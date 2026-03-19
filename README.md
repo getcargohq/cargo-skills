@@ -87,7 +87,7 @@ The agent queries billing metrics broken down by workflow, connector, or date ra
 ## Prerequisites
 
 ```bash
-npm install -g @cargo-ai/cli
+npm install -g @cargo-ai/cli@^1.0.5
 cargo-ai login --token <your-api-token>
 cargo-ai whoami
 ```

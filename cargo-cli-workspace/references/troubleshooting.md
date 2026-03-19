@@ -7,7 +7,7 @@ Common errors and recovery steps for `cargo-cli-workspace` commands.
 | Symptom | Cause | Fix |
 |---------|-------|-----|
 | `{"errorMessage": "..."}` with non-zero exit | Any CLI error | Read the `errorMessage` — it usually says exactly what's wrong |
-| `command not found: cargo-ai` | CLI not installed or not in PATH | Run `npm install -g @cargo-ai/cli` or prefix with `npx @cargo-ai/cli` |
+| `command not found: cargo-ai` | CLI not installed or not in PATH | Run `npm install -g @cargo-ai/cli@^1.0.5` or prefix with `npx @cargo-ai/cli@^1.0.5` |
 | `Unauthorized` or `Forbidden` | Bad or expired token, or insufficient permissions | Re-run `cargo-ai login --token <token>`; verify with `cargo-ai whoami`; use an admin token for workspace management |
 
 ## Users

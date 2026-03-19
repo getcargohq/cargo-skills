@@ -2,7 +2,7 @@
 name: cargo-skills
 description: Master skill index for the Cargo CLI. Use this file to understand which skill to load, how the skills relate to each other, and how to chain them together to accomplish end-to-end revenue automation tasks on the Cargo platform.
 license: MIT
-compatibility: Requires @cargo-ai/cli (npm) and a Cargo API token
+compatibility: Requires @cargo-ai/cli@^1.0.5 (npm) and a Cargo API token
 metadata:
   author: getcargo
   version: "1.0"
@@ -24,7 +24,7 @@ This repository contains seven skills for the [Cargo](https://getcargo.ai) AI-na
 ## Installation
 
 ```bash
-npm install -g @cargo-ai/cli
+npm install -g @cargo-ai/cli@^1.0.5
 cargo-ai login --token <your-api-token>
 # Optional: target a specific workspace
 cargo-ai login --token <your-api-token> --workspace-uuid <uuid>
@@ -32,7 +32,7 @@ cargo-ai login --token <your-api-token> --workspace-uuid <uuid>
 cargo-ai whoami
 ```
 
-Without a global install, prefix every command with `npx @cargo-ai/cli` instead of `cargo-ai`.
+Without a global install, prefix every command with `npx @cargo-ai/cli@^1.0.5` instead of `cargo-ai`.
 
 All commands output JSON to stdout. Failed commands exit non-zero and return `{"errorMessage": "..."}`.
 

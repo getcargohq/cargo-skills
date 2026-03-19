@@ -2,7 +2,7 @@
 name: cargo-cli-ai
 description: Create and configure AI agents, upload files for RAG, manage MCP servers, and handle agent memories using the Cargo CLI. Use when the user wants to create or update agents, upload knowledge base files, connect MCP tool servers, or manage agent memories. For sending messages to agents, use the cargo-cli-orchestration skill instead.
 license: MIT
-compatibility: Requires @cargo-ai/cli (npm) and a Cargo API token
+compatibility: Requires @cargo-ai/cli@^1.0.5 (npm) and a Cargo API token
 metadata:
   author: getcargo
   version: "1.0"
@@ -23,12 +23,12 @@ Agent resource management: creating and configuring agents, uploading files for 
 ## Prerequisites
 
 ```bash
-npm install -g @cargo-ai/cli
+npm install -g @cargo-ai/cli@^1.0.5
 cargo-ai login --token <your-api-token>
 cargo-ai login --token <your-api-token> --workspace-uuid <uuid>
 ```
 
-Verify with `cargo-ai whoami`. All commands output JSON to stdout. Without a global install, prefix every command with `npx @cargo-ai/cli` instead of `cargo-ai`.
+Verify with `cargo-ai whoami`. All commands output JSON to stdout. Without a global install, prefix every command with `npx @cargo-ai/cli@^1.0.5` instead of `cargo-ai`.
 
 Failed commands exit non-zero and return `{"errorMessage": "..."}`.
 

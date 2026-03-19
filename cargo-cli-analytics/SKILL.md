@@ -2,7 +2,7 @@
 name: cargo-cli-analytics
 description: Download workflow run results, export segment data, and monitor run metrics using the Cargo CLI. Use when the user wants run metrics, error rates, data export, or download results for their Cargo workspace. For billing and credit usage, use the cargo-cli-billing skill instead.
 license: MIT
-compatibility: Requires @cargo-ai/cli (npm) and a Cargo API token
+compatibility: Requires @cargo-ai/cli@^1.0.5 (npm) and a Cargo API token
 metadata:
   author: getcargo
   version: "1.4"
@@ -21,12 +21,12 @@ Measurement and export: monitoring run metrics, downloading run and batch result
 ## Prerequisites
 
 ```bash
-npm install -g @cargo-ai/cli
+npm install -g @cargo-ai/cli@^1.0.5
 cargo-ai login --token <your-api-token>
 cargo-ai login --token <your-api-token> --workspace-uuid <uuid>
 ```
 
-Verify with `cargo-ai whoami`. All commands output JSON to stdout. Without a global install, prefix every command with `npx @cargo-ai/cli` instead of `cargo-ai`.
+Verify with `cargo-ai whoami`. All commands output JSON to stdout. Without a global install, prefix every command with `npx @cargo-ai/cli@^1.0.5` instead of `cargo-ai`.
 
 Failed commands exit non-zero and return `{"errorMessage": "..."}`.
 
