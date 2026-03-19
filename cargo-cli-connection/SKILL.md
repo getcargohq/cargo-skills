@@ -120,7 +120,7 @@ cargo-ai connection integration list --has-actions true
 # Only integrations that have extractors (can sync data into models)
 cargo-ai connection integration list --has-extractors true
 
-# Get details for a native integration (includes available actions and extractors)
+# Get built-in Cargo actions and extractors (NOT third-party connector actions)
 cargo-ai connection native-integration get
 ```
 
@@ -141,7 +141,7 @@ cargo-ai connection connector list
 cargo-ai connection integration get <integration-slug>
 # → actions are keyed by actionSlug, with config.jsonSchema for each
 # → Or use get-documentation for a plain text overview
-# → Or use native-integration get for native actions
+# → Or use native-integration get for built-in Cargo actions (not third-party)
 
 # 3. Reference the connector and action in a node graph
 # See cargo-cli-orchestration references/nodes.md for the full node syntax

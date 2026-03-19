@@ -139,13 +139,15 @@ Returns the full integration object, including all actions and extractors with t
 
 ## cargo-ai connection native-integration get
 
+> **Note:** This command returns **built-in Cargo actions only** (e.g. `start`, `end`, `branch`, `filter`, `agent`, `python`). It does **not** return HubSpot, Salesforce, Clearbit, or other third-party connector actions. For those, use `cargo-ai connection integration get <slug>`.
+
 ```json
 {
   "nativeIntegration": {
     "actions": {
-      "company_enrich": {
-        "name": "Company Enrich",
-        "description": "Enrich a company record",
+      "send_email": {
+        "name": "Send Email",
+        "description": "Send an email via the native Cargo email action",
         "category": "enrichment",
         "icon": "https://...",
         "isSerialized": false,

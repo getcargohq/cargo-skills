@@ -18,12 +18,12 @@ Common errors and recovery steps for `cargo-cli-connection` commands.
 | `connector create` fails                | Integration slug doesn't exist                   | Run `integration list` to find valid `integrationSlug` values                                    |
 | `connector remove` fails                | Connector is referenced by active plays or tools | Check `playsCount` and `toolsCount` on the connector; remove or update dependent resources first |
 | Workflow fails with connector not found | Connector UUID in node graph is wrong            | Re-run `connector list` to verify the UUID used in the node config                               |
-| Action not executing as expected        | Wrong `actionSlug`                               | Run `native-integration get` to see the correct `actions[].slug` values                   |
+| Action not executing as expected        | Wrong `actionSlug`                               | For third-party connector actions (HubSpot, Salesforce, etc.), run `integration get <slug>` to see correct `actionSlug` values. Only use `native-integration get` for built-in Cargo actions. |
 
 ## Integrations
 
 | Symptom                                                 | Cause                                                         | Fix                                                             |
 | ------------------------------------------------------- | ------------------------------------------------------------- | --------------------------------------------------------------- |
 | `integration list` doesn't show an expected integration | Integration may not be available in your region or plan       | Contact Cargo support or check the integrations page in the app |
-| `native-integration get` returns not found              | Wrong integration slug                                        | Use `integration list` to confirm the exact slug                |
+| Third-party actions (e.g. HubSpot) not found via `native-integration get` | `native-integration get` only returns built-in Cargo actions | Use `integration get <slug>` (e.g. `integration get hubspot`) to get service-specific actions |
 | OAuth flow incomplete                                   | `complete-oauth` not called after creating an OAuth connector | Complete the OAuth flow through the Cargo app UI or via the API |
