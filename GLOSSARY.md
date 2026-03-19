@@ -9,8 +9,8 @@ Key terms used across the Cargo CLI skills.
 **actionSlug**
 A string identifier for a specific action on a workflow node. Present on both `kind: "native"` and `kind: "connector"` nodes.
 
-- **Native nodes** — built-in actions discovered via `cargo-ai connection native-integration get` (keys of the `actions` object): `start`, `end`, `branch`, `filter`, `variables`, `agent`, `python`, `script`, etc.
-- **Connector nodes** — integration-specific actions discovered via `cargo-ai connection integration list` and the integration's action catalog. Examples: `company_enrich`, `create_contact`, `send_message`.
+- **Native nodes** — built-in Cargo actions discovered via `cargo-ai connection native-integration get` (keys of the `actions` object): `start`, `end`, `branch`, `filter`, `variables`, `agent`, `python`, `script`, etc. These are generic platform actions, not third-party service actions.
+- **Connector nodes** — third-party service-specific actions discovered via `cargo-ai connection integration get <slug>` (e.g. `integration get hubspot`). Examples: `company_enrich`, `create_contact`, `send_message`. **Do not use `native-integration get` for these** — it will not return HubSpot, Salesforce, or other connector-specific actions.
 
 **agent**
 An AI resource with configured instructions, a language model, and optional tools. Created and configured via `cargo-cli-ai`. Used in workflows as a `kind: "agent"` node, or messaged directly via `cargo-cli-orchestration`.

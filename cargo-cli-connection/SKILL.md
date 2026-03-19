@@ -42,8 +42,20 @@ Failed commands exit non-zero and return `{"errorMessage": "..."}`.
 cargo-ai connection connector list                        # all authenticated connectors
 cargo-ai connection integration list                      # all available integration types
 cargo-ai connection integration list --search "hubspot"   # search by name
-cargo-ai connection native-integration get                # native actions and extractors
+cargo-ai connection integration get <slug>                # third-party-specific actions (e.g. HubSpot)
+cargo-ai connection native-integration get                # built-in Cargo actions only (NOT third-party)
 ```
+
+### `integration get` vs `native-integration get`
+
+These two commands return **different sets of actions** and are not interchangeable:
+
+| Command | What it returns | When to use |
+|---|---|---|
+| `integration get <slug>` | Actions specific to a third-party service (e.g. HubSpot contact CRUD, deal management, Salesforce queries) | When you need service-specific actions to use in a connector node — **use this for HubSpot, Salesforce, Clearbit, etc.** |
+| `native-integration get` | Generic built-in Cargo actions (e.g. HTTP requests, data transforms, internal utilities) | When you need Cargo-native capabilities that don't belong to any specific third-party connector |
+
+**Example:** To find HubSpot-specific actions, use `integration get hubspot` — not `native-integration get`. The latter will only return generic actions unrelated to HubSpot.
 
 ## Quick reference
 
@@ -108,13 +120,13 @@ cargo-ai connection integration list --has-actions true
 # Only integrations that have extractors (can sync data into models)
 cargo-ai connection integration list --has-extractors true
 
-# Get details for a native integration (includes available actions and extractors)
+# Get built-in Cargo actions and extractors (NOT third-party connector actions)
 cargo-ai connection native-integration get
 ```
 
 **Integration categories:** `engagement`, `marketing`, `sales`, `finance`, `analytics`, `freeform`, `success`, `support`, `enrichment`, `storage`, `custom`.
 
-Use `native-integration get` to discover all native actions available in your workspace. Actions are referenced by `actionSlug` in workflow node graphs (see the `cargo-cli-orchestration` skill's `references/nodes.md`).
+Use `integration get <slug>` to discover all actions available for a specific third-party service (e.g. HubSpot, Salesforce). Use `native-integration get` only for built-in Cargo actions — it does **not** return HubSpot or other service-specific actions. Actions are referenced by `actionSlug` in workflow node graphs (see the `cargo-cli-orchestration` skill's `references/nodes.md`).
 
 ## Using connector actions in workflows
 
@@ -129,7 +141,7 @@ cargo-ai connection connector list
 cargo-ai connection integration get <integration-slug>
 # → actions are keyed by actionSlug, with config.jsonSchema for each
 # → Or use get-documentation for a plain text overview
-# → Or use native-integration get for native actions
+# → Or use native-integration get for built-in Cargo actions (not third-party)
 
 # 3. Reference the connector and action in a node graph
 # See cargo-cli-orchestration references/nodes.md for the full node syntax

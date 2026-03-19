@@ -55,13 +55,29 @@ cargo-ai connection integration get-documentation hubspot
 
 Returns plain text documentation for the integration, including available actions and their configuration.
 
-## Discover native actions and extractors
+## Discover actions for a specific integration (e.g. HubSpot)
+
+```bash
+cargo-ai connection integration get hubspot
+# → Returns HubSpot-specific actions (e.g. "create_contact", "update_deal") and extractors
+# → Each action includes its config.jsonSchema for building workflow nodes
+
+cargo-ai connection integration get-documentation hubspot
+# → Plain text overview of all HubSpot actions
+```
+
+**Use `integration get <slug>` when you need service-specific actions** — HubSpot, Salesforce, Clearbit, etc.
+
+## Discover native (built-in Cargo) actions and extractors
 
 ```bash
 cargo-ai connection native-integration get
-# → actions: keyed by actionSlug (e.g. "company_enrich", "send_email")
+# → Returns built-in Cargo actions ONLY — NOT HubSpot or other third-party actions
+# → actions: keyed by actionSlug (generic platform utilities)
 # → extractors: keyed by extractor slug
 ```
+
+**Important:** `native-integration get` does **not** return HubSpot-specific or other third-party connector actions. To get those, use `integration get <slug>` instead.
 
 Use `actionSlug` values in workflow node configs (see `cargo-cli-orchestration/references/nodes.md`).
 

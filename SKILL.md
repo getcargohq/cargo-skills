@@ -198,7 +198,8 @@ cargo-ai storage relationship set --from-model-uuid <uuid> --to-model-uuid <uuid
 ```bash
 cargo-ai connection connector list
 cargo-ai connection integration list
-cargo-ai connection native-integration get       # discover available actions
+cargo-ai connection integration get <slug>          # third-party actions (HubSpot, Salesforce, etc.)
+cargo-ai connection native-integration get          # built-in Cargo actions only (NOT third-party)
 ```
 
 **Key concepts:**
@@ -299,7 +300,7 @@ Most `cargo-cli-orchestration` operations require UUIDs from other skills. This 
 | `segmentUuid`   | `segmentation segment list`                | `batch create --data '{"kind":"segment",...}'`                          |
 | `agentUuid`     | `ai agent list`                            | `ai chat create`, node graph (`kind: "agent"`)                          |
 | `connectorUuid` | `connection connector list`                | Node graph (`kind: "connector"`), `billing usage --connector-uuid`      |
-| `actionSlug`    | `connection native-integration get`        | Node graph (`kind: "connector"`)                                        |
+| `actionSlug`    | `connection integration get <slug>` (third-party) or `connection native-integration get` (built-in) | Node graph (`kind: "connector"` or `kind: "native"`) |
 | `releaseUuid`   | `orchestration batch get` → `.releaseUuid` | `orchestration release get`, `batch download`                           |
 | `batchUuid`     | `orchestration batch create`               | `batch get`, `batch download`, `run get-metrics --batch-uuid`           |
 | `folderUuid`    | `workspace folder list`                    | `play list --folder-uuid`, `tool list --folder-uuid`                    |
@@ -338,10 +339,10 @@ cargo-ai segmentation segment list
 **Skills needed:** `cargo-cli-storage`, `cargo-cli-connection`, `cargo-cli-orchestration`, `cargo-cli-analytics`
 
 ```
-1. storage model get-ddl          → get exact table name
-2. connection connector list       → get enrichment + CRM connector UUIDs
-3. connection native-integration get       → discover action slugs
-4. orchestration tool list         → find the enrichment tool
+1. storage model get-ddl                   → get exact table name
+2. connection connector list               → get enrichment + CRM connector UUIDs
+3. connection integration get <slug>       → discover third-party action slugs (e.g. HubSpot, Clearbit)
+4. orchestration tool list                 → find the enrichment tool
 5. orchestration batch create      → run on a segment of companies
 6. orchestration batch get         → poll until status is terminal
 7. analytics run download          → export results
@@ -366,7 +367,7 @@ cargo-ai segmentation segment list
 
 ```
 1. connection connector list               → get connector UUID
-2. connection native-integration get      → get actionSlug
+2. connection integration get <slug>       → get actionSlug for the third-party service
 3. orchestration node validate --nodes     → validate graph before running
 4. orchestration run create --nodes        → run with custom node graph
 5. orchestration run get                   → poll to terminal state
