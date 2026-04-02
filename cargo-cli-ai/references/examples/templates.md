@@ -4,6 +4,11 @@
 
 An **AI template** is a pre-built agent configuration — a ready-to-use agent blueprint with instructions, model settings, and tool configuration already defined. Templates capture common agent patterns (lead research, company classification, email drafting) so you don't have to configure an agent from scratch.
 
+**Always check templates before creating an agent.** Even if no template is a perfect match, they provide:
+- A proven system prompt structure for the use case
+- A recommended language model and temperature setting
+- A list of tools and resources to consider attaching
+
 AI templates are read-only. You discover them by listing, then use their configuration as a starting point when creating or updating an agent.
 
 ## List all AI templates

@@ -2,9 +2,12 @@
 
 ## What is a template?
 
-A **template** is a pre-built workflow blueprint — a ready-to-use node graph you can apply when creating a play or tool. Templates capture common automation patterns (enrichment pipelines, CRM syncs, AI research flows) so you don't have to build nodes from scratch.
+A **template** is a pre-built workflow blueprint — a ready-to-use node graph that captures common automation patterns (enrichment pipelines, CRM syncs, AI research flows, lead scoring). Templates serve two purposes:
 
-Templates are read-only. You discover them by slug, inspect their node graph and expected input schema, then use that graph as the `--nodes` value when creating a run or batch.
+1. **Design-time inspiration** — when building or updating a tool or play, browse templates to find one close to your use case, then copy its node graph into your draft release as a starting point instead of designing from scratch.
+2. **Runtime shortcut** — plug a template's nodes directly into `run create` or `batch create` via the `--nodes` flag without modifying the tool's stored definition.
+
+Templates are read-only. You discover them by slug, inspect their node graph and expected input schema, then either adapt the graph for a draft release or pass it directly as `--nodes` when creating a run or batch.
 
 ## List all templates
 
@@ -117,6 +120,41 @@ Response:
   }
 }
 ```
+
+## Use a template as inspiration when building a tool or play
+
+When creating or redesigning a tool or play, start with a template rather than building nodes from scratch. Copy the template's node graph into the draft release, replace any placeholders, then deploy.
+
+```bash
+# 1. Find a template that matches your use case
+cargo-ai orchestration template list
+# → Find "company-enrichment" (kind: "tool") or "lead-scoring" (kind: "play")
+
+# 2. Inspect the node graph — understand the structure and spot placeholders
+cargo-ai orchestration template get company-enrichment
+
+# 3. Fill in placeholders (connectorUuid, agentUuid, etc.) and validate
+cargo-ai orchestration node validate --nodes '[...modified nodes...]'
+# → { "outcome": "valid" }
+
+# 4. Find your tool's workflowUuid
+cargo-ai orchestration tool list
+# → Extract tool.workflowUuid
+
+# 5. Save the adapted nodes to the draft release
+cargo-ai orchestration draft-release update \
+  --workflow-uuid <tool.workflowUuid> \
+  --nodes '[...validated nodes...]'
+
+# 6. Deploy the draft release
+cargo-ai orchestration draft-release deploy \
+  --workflow-uuid <tool.workflowUuid> \
+  --nodes '[...validated nodes...]' \
+  --form-fields 'null' \
+  --description "Based on company-enrichment template"
+```
+
+> For plays, the same pattern applies — just use `play list` and replace `run create` with `batch create` in any test steps.
 
 ## Use a template to run a tool
 

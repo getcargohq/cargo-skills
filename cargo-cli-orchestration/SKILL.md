@@ -67,6 +67,8 @@ cargo-ai connection connector list         # all connectors
 
 **Plays vs tools:** Both are backed by a workflow. A **play** is a segment-driven automation — it reacts to data changes in a segment (records added, updated, removed). A **tool** is an on-demand workflow — triggered manually, via API, or on a cron schedule. Workflows don't have a `name` field; use `play list` or `tool list` to find names and extract the `workflowUuid`.
 
+**Designing a new tool or play?** Check templates first — they are pre-built node graphs for common automation patterns (enrichment pipelines, CRM syncs, lead scoring) and are an excellent starting point. List templates with `cargo-ai orchestration template list` and inspect a specific one with `cargo-ai orchestration template get <slug>`. Templates are tagged by `kind` so you can find ones suited for tools (`"kind":"tool"`) or plays (`"kind":"play"`) right away. See `references/templates.md` for the full guide.
+
 **Compatibility rules:**
 
 - **`run create`** — only works with **tool** workflows (or no `workflowUuid`). Play workflows return `playNotCompatible`.
@@ -245,7 +247,9 @@ cargo-ai segmentation segment remove <segment-uuid>
 
 ## Use a workflow template
 
-Templates are pre-built node graphs for common automation patterns. Use them to bootstrap a run without building nodes from scratch.
+Templates are pre-built node graphs for common automation patterns. They serve two purposes:
+- **Inspiration when building** — browse templates to understand how to structure a new tool or play, then copy and adapt the node graph into your draft release
+- **Bootstrap a run** — plug a template's nodes directly into `run create` or `batch create` without touching the tool's stored definition
 
 ```bash
 cargo-ai orchestration template list              # list available templates
