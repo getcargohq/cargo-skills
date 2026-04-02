@@ -68,6 +68,8 @@ cargo-ai orchestration batch create \
 
 To change what a play does, update its draft release and deploy it. The draft release holds the unpublished node graph for the workflow.
 
+> **Looking for inspiration?** Before designing a node graph from scratch, check `cargo-ai orchestration template list` for pre-built patterns (lead scoring, enrichment pipelines, CRM syncs). Use `cargo-ai orchestration template get <slug>` to copy a ready-made node graph and adapt it instead of starting from zero. Templates tagged `"kind":"play"` are designed for segment-driven automations.
+
 ```bash
 # Step 1 — Find the play and its workflowUuid
 cargo-ai orchestration play list

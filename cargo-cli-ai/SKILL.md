@@ -74,6 +74,13 @@ cargo-ai ai memory remove --mem0-id <id> --scope agent --agent-uuid <uuid>
 
 Agents are AI resources with configured instructions, a language model, tools, and optional resources.
 
+**Before creating an agent from scratch, check existing templates — they capture proven patterns for common use cases (lead research, classification, email drafting) and give you a ready-made system prompt, model, and temperature to start from:**
+
+```bash
+cargo-ai ai template list          # browse available patterns
+cargo-ai ai template get <slug>    # inspect system prompt, model, and tools
+```
+
 ```bash
 # List all agents
 cargo-ai ai agent list
@@ -136,24 +143,25 @@ cargo-ai ai release deploy-draft --agent-uuid <uuid> \
 
 **Agent configuration workflow:**
 
-1. Create the agent: `cargo-ai ai agent create --name "..." --icon-color blue --icon-face 🤖`
-2. Get the draft release: `cargo-ai ai release get-draft --agent-uuid <uuid>`
-3. Update the draft with tools, resources, prompt, model: `cargo-ai ai release update-draft --agent-uuid <uuid> ...`
-4. Deploy: `cargo-ai ai release deploy-draft --agent-uuid <uuid> ...`
+1. **Browse templates for inspiration**: `cargo-ai ai template list` — find a template close to your use case, then `cargo-ai ai template get <slug>` to see its system prompt, model, and temperature
+2. Create the agent: `cargo-ai ai agent create --name "..." --icon-color blue --icon-face 🤖`
+3. Get the draft release: `cargo-ai ai release get-draft --agent-uuid <uuid>`
+4. Update the draft with tools, resources, prompt, model: `cargo-ai ai release update-draft --agent-uuid <uuid> ...`
+5. Deploy: `cargo-ai ai release deploy-draft --agent-uuid <uuid> ...`
 
 ## Templates
 
-Templates are pre-built agent configurations. Use them to bootstrap agents with proven patterns.
+Templates are pre-built agent configurations that capture proven patterns for common use cases. **Always check templates before designing an agent from scratch** — they give you a ready-made system prompt, recommended language model, temperature, and tool configuration that you can adopt as-is or adapt.
 
 ```bash
 # List available agent templates
 cargo-ai ai template list
 
-# Get a template by slug
+# Get a template by slug — inspect its system prompt, model, and settings
 cargo-ai ai template get <slug>
 ```
 
-Templates include a system prompt, tools, resources, and recommended model settings. Use these as a starting point and customize via `release update-draft`.
+Templates include a system prompt, tools, resources, and recommended model settings. Use them as a starting point and customize via `release update-draft`. See `references/examples/templates.md` for the full guide including an end-to-end example of creating an agent from a template.
 
 ## Model and temperature guidance
 
