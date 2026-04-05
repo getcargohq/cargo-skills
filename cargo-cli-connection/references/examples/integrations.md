@@ -37,36 +37,43 @@ cargo-ai connection integration list --search "hubspot"
 # → Use slug when creating connectors: --integration-slug <slug>
 ```
 
-## Get full integration details
+## Get full integration details (actions + config schemas)
 
 ```bash
-cargo-ai connection integration get clearbit
-# → Returns the full integration object with actions, extractors, and configuration schemas
+cargo-ai connection integration list --slug clearbit
+# → Returns the full integration object including .manifest.actions and their config.jsonSchema
 ```
 
-Use this to discover all available actions and extractors for an integration, including their `config.jsonSchema` for building workflow nodes.
+Use this to discover all available actions for an integration and the exact config fields each action expects. This is the authoritative source before building a connector node — field names vary between integrations and are not validated by `node validate`.
 
-## Get integration documentation
+```bash
+# Extract the config schema for a specific action
+cargo-ai connection integration list --slug sql | \
+  jq '.integrations[0].manifest.actions.upsertRecords.config.jsonSchema'
+```
+
+## Get integration documentation (plain text)
 
 ```bash
 cargo-ai connection integration get-documentation clearbit
 cargo-ai connection integration get-documentation hubspot
 ```
 
-Returns plain text documentation for the integration, including available actions and their configuration.
+Returns plain text documentation for the integration. Useful for a quick overview, but does not include machine-readable config schemas — use `integration list --slug <slug>` when you need the exact field names for node configs.
 
 ## Discover actions for a specific integration (e.g. HubSpot)
 
 ```bash
-cargo-ai connection integration get hubspot
-# → Returns HubSpot-specific actions (e.g. "create_contact", "update_deal") and extractors
-# → Each action includes its config.jsonSchema for building workflow nodes
+# Full manifest with action schemas
+cargo-ai connection integration list --slug hubspot
+# → .integrations[0].manifest.actions — keyed by actionSlug
+# → Each action includes .config.jsonSchema for building workflow nodes
 
+# Plain text overview
 cargo-ai connection integration get-documentation hubspot
-# → Plain text overview of all HubSpot actions
 ```
 
-**Use `integration get <slug>` when you need service-specific actions** — HubSpot, Salesforce, Clearbit, etc.
+**Use `integration list --slug <slug>` when you need service-specific action config schemas** — HubSpot, Salesforce, SQL, Clearbit, etc.
 
 ## Discover native (built-in Cargo) actions and extractors
 
@@ -114,5 +121,57 @@ cargo-ai connection integration get hubspot
 | HTTP (custom) | `http`         |
 | Slack         | `slack`        |
 | Google Sheets | `googleSheets` |
+| SQL (BigQuery, Snowflake, etc.) | `sql` |
 
 Run `integration list` for the complete current list.
+
+---
+
+## SQL integration — action config reference
+
+The SQL integration uses different field names from CRM connectors like Salesforce. Always use `integration list --slug sql` to confirm schemas, but the key actions are documented below.
+
+### `upsertRecords` — MERGE a row by matching column
+
+```json
+{
+  "kind": "connector",
+  "integrationSlug": "sql",
+  "actionSlug": "upsertRecords",
+  "connectorUuid": "<your-sql-connector-uuid>",
+  "config": {
+    "database": "my-bq-project",
+    "schema": "my_dataset",
+    "table": "my_table",
+    "matchingColumnSlug": "domain",
+    "matchingValue": {
+      "kind": "templateExpression",
+      "expression": "{{ nodes.start.domain }}",
+      "instructTo": "none",
+      "fromRecipe": false
+    },
+    "mappings": [
+      {
+        "columnSlug": "domain",
+        "value": {
+          "kind": "templateExpression",
+          "expression": "{{ nodes.start.domain }}",
+          "instructTo": "none",
+          "fromRecipe": false
+        }
+      },
+      {
+        "columnSlug": "parent_domain",
+        "value": {
+          "kind": "templateExpression",
+          "expression": "{{ nodes.start.parent_domain }}",
+          "instructTo": "none",
+          "fromRecipe": false
+        }
+      }
+    ]
+  }
+}
+```
+
+> **Note:** The target table is specified as three separate fields (`database`, `schema`, `table`) — not as a single `objectType` string. Using `objectType` passes `node validate` but leaves all three fields empty in the UI and fails at runtime.

@@ -86,6 +86,8 @@ cargo-ai orchestration draft-release deploy \
 
 > **Do not skip validation.** Deploying an invalid node graph will cause runs to fail. Always run `node validate` before `draft-release deploy`.
 
+> **Do not pass `--version` to `draft-release deploy`.** Passing `--version` causes the command to exit 0 and print `"1.0.0"` without deploying anything — no error, no warning. Omit the flag entirely; the platform auto-assigns the next semantic version.
+
 ---
 
 ## Run a tool on a single record

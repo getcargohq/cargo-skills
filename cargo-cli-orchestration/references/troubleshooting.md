@@ -16,6 +16,7 @@ Common errors and recovery steps for `cargo-cli-orchestration` commands.
 
 | Symptom                             | Cause                                              | Fix                                                                                                         |
 | ----------------------------------- | -------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `draft-release deploy` exits 0 but nothing deploys | `--version` flag was passed | Omit `--version` entirely — passing it causes a silent no-op. The platform assigns the version automatically. |
 | Run stuck in `pending`              | Workflow may be paused or have no deployed release | Check that the play/tool `isEnabled` is `true`; verify a release exists with `release list --workflow-uuid` |
 | Batch never finishes                | Individual runs may be erroring or stuck           | List runs for the batch: `run list --workflow-uuid <uuid> --batch-uuid <uuid>` and check for errors         |
 | `Workflow not found`                | Wrong UUID                                         | Re-run `play list` or `tool list` and double-check the `workflowUuid`                                       |
@@ -60,6 +61,31 @@ When a run reaches `status: "error"`, follow this sequence:
 
 4. **Re-trigger after fixing:** Create a new run with the corrected data or node config.
 5. **For systematic failures:** Use `run download --statuses error` to export all failed records, fix the data, then re-batch with `batch create --data '{"kind":"recordIds",...}'`.
+
+## Connector config field mismatches
+
+`node validate` only checks graph structure (node kinds, UUID links, required top-level fields). It does **not** validate the contents of each node's `config` object against the integration's JSON schema. A node can return `{ "outcome": "valid" }` while using entirely wrong field names — the misconfiguration only surfaces at runtime or in the UI.
+
+**The most common source of this:** copying config field names from one integration (e.g. Salesforce) into a different integration (e.g. SQL). Each integration has its own schema.
+
+**How to get the correct config schema before building a node:**
+
+```bash
+# Get the full integration manifest including action schemas
+cargo-ai connection integration list --slug <integration-slug>
+# → Look at .manifest.actions.<actionSlug>.config.jsonSchema for the exact fields
+```
+
+**Example — SQL vs Salesforce field name differences:**
+
+| Concept         | Salesforce (`upsertRecords`) | SQL (`upsertRecords`) |
+| --------------- | ---------------------------- | --------------------- |
+| Target table    | `objectType` (e.g. `"Account"`) | `database` + `schema` + `table` (separate fields) |
+| Match key name  | `matchingPropertyName`       | `matchingColumnSlug`  |
+| Match key value | `matchingValue`              | `matchingValue`       |
+| Column mappings | `mappings[].propertyName`    | `mappings[].columnSlug` |
+
+Using Salesforce-style fields on a SQL node passes validation but leaves the database, schema, and table empty in the UI — the upsert will fail at runtime.
 
 ## Batch sizing and third-party connector rate limits
 
