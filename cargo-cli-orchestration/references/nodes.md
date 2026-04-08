@@ -31,7 +31,7 @@ Every node in the `--nodes` JSON array has these fields:
 | `slug`              | yes      | Human-readable identifier (`start` and `end` are reserved)                 |
 | `kind`              | yes      | `native`, `connector`, `tool`, or `agent`                                  |
 | `config`            | yes      | Action-specific configuration (`{}` for start)                             |
-| `childrenUuids`     | yes      | UUIDs of downstream nodes — array length **must match** the "Children" count for the node's action (see native actions tables below). `[]` only for `end` nodes |
+| `childrenUuids`     | yes      | UUIDs of downstream nodes — array length **must match** the "Children" count for the node's action (see native actions tables below) |
 | `fallbackOnFailure` | yes      | Continue to the next node even if this one fails                           |
 | `position`          | yes      | `{"x": 0, "y": 0}` — layout only, no runtime effect                        |
 | `fallbackChildUuid` | no       | UUID of a fallback node to run on failure                                  |
