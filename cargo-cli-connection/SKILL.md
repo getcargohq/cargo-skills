@@ -65,6 +65,7 @@ cargo-ai connection connector create --integration-slug <slug> --slug <slug> --n
 cargo-ai connection connector update --uuid <uuid> --name <name>
 cargo-ai connection connector remove <connector-uuid>
 cargo-ai connection connector get <connector-uuid>
+cargo-ai connection connector autocomplete --connector-uuid <uuid> --slug <slug> --params '<json>'
 cargo-ai connection integration list
 cargo-ai connection integration get <slug>
 cargo-ai connection integration get-documentation <slug>
@@ -127,6 +128,128 @@ cargo-ai connection native-integration get
 **Integration categories:** `engagement`, `marketing`, `sales`, `finance`, `analytics`, `freeform`, `success`, `support`, `enrichment`, `storage`, `custom`.
 
 Use `integration get <slug>` to discover all actions available for a specific third-party service (e.g. HubSpot, Salesforce). Use `native-integration get` only for built-in Cargo actions — it does **not** return HubSpot or other service-specific actions. Actions are referenced by `actionSlug` in workflow node graphs (see the `cargo-cli-orchestration` skill's `references/nodes.md`).
+
+## Connector autocomplete — fetching available values for action fields
+
+Some action fields don't accept freeform input — their allowed values must be fetched dynamically from the connector. When you inspect an action's config (via `integration get <slug>` or `native-integration get`), look at the `uiSchema` alongside the `jsonSchema`. If a field's `uiSchema` contains `"ui:widget": "IntegrationAutocompleteWidget"`, the valid values for that field **must** be retrieved using `connector autocomplete`.
+
+### How to detect autocomplete fields
+
+When an action's config looks like this:
+
+```json
+{
+  "jsonSchema": {
+    "type": "object",
+    "properties": {
+      "objectType": { "type": "string", "description": "The object type" }
+    }
+  },
+  "uiSchema": {
+    "objectType": {
+      "ui:widget": "IntegrationAutocompleteWidget",
+      "ui:options": {
+        "slug": "listObjects",
+        "allowRefresh": true
+      }
+    }
+  }
+}
+```
+
+The `objectType` field requires autocomplete. The `ui:options.slug` (`"listObjects"`) is the autocomplete slug you pass to `connector autocomplete`.
+
+### How to call connector autocomplete
+
+```bash
+cargo-ai connection connector autocomplete \
+  --connector-uuid <connector-uuid> \
+  --slug <autocomplete-slug> \
+  --params '{}'
+```
+
+| Flag               | Required | Description                                                       |
+| ------------------ | -------- | ----------------------------------------------------------------- |
+| `--connector-uuid` | yes      | The UUID of the connector to autocomplete against                 |
+| `--slug`           | yes      | The autocomplete slug from `uiSchema[field]["ui:options"].slug`   |
+| `--params`         | yes      | JSON object of parameters (use `{}` when none are needed)         |
+| `--value`          | no       | Search string to filter results                                   |
+| `--refresh`        | no       | Bypass cache and fetch fresh results                              |
+
+### Autocomplete with parameters
+
+Some autocomplete fields depend on the value of another field. This is indicated by a `params` object in `ui:options`:
+
+```json
+{
+  "uiSchema": {
+    "objectType": {
+      "ui:widget": "IntegrationAutocompleteWidget",
+      "ui:options": { "slug": "listObjects" }
+    },
+    "propertyName": {
+      "ui:widget": "IntegrationAutocompleteWidget",
+      "ui:options": {
+        "slug": "listObjectProperties",
+        "params": { "objectType": "$this.$parent.objectType" }
+      }
+    }
+  }
+}
+```
+
+Here, `propertyName` depends on the selected `objectType`. Replace the `$this.$parent...` expression with the actual value you chose:
+
+```bash
+# 1. First, get the list of object types
+cargo-ai connection connector autocomplete \
+  --connector-uuid <uuid> --slug listObjects --params '{}'
+
+# 2. Then, get properties for the chosen object type
+cargo-ai connection connector autocomplete \
+  --connector-uuid <uuid> --slug listObjectProperties \
+  --params '{"objectType": "contacts"}'
+```
+
+### Response format
+
+```json
+{
+  "results": [
+    { "label": "Contacts", "value": "contacts" },
+    { "label": "Companies", "value": "companies" },
+    { "label": "Deals", "value": "deals" }
+  ]
+}
+```
+
+Use the `value` field in your node config. The `label` is the human-readable display name. Results may also include optional `description` and `parent` fields.
+
+### End-to-end example: configuring a HubSpot action
+
+```bash
+# 1. Find your HubSpot connector UUID
+cargo-ai connection connector list --integration-slug hubspot
+
+# 2. Get HubSpot actions and inspect their config + uiSchema
+cargo-ai connection integration get hubspot
+# → The "findRecords" action has objectType with autocomplete slug "listObjects"
+
+# 3. Fetch available object types
+cargo-ai connection connector autocomplete \
+  --connector-uuid <hubspot-connector-uuid> \
+  --slug listObjects --params '{}'
+# → Returns: contacts, companies, deals, tickets, etc.
+
+# 4. Fetch properties for the chosen object type
+cargo-ai connection connector autocomplete \
+  --connector-uuid <hubspot-connector-uuid> \
+  --slug listObjectProperties \
+  --params '{"objectType": "contacts"}'
+# → Returns: email, firstname, lastname, phone, etc.
+
+# 5. Use these values in your workflow node config
+```
 
 ## Using connector actions in workflows
 
