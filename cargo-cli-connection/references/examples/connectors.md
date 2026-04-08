@@ -74,6 +74,57 @@ cargo-ai connection connector list
 # → Check playsCount and toolsCount fields for each connector
 ```
 
+## Autocomplete — fetch available values for an action field
+
+When an action's `uiSchema` marks a field with `"ui:widget": "IntegrationAutocompleteWidget"`, use `connector autocomplete` to get the allowed values.
+
+```bash
+# Basic autocomplete (no params needed)
+cargo-ai connection connector autocomplete \
+  --connector-uuid <connector-uuid> \
+  --slug listObjects \
+  --params '{}'
+# → { "results": [{ "label": "Contacts", "value": "contacts" }, ...] }
+```
+
+## Autocomplete with dependent parameters
+
+Some fields depend on another field's value. Pass the dependency in `--params`:
+
+```bash
+# Get properties for a specific object type
+cargo-ai connection connector autocomplete \
+  --connector-uuid <connector-uuid> \
+  --slug listObjectProperties \
+  --params '{"objectType": "contacts"}'
+# → { "results": [{ "label": "Email", "value": "email" }, ...] }
+```
+
+## Autocomplete with search filtering
+
+Use `--value` to filter results by a search string:
+
+```bash
+cargo-ai connection connector autocomplete \
+  --connector-uuid <connector-uuid> \
+  --slug listObjectProperties \
+  --params '{"objectType": "contacts"}' \
+  --value "email"
+# → Returns only properties matching "email"
+```
+
+## Autocomplete with cache refresh
+
+Results are cached (default 30 minutes). Use `--refresh` to bypass the cache:
+
+```bash
+cargo-ai connection connector autocomplete \
+  --connector-uuid <connector-uuid> \
+  --slug listObjects \
+  --params '{}' \
+  --refresh
+```
+
 ## Rate limit awareness
 
 Some connectors have rate limits (visible in the `rateLimit` field from `connector list`):

@@ -127,6 +127,45 @@ Returns the full integration object, including all actions and extractors with t
           "costs": [{ "type": "fixed", "cost": 1 }]
         },
         "childrenCount": 0
+      },
+      "findRecords": {
+        "name": "Find records",
+        "description": "Find records matching the given criterias.",
+        "category": "enrichment",
+        "icon": "https://...",
+        "isSerialized": false,
+        "config": {
+          "jsonSchema": {
+            "type": "object",
+            "properties": {
+              "objectType": { "type": "string", "description": "The object type" },
+              "propertyName": { "type": "string", "description": "Property to search on" }
+            }
+          },
+          "uiSchema": {
+            "objectType": {
+              "ui:widget": "IntegrationAutocompleteWidget",
+              "ui:options": {
+                "slug": "listObjects",
+                "allowRefresh": true
+              }
+            },
+            "propertyName": {
+              "ui:widget": "IntegrationAutocompleteWidget",
+              "ui:options": {
+                "slug": "listObjectProperties",
+                "allowRefresh": true,
+                "params": {
+                  "objectType": "$this.$parent.objectType"
+                }
+              }
+            }
+          }
+        },
+        "credits": {
+          "costs": [{ "type": "fixed", "cost": 1 }]
+        },
+        "childrenCount": 0
       }
     },
     "extractors": {},
@@ -136,6 +175,8 @@ Returns the full integration object, including all actions and extractors with t
 ```
 
 **Key fields:** `actions` is keyed by `actionSlug` — use these in workflow connector nodes. `connector.config.jsonSchema` describes the credentials needed when creating a connector (for non-credit integrations). `extractors` is keyed by extractor slug — use these when creating models.
+
+**`uiSchema` and autocomplete:** Each action's `config` may include a `uiSchema` alongside `jsonSchema`. When a field in `uiSchema` has `"ui:widget": "IntegrationAutocompleteWidget"`, its allowed values must be fetched via `connector autocomplete`. The `ui:options.slug` tells you which autocomplete slug to use, and `ui:options.params` (if present) specifies dependent parameters — replace `$this.$parent...` expressions with actual values. See the main SKILL.md for the full autocomplete workflow.
 
 ## cargo-ai connection native-integration get
 
@@ -192,6 +233,7 @@ Returns the full integration object, including all actions and extractors with t
 | `category` | One of: `invisible`, `logic`, `storage`, `ai`, `sales`, `code` |
 | `icon` | Icon URL |
 | `config.jsonSchema` | JSON Schema describing the action's input parameters |
+| `config.uiSchema` | UI hints for each field — check for `IntegrationAutocompleteWidget` to detect autocomplete fields |
 | `childrenCount` | Number of child branches (0 for most actions) |
 | `credits.costs` | Credit cost per execution. Each cost has `type` (`fixed` or `unit`) and `cost` (number) |
 
@@ -205,3 +247,37 @@ Returns the full integration object, including all actions and extractors with t
 | `config.jsonSchema` | JSON Schema describing the extractor's configuration |
 | `mode.kind` | `"fetch"` (pull-based) or `"ingest"` (push-based) |
 | `mode.isIncremental` | Whether the extractor supports incremental sync (fetch mode only) |
+
+## cargo-ai connection connector autocomplete
+
+Fetches the allowed values for a field that uses `IntegrationAutocompleteWidget` in its `uiSchema`.
+
+```json
+{
+  "results": [
+    {
+      "label": "Contacts",
+      "value": "contacts",
+      "description": "HubSpot contacts object"
+    },
+    {
+      "label": "Companies",
+      "value": "companies"
+    },
+    {
+      "label": "Deals",
+      "value": "deals"
+    }
+  ]
+}
+```
+
+| Field | Required | Description |
+| ----- | -------- | ----------- |
+| `label` | yes | Human-readable display name |
+| `value` | yes | The value to use in node config |
+| `description` | no | Additional context about the option |
+| `parent` | no | Parent grouping identifier (for hierarchical options) |
+| `configOverride` | no | Additional config values that should be set when this option is selected |
+
+Use the `value` field when setting the corresponding property in a workflow node's `config`.

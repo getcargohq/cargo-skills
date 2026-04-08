@@ -15,6 +15,9 @@ A string identifier for a specific action on a workflow node. Present on both `k
 **agent**
 An AI resource with configured instructions, a language model, and optional tools. Created and configured via `cargo-cli-ai`. Used in workflows as a `kind: "agent"` node, or messaged directly via `cargo-cli-orchestration`.
 
+**autocomplete**
+A mechanism to fetch the list of allowed values for an action config field at runtime. When an action's `uiSchema` marks a field with `"ui:widget": "IntegrationAutocompleteWidget"`, its valid values must be retrieved via `cargo-ai connection connector autocomplete --connector-uuid <uuid> --slug <slug> --params '<json>'`. The autocomplete slug and params come from the field's `ui:options` in the `uiSchema`. Returns `{ "results": [{ "label": "...", "value": "..." }] }` — use the `value` in node configs.
+
 ---
 
 ## B
@@ -217,6 +220,13 @@ A float between `0.0` and `1.0` controlling how deterministic an agent's respons
 
 **tool**
 An on-demand workflow triggered manually, via API, or on a cron schedule. Listed via `orchestration tool list`. Supports both `run create` (single record) and `batch create` (multiple records).
+
+---
+
+## U
+
+**uiSchema**
+A companion object to `jsonSchema` in action and extractor configs. While `jsonSchema` defines the types and structure of fields, `uiSchema` provides UI rendering hints. The most important hint for CLI usage is `"ui:widget": "IntegrationAutocompleteWidget"` — this signals that the field's allowed values must be fetched dynamically using `connector autocomplete` rather than set to a freeform value. The `ui:options.slug` identifies which autocomplete endpoint to call, and `ui:options.params` (if present) specifies dependencies on other fields. See `cargo-cli-connection` for the full autocomplete workflow.
 
 ---
 
