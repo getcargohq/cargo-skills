@@ -67,6 +67,8 @@ cargo-ai connection connector list                       # → connectorUuid
 | `actionSlug`      | yes      | Action within the integration            |
 | `connectorUuid`   | yes      | Your connected account UUID              |
 
+`childrenCount` for connector nodes equals the integration action's `children` array length if defined, otherwise defaults to **1**. Most connector actions have exactly 1 child.
+
 ### `tool`
 
 Embeds another tool (sub-workflow) as a node. The tool's deployed release config fields become the node's `config`.
@@ -77,7 +79,7 @@ Embeds another tool (sub-workflow) as a node. The tool's deployed release config
 | `templateSlug` | no       | Template slug — use when instantiating from a template   |
 | `releaseUuid`  | no       | Pin to a specific release of the tool                    |
 
-Provide at least one of `toolUuid` or `templateSlug`.
+Provide at least one of `toolUuid` or `templateSlug`. `childrenCount` is **1**.
 
 ```bash
 # Find toolUuid
@@ -95,7 +97,7 @@ Embeds a saved AI agent as a node. The agent runs to completion and its output i
 | `templateSlug` | no       | Template slug — use when instantiating from a template |
 | `releaseUuid`  | no       | Pin to a specific release of the agent               |
 
-Provide at least one of `agentUuid` or `templateSlug`.
+Provide at least one of `agentUuid` or `templateSlug`. `childrenCount` is **1**.
 
 ```bash
 # Find agentUuid
