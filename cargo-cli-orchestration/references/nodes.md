@@ -31,7 +31,7 @@ Every node in the `--nodes` JSON array has these fields:
 | `slug`              | yes      | Human-readable identifier (`start` and `end` are reserved)                 |
 | `kind`              | yes      | `native`, `connector`, `tool`, or `agent`                                  |
 | `config`            | yes      | Action-specific configuration (`{}` for start)                             |
-| `childrenUuids`     | yes      | UUIDs of downstream nodes (`[]` for end)                                   |
+| `childrenUuids`     | yes      | UUIDs of downstream nodes — array length **must match** the "Children" count for the node's action (see native actions tables below). `[]` only for `end` nodes |
 | `fallbackOnFailure` | yes      | Continue to the next node even if this one fails                           |
 | `position`          | yes      | `{"x": 0, "y": 0}` — layout only, no runtime effect                        |
 | `fallbackChildUuid` | no       | UUID of a fallback node to run on failure                                  |
@@ -245,7 +245,7 @@ The `group` node iterates over `items`, running the child subgraph once per item
 **Group sub-graph (`_nodes`):** The `_nodes` array inside the group's config defines the internal workflow executed for each item. It follows the **exact same rules** as a top-level node graph:
 
 - Must have a `start` node and an `end` node
-- All intermediate nodes must chain via `childrenUuids` — every non-`end` node must have the correct number of children
+- Every node's `childrenUuids` must contain **exactly the number of entries shown in the "Children" column** of the native actions tables above (e.g. `start` → 1, `variables` → 1, `branch` → 2, `end` → 0). This rule applies identically at both the top level and inside `_nodes`
 - The `end` node must have `childrenUuids: []`
 - Reference the current item with `{{nodes.start.value}}` or `{{nodes.start.<field>}}`
 - Reference parent workflow data with `{{parentNodes.<slug>.<field>}}`
