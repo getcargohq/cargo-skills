@@ -238,9 +238,19 @@ Same shape as `end` variables, but the output is available to downstream nodes v
 | actionSlug | Purpose               | Children | Config                                                      |
 | ---------- | --------------------- | -------- | ----------------------------------------------------------- |
 | `delay`    | Wait before next node | 1        | `{"minutes": <number>}`                                     |
-| `group`    | Loop over array items | 1        | `{"items": <array-expression>, "failOnItemFailure": false}` |
+| `group`    | Loop over array items | 1        | `{"items": <array-expression>, "failOnItemFailure": false, "_nodes": [...]}` |
 
-The `group` node iterates over `items`, running the child subgraph once per item. Each iteration can access the current item via `{{nodes.start.<field>}}` (the group creates a sub-run with its own start). Use `{{parentNodes.<slug>.<field>}}` to reference the parent run's data.
+The `group` node iterates over `items`, running the child subgraph once per item. Each iteration can access the current item via `{{nodes.start.value}}` (for simple values) or `{{nodes.start.<field>}}` (for object items). Use `{{parentNodes.<slug>.<field>}}` to reference the parent run's data.
+
+**Group sub-graph (`_nodes`):** The `_nodes` array inside the group's config defines the internal workflow executed for each item. It follows the **exact same rules** as a top-level node graph:
+
+- Must have a `start` node and an `end` node
+- All intermediate nodes must chain via `childrenUuids` — every non-`end` node must have the correct number of children
+- The `end` node must have `childrenUuids: []`
+- Reference the current item with `{{nodes.start.value}}` or `{{nodes.start.<field>}}`
+- Reference parent workflow data with `{{parentNodes.<slug>.<field>}}`
+
+**Important:** Do NOT leave the last sub-node with `childrenUuids: []` unless it is the `end` node. Every other node type (variables, connector, tool, agent, etc.) requires exactly 1 child. Always terminate the sub-graph with an explicit `end` node.
 
 ### AI and code
 
@@ -525,7 +535,7 @@ Python scripts receive `nodes` and `parentNodes` dicts. Set `result` to define t
 
 ### Group node: loop over items
 
-Process each item in an array through a sub-workflow. The group node creates a child batch, running the inner graph once per item.
+Process each item in an array through a sub-workflow. The group node creates a child batch, running the inner graph once per item. The `_nodes` array inside the group config defines the sub-graph executed per item — it must have its own `start` and `end` nodes, just like a top-level workflow.
 
 ```bash
 cargo-ai orchestration run create \
@@ -541,7 +551,32 @@ cargo-ai orchestration run create \
       "uuid":"b2b2b2b2-b2b2-4b2b-ab2b-b2b2b2b2b2b2","slug":"loop","kind":"native","actionSlug":"group",
       "config":{
         "items":{"kind":"templateExpression","expression":"{{nodes.start.domains}}","instructTo":"none","fromRecipe":false},
-        "failOnItemFailure":false
+        "failOnItemFailure":false,
+        "_nodes":[
+          {
+            "uuid":"b2a1a1a1-a1a1-4a1a-aa1a-a1a1a1a1a1a1","slug":"start","kind":"native","actionSlug":"start",
+            "config":{},"childrenUuids":["b2a2a2a2-a2a2-4a2a-aa2a-a2a2a2a2a2a2"],"fallbackOnFailure":false,
+            "position":{"x":0,"y":0}
+          },
+          {
+            "uuid":"b2a2a2a2-a2a2-4a2a-aa2a-a2a2a2a2a2a2","slug":"enrich","kind":"connector",
+            "integrationSlug":"clearbit","actionSlug":"enrichCompanyFromDomain",
+            "connectorUuid":"<connector-uuid>",
+            "config":{
+              "domain":{"kind":"templateExpression","expression":"{{nodes.start.value}}","instructTo":"none","fromRecipe":false}
+            },
+            "childrenUuids":["b2a3a3a3-a3a3-4a3a-aa3a-a3a3a3a3a3a3"],"fallbackOnFailure":false,
+            "position":{"x":0,"y":160}
+          },
+          {
+            "uuid":"b2a3a3a3-a3a3-4a3a-aa3a-a3a3a3a3a3a3","slug":"end","kind":"native","actionSlug":"end",
+            "config":{"variables":[
+              {"name":"company_name","type":"string","value":{"kind":"templateExpression","expression":"{{nodes.enrich.name}}","instructTo":"none","fromRecipe":false}}
+            ]},
+            "childrenUuids":[],"fallbackOnFailure":false,
+            "position":{"x":0,"y":320}
+          }
+        ]
       },
       "childrenUuids":["b3b3b3b3-b3b3-4b3b-ab3b-b3b3b3b3b3b3"],"fallbackOnFailure":false,
       "position":{"x":0,"y":166}
@@ -555,7 +590,9 @@ cargo-ai orchestration run create \
   ]'
 ```
 
-Each iteration receives the current item as its start data. Use `{{parentNodes.start.domains}}` inside the loop to access the parent run's data.
+Each iteration receives the current item as its start data (`{{nodes.start.value}}` for simple values, `{{nodes.start.<field>}}` for object items). Use `{{parentNodes.start.domains}}` inside the loop to access the parent run's data.
+
+**Sub-graph rules:** The `_nodes` array is a complete node graph — it must have `start` and `end` nodes. Every intermediate node must chain to the next via `childrenUuids`. The `end` node is the only node that should have `childrenUuids: []`.
 
 ## Validation
 
@@ -604,6 +641,8 @@ Error:
 | `startNodeNotFound`           | No node with `slug:"start"` and `actionSlug:"start"` | Add the required start node         |
 | `invalidReleaseOrCustomNodes` | Both `--release-uuid` and `--nodes` provided         | Use one or the other, not both      |
 | `nodesNotFound`               | `childrenUuids` references a UUID not in the array   | Verify all UUID cross-references    |
+| `childrenUuidsInvalid`        | Wrong number of entries in `childrenUuids`            | Check the Children column in the native actions tables — each node type requires an exact count (e.g. `variables` needs 1, `end` needs 0, `branch` needs 2). Inside a group's `_nodes`, the last node must be an `end` node (`childrenUuids: []`), not a `variables` or connector node with an empty array |
+| `subNodesInvalid`             | A group node's `_nodes` sub-graph has invalid nodes  | Check the nested `invalidNodes` array for details — the sub-graph must follow the same rules as a top-level graph (start + end nodes, correct childrenUuids counts) |
 | `connectorNotFound`           | `connectorUuid` doesn't match an active connector    | Check `connector list` for the UUID |
 | `nativeInvalid`               | `actionSlug` doesn't match a known native action     | Check the native actions table      |
 | `toolInvalid`                 | `toolUuid` doesn't match an existing tool            | Check `tool list` for the UUID      |
