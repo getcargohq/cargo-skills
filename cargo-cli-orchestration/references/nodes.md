@@ -31,7 +31,7 @@ Every node in the `--nodes` JSON array has these fields:
 | `slug`              | yes      | Human-readable identifier (`start` and `end` are reserved)                 |
 | `kind`              | yes      | `native`, `connector`, `tool`, or `agent`                                  |
 | `config`            | yes      | Action-specific configuration (`{}` for start)                             |
-| `childrenUuids`     | yes      | UUIDs of downstream nodes — array length **must match** the "Children" count for the node's action (see native actions tables below) |
+| `childrenUuids`     | yes      | UUIDs of downstream nodes — array length **must match** the `childrenCount` for the node's action (see native actions tables below) |
 | `fallbackOnFailure` | yes      | Continue to the next node even if this one fails                           |
 | `position`          | yes      | `{"x": 0, "y": 0}` — layout only, no runtime effect                        |
 | `fallbackChildUuid` | no       | UUID of a fallback node to run on failure                                  |
@@ -198,7 +198,7 @@ These are the `actionSlug` values available for `kind: "native"` nodes.
 
 ### Workflow entry/exit
 
-| actionSlug | Purpose                   | Children | Config                                       |
+| actionSlug | Purpose                   | childrenCount | Config                                       |
 | ---------- | ------------------------- | -------- | -------------------------------------------- |
 | `start`    | Entry point               | 1        | `{}`                                         |
 | `end`      | Exit point, define output | 0        | `{"variables": [{"name", "type", "value"}]}` |
@@ -211,7 +211,7 @@ The `end` node's `variables` array defines the workflow output. Each variable ha
 
 ### Routing
 
-| actionSlug | Purpose               | Children | Config                                                                     |
+| actionSlug | Purpose               | childrenCount | Config                                                                     |
 | ---------- | --------------------- | -------- | -------------------------------------------------------------------------- |
 | `filter`   | Continue only if true | 1        | `{"filter": <bool-expression>}`                                            |
 | `branch`   | If/else split         | 2        | `{"condition": <bool-expression>}`                                         |
@@ -227,7 +227,7 @@ The `end` node's `variables` array defines the workflow output. Each variable ha
 
 ### Data
 
-| actionSlug  | Purpose               | Children | Config                                                                   |
+| actionSlug  | Purpose               | childrenCount | Config                                                                   |
 | ----------- | --------------------- | -------- | ------------------------------------------------------------------------ |
 | `variables` | Create/transform data | 1        | `{"variables": [{"name": "...", "type": "...", "value": <expression>}]}` |
 
@@ -235,7 +235,7 @@ Same shape as `end` variables, but the output is available to downstream nodes v
 
 ### Flow control
 
-| actionSlug | Purpose               | Children | Config                                                      |
+| actionSlug | Purpose               | childrenCount | Config                                                      |
 | ---------- | --------------------- | -------- | ----------------------------------------------------------- |
 | `delay`    | Wait before next node | 1        | `{"minutes": <number>}`                                     |
 | `group`    | Loop over array items | 1        | `{"items": <array-expression>, "failOnItemFailure": false, "_nodes": [...]}` |
@@ -245,7 +245,7 @@ The `group` node iterates over `items`, running the child subgraph once per item
 **Group sub-graph (`_nodes`):** The `_nodes` array inside the group's config defines the internal workflow executed for each item. It follows the **exact same rules** as a top-level node graph:
 
 - Must have a `start` node and an `end` node
-- Every node's `childrenUuids` must contain **exactly the number of entries shown in the "Children" column** of the native actions tables above (e.g. `start` → 1, `variables` → 1, `branch` → 2, `end` → 0). This rule applies identically at both the top level and inside `_nodes`
+- Every node's `childrenUuids` must contain **exactly the number of entries shown in the `childrenCount` column** of the native actions tables above (e.g. `start` → 1, `variables` → 1, `branch` → 2, `end` → 0). This rule applies identically at both the top level and inside `_nodes`
 - The `end` node must have `childrenUuids: []`
 - Reference the current item with `{{nodes.start.value}}` or `{{nodes.start.<field>}}`
 - Reference parent workflow data with `{{parentNodes.<slug>.<field>}}`
@@ -254,7 +254,7 @@ The `group` node iterates over `items`, running the child subgraph once per item
 
 ### AI and code
 
-| actionSlug | Purpose             | Children | Config                                                                                                 |
+| actionSlug | Purpose             | childrenCount | Config                                                                                                 |
 | ---------- | ------------------- | -------- | ------------------------------------------------------------------------------------------------------ |
 | `agent`    | Inline AI agent     | 1        | `{"prompt": "...", "advancedSettings": {"connectorUuid": "...", "languageModelSlug": "gpt-4.1-mini"}}` |
 | `python`   | Run Python code     | 1        | `{"script": "..."}`                                                                                    |
@@ -641,7 +641,7 @@ Error:
 | `startNodeNotFound`           | No node with `slug:"start"` and `actionSlug:"start"` | Add the required start node         |
 | `invalidReleaseOrCustomNodes` | Both `--release-uuid` and `--nodes` provided         | Use one or the other, not both      |
 | `nodesNotFound`               | `childrenUuids` references a UUID not in the array   | Verify all UUID cross-references    |
-| `childrenUuidsInvalid`        | Wrong number of entries in `childrenUuids`            | Check the Children column in the native actions tables — each node type requires an exact count (e.g. `variables` needs 1, `end` needs 0, `branch` needs 2). Inside a group's `_nodes`, the last node must be an `end` node (`childrenUuids: []`), not a `variables` or connector node with an empty array |
+| `childrenUuidsInvalid`        | Wrong number of entries in `childrenUuids`            | Check the `childrenCount` column in the native actions tables — each node type requires an exact count (e.g. `variables` needs 1, `end` needs 0, `branch` needs 2). Inside a group's `_nodes`, the last node must be an `end` node (`childrenUuids: []`), not a `variables` or connector node with an empty array |
 | `subNodesInvalid`             | A group node's `_nodes` sub-graph has invalid nodes  | Check the nested `invalidNodes` array for details — the sub-graph must follow the same rules as a top-level graph (start + end nodes, correct childrenUuids counts) |
 | `connectorNotFound`           | `connectorUuid` doesn't match an active connector    | Check `connector list` for the UUID |
 | `nativeInvalid`               | `actionSlug` doesn't match a known native action     | Check the native actions table      |
