@@ -69,6 +69,8 @@ cargo-ai connection connector list                       # → connectorUuid
 
 `childrenCount` for connector nodes equals the integration action's `children` array length if defined, otherwise defaults to **1**. Most connector actions have exactly 1 child.
 
+**Config values from autocomplete:** When you run `integration get <slug>`, some actions include a `uiSchema` alongside the `jsonSchema`. If a field has `"ui:widget": "IntegrationAutocompleteWidget"` in the `uiSchema`, you **must** fetch its allowed values using `connector autocomplete` rather than guessing or using freeform input. See `cargo-cli-connection/SKILL.md` for the full autocomplete workflow.
+
 ### `tool`
 
 Embeds another tool (sub-workflow) as a node. The tool's deployed release config fields become the node's `config`.
