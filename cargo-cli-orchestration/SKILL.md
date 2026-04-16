@@ -1,11 +1,11 @@
 ---
 name: cargo-cli-orchestration
-description: Interact with the Cargo platform via CLI. Use when the user wants to run a workflow, trigger a batch, message an AI agent, query a data warehouse, fetch segment records, or inspect a model schema.
+description: Interact with the Cargo platform via CLI. Use when the user wants to execute an action, run a workflow, trigger a batch, message an AI agent, query a data warehouse, fetch segment records, or inspect a model schema.
 license: MIT
 compatibility: Requires @cargo-ai/cli (npm) and a Cargo API token
 metadata:
   author: getcargo
-  version: "1.3"
+  version: "1.4"
 ---
 
 # Cargo CLI — Orchestration

@@ -5,7 +5,7 @@ license: MIT
 compatibility: Requires @cargo-ai/cli (npm) and a Cargo API token
 metadata:
   author: getcargo
-  version: "1.0"
+  version: "1.1"
 ---
 
 # Cargo CLI — AI

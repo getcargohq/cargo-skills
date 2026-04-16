@@ -42,7 +42,7 @@ All commands output JSON to stdout. Failed commands exit non-zero and return `{"
 
 | Skill                                                 | Load when you need to…                                                                             |
 | ----------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| [`cargo-cli-orchestration`](#cargo-cli-orchestration) | Run workflows, trigger batches, chat with agents, query your data warehouse, fetch segment records |
+| [`cargo-cli-orchestration`](#cargo-cli-orchestration) | Execute actions, run workflows, trigger batches, chat with agents, query your data warehouse       |
 | [`cargo-cli-analytics`](#cargo-cli-analytics)         | Download run results, export segment data, monitor error rates and metrics                         |
 | [`cargo-cli-billing`](#cargo-cli-billing)             | Check credit usage, view subscription details, track costs per workflow or connector               |
 | [`cargo-cli-storage`](#cargo-cli-storage)             | Inspect or modify data models, columns, datasets, and relationships                                |
@@ -344,7 +344,17 @@ cargo-ai segmentation segment list
 
 ## End-to-end use cases
 
-### 1. Enrich a list of companies and push to CRM
+### 1. Enrich a single company (simplest path)
+
+**Skills needed:** `cargo-cli-orchestration`
+
+```
+1. orchestration action execute            → run a connector action on one record
+   --action '{"kind":"connector","integrationSlug":"clearbit","actionSlug":"company_enrich","config":{}}'
+   --data '{"domain":"acme.com"}' --wait-until-finished
+```
+
+### 2. Enrich a list of companies and push to CRM
 
 **Skills needed:** `cargo-cli-storage`, `cargo-cli-connection`, `cargo-cli-orchestration`, `cargo-cli-analytics`
 
@@ -358,7 +368,7 @@ cargo-ai segmentation segment list
 7. analytics run download          → export results
 ```
 
-### 2. Score leads with AI and update the model
+### 3. Score leads with AI and update the model
 
 **Skills needed:** `cargo-cli-ai`, `cargo-cli-orchestration`, `cargo-cli-billing`
 
@@ -371,7 +381,7 @@ cargo-ai segmentation segment list
 6. billing usage get-metrics       → check credit consumption
 ```
 
-### 3. Build a custom enrichment workflow from scratch
+### 4. Build a custom enrichment workflow from scratch
 
 **Skills needed:** `cargo-cli-connection`, `cargo-cli-orchestration`
 
@@ -383,7 +393,7 @@ cargo-ai segmentation segment list
 5. orchestration run get                   → poll to terminal state
 ```
 
-### 4. Monitor workflow health and alert on errors
+### 5. Monitor workflow health and alert on errors
 
 **Skills needed:** `cargo-cli-orchestration`, `cargo-cli-analytics`
 
@@ -394,7 +404,7 @@ cargo-ai segmentation segment list
 4. analytics run download --statuses error → download failed runs for inspection
 ```
 
-### 5. Bootstrap a fresh workspace
+### 6. Bootstrap a fresh workspace
 
 **Skills needed:** `cargo-cli-workspace`, `cargo-cli-storage`, `cargo-cli-connection`, `cargo-cli-ai`
 
@@ -410,7 +420,7 @@ cargo-ai segmentation segment list
 9. workspace folder create         → organize plays and tools into folders
 ```
 
-### 6. Export and analyze segment data
+### 7. Export and analyze segment data
 
 **Skills needed:** `cargo-cli-storage`, `cargo-cli-analytics`
 
