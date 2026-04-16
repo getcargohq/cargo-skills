@@ -5,7 +5,7 @@ license: MIT
 compatibility: Requires @cargo-ai/cli (npm) and a Cargo API token
 metadata:
   author: getcargo
-  version: "1.0"
+  version: "1.1"
 ---
 
 # Cargo CLI — AI
@@ -72,13 +72,13 @@ cargo-ai ai memory remove --mem0-id <id> --scope agent --agent-uuid <uuid>
 
 ## Agents
 
-Agents are AI resources with configured instructions, a language model, tools, and optional resources.
+Agents are AI resources with configured instructions, a language model, actions, and optional resources.
 
 **Before creating an agent from scratch, check existing templates — they capture proven patterns for common use cases (lead research, classification, email drafting) and give you a ready-made system prompt, model, and temperature to start from:**
 
 ```bash
 cargo-ai ai template list          # browse available patterns
-cargo-ai ai template get <slug>    # inspect system prompt, model, and tools
+cargo-ai ai template get <slug>    # inspect system prompt, model, and actions
 ```
 
 ```bash
@@ -110,7 +110,7 @@ cargo-ai ai agent remove <agent-uuid>
 
 ## Releases
 
-Releases are versioned snapshots of an agent's configuration (system prompt, tools, resources, model, temperature). Agents execute against their deployed release.
+Releases are versioned snapshots of an agent's configuration (system prompt, actions, resources, model, temperature). Agents execute against their deployed release.
 
 ```bash
 # List releases for an agent
@@ -133,12 +133,12 @@ cargo-ai ai release update-draft --agent-uuid <uuid> \
 cargo-ai ai release deploy-draft --agent-uuid <uuid> \
   --integration-slug openai \
   --language-model-slug gpt-4o \
-  --tools '[]' \
+  --actions '[]' \
   --mcp-clients '[]' \
   --resources '[]' \
   --capabilities '[]' \
   --suggested-actions '[]' \
-  --description "Added research tools"
+  --description "Added research actions"
 ```
 
 **Agent configuration workflow:**
@@ -146,7 +146,7 @@ cargo-ai ai release deploy-draft --agent-uuid <uuid> \
 1. **Browse templates for inspiration**: `cargo-ai ai template list` — find a template close to your use case, then `cargo-ai ai template get <slug>` to see its system prompt, model, and temperature
 2. Create the agent: `cargo-ai ai agent create --name "..." --icon-color blue --icon-face 🤖`
 3. Get the draft release: `cargo-ai ai release get-draft --agent-uuid <uuid>`
-4. Update the draft with tools, resources, prompt, model: `cargo-ai ai release update-draft --agent-uuid <uuid> ...`
+4. Update the draft with configured actions, resources, prompt, model: `cargo-ai ai release update-draft --agent-uuid <uuid> ...`
 5. Deploy: `cargo-ai ai release deploy-draft --agent-uuid <uuid> ...`
 
 ## Templates
@@ -161,7 +161,7 @@ cargo-ai ai template list
 cargo-ai ai template get <slug>
 ```
 
-Templates include a system prompt, tools, resources, and recommended model settings. Use them as a starting point and customize via `release update-draft`. See `references/examples/templates.md` for the full guide including an end-to-end example of creating an agent from a template.
+Templates include a system prompt, actions, resources, and recommended model settings. Use them as a starting point and customize via `release update-draft`. See `references/examples/templates.md` for the full guide including an end-to-end example of creating an agent from a template.
 
 ## Model and temperature guidance
 
@@ -197,7 +197,7 @@ Uploaded files are attached to agents via the release's `resources` configuratio
 
 ## MCP servers
 
-MCP (Model Context Protocol) servers expose additional tools to agents. Once connected, agents can call MCP tools automatically during conversations or workflow runs.
+MCP (Model Context Protocol) servers expose additional actions to agents. Once connected, agents can call MCP actions automatically during conversations or workflow runs.
 
 ```bash
 # List all MCP servers

@@ -169,6 +169,36 @@ JSON response structures returned by Cargo CLI commands used in the `cargo-cli-o
 
 **IMPORTANT:** `segment fetch` requires `--model-uuid`, not `--segment-uuid`. Get `modelUuid` from the segment list response.
 
+## cargo-ai orchestration action execute
+
+```json
+{
+  "run": {
+    "uuid": "run-uuid",
+    "status": "pending",
+    "createdAt": "2025-01-15T10:00:00Z"
+  }
+}
+```
+
+With `--wait-until-finished`, returns the terminal run state (same shape as `run get`).
+
+**Status values:** `pending`, `running`, `success`, `error`, `cancelled`.
+
+## cargo-ai orchestration action execute-batch
+
+```json
+{
+  "batch": {
+    "uuid": "batch-uuid",
+    "status": "pending",
+    "createdAt": "2025-01-15T10:00:00Z"
+  }
+}
+```
+
+With `--wait-until-finished`, returns the terminal batch state (same shape as `batch get`).
+
 ## cargo-ai orchestration run create
 
 ```json

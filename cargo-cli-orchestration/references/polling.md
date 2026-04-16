@@ -169,5 +169,5 @@ Use `fallbackOnFailure: true` if you want execution to continue to the next node
 |---|---|---|
 | Run stuck in `pending` for >30s | Workflow not enabled, no deployed release | Check `isEnabled` on the tool/play; verify a release exists with `release list --workflow-uuid <uuid>` |
 | Batch never reaches a terminal `status` | Individual runs are stuck or erroring | Run `run list --workflow-uuid <uuid> --batch-uuid <uuid>` to inspect per-record status |
-| Agent message stuck in `generating` for >60s | Agent running multi-step tools | Wait up to 120s for complex agents; check `message get` for partial progress |
+| Agent message stuck in `generating` for >60s | Agent running multi-step actions | Wait up to 120s for complex agents; check `message get` for partial progress |
 | Batch shows `executedRunsCount` less than `runsCount` after a long time | Some records are stuck | Check `run list` for `pending` or `generating` statuses; contact support if persistent |

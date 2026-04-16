@@ -23,7 +23,7 @@ JSON response structures returned by Cargo CLI commands used in the `cargo-cli-a
         "integrationSlug": "openai",
         "temperature": 0.3,
         "maxSteps": 10,
-        "tools": [],
+        "actions": [],
         "resources": [],
         "capabilities": [],
         "mcpClients": [],
@@ -70,14 +70,14 @@ Same structure as a single item from `agent list`, nested under `agent`:
       "agentUuid": "agent-uuid",
       "version": "3",
       "status": "deployed",
-      "description": "Added research tools",
+      "description": "Added research actions",
       "systemPrompt": "You are a sales research assistant...",
       "languageModelSlug": "gpt-4o",
       "integrationSlug": "openai",
       "temperature": 0.3,
       "maxSteps": 10,
       "withReasoning": false,
-      "tools": [],
+      "actions": [],
       "resources": [],
       "capabilities": [],
       "suggestedActions": [],
@@ -103,7 +103,7 @@ Supports `--agent-uuid`, `--limit`, `--offset`.
     "agentUuid": "agent-uuid",
     "version": "3",
     "status": "deployed",
-    "description": "Added research tools",
+    "description": "Added research actions",
     "systemPrompt": "You are a sales research assistant...",
     "languageModelSlug": "gpt-4o",
     "integrationSlug": "openai",
@@ -111,7 +111,7 @@ Supports `--agent-uuid`, `--limit`, `--offset`.
     "temperature": 0.3,
     "maxSteps": 10,
     "withReasoning": false,
-    "tools": [
+    "actions": [
       {
         "kind": "connector",
         "integrationSlug": "clearbit",
@@ -152,9 +152,9 @@ Supports `--agent-uuid`, `--limit`, `--offset`.
 }
 ```
 
-**Key fields:** `tools` (array of tool/connector/agent tools), `resources` (file or model resources), `mcpClients` (MCP server connections), `systemPrompt`, `languageModelSlug`, `temperature`, `maxSteps`.
+**Key fields:** `actions` (array of tool/connector/agent actions), `resources` (file or model resources), `mcpClients` (MCP server connections), `systemPrompt`, `languageModelSlug`, `temperature`, `maxSteps`.
 
-**Tool kinds:** `tool` (workflow tool), `connector` (integration action), `agent` (sub-agent).
+**Action kinds:** `tool` (workflow tool), `connector` (integration action), `agent` (sub-agent).
 
 **Resource kinds:** `file` (uploaded files/folders), `model` (data model reference).
 
@@ -207,7 +207,7 @@ Supports `--agent-uuid`, `--limit`, `--offset`.
     "temperature": 0.3,
     "maxSteps": 10,
     "withReasoning": false,
-    "tools": [...],
+    "actions": [...],
     "resources": [...],
     "capabilities": [],
     "suggestedActions": [],
@@ -255,7 +255,7 @@ Supports `--agent-uuid`, `--limit`, `--offset`.
       "uuid": "mcp-server-uuid",
       "workspaceUuid": "...",
       "name": "Internal Tools",
-      "tools": [
+      "actions": [
         {
           "kind": "tool",
           "slug": "search_docs",
@@ -272,7 +272,7 @@ Supports `--agent-uuid`, `--limit`, `--offset`.
 }
 ```
 
-**Key fields:** `uuid`, `name`, `tools` (discovered tools from the MCP server).
+**Key fields:** `uuid`, `name`, `actions` (discovered actions from the MCP server).
 
 ## cargo-ai ai memory list
 

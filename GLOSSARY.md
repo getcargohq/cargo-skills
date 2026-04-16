@@ -6,6 +6,9 @@ Key terms used across the Cargo CLI skills.
 
 ## A
 
+**action**
+A discrete operation that an AI agent or workflow can perform. Actions come in four kinds: `tool` (orchestration tool), `connector` (third-party integration action), `agent` (AI agent), and `native` (built-in platform action). Actions replace the previous "tools" terminology in AI releases and messages. Execute a single action with `orchestration action execute`, or a single action across multiple records with `orchestration action execute-batch`. To chain multiple actions, use `run create` with `--nodes` or `batch create`.
+
 **actionSlug**
 A string identifier for a specific action on a workflow node. Present on both `kind: "native"` and `kind: "connector"` nodes.
 
@@ -13,7 +16,7 @@ A string identifier for a specific action on a workflow node. Present on both `k
 - **Connector nodes** — third-party service-specific actions discovered via `cargo-ai connection integration get <slug>` (e.g. `integration get hubspot`). Examples: `company_enrich`, `create_contact`, `send_message`. **Do not use `native-integration get` for these** — it will not return HubSpot, Salesforce, or other connector-specific actions.
 
 **agent**
-An AI resource with configured instructions, a language model, and optional tools. Created and configured via `cargo-cli-ai`. Used in workflows as a `kind: "agent"` node, or messaged directly via `cargo-cli-orchestration`.
+An AI resource with configured instructions, a language model, and optional actions. Created and configured via `cargo-cli-ai`. Used in workflows as a `kind: "agent"` node, or messaged directly via `cargo-cli-orchestration`.
 
 **autocomplete**
 A mechanism to fetch the list of allowed values for an action config field at runtime. When an action's `uiSchema` marks a field with `"ui:widget": "IntegrationAutocompleteWidget"`, its valid values must be retrieved via `cargo-ai connection connector autocomplete --connector-uuid <uuid> --slug <slug> --params '<json>'`. The autocomplete slug and params come from the field's `ui:options` in the `uiSchema`. Returns `{ "results": [{ "label": "...", "value": "..." }] }` — use the `value` in node configs.
@@ -133,7 +136,7 @@ The identifier for an LLM used by an agent or inline agent node. Examples: `gpt-
 ## M
 
 **MCP server**
-A Model Context Protocol server that exposes additional tools to agents. Connected via `cargo-cli-ai`. Once connected, agents can call MCP tools automatically during conversations or workflow runs.
+A Model Context Protocol server that exposes additional actions to agents. Connected via `cargo-cli-ai`. Once connected, agents can call MCP actions automatically during conversations or workflow runs.
 
 **memory**
 A piece of information an agent stores from a conversation for future reference. Listed via `ai memory list --agent-uuid <uuid>`. Can be cleared with `ai memory remove`.

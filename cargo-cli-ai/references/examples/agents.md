@@ -58,7 +58,7 @@ cargo-ai ai release update-draft --agent-uuid <agent-uuid> \
 cargo-ai ai release deploy-draft --agent-uuid <agent-uuid> \
   --integration-slug openai \
   --language-model-slug gpt-4o-mini \
-  --tools '[]' \
+  --actions '[]' \
   --mcp-clients '[]' \
   --resources '[]' \
   --capabilities '[]' \
@@ -94,7 +94,7 @@ cargo-ai ai template list
 
 # 2. Get the template
 cargo-ai ai template get <template-slug>
-# → Copy the systemPrompt, tools, resources, model settings
+# → Copy the systemPrompt, actions, resources, model settings
 
 # 3. Create the agent
 cargo-ai ai agent create \
@@ -111,7 +111,7 @@ cargo-ai ai release update-draft --agent-uuid <agent-uuid> \
 cargo-ai ai release deploy-draft --agent-uuid <agent-uuid> \
   --integration-slug <from template> \
   --language-model-slug <from template> \
-  --tools '[]' \
+  --actions '[]' \
   --mcp-clients '[]' \
   --resources '[]' \
   --capabilities '[]' \
@@ -128,5 +128,5 @@ cargo-ai ai release list --agent-uuid <agent-uuid>
 
 ```bash
 cargo-ai ai agent get <agent-uuid>
-# → .deployedRelease contains the full live config (prompt, model, tools, resources)
+# → .deployedRelease contains the full live config (prompt, model, actions, resources)
 ```

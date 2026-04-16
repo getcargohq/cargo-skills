@@ -36,10 +36,10 @@ The `--parent-uuid` passed to `release update-draft` does not match a valid rele
 The version string is invalid. Version must be a non-empty string (not a number).
 
 **`invalidConnector`**
-A connector UUID referenced in the release tools or configuration does not exist. Verify connector UUIDs with `cargo-ai connection connector list`.
+A connector UUID referenced in the release actions or configuration does not exist. Verify connector UUIDs with `cargo-ai connection connector list`.
 
 **`failedToReconciliateAgentAiTools`**
-The tools configuration in the release is invalid — a referenced tool, agent, or connector UUID may not exist. Verify all UUIDs in the tools array.
+The actions configuration in the release is invalid — a referenced tool, agent, or connector UUID may not exist. Verify all UUIDs in the actions array.
 
 ## Templates
 
@@ -62,7 +62,7 @@ Large files may take longer to upload. Ensure the file path is correct and the f
 **`mcpServerNotFound`**
 The MCP server UUID does not exist or has been deleted. Run `cargo-ai ai mcp-server list` to get the current list.
 
-**MCP tools not appearing in agent**
+**MCP actions not appearing in agent**
 MCP servers are connected to agents via MCP clients on the release. After creating an MCP server, add it as an MCP client to the agent's draft release using `release update-draft`, then deploy.
 
 ## Memories

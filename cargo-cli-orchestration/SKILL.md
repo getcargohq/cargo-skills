@@ -1,39 +1,47 @@
 ---
 name: cargo-cli-orchestration
-description: Interact with the Cargo platform via CLI. Use when the user wants to run a workflow, trigger a batch, message an AI agent, query a data warehouse, fetch segment records, or inspect a model schema.
+description: Interact with the Cargo platform via CLI. Use when the user wants to execute an action, run a workflow, trigger a batch, message an AI agent, query a data warehouse, fetch segment records, or inspect a model schema.
 license: MIT
 compatibility: Requires @cargo-ai/cli (npm) and a Cargo API token
 metadata:
   author: getcargo
-  version: "1.3"
+  version: "1.4"
 ---
 
 # Cargo CLI — Orchestration
 
 Runtime operations for the Cargo platform.
 
-**What do you want to do?**
+**What do you want to run?**
 
-| Goal                              | Command                   | Section            | Workflow type |
-| --------------------------------- | ------------------------- | ------------------ | ------------- |
-| Process **one** record            | `run create`              | Create a run       | Tool only     |
-| Process **many** records          | `batch create`            | Create a batch     | Play or Tool  |
-| Chat with an **AI agent**         | `message create`          | Send a message     | —             |
-| **Query** your data warehouse     | `system-of-record client` | Query the SoR      | —             |
-| **Fetch** live segment records    | `segment fetch`           | Fetch segment data | —             |
-| **Inspect** a model's table shape | `storage model get-ddl`   | Quick reference    | —             |
+```
+Need to run something?
+├── One action, one record       → action execute
+├── One action, many records     → action execute-batch
+├── Multiple actions chained
+│   ├── One-off / ad-hoc         → run create --nodes (one record)
+│   │                              batch create --nodes (many records)
+│   └── Reusable workflow        → build a tool, then run create --workflow-uuid
+│                                  or batch create --workflow-uuid
+└── Conversational AI agent      → message create
+```
 
-> See `references/response-shapes.md` for full JSON response structures.
-> See `references/filter-syntax.md` for the complete filter condition reference.
-> See `references/polling.md` for all async polling patterns, error handling, and retry strategies.
-> See `references/troubleshooting.md` for common errors and how to fix them.
-> See `references/nodes.md` for the full node creation guide (kinds, native actions, expressions, validation, routing, and examples).
-> See `references/templates.md` for using pre-built workflow templates.
-> See `references/plays.md` for play (segment-driven automation) examples.
-> See `references/tools.md` for tool (on-demand workflow) examples.
-> See `references/agents.md` for AI agent chat examples.
-> See `references/queries.md` for system of record query examples.
-> See `references/segments.md` for segment fetch and filter examples.
+> **Terminology:** An orchestration **tool** is a saved on-demand workflow (listed via `tool list`). An **action** is a single operation you execute without building a workflow — it can embed a saved orchestration tool (`kind: "tool"`), call a third-party connector (`kind: "connector"`), invoke an AI agent (`kind: "agent"`), or run a built-in platform operation (`kind: "native"`).
+
+**References:**
+
+> `references/actions.md` — action execute and execute-batch examples
+> `references/tools.md` — tool (on-demand workflow) examples
+> `references/plays.md` — play (segment-driven automation) examples
+> `references/agents.md` — AI agent chat examples
+> `references/nodes.md` — full node creation guide (kinds, native actions, expressions, validation, routing)
+> `references/templates.md` — pre-built workflow templates
+> `references/queries.md` — system of record query examples
+> `references/segments.md` — segment fetch and filter examples
+> `references/response-shapes.md` — full JSON response structures
+> `references/filter-syntax.md` — complete filter condition reference
+> `references/polling.md` — async polling patterns, error handling, retry strategies
+> `references/troubleshooting.md` — common errors and how to fix them
 
 ## Prerequisites
 
@@ -79,11 +87,19 @@ cargo-ai connection connector list         # all connectors
 ## Quick reference
 
 ```bash
+# Single actions
+cargo-ai orchestration action execute --action '{"kind":"tool","toolUuid":"<uuid>","config":{}}' --data '{"domain":"acme.com"}'
+cargo-ai orchestration action execute-batch --action '{"kind":"connector","integrationSlug":"clearbit","actionSlug":"company_enrich","config":{}}' --records '[{...},{...}]'
+
+# Workflows (chain multiple actions)
 cargo-ai orchestration run create --workflow-uuid <uuid> --data '{"company":"Acme","domain":"acme.com"}'
-cargo-ai orchestration run create --workflow-uuid <uuid> --data '{"company":"Acme","domain":"acme.com"}' --wait-until-finished
+cargo-ai orchestration run create --data '{"domain":"acme.com"}' --nodes '[...]'
 cargo-ai orchestration batch create --workflow-uuid <uuid> --data '{"kind":"segment","segmentUuid":"..."}'
-cargo-ai orchestration batch create --workflow-uuid <uuid> --data '{"kind":"segment","segmentUuid":"..."}' --wait-until-finished
+
+# AI agents
 cargo-ai ai message create --chat-uuid <uuid> --parts '[{"type":"text","text":"..."}]'
+
+# Data
 cargo-ai system-of-record client query "SELECT * FROM companies LIMIT 10"
 cargo-ai segmentation segment fetch --model-uuid <uuid> --filter '{"conjonction":"and","groups":[]}' --fetching-limit 100
 cargo-ai storage model get-ddl <model-uuid>
@@ -91,21 +107,43 @@ cargo-ai storage model get-ddl <model-uuid>
 
 ## Polling async operations
 
-Runs, batches, and agent messages are asynchronous. Either poll until they reach a terminal state, or pass `--wait-until-finished` to `run create` or `batch create` to block and return the final result in one command.
+All operations are asynchronous. Either poll until terminal state, or pass `--wait-until-finished` to block.
 
-| Operation     | Poll command         | Interval | Done when                                      |
-| ------------- | -------------------- | -------- | ---------------------------------------------- |
-| Run           | `run get <uuid>`     | 2s       | `status` is `success`, `error`, or `cancelled` |
-| Batch         | `batch get <uuid>`   | 5s       | `status` is `success`, `error`, or `cancelled` |
-| Agent message | `message get <uuid>` | 2s       | `status` is `success` or `error`               |
+`action execute` returns a run. `action execute-batch` returns a batch. They poll the same way:
+
+| Result type     | Poll command         | Interval | Done when                                      |
+| --------------- | -------------------- | -------- | ---------------------------------------------- |
+| Run             | `run get <uuid>`     | 2s       | `status` is `success`, `error`, or `cancelled` |
+| Batch           | `batch get <uuid>`   | 5s       | `status` is `success`, `error`, or `cancelled` |
+| Agent message   | `message get <uuid>` | 2s       | `status` is `success` or `error`               |
 
 For long-running batches (1000+ records), increase the interval to 10-15s after the first minute.
 
-Pass `--wait-until-finished` to `run create` or `batch create` to block until the operation reaches a terminal state and return the final result — no manual polling needed.
+## Execute actions
+
+Run a single action — no workflow or node graph needed.
+
+```bash
+# One action, one record → returns a run
+cargo-ai orchestration action execute \
+  --action '{"kind":"connector","integrationSlug":"clearbit","actionSlug":"company_enrich","config":{}}' \
+  --data '{"domain":"acme.com"}' \
+  --wait-until-finished
+
+# One action, many records → returns a batch
+cargo-ai orchestration action execute-batch \
+  --action '{"kind":"tool","toolUuid":"<tool-uuid>","config":{}}' \
+  --records '[{"domain":"acme.com"},{"domain":"globex.com"}]' \
+  --wait-until-finished
+```
+
+Action kinds: `tool`, `connector`, `agent`, `native`. See `references/actions.md` for all action kinds, parameters, retry config, response shapes, and end-to-end examples.
 
 ## Create a run
 
-A run processes a single record through a workflow. **Runs only work with tool workflows.** Play workflows return `playNotCompatible` — use `batch create` instead.
+A run processes a single record through a workflow. Use `run create` when you need to **chain multiple actions** together via a node graph, or when running an existing tool workflow.
+
+**Runs only work with tool workflows.** Play workflows return `playNotCompatible` — use `batch create` instead.
 
 ```bash
 cargo-ai orchestration run create \
@@ -180,7 +218,7 @@ cargo-ai ai message create \                              # 3. Send a message
 #   Done when .message.status is "success" (read .parts) or "error" (read .errorMessage)
 ```
 
-Also supports `--tools`, `--resources`, `--language-model-slug`, `--temperature`, `--max-steps`, and `--wait-until-finished` (blocks until the assistant message reaches a terminal status). See `references/agents.md` for multi-turn conversations, tool/resource injection, and model selection.
+Also supports `--actions`, `--resources`, `--language-model-slug`, `--temperature`, `--max-steps`, and `--wait-until-finished` (blocks until the assistant message reaches a terminal status). See `references/agents.md` for multi-turn conversations, action/resource injection, and model selection.
 
 ## Inspect records
 
@@ -247,71 +285,25 @@ cargo-ai segmentation segment remove <segment-uuid>
 
 ## Use a workflow template
 
-Templates are pre-built node graphs for common automation patterns. They serve two purposes:
-- **Inspiration when building** — browse templates to understand how to structure a new tool or play, then copy and adapt the node graph into your draft release
-- **Bootstrap a run** — plug a template's nodes directly into `run create` or `batch create` without touching the tool's stored definition
+Templates are pre-built node graphs for common automation patterns (enrichment pipelines, CRM syncs, lead scoring). Browse with `template list`, inspect with `template get <slug>`, fill in placeholders, validate, and run.
 
 ```bash
 cargo-ai orchestration template list              # list available templates
 cargo-ai orchestration template get <slug>        # get template nodes + config
 ```
 
-**Pattern:**
-
-```bash
-# 1. Browse templates
-cargo-ai orchestration template list
-
-# 2. Get the node graph
-cargo-ai orchestration template get company-enrichment
-# → Copy "nodes" array, fill in __REPLACE_WITH_*__ placeholders
-
-# 3. Validate before running
-cargo-ai orchestration node validate --nodes '[...nodes...]'
-# → { "outcome": "valid" }
-
-# 4. Run
-cargo-ai orchestration run create \
-  --workflow-uuid <tool.workflowUuid> \
-  --data '{"domain":"acme.com"}' \
-  --nodes '[...validated nodes...]'
-```
-
-See `references/templates.md` for the full guide including play templates and placeholder conventions.
+See `references/templates.md` for the full guide including placeholder conventions and end-to-end examples.
 
 ## Validate and test nodes
 
-Before running a custom node graph, validate its structure. For debugging, compute (dry-run) or execute a single node in isolation.
+Always validate custom node graphs before running them.
 
 ```bash
-# Validate a node graph — catches structural errors before running
 cargo-ai orchestration node validate --nodes '[...]'
-# → { "outcome": "valid" }
-# → { "outcome": "notValid", "invalidNodes": [{ "node": {...}, "reason": "connectorNotFound" }] }
-
-# Compute a node — evaluate expressions without executing side effects
-cargo-ai orchestration node compute \
-  --node '{...node definition...}' \
-  --context '{"nodes":{"start":{"domain":"acme.com"}}}'
-
-# Execute a single node — run one node with its computed config (makes real API calls)
-cargo-ai orchestration node execute \
-  --workflow-uuid <uuid> \
-  --release-uuid <uuid> \
-  --node '{...node definition...}' \
-  --computed-config '{...}' \
-  --context '{"nodes":{"start":{"domain":"acme.com"}}}'
+# → { "outcome": "valid" } or { "outcome": "notValid", "invalidNodes": [...] }
 ```
 
-**When to use each:**
-
-| Command          | Use for                                                        |
-| ---------------- | -------------------------------------------------------------- |
-| `node validate`  | Structural check — missing start node, bad UUIDs, bad slugs   |
-| `node compute`   | Expression preview — see what a config resolves to from context|
-| `node execute`   | Live test — run one node against real services (costs credits) |
-
-See `references/nodes.md` for validation error codes and node graph construction.
+For debugging, use `node compute` (dry-run expressions) or `node execute` (live test, costs credits). See `references/nodes.md` for the full node creation guide, validation error codes, and examples.
 
 ## Help
 

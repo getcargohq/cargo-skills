@@ -42,7 +42,7 @@ All commands output JSON to stdout. Failed commands exit non-zero and return `{"
 
 | Skill                                                 | Load when you need to…                                                                             |
 | ----------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| [`cargo-cli-orchestration`](#cargo-cli-orchestration) | Run workflows, trigger batches, chat with agents, query your data warehouse, fetch segment records |
+| [`cargo-cli-orchestration`](#cargo-cli-orchestration) | Execute actions, run workflows, trigger batches, chat with agents, query your data warehouse       |
 | [`cargo-cli-analytics`](#cargo-cli-analytics)         | Download run results, export segment data, monitor error rates and metrics                         |
 | [`cargo-cli-billing`](#cargo-cli-billing)             | Check credit usage, view subscription details, track costs per workflow or connector               |
 | [`cargo-cli-storage`](#cargo-cli-storage)             | Inspect or modify data models, columns, datasets, and relationships                                |
@@ -98,24 +98,34 @@ All commands output JSON to stdout. Failed commands exit non-zero and return `{"
 
 ### cargo-cli-orchestration
 
-**The execution hub.** Use for everything runtime: running tools on single records, triggering batches across segments, chatting with AI agents, querying your data warehouse with SQL, and fetching live segment data.
+**The execution hub.** Execute actions, run workflows, chat with AI agents, query your data warehouse, and fetch segment records.
 
 **Key commands:**
 
 ```bash
+# Single actions (no workflow needed)
+cargo-ai orchestration action execute --action '{"kind":"tool","toolUuid":"<uuid>","config":{}}' --data '{...}'
+cargo-ai orchestration action execute-batch --action '{"kind":"connector","integrationSlug":"...","actionSlug":"...","config":{}}' --records '[{...},{...}]'
+
+# Workflows (chain multiple actions)
 cargo-ai orchestration run create --workflow-uuid <uuid> --data '{...}'
+cargo-ai orchestration run create --data '{...}' --nodes '[...]'
 cargo-ai orchestration batch create --workflow-uuid <uuid> --data '{"kind":"segment","segmentUuid":"..."}'
+
+# AI agents
 cargo-ai ai message create --chat-uuid <uuid> --parts '[{"type":"text","text":"..."}]'
+
+# Data
 cargo-ai system-of-record client query "SELECT * FROM <table> LIMIT 10"
 cargo-ai segmentation segment fetch --model-uuid <uuid> --filter '{"conjonction":"and","groups":[]}'
 ```
 
 **Critical rules:**
 
-- `run create` works only with **tool** workflows. For plays, use `batch create`.
-- Filter JSON uses `conjonction` (not `conjunction`) — this is intentional and will break silently if misspelled.
+- See the decision flowchart at the top of `cargo-cli-orchestration/SKILL.md` for when to use `action execute` vs `run create` vs `batch create`.
+- Filter JSON uses `conjonction` (not `conjunction`) — breaks silently if misspelled.
 - Always get DDL before querying the system-of-record: `cargo-ai storage model get-ddl <model-uuid>`.
-- Runs, batches, and agent messages are async — poll until terminal state. See [Async polling](#async-polling).
+- All operations are async — poll or pass `--wait-until-finished`. See [Async polling](#async-polling).
 
 **References:** `cargo-cli-orchestration/SKILL.md`
 
@@ -227,16 +237,7 @@ cargo-ai ai mcp-server create --name "Internal Tools" --url "https://..."
 cargo-ai ai memory list --agent-uuid <uuid>
 ```
 
-**Model and temperature guidance:**
-
-| Use case                            | Recommended model                   | Temperature   |
-| ----------------------------------- | ----------------------------------- | ------------- |
-| Classification, extraction, scoring | `gpt-4o-mini` or `claude-3-5-haiku` | `0.0` – `0.2` |
-| Research, summarization, analysis   | `gpt-4o` or `claude-3-5-sonnet`     | `0.2` – `0.5` |
-| Copywriting, personalization        | `gpt-4o` or `claude-3-5-sonnet`     | `0.5` – `0.8` |
-| Brainstorming, creative ideation    | `gpt-4o` or `claude-opus`           | `0.7` – `1.0` |
-
-Low temperature (`0.0`–`0.2`) = deterministic, consistent outputs. High temperature (`0.7`+) = creative, varied outputs. For production workflows processing thousands of records, prefer low temperature.
+See `cargo-cli-ai/SKILL.md` for model and temperature guidance by use case.
 
 **References:** `cargo-cli-ai/SKILL.md`
 
@@ -266,26 +267,17 @@ cargo-ai workspace folder create --name "Q1 Campaigns" --emoji-slug "rocket" --k
 
 ## Async polling
 
-All runs, batches, and agent messages are asynchronous. Always poll until a terminal state is reached.
+All operations are asynchronous. Pass `--wait-until-finished` to block, or poll:
 
-| Operation     | Poll command                              | Interval | Terminal when                                  |
+| Result type   | Poll command                              | Interval | Terminal when                                  |
 | ------------- | ----------------------------------------- | -------- | ---------------------------------------------- |
 | Run           | `cargo-ai orchestration run get <uuid>`   | 2s       | `status` is `success`, `error`, or `cancelled` |
 | Batch         | `cargo-ai orchestration batch get <uuid>` | 5s       | `status` is `success`, `error`, or `cancelled` |
 | Agent message | `cargo-ai ai message get <uuid>`          | 2s       | `status` is `success` or `error`               |
 
-For large batches (1000+ records), increase the interval to 10–15s after the first minute.
+`action execute` returns a run; `action execute-batch` returns a batch — same polling applies.
 
-Pass `--wait-until-finished` to `run create` or `batch create` to block until the operation reaches a terminal state and return the final result — no manual polling needed.
-
-**When a run returns `error` status:**
-
-1. Read the run details: `cargo-ai orchestration run get <uuid>` — look at the node-level output for the specific node that failed.
-2. Check the error message from the connector or agent node to understand the root cause.
-3. Fix the input data or node config, then re-trigger.
-4. For transient errors (rate limits, timeouts), add a `retry` config to the node: `{"maximumAttempts": 3, "initialInterval": 1000, "backoffCoefficient": 2}`.
-
-See `cargo-cli-orchestration/references/troubleshooting.md` for a full list of error patterns.
+See `cargo-cli-orchestration/references/polling.md` for retry strategies, error handling, and large-batch guidance.
 
 ---
 
@@ -334,7 +326,17 @@ cargo-ai segmentation segment list
 
 ## End-to-end use cases
 
-### 1. Enrich a list of companies and push to CRM
+### 1. Enrich a single company (simplest path)
+
+**Skills needed:** `cargo-cli-orchestration`
+
+```
+1. orchestration action execute            → run a connector action on one record
+   --action '{"kind":"connector","integrationSlug":"clearbit","actionSlug":"company_enrich","config":{}}'
+   --data '{"domain":"acme.com"}' --wait-until-finished
+```
+
+### 2. Enrich a list of companies and push to CRM
 
 **Skills needed:** `cargo-cli-storage`, `cargo-cli-connection`, `cargo-cli-orchestration`, `cargo-cli-analytics`
 
@@ -348,7 +350,7 @@ cargo-ai segmentation segment list
 7. analytics run download          → export results
 ```
 
-### 2. Score leads with AI and update the model
+### 3. Score leads with AI and update the model
 
 **Skills needed:** `cargo-cli-ai`, `cargo-cli-orchestration`, `cargo-cli-billing`
 
@@ -361,7 +363,7 @@ cargo-ai segmentation segment list
 6. billing usage get-metrics       → check credit consumption
 ```
 
-### 3. Build a custom enrichment workflow from scratch
+### 4. Build a custom enrichment workflow from scratch
 
 **Skills needed:** `cargo-cli-connection`, `cargo-cli-orchestration`
 
@@ -373,7 +375,7 @@ cargo-ai segmentation segment list
 5. orchestration run get                   → poll to terminal state
 ```
 
-### 4. Monitor workflow health and alert on errors
+### 5. Monitor workflow health and alert on errors
 
 **Skills needed:** `cargo-cli-orchestration`, `cargo-cli-analytics`
 
@@ -384,7 +386,7 @@ cargo-ai segmentation segment list
 4. analytics run download --statuses error → download failed runs for inspection
 ```
 
-### 5. Bootstrap a fresh workspace
+### 6. Bootstrap a fresh workspace
 
 **Skills needed:** `cargo-cli-workspace`, `cargo-cli-storage`, `cargo-cli-connection`, `cargo-cli-ai`
 
@@ -400,7 +402,7 @@ cargo-ai segmentation segment list
 9. workspace folder create         → organize plays and tools into folders
 ```
 
-### 6. Export and analyze segment data
+### 7. Export and analyze segment data
 
 **Skills needed:** `cargo-cli-storage`, `cargo-cli-analytics`
 

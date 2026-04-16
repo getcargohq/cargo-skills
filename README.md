@@ -23,17 +23,24 @@ Works with Claude Code, Cursor, Windsurf, GitHub Copilot, and any agent that sup
 
 **Cargo** connects your data models (companies, contacts, deals) to external integrations (CRMs, enrichment providers, AI agents) and runs them as automated workflows. This skill covers the full CLI surface:
 
-| Domain            | What the agent learns                                                                                                                           |
-| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Orchestration** | Run tools on single records, trigger batches across segments, poll async operations, query the data warehouse with SQL, fetch live segment data |
-| **Storage**       | Inspect models and their DDL, create columns, navigate datasets, set relationships between models                                               |
-| **Connection**    | Authenticate connectors (HubSpot, Clearbit, Salesforce…), discover integration actions and their slugs                                          |
-| **AI**            | Create and configure agents, upload files for RAG, connect MCP servers, inspect agent memories                                                  |
-| **Analytics**     | Download run results, export segment data, monitor error rates and success metrics                                                              |
-| **Billing**       | Track credit consumption per workflow or connector, check subscription status, view invoices                                                    |
-| **Workspace**     | Invite users, create and rotate API tokens, organize resources into folders, manage roles                                                       |
+| Domain            | What the agent learns                                                                                                                                              |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Orchestration** | Execute single actions, chain actions into workflows, trigger batches across segments, poll async operations, query the data warehouse with SQL, fetch segment data |
+| **Storage**       | Inspect models and their DDL, create columns, navigate datasets, set relationships between models                                                                  |
+| **Connection**    | Authenticate connectors (HubSpot, Clearbit, Salesforce…), discover integration actions and their slugs                                                             |
+| **AI**            | Create and configure agents, upload files for RAG, connect MCP servers, inspect agent memories                                                                     |
+| **Analytics**     | Download run results, export segment data, monitor error rates and success metrics                                                                                 |
+| **Billing**       | Track credit consumption per workflow or connector, check subscription status, view invoices                                                                       |
+| **Workspace**     | Invite users, create and rotate API tokens, organize resources into folders, manage roles                                                                          |
 
 ## Use cases
+
+### Execute a single action
+
+Ask your agent to run one action on a record — it will pick the right action kind (connector, tool, or agent), execute it, and return the result.
+
+> "Enrich acme.com with Clearbit."
+> "Run the lead scorer on this contact."
 
 ### Run an existing workflow
 

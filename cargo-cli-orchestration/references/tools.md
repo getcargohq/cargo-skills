@@ -90,7 +90,7 @@ cargo-ai orchestration draft-release deploy \
 
 ## Run a tool on a single record
 
-The most common use case — run the tool on one record. Tools support both `run create` (single record) and `batch create` (multiple records). Allowed batch data kinds for tools: `file`, `records`.
+The most common use case — run an existing tool workflow on one record. Tools support both `run create` (single record) and `batch create` (multiple records). Allowed batch data kinds for tools: `file`, `records`.
 
 ```bash
 # 1. Find the tool
