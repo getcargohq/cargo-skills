@@ -103,7 +103,10 @@ All commands output JSON to stdout. Failed commands exit non-zero and return `{"
 **Key commands:**
 
 ```bash
+cargo-ai orchestration action execute --action '{"kind":"tool","toolUuid":"<uuid>","config":{}}' --data '{...}'
+cargo-ai orchestration action execute-batch --action '{"kind":"connector","integrationSlug":"clearbit","actionSlug":"company_enrich","config":{}}' --records '[{...},{...}]'
 cargo-ai orchestration run create --workflow-uuid <uuid> --data '{...}'
+cargo-ai orchestration run create --data '{...}' --nodes '[...]'
 cargo-ai orchestration batch create --workflow-uuid <uuid> --data '{"kind":"segment","segmentUuid":"..."}'
 cargo-ai ai message create --chat-uuid <uuid> --parts '[{"type":"text","text":"..."}]'
 cargo-ai system-of-record client query "SELECT * FROM <table> LIMIT 10"
@@ -112,6 +115,9 @@ cargo-ai segmentation segment fetch --model-uuid <uuid> --filter '{"conjonction"
 
 **Critical rules:**
 
+- Use `action execute` for a single action on one record — simplest path, no workflow needed.
+- Use `action execute-batch` for a single action on multiple records.
+- Use `run create` / `batch create` to chain multiple actions together via a node graph.
 - `run create` works only with **tool** workflows. For plays, use `batch create`.
 - Filter JSON uses `conjonction` (not `conjunction`) — this is intentional and will break silently if misspelled.
 - Always get DDL before querying the system-of-record: `cargo-ai storage model get-ddl <model-uuid>`.

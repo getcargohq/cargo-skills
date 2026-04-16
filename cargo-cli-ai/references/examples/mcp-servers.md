@@ -53,9 +53,9 @@ cargo-ai ai release deploy-draft --agent-uuid <agent-uuid> \
   --integration-slug openai
 ```
 
-## Disable specific tools from an MCP server
+## Disable specific actions from an MCP server
 
-Use `disabledToolSlugs` to prevent the agent from using specific MCP tools:
+Use `disabledToolSlugs` to prevent the agent from using specific MCP actions:
 
 ```bash
 cargo-ai ai release update-draft --agent-uuid <agent-uuid> \

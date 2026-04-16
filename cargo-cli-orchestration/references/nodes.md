@@ -264,7 +264,7 @@ The `group` node iterates over `items`, running the child subgraph once per item
 | `python`   | Run Python code     | 1        | `{"script": "..."}`                                                                                    |
 | `script`   | Run JavaScript code | 1        | `{"script": "..."}`                                                                                    |
 
-The `agent` action requires `advancedSettings.connectorUuid` (an AI provider connector — get it from `connector list`). Optional fields: `tools`, `resources`, `capabilities`, `output` (structured output with `{"type": "jsonSchema", "jsonSchema": {...}}`), `advancedSettings.temperature`, `advancedSettings.maxSteps`, `advancedSettings.systemPrompt`.
+The `agent` action requires `advancedSettings.connectorUuid` (an AI provider connector — get it from `connector list`). Optional fields: `actions`, `resources`, `capabilities`, `output` (structured output with `{"type": "jsonSchema", "jsonSchema": {...}}`), `advancedSettings.temperature`, `advancedSettings.maxSteps`, `advancedSettings.systemPrompt`.
 
 The `python` and `script` nodes receive `nodes` and `parentNodes` as context variables. The return value of the script becomes the node's output under `{{nodes.<slug>.result}}`.
 

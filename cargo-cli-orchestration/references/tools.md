@@ -88,9 +88,45 @@ cargo-ai orchestration draft-release deploy \
 
 ---
 
+## Execute a single action (without a workflow)
+
+If you only need to run **one action** (e.g. a single enrichment call, one agent invocation), use `action execute` instead of building a full workflow. No `workflowUuid` or node graph required.
+
+```bash
+# Execute a tool action directly
+cargo-ai orchestration action execute \
+  --action '{"kind":"tool","toolUuid":"<tool-uuid>","config":{}}' \
+  --data '{"domain":"acme.com"}' \
+  --wait-until-finished
+
+# Execute a connector action directly
+cargo-ai orchestration action execute \
+  --action '{"kind":"connector","integrationSlug":"clearbit","actionSlug":"company_enrich","config":{}}' \
+  --data '{"domain":"acme.com"}' \
+  --wait-until-finished
+```
+
+For multiple records with a single action, use `action execute-batch`:
+
+```bash
+cargo-ai orchestration action execute-batch \
+  --action '{"kind":"tool","toolUuid":"<tool-uuid>","config":{}}' \
+  --records '[{"domain":"acme.com"},{"domain":"globex.com"},{"domain":"initech.com"}]' \
+  --wait-until-finished
+```
+
+**When to use `action execute` vs `run create`:**
+
+- **`action execute`** — one action, one record. No workflow needed.
+- **`action execute-batch`** — one action, many records. No workflow needed.
+- **`run create` with `--nodes`** — chain multiple actions together into a workflow (multi-step logic).
+- **`run create` with `--workflow-uuid`** — run an existing tool's persisted workflow.
+
+---
+
 ## Run a tool on a single record
 
-The most common use case — run the tool on one record. Tools support both `run create` (single record) and `batch create` (multiple records). Allowed batch data kinds for tools: `file`, `records`.
+The most common use case — run an existing tool workflow on one record. Tools support both `run create` (single record) and `batch create` (multiple records). Allowed batch data kinds for tools: `file`, `records`.
 
 ```bash
 # 1. Find the tool

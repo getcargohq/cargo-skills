@@ -27,8 +27,8 @@ Common errors and recovery steps for `cargo-cli-orchestration` commands.
 
 | Symptom                                                              | Cause                                    | Fix                                                                        |
 | -------------------------------------------------------------------- | ---------------------------------------- | -------------------------------------------------------------------------- |
-| Assistant message stuck in `pending` or `generating` for a long time | Agent may be running multi-step tools    | Wait longer (up to 60s for complex tasks); check with `message get <uuid>` |
-| Message returns `error` status                                       | Agent encountered an unrecoverable error | Read `.message.errorMessage`; try again with simpler input or fewer tools  |
+| Assistant message stuck in `pending` or `generating` for a long time | Agent may be running multi-step actions   | Wait longer (up to 60s for complex tasks); check with `message get <uuid>` |
+| Message returns `error` status                                       | Agent encountered an unrecoverable error | Read `.message.errorMessage`; try again with simpler input or fewer actions |
 | `Chat not found`                                                     | Wrong UUID or chat was deleted           | Re-create with `chat create`                                               |
 | `Agent not found`                                                    | Wrong UUID                               | Re-run `agent list` to get current UUIDs                                   |
 

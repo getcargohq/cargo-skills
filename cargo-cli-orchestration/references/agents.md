@@ -98,16 +98,16 @@ cargo-ai ai message create \
 # → Poll for response
 ```
 
-## Send a message with tools
+## Send a message with actions
 
-Give the agent access to specific tools for enrichment, CRM actions, etc.
+Give the agent access to specific actions for enrichment, CRM actions, etc.
 
 ```bash
 cargo-ai ai message create \
   --chat-uuid <chat-uuid> \
   --parts '[{"type":"text","text":"Enrich this lead and add to Salesforce"}]' \
-  --tools '[{"slug":"clearbit","kind":"tool","toolUuid": "<tool-uuid>","config":{}},{"slug":"salesforce","kind":"tool","config":{}}]'
-# → The agent can use these tools during its response
+  --actions '[{"slug":"clearbit","kind":"tool","toolUuid": "<tool-uuid>","config":{}},{"slug":"salesforce","kind":"tool","config":{}}]'
+# → The agent can use these actions during its response
 ```
 
 ## Send a message with model resources
@@ -137,7 +137,7 @@ cargo-ai ai message create \
 
 Lower temperature (0.0–0.3) for factual/structured tasks, higher (0.7–1.0) for creative tasks.
 
-## Send a message with tools, resources, and custom model
+## Send a message with actions, resources, and custom model
 
 Full example combining all options.
 
@@ -145,7 +145,7 @@ Full example combining all options.
 cargo-ai ai message create \
   --chat-uuid <chat-uuid> \
   --parts '[{"type":"text","text":"Research Acme Corp, enrich their data, and update our CRM"}]' \
-  --tools '[{"slug":"clearbit","kind":"tool","config":{}},{"slug":"salesforce","kind":"tool","config":{}}]' \
+  --actions '[{"slug":"clearbit","kind":"tool","config":{}},{"slug":"salesforce","kind":"tool","config":{}}]' \
   --resources '[{"slug":"companies","kind":"model","integrationSlug":"salesforce","modelUuid":"<model-uuid>"}]' \
   --language-model-slug gpt-4o \
   --temperature 0.3 \
@@ -195,7 +195,7 @@ cargo-ai ai release update-draft --agent-uuid agent-abc \
 cargo-ai ai file upload --file-path ./icp-criteria.pdf
 # → Extract file.uuid
 
-# Step 5 — Give the agent access to tools (optional — connectors as tools)
+# Step 5 — Give the agent access to actions (optional — connectors as actions)
 cargo-ai orchestration tool list
 # → Find a "Find Email" tool, extract uuid
 
@@ -210,7 +210,7 @@ cargo-ai ai chat create \
 cargo-ai ai message create \
   --chat-uuid <chat-uuid> \
   --parts '[{"type":"text","text":"Research the VP of Sales at acme.com. Find their name, LinkedIn URL, and email address."}]' \
-  --tools '[{"slug":"find_email","kind":"tool","toolUuid":"<email-finder-tool-uuid>","config":{}}]' \
+  --actions '[{"slug":"find_email","kind":"tool","toolUuid":"<email-finder-tool-uuid>","config":{}}]' \
   --max-steps 10
 # → Extract assistantMessage.uuid
 
