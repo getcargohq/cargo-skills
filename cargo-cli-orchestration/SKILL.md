@@ -12,37 +12,36 @@ metadata:
 
 Runtime operations for the Cargo platform.
 
-**What do you want to do?**
+**What do you want to run?**
 
-| Goal                                          | Command                    | Section                 |
-| --------------------------------------------- | -------------------------- | ----------------------- |
-| Run **one action** on **one** record           | `action execute`           | Execute a single action |
-| Run **one action** on **many** records         | `action execute-batch`     | Execute a batch action  |
-| **Chain actions** into a workflow on one record | `run create` (with nodes) | Create a run            |
-| **Chain actions** across many records          | `batch create`             | Create a batch          |
-| Chat with an **AI agent**                      | `message create`           | Send a message          |
-| **Query** your data warehouse                  | `system-of-record client`  | Query the SoR           |
-| **Fetch** live segment records                 | `segment fetch`            | Fetch segment data      |
-| **Inspect** a model's table shape              | `storage model get-ddl`    | Quick reference         |
+```
+Need to run something?
+├── One action, one record       → action execute
+├── One action, many records     → action execute-batch
+├── Multiple actions chained
+│   ├── One-off / ad-hoc         → run create --nodes (one record)
+│   │                              batch create --nodes (many records)
+│   └── Reusable workflow        → build a tool, then run create --workflow-uuid
+│                                  or batch create --workflow-uuid
+└── Conversational AI agent      → message create
+```
 
-**Choosing the right approach:**
+> **Terminology:** An orchestration **tool** is a saved workflow you trigger on demand. An **action** is a single step you execute — it can reference a tool (`kind: "tool"`), a connector (`kind: "connector"`), an agent (`kind: "agent"`), or a native operation (`kind: "native"`).
 
-- **`action execute`** — run a single action (connector, tool, or agent) on one record. Simplest path when you only need one step.
-- **`action execute-batch`** — run a single action on multiple records at once.
-- **`run create` / `batch create`** — chain multiple actions together into a workflow (pass `--nodes` with a node graph). Use when you need multi-step logic, branching, or data flowing between steps.
-- **Build a tool** — if you'll reuse the same workflow repeatedly, create a tool with a persisted node graph and deploy it. Then trigger it with `run create --workflow-uuid` or `batch create --workflow-uuid`.
+**References:**
 
-> See `references/response-shapes.md` for full JSON response structures.
-> See `references/filter-syntax.md` for the complete filter condition reference.
-> See `references/polling.md` for all async polling patterns, error handling, and retry strategies.
-> See `references/troubleshooting.md` for common errors and how to fix them.
-> See `references/nodes.md` for the full node creation guide (kinds, native actions, expressions, validation, routing, and examples).
-> See `references/templates.md` for using pre-built workflow templates.
-> See `references/plays.md` for play (segment-driven automation) examples.
-> See `references/tools.md` for tool (on-demand workflow) examples.
-> See `references/agents.md` for AI agent chat examples.
-> See `references/queries.md` for system of record query examples.
-> See `references/segments.md` for segment fetch and filter examples.
+> `references/actions.md` — action execute and execute-batch examples
+> `references/tools.md` — tool (on-demand workflow) examples
+> `references/plays.md` — play (segment-driven automation) examples
+> `references/agents.md` — AI agent chat examples
+> `references/nodes.md` — full node creation guide (kinds, native actions, expressions, validation, routing)
+> `references/templates.md` — pre-built workflow templates
+> `references/queries.md` — system of record query examples
+> `references/segments.md` — segment fetch and filter examples
+> `references/response-shapes.md` — full JSON response structures
+> `references/filter-syntax.md` — complete filter condition reference
+> `references/polling.md` — async polling patterns, error handling, retry strategies
+> `references/troubleshooting.md` — common errors and how to fix them
 
 ## Prerequisites
 
@@ -76,8 +75,6 @@ cargo-ai connection connector list         # all connectors
 
 **Plays vs tools:** Both are backed by a workflow. A **play** is a segment-driven automation — it reacts to data changes in a segment (records added, updated, removed). A **tool** is an on-demand workflow — triggered manually, via API, or on a cron schedule. Workflows don't have a `name` field; use `play list` or `tool list` to find names and extract the `workflowUuid`.
 
-**Actions vs workflows:** If you only need to run a **single action** (one connector call, one tool, one agent), use `action execute` — no workflow or node graph required. If you need to **chain multiple actions** together, use `run create` with `--nodes` or build a tool.
-
 **Designing a new tool or play?** Check templates first — they are pre-built node graphs for common automation patterns (enrichment pipelines, CRM syncs, lead scoring) and are an excellent starting point. List templates with `cargo-ai orchestration template list` and inspect a specific one with `cargo-ai orchestration template get <slug>`. Templates are tagged by `kind` so you can find ones suited for tools (`"kind":"tool"`) or plays (`"kind":"play"`) right away. See `references/templates.md` for the full guide.
 
 **Compatibility rules:**
@@ -90,14 +87,19 @@ cargo-ai connection connector list         # all connectors
 ## Quick reference
 
 ```bash
+# Single actions
 cargo-ai orchestration action execute --action '{"kind":"tool","toolUuid":"<uuid>","config":{}}' --data '{"domain":"acme.com"}'
-cargo-ai orchestration action execute-batch --action '{"kind":"connector","integrationSlug":"clearbit","actionSlug":"company_enrich","config":{}}' --records '[{"domain":"acme.com"},{"domain":"globex.com"}]'
+cargo-ai orchestration action execute-batch --action '{"kind":"connector","integrationSlug":"clearbit","actionSlug":"company_enrich","config":{}}' --records '[{...},{...}]'
+
+# Workflows (chain multiple actions)
 cargo-ai orchestration run create --workflow-uuid <uuid> --data '{"company":"Acme","domain":"acme.com"}'
 cargo-ai orchestration run create --data '{"domain":"acme.com"}' --nodes '[...]'
-cargo-ai orchestration run create --workflow-uuid <uuid> --data '{"company":"Acme","domain":"acme.com"}' --wait-until-finished
 cargo-ai orchestration batch create --workflow-uuid <uuid> --data '{"kind":"segment","segmentUuid":"..."}'
-cargo-ai orchestration batch create --workflow-uuid <uuid> --data '{"kind":"segment","segmentUuid":"..."}' --wait-until-finished
+
+# AI agents
 cargo-ai ai message create --chat-uuid <uuid> --parts '[{"type":"text","text":"..."}]'
+
+# Data
 cargo-ai system-of-record client query "SELECT * FROM companies LIMIT 10"
 cargo-ai segmentation segment fetch --model-uuid <uuid> --filter '{"conjonction":"and","groups":[]}' --fetching-limit 100
 cargo-ai storage model get-ddl <model-uuid>
@@ -105,73 +107,37 @@ cargo-ai storage model get-ddl <model-uuid>
 
 ## Polling async operations
 
-Runs, batches, and agent messages are asynchronous. Either poll until they reach a terminal state, or pass `--wait-until-finished` to `run create` or `batch create` to block and return the final result in one command.
+All operations are asynchronous. Either poll until terminal state, or pass `--wait-until-finished` to block.
 
-| Operation       | Poll command         | Interval | Done when                                      |
+`action execute` returns a run. `action execute-batch` returns a batch. They poll the same way:
+
+| Result type     | Poll command         | Interval | Done when                                      |
 | --------------- | -------------------- | -------- | ---------------------------------------------- |
-| Action execute  | `run get <uuid>`     | 2s       | `status` is `success`, `error`, or `cancelled` |
-| Action batch    | `batch get <uuid>`   | 5s       | `status` is `success`, `error`, or `cancelled` |
 | Run             | `run get <uuid>`     | 2s       | `status` is `success`, `error`, or `cancelled` |
 | Batch           | `batch get <uuid>`   | 5s       | `status` is `success`, `error`, or `cancelled` |
 | Agent message   | `message get <uuid>` | 2s       | `status` is `success` or `error`               |
 
 For long-running batches (1000+ records), increase the interval to 10-15s after the first minute.
 
-Pass `--wait-until-finished` to `run create` or `batch create` to block until the operation reaches a terminal state and return the final result — no manual polling needed.
+## Execute actions
 
-## Execute a single action
-
-Use `action execute` when you want to run **one action** on **one record** — no workflow or node graph needed. This is the simplest way to trigger a connector, tool, or agent action.
+Run a single action — no workflow or node graph needed.
 
 ```bash
-# Execute a tool action
-cargo-ai orchestration action execute \
-  --action '{"kind":"tool","toolUuid":"<tool-uuid>","config":{}}' \
-  --data '{"email":"user@example.com"}'
-
-# Execute a connector action
+# One action, one record → returns a run
 cargo-ai orchestration action execute \
   --action '{"kind":"connector","integrationSlug":"clearbit","actionSlug":"company_enrich","config":{}}' \
   --data '{"domain":"acme.com"}' \
   --wait-until-finished
 
-# Execute an agent action
-cargo-ai orchestration action execute \
-  --action '{"kind":"agent","agentUuid":"<agent-uuid>","config":{}}' \
-  --data '{"company":"Acme Corp"}'
-```
-
-Returns a `run` object. Poll with `run get <uuid>` or pass `--wait-until-finished` to block.
-
-**Action kinds:**
-
-| Kind          | Required fields                                      | Description                          |
-| ------------- | ---------------------------------------------------- | ------------------------------------ |
-| `tool`        | `toolUuid` or `templateSlug` or `releaseUuid`        | Execute an orchestration tool        |
-| `connector`   | `integrationSlug` + `actionSlug`                     | Execute a third-party service action |
-| `agent`       | `agentUuid` or `templateSlug` or `releaseUuid`       | Execute an AI agent                  |
-| `native`      | `actionSlug`                                         | Execute a built-in platform action   |
-
-Optional `retry` config: `{"maximumAttempts": 3, "initialInterval": 1000, "backoffCoefficient": 2}`.
-
-## Execute a batch action
-
-Use `action execute-batch` when you want to run **one action** on **multiple records**. Same action kinds as `action execute`.
-
-```bash
+# One action, many records → returns a batch
 cargo-ai orchestration action execute-batch \
   --action '{"kind":"tool","toolUuid":"<tool-uuid>","config":{}}' \
-  --records '[{"email":"a@b.com"},{"email":"c@d.com"}]'
-
-# With webhook notification
-cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"clearbit","actionSlug":"company_enrich","config":{}}' \
   --records '[{"domain":"acme.com"},{"domain":"globex.com"}]' \
-  --webhook-url "https://hooks.example.com/done" \
   --wait-until-finished
 ```
 
-Returns a `batch` object. Poll with `batch get <uuid>` or pass `--wait-until-finished`.
+Action kinds: `tool`, `connector`, `agent`, `native`. See `references/actions.md` for all action kinds, parameters, retry config, response shapes, and end-to-end examples.
 
 ## Create a run
 

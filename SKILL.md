@@ -98,30 +98,36 @@ All commands output JSON to stdout. Failed commands exit non-zero and return `{"
 
 ### cargo-cli-orchestration
 
-**The execution hub.** Use for everything runtime: running tools on single records, triggering batches across segments, chatting with AI agents, querying your data warehouse with SQL, and fetching live segment data.
+**The execution hub.** Execute actions, run workflows, chat with AI agents, query your data warehouse, and fetch segment records.
 
 **Key commands:**
 
 ```bash
+# Single actions (no workflow needed)
 cargo-ai orchestration action execute --action '{"kind":"tool","toolUuid":"<uuid>","config":{}}' --data '{...}'
-cargo-ai orchestration action execute-batch --action '{"kind":"connector","integrationSlug":"clearbit","actionSlug":"company_enrich","config":{}}' --records '[{...},{...}]'
+cargo-ai orchestration action execute-batch --action '{"kind":"connector","integrationSlug":"...","actionSlug":"...","config":{}}' --records '[{...},{...}]'
+
+# Workflows (chain multiple actions)
 cargo-ai orchestration run create --workflow-uuid <uuid> --data '{...}'
 cargo-ai orchestration run create --data '{...}' --nodes '[...]'
 cargo-ai orchestration batch create --workflow-uuid <uuid> --data '{"kind":"segment","segmentUuid":"..."}'
+
+# AI agents
 cargo-ai ai message create --chat-uuid <uuid> --parts '[{"type":"text","text":"..."}]'
+
+# Data
 cargo-ai system-of-record client query "SELECT * FROM <table> LIMIT 10"
 cargo-ai segmentation segment fetch --model-uuid <uuid> --filter '{"conjonction":"and","groups":[]}'
 ```
 
 **Critical rules:**
 
-- Use `action execute` for a single action on one record — simplest path, no workflow needed.
-- Use `action execute-batch` for a single action on multiple records.
-- Use `run create` / `batch create` to chain multiple actions together via a node graph.
-- `run create` works only with **tool** workflows. For plays, use `batch create`.
-- Filter JSON uses `conjonction` (not `conjunction`) — this is intentional and will break silently if misspelled.
+- `action execute` for one action on one record. `action execute-batch` for one action on many records.
+- `run create` / `batch create` to chain actions via a node graph.
+- `run create` only works with **tool** workflows. For plays, use `batch create`.
+- Filter JSON uses `conjonction` (not `conjunction`) — breaks silently if misspelled.
 - Always get DDL before querying the system-of-record: `cargo-ai storage model get-ddl <model-uuid>`.
-- Runs, batches, and agent messages are async — poll until terminal state. See [Async polling](#async-polling).
+- All operations are async — poll until terminal state or pass `--wait-until-finished`. See [Async polling](#async-polling).
 
 **References:** `cargo-cli-orchestration/SKILL.md`
 
@@ -272,17 +278,15 @@ cargo-ai workspace folder create --name "Q1 Campaigns" --emoji-slug "rocket" --k
 
 ## Async polling
 
-All runs, batches, and agent messages are asynchronous. Always poll until a terminal state is reached.
+All operations are asynchronous. `action execute` returns a run; `action execute-batch` returns a batch. Poll until terminal state, or pass `--wait-until-finished` to block.
 
-| Operation     | Poll command                              | Interval | Terminal when                                  |
+| Result type   | Poll command                              | Interval | Terminal when                                  |
 | ------------- | ----------------------------------------- | -------- | ---------------------------------------------- |
 | Run           | `cargo-ai orchestration run get <uuid>`   | 2s       | `status` is `success`, `error`, or `cancelled` |
 | Batch         | `cargo-ai orchestration batch get <uuid>` | 5s       | `status` is `success`, `error`, or `cancelled` |
 | Agent message | `cargo-ai ai message get <uuid>`          | 2s       | `status` is `success` or `error`               |
 
-For large batches (1000+ records), increase the interval to 10–15s after the first minute.
-
-Pass `--wait-until-finished` to `run create` or `batch create` to block until the operation reaches a terminal state and return the final result — no manual polling needed.
+For large batches (1000+ records), increase the interval to 10-15s after the first minute.
 
 **When a run returns `error` status:**
 
