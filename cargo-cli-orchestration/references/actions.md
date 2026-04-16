@@ -15,7 +15,7 @@ Actions come in four kinds:
 
 Every action object also requires a `config` field (use `{}` for defaults).
 
-> **When to use actions vs workflows:** Actions are for running a **single step**. If you need to chain multiple steps together (enrichment → scoring → CRM push), use `run create --nodes` or `batch create --nodes` instead. See `tools.md` for workflow examples.
+> **When to use actions vs workflows:** Actions are for running a **single operation** without building a workflow graph. If you need to **chain multiple operations** together (enrichment → scoring → CRM push), use `run create --nodes` or `batch create --nodes` instead. See `tools.md` for workflow examples.
 
 ---
 

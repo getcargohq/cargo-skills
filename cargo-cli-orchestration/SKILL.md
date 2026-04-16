@@ -26,7 +26,7 @@ Need to run something?
 └── Conversational AI agent      → message create
 ```
 
-> **Terminology:** An orchestration **tool** is a saved workflow you trigger on demand. An **action** is a single step you execute — it can reference a tool (`kind: "tool"`), a connector (`kind: "connector"`), an agent (`kind: "agent"`), or a native operation (`kind: "native"`).
+> **Terminology:** An orchestration **tool** is a saved on-demand workflow (listed via `tool list`). An **action** is a single operation you execute without building a workflow — it can embed a saved orchestration tool (`kind: "tool"`), call a third-party connector (`kind: "connector"`), invoke an AI agent (`kind: "agent"`), or run a built-in platform operation (`kind: "native"`).
 
 **References:**
 
@@ -285,71 +285,25 @@ cargo-ai segmentation segment remove <segment-uuid>
 
 ## Use a workflow template
 
-Templates are pre-built node graphs for common automation patterns. They serve two purposes:
-- **Inspiration when building** — browse templates to understand how to structure a new tool or play, then copy and adapt the node graph into your draft release
-- **Bootstrap a run** — plug a template's nodes directly into `run create` or `batch create` without touching the tool's stored definition
+Templates are pre-built node graphs for common automation patterns (enrichment pipelines, CRM syncs, lead scoring). Browse with `template list`, inspect with `template get <slug>`, fill in placeholders, validate, and run.
 
 ```bash
 cargo-ai orchestration template list              # list available templates
 cargo-ai orchestration template get <slug>        # get template nodes + config
 ```
 
-**Pattern:**
-
-```bash
-# 1. Browse templates
-cargo-ai orchestration template list
-
-# 2. Get the node graph
-cargo-ai orchestration template get company-enrichment
-# → Copy "nodes" array, fill in __REPLACE_WITH_*__ placeholders
-
-# 3. Validate before running
-cargo-ai orchestration node validate --nodes '[...nodes...]'
-# → { "outcome": "valid" }
-
-# 4. Run
-cargo-ai orchestration run create \
-  --workflow-uuid <tool.workflowUuid> \
-  --data '{"domain":"acme.com"}' \
-  --nodes '[...validated nodes...]'
-```
-
-See `references/templates.md` for the full guide including play templates and placeholder conventions.
+See `references/templates.md` for the full guide including placeholder conventions and end-to-end examples.
 
 ## Validate and test nodes
 
-Before running a custom node graph, validate its structure. For debugging, compute (dry-run) or execute a single node in isolation.
+Always validate custom node graphs before running them.
 
 ```bash
-# Validate a node graph — catches structural errors before running
 cargo-ai orchestration node validate --nodes '[...]'
-# → { "outcome": "valid" }
-# → { "outcome": "notValid", "invalidNodes": [{ "node": {...}, "reason": "connectorNotFound" }] }
-
-# Compute a node — evaluate expressions without executing side effects
-cargo-ai orchestration node compute \
-  --node '{...node definition...}' \
-  --context '{"nodes":{"start":{"domain":"acme.com"}}}'
-
-# Execute a single node — run one node with its computed config (makes real API calls)
-cargo-ai orchestration node execute \
-  --workflow-uuid <uuid> \
-  --release-uuid <uuid> \
-  --node '{...node definition...}' \
-  --computed-config '{...}' \
-  --context '{"nodes":{"start":{"domain":"acme.com"}}}'
+# → { "outcome": "valid" } or { "outcome": "notValid", "invalidNodes": [...] }
 ```
 
-**When to use each:**
-
-| Command          | Use for                                                        |
-| ---------------- | -------------------------------------------------------------- |
-| `node validate`  | Structural check — missing start node, bad UUIDs, bad slugs   |
-| `node compute`   | Expression preview — see what a config resolves to from context|
-| `node execute`   | Live test — run one node against real services (costs credits) |
-
-See `references/nodes.md` for validation error codes and node graph construction.
+For debugging, use `node compute` (dry-run expressions) or `node execute` (live test, costs credits). See `references/nodes.md` for the full node creation guide, validation error codes, and examples.
 
 ## Help
 

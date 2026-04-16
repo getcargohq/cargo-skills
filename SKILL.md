@@ -122,12 +122,10 @@ cargo-ai segmentation segment fetch --model-uuid <uuid> --filter '{"conjonction"
 
 **Critical rules:**
 
-- `action execute` for one action on one record. `action execute-batch` for one action on many records.
-- `run create` / `batch create` to chain actions via a node graph.
-- `run create` only works with **tool** workflows. For plays, use `batch create`.
+- See the decision flowchart at the top of `cargo-cli-orchestration/SKILL.md` for when to use `action execute` vs `run create` vs `batch create`.
 - Filter JSON uses `conjonction` (not `conjunction`) — breaks silently if misspelled.
 - Always get DDL before querying the system-of-record: `cargo-ai storage model get-ddl <model-uuid>`.
-- All operations are async — poll until terminal state or pass `--wait-until-finished`. See [Async polling](#async-polling).
+- All operations are async — poll or pass `--wait-until-finished`. See [Async polling](#async-polling).
 
 **References:** `cargo-cli-orchestration/SKILL.md`
 
@@ -239,16 +237,7 @@ cargo-ai ai mcp-server create --name "Internal Tools" --url "https://..."
 cargo-ai ai memory list --agent-uuid <uuid>
 ```
 
-**Model and temperature guidance:**
-
-| Use case                            | Recommended model                   | Temperature   |
-| ----------------------------------- | ----------------------------------- | ------------- |
-| Classification, extraction, scoring | `gpt-4o-mini` or `claude-3-5-haiku` | `0.0` – `0.2` |
-| Research, summarization, analysis   | `gpt-4o` or `claude-3-5-sonnet`     | `0.2` – `0.5` |
-| Copywriting, personalization        | `gpt-4o` or `claude-3-5-sonnet`     | `0.5` – `0.8` |
-| Brainstorming, creative ideation    | `gpt-4o` or `claude-opus`           | `0.7` – `1.0` |
-
-Low temperature (`0.0`–`0.2`) = deterministic, consistent outputs. High temperature (`0.7`+) = creative, varied outputs. For production workflows processing thousands of records, prefer low temperature.
+See `cargo-cli-ai/SKILL.md` for model and temperature guidance by use case.
 
 **References:** `cargo-cli-ai/SKILL.md`
 
@@ -278,7 +267,7 @@ cargo-ai workspace folder create --name "Q1 Campaigns" --emoji-slug "rocket" --k
 
 ## Async polling
 
-All operations are asynchronous. `action execute` returns a run; `action execute-batch` returns a batch. Poll until terminal state, or pass `--wait-until-finished` to block.
+All operations are asynchronous. Pass `--wait-until-finished` to block, or poll:
 
 | Result type   | Poll command                              | Interval | Terminal when                                  |
 | ------------- | ----------------------------------------- | -------- | ---------------------------------------------- |
@@ -286,16 +275,9 @@ All operations are asynchronous. `action execute` returns a run; `action execute
 | Batch         | `cargo-ai orchestration batch get <uuid>` | 5s       | `status` is `success`, `error`, or `cancelled` |
 | Agent message | `cargo-ai ai message get <uuid>`          | 2s       | `status` is `success` or `error`               |
 
-For large batches (1000+ records), increase the interval to 10-15s after the first minute.
+`action execute` returns a run; `action execute-batch` returns a batch — same polling applies.
 
-**When a run returns `error` status:**
-
-1. Read the run details: `cargo-ai orchestration run get <uuid>` — look at the node-level output for the specific node that failed.
-2. Check the error message from the connector or agent node to understand the root cause.
-3. Fix the input data or node config, then re-trigger.
-4. For transient errors (rate limits, timeouts), add a `retry` config to the node: `{"maximumAttempts": 3, "initialInterval": 1000, "backoffCoefficient": 2}`.
-
-See `cargo-cli-orchestration/references/troubleshooting.md` for a full list of error patterns.
+See `cargo-cli-orchestration/references/polling.md` for retry strategies, error handling, and large-batch guidance.
 
 ---
 

@@ -146,7 +146,7 @@ cargo-ai ai release deploy-draft --agent-uuid <uuid> \
 1. **Browse templates for inspiration**: `cargo-ai ai template list` — find a template close to your use case, then `cargo-ai ai template get <slug>` to see its system prompt, model, and temperature
 2. Create the agent: `cargo-ai ai agent create --name "..." --icon-color blue --icon-face 🤖`
 3. Get the draft release: `cargo-ai ai release get-draft --agent-uuid <uuid>`
-4. Update the draft with actions, resources, prompt, model: `cargo-ai ai release update-draft --agent-uuid <uuid> ...`
+4. Update the draft with configured actions, resources, prompt, model: `cargo-ai ai release update-draft --agent-uuid <uuid> ...`
 5. Deploy: `cargo-ai ai release deploy-draft --agent-uuid <uuid> ...`
 
 ## Templates
