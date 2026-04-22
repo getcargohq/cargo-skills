@@ -75,6 +75,8 @@ cargo-ai connection connector list         # all connectors
 
 **Plays vs tools:** Both are backed by a workflow. A **play** is a segment-driven automation — it reacts to data changes in a segment (records added, updated, removed). A **tool** is an on-demand workflow — triggered manually, via API, or on a cron schedule. Workflows don't have a `name` field; use `play list` or `tool list` to find names and extract the `workflowUuid`.
 
+**Retrieve in the UI:** plays live at `app.getcargo.io/workspaces/<WORKSPACE_UUID>/plays/<PLAY_UUID>` and tools at `app.getcargo.io/workspaces/<WORKSPACE_UUID>/tools/<TOOL_UUID>`. Get `<WORKSPACE_UUID>` from `cargo-ai whoami` under `workspace.uuid`.
+
 **Designing a new tool or play?** Check templates first — they are pre-built node graphs for common automation patterns (enrichment pipelines, CRM syncs, lead scoring) and are an excellent starting point. List templates with `cargo-ai orchestration template list` and inspect a specific one with `cargo-ai orchestration template get <slug>`. Templates are tagged by `kind` so you can find ones suited for tools (`"kind":"tool"`) or plays (`"kind":"play"`) right away. See `references/templates.md` for the full guide.
 
 **Compatibility rules:**

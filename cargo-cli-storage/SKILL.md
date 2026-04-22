@@ -40,6 +40,8 @@ cargo-ai storage model list                # all models (uuid, name, slug, colum
 cargo-ai storage model list --dataset-uuid <uuid>   # models in a specific dataset
 ```
 
+**Retrieve in the UI:** models live at `app.getcargo.io/workspaces/<WORKSPACE_UUID>/models/<MODEL_UUID>`. Get `<WORKSPACE_UUID>` from `cargo-ai whoami` under `workspace.uuid`.
+
 ## Quick reference
 
 ```bash
