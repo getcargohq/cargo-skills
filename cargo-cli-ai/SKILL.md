@@ -42,6 +42,8 @@ cargo-ai ai mcp-server list                # all MCP servers (uuid, name)
 cargo-ai ai memory list --scope agent --agent-uuid <uuid>  # agent memories
 ```
 
+**Retrieve in the UI:** agents live at `app.getcargo.io/workspaces/<WORKSPACE_UUID>/agents/<AGENT_UUID>`. Get `<WORKSPACE_UUID>` from `cargo-ai whoami` under `workspace.uuid`.
+
 ## Quick reference
 
 ```bash

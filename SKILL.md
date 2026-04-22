@@ -322,6 +322,19 @@ cargo-ai ai agent list
 cargo-ai segmentation segment list
 ```
 
+### Retrieve in the UI
+
+Each resource has a dedicated page in the Cargo app. Use these URL patterns to cross-reference a UUID returned by the CLI with the UI, or to extract a UUID from a URL the user pastes.
+
+| Resource | URL pattern                                                         |
+| -------- | ------------------------------------------------------------------- |
+| Play     | `app.getcargo.io/workspaces/<WORKSPACE_UUID>/plays/<PLAY_UUID>`     |
+| Tool     | `app.getcargo.io/workspaces/<WORKSPACE_UUID>/tools/<TOOL_UUID>`     |
+| Agent    | `app.getcargo.io/workspaces/<WORKSPACE_UUID>/agents/<AGENT_UUID>`   |
+| Model    | `app.getcargo.io/workspaces/<WORKSPACE_UUID>/models/<MODEL_UUID>`   |
+
+The workspace UUID is returned by `cargo-ai whoami` under `workspace.uuid`.
+
 ---
 
 ## End-to-end use cases
