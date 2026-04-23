@@ -98,6 +98,8 @@ cargo-ai orchestration draft-release deploy \
 
 > **Do not skip validation.** Deploying an invalid node graph will cause runs to fail. Always run `node validate` before `draft-release deploy`.
 
+> **Do not pass `--version` to `draft-release deploy`.** The deploy-specific `--version` flag is shadowed by the global `--version` flag — passing it causes the command to print the CLI version (e.g. `1.0.11`) and exit 0 **without deploying**. Omit it and let the server auto-assign (first deploy → `1.0.0`, then `1.0.1`, etc.). Always confirm the deploy worked with `release get-deployed --workflow-uuid <uuid>` — the response should show `status: "deployed"`, not `draft`.
+
 ---
 
 ## Run a play's workflow on specific records

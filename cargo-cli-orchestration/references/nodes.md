@@ -155,6 +155,8 @@ The `config` for an `agent` node takes two fields:
 }
 ```
 
+> **Reading agent output downstream — the `.answer` wrapper.** The parsed JSON is exposed under `.answer`, not directly on the node. Use `{{nodes.<slug>.answer.<field>}}` (e.g. `{{nodes.classify.answer.category}}`). Referencing `{{nodes.classify.category}}` resolves to undefined silently — branch conditions evaluate to false, end-node variables come out empty, and the run still reports `success`. This bites hard because nothing errors. Same path applies to `output.type: "text"` results — read them via `{{nodes.<slug>.answer}}`.
+
 ## Config values and expressions
 
 Config fields that need dynamic data use **expression objects**:
@@ -491,8 +493,8 @@ cargo-ai orchestration run create \
       "uuid":"f3f3f3f3-f3f3-4f3f-af3f-f3f3f3f3f3f3","slug":"end","kind":"native","actionSlug":"end",
       "config":{
         "variables":[
-          {"name":"category","type":"string","value":{"kind":"templateExpression","expression":"{{nodes.classify.category}}","instructTo":"none","fromRecipe":false}},
-          {"name":"reasoning","type":"string","value":{"kind":"templateExpression","expression":"{{nodes.classify.reasoning}}","instructTo":"none","fromRecipe":false}}
+          {"name":"category","type":"string","value":{"kind":"templateExpression","expression":"{{nodes.classify.answer.category}}","instructTo":"none","fromRecipe":false}},
+          {"name":"reasoning","type":"string","value":{"kind":"templateExpression","expression":"{{nodes.classify.answer.reasoning}}","instructTo":"none","fromRecipe":false}}
         ]
       },
       "childrenUuids":[],"fallbackOnFailure":false,
@@ -683,6 +685,8 @@ cargo-ai orchestration node compute \
 The `--context` object mirrors what nodes receive at runtime — `nodes.<slug>.<field>` for data from previous nodes. Inside a `group` loop, also pass `groupContext`.
 
 Response shows the resolved config values that would be sent to the connector or action.
+
+> **Don't use `node compute` to debug branch/condition logic.** The local evaluator does not reliably resolve `templateExpression` references against `--context` for boolean conditions — literals (`{{true}}`) work, but `{{nodes.qualify.answer.qualified}}` may return `false` even when the context has `qualified: true`. For branch debugging, prefer running the full graph with a single record (`batch create --data '{"kind":"recordIds",...}'`) and inspecting `run get <run-uuid>` — read `run.executions[].nodeChildIndex` / `nextNodeUuid` to see which branch was taken, and read `runContext.<upstreamSlug>` (returned at the top level of the same response) to verify the field the condition reads. `executions[].title` is only a truncated summary. See `references/troubleshooting.md` → "Debugging a workflow run".
 
 ## Node execute
 
