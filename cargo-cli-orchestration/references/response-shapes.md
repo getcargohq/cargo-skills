@@ -226,11 +226,47 @@ With `--wait-until-finished`, returns the terminal batch state (same shape as `b
     "status": "success",
     "batchUuid": null,
     "releaseUuid": "...",
+    "recordId": "...",
+    "recordTitle": "...",
+    "contextS3Filename": "...",
+    "computedConfigsS3Filename": "...",
+    "executions": [
+      {
+        "nodeUuid": "...",
+        "nodeSlug": "qualify",
+        "nodeKind": "agent",
+        "nodeActionSlug": "...",
+        "nodeChildIndex": 0,
+        "nextNodeUuid": "...",
+        "status": "success",
+        "title": "✅ {\"qualified\":true,\"score\":8,...}",
+        "creditsUsedCount": 1,
+        "startedAt": "...",
+        "updatedAt": "...",
+        "finishedAt": "..."
+      }
+    ],
     "createdAt": "2025-01-15T10:00:00Z",
     "finishedAt": "2025-01-15T10:00:05Z"
+  },
+  "runContext": {
+    "start":   { "_id": "...", "domain": "acme.com" },
+    "qualify": { "answer": { "qualified": true, "score": 8, "reasoning": "..." } },
+    "is_qualified": { "condition": true },
+    "post_slack": { "ok": true, "channel": "C123", "ts": "..." },
+    "end": { "qualified": true, "score": 8, "slack_message_ts": "..." }
+  },
+  "runComputedConfigs": {
+    "qualify": { "...resolved config that was sent to the node..." }
   }
 }
 ```
+
+**Key fields for debugging:**
+
+- `run.executions[].title` — quick human-readable summary of each node's output; **may be truncated**, do not treat as the full output.
+- `runContext.<nodeSlug>` — the actual per-node output, keyed by `nodeSlug`. This is the canonical source for what `{{nodes.<slug>...}}` resolves to downstream. Agent nodes wrap their structured output under `.answer` (e.g. `runContext.qualify.answer.qualified`).
+- `runComputedConfigs.<nodeSlug>` — the resolved config values each node was actually called with (after template expression evaluation).
 
 ## cargo-ai orchestration batch create
 

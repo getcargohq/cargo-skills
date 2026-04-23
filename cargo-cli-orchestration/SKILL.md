@@ -41,7 +41,7 @@ Need to run something?
 > `references/response-shapes.md` — full JSON response structures
 > `references/filter-syntax.md` — complete filter condition reference
 > `references/polling.md` — async polling patterns, error handling, retry strategies
-> `references/troubleshooting.md` — common errors and how to fix them
+> `references/troubleshooting.md` — common errors, plus a "Debugging a workflow run" section for runs that succeed but produce wrong output (wrong-branch routing, empty downstream values)
 
 ## Prerequisites
 
@@ -305,7 +305,7 @@ cargo-ai orchestration node validate --nodes '[...]'
 # → { "outcome": "valid" } or { "outcome": "notValid", "invalidNodes": [...] }
 ```
 
-For debugging, use `node compute` (dry-run expressions) or `node execute` (live test, costs credits). See `references/nodes.md` for the full node creation guide, validation error codes, and examples.
+For debugging, use `node compute` (dry-run expressions) or `node execute` (live test, costs credits). For runs that complete with `status: success` but produce wrong output (wrong branch taken, empty downstream values), use `run.executions[].title` from `run get` only as a quick summary — it may be truncated — and read `runContext.<nodeSlug>` (returned at the top level of the same `run get <run-uuid>` response) to verify field-level data. See `references/troubleshooting.md` → "Debugging a workflow run" and `references/nodes.md` for the full node creation guide, validation error codes, and examples.
 
 ## Help
 

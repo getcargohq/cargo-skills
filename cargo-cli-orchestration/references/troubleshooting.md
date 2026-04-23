@@ -41,6 +41,76 @@ Common errors and recovery steps for `cargo-cli-orchestration` commands.
 | `outcome: "notQueried"` with permission error  | SoR connection issue                   | Verify the connection is active in Cargo; try `sor list` to check status          |
 | Query returns empty rows                       | Filter too restrictive, or wrong table | Verify table name with DDL; try a broader query first (`SELECT * ... LIMIT 5`)    |
 
+## Debugging a workflow run
+
+A run can finish with `status: "success"` and still be wrong — wrong branch taken, empty downstream values, no Slack message sent. Use this checklist when behavior doesn't match expectations.
+
+### 1. Pull the per-node executions and context
+
+```bash
+cargo-ai orchestration run get <run-uuid>
+```
+
+The response has three top-level fields:
+
+| Field                | What it gives you                                                                                |
+| -------------------- | ------------------------------------------------------------------------------------------------ |
+| `run.executions[]`   | Node-by-node trace (which node ran, status, routing)                                             |
+| `runContext`         | Full per-node output, keyed by `nodeSlug` — the actual data referenced as `{{nodes.<slug>...}}`  |
+| `runComputedConfigs` | Per-node resolved config values (what each node was actually called with), also keyed by `nodeSlug` |
+
+Each `executions[]` item has:
+
+| Field            | What it tells you                                                                                |
+| ---------------- | ------------------------------------------------------------------------------------------------ |
+| `nodeSlug`       | Which node ran                                                                                   |
+| `status`         | `success` / `error` for this node                                                                |
+| `nextNodeUuid`   | Where execution went next — for a `branch`, this reveals which child was taken                   |
+| `nodeChildIndex` | Index into `childrenUuids` that was followed (`0` = matched/yes, `1` = not matched/no for branch)|
+| `title`          | Human-readable **summary only** — may be truncated; do not treat as the full output              |
+| `creditsUsedCount` | Per-node cost; agent and connector nodes are non-zero, native nodes are zero                  |
+
+`title` is a quick sanity check, not a source of truth — it can be truncated. To verify the exact data a node produced, read `runContext.<nodeSlug>` from the same response. Deep-dive into it to confirm the path you're referencing in `{{nodes.<slug>....}}` actually exists (for example, an agent's structured output is nested under `.answer`, so the right path is `{{nodes.<slug>.answer.<field>}}` and not `{{nodes.<slug>.<field>}}`).
+
+### 2. Spot wrong-branch routing
+
+If a `branch` node's `title` says "❌ Condition is not matched" but you expected the yes-path, the condition expression resolved to falsy. Most common causes:
+
+| Cause | Fix |
+|---|---|
+| Path in the expression doesn't exist | Read `runContext.<upstreamSlug>` from `run get <run-uuid>` and check the actual shape — common case: an agent's output is nested under `.answer`, so `{{nodes.qualify.qualified}}` resolves to undefined while `{{nodes.qualify.answer.qualified}}` works |
+| Stringified boolean comparison | `{{nodes.qualify.answer.qualified === true}}` may evaluate the inner expression as a string template — prefer the truthy form `{{nodes.qualify.answer.qualified}}` |
+| Field actually missing from the output | The upstream node didn't produce it — `runContext.<upstreamSlug>` will confirm. For agents, this usually means revisiting the prompt + `jsonSchema` |
+| Typo in slug or field | Slugs are case-sensitive; `nodes.Qualify.answer.qualified` won't resolve |
+
+### 3. Re-run a single record after fixing
+
+```bash
+# Stage the fix without deploying (per workflow safety)
+cargo-ai orchestration draft-release update \
+  --workflow-uuid <play.workflowUuid> --nodes '[...]'
+
+# After approval, deploy (do NOT pass --version — it collides with the global flag)
+cargo-ai orchestration draft-release deploy \
+  --workflow-uuid <play.workflowUuid> --nodes '[...]' \
+  --form-fields 'null' --description "Fix branch condition"
+
+# Re-test against the same record IDs that exposed the bug
+cargo-ai orchestration batch create \
+  --workflow-uuid <play.workflowUuid> \
+  --data '{"kind":"recordIds","modelUuid":"<model>","ids":["id1","id2","id3"]}'
+```
+
+### 4. Common silent-failure modes
+
+| Symptom in `run get` | Likely cause |
+|---|---|
+| Run is `success` but nothing downstream of a node fired | Downstream expression resolved to undefined — open `runContext.<upstreamSlug>` from `run get` and compare against the path you wrote |
+| Branch always takes the same child | Condition references a non-existent path; `{{...}}` resolved to undefined which is falsy — verify against `runContext.<upstreamSlug>` |
+| `find_email`/connector node ran but downstream values are empty | Connector returned a partial response — read `runContext.<nodeSlug>` from `run get` to see the exact shape, then use the actual field names (e.g. `nodes.find_email.email` may be `nodes.find_email.contact.email` for some integrations) |
+| Slack post succeeded but message body has `{{...}}` literals | Template syntax error — a stray space or a missing closing `}}` makes the template engine treat the segment as plain text |
+| End-node variables are all empty in a successful run | The `value` expressions reference paths that don't exist; cross-check each upstream node's `runContext.<slug>` from `run get` (don't rely on `title` — it may be truncated) |
+
 ## Run error recovery
 
 When a run reaches `status: "error"`, follow this sequence:
