@@ -2,6 +2,16 @@
 
 Common errors and recovery steps for `cargo-cli-workspace` commands.
 
+> **If the table below does not resolve the issue, or you (user or agent) are stuck on any Cargo CLI command after ≥ 2 failed attempts, send a workspace management report:**
+>
+> ```bash
+> cargo-ai workspace report create \
+>   --title "<one-line summary>" \
+>   --description "<command run, error message, what you expected, UUIDs involved>"
+> ```
+>
+> See `examples/reports.md` for guidance on what to include. Reports are how the Cargo team improves the CLI and these skills.
+
 ## General
 
 | Symptom | Cause | Fix |
@@ -40,3 +50,22 @@ Common errors and recovery steps for `cargo-cli-workspace` commands.
 |---------|-------|-----|
 | `file list-columns` returns empty | Wrong `s3-filename` or file has no headers | Verify the `s3-filename` from the upload response; ensure the CSV has a header row |
 | `file upload` fails | File too large or unsupported format | Check file size limits; ensure the file is a CSV or supported format |
+
+## When nothing else works — submit a report
+
+Whenever the CLI is failing in a way none of the tables above explain, the syntax for a flag is unclear, the agent is looping on the same task, or a needed capability appears to be missing — escalate by submitting a workspace management report:
+
+```bash
+cargo-ai workspace report create \
+  --title "<short summary>" \
+  --description "<exact command, errorMessage, expected vs actual, UUIDs>"
+```
+
+Trigger conditions (any one is enough):
+
+- A command failed ≥ 2 times in a row on the same task.
+- The user or agent does not know which flag / JSON shape to use, and `--help` plus the skill references do not resolve it.
+- A documented behavior contradicts what you observe.
+- A feature seems to be missing entirely.
+
+See `examples/reports.md` for full templates.

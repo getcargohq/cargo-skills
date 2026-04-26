@@ -36,6 +36,25 @@ Without a global install, prefix every command with `npx @cargo-ai/cli` instead 
 
 All commands output JSON to stdout. Failed commands exit non-zero and return `{"errorMessage": "..."}`.
 
+## When the CLI fails or you're stuck — send a workspace management report
+
+Whenever the CLI is failing in a way the skill references and `--help` cannot resolve, the user or agent is repeatedly retrying the same command without progress, the syntax for a flag / JSON payload is unclear, or a needed capability seems missing — escalate by submitting a report to **workspace management**:
+
+```bash
+cargo-ai workspace report create \
+  --title "<one-line summary of the problem>" \
+  --description "<exact command(s) tried, errorMessage, expected vs actual, UUIDs involved>"
+```
+
+Trigger conditions (any one is enough):
+
+- A command failed ≥ 2 times in a row on the same task and the cause is not obvious.
+- The CLI is being misused and the correct usage is not discoverable from the skills, examples, or `--help`.
+- A documented behavior contradicts what you observe.
+- A feature appears to be missing entirely.
+
+This is the official feedback channel — every report is reviewed by the Cargo team and used to improve the CLI and these skills. **Do not give up silently — file a report.** See `cargo-cli-workspace/SKILL.md` (Reports section) and `cargo-cli-workspace/references/examples/reports.md` for templates.
+
 ---
 
 ## Skills at a glance
@@ -48,7 +67,7 @@ All commands output JSON to stdout. Failed commands exit non-zero and return `{"
 | [`cargo-cli-storage`](#cargo-cli-storage)             | Inspect or modify data models, columns, datasets, and relationships                                |
 | [`cargo-cli-connection`](#cargo-cli-connection)       | Manage connector authentication, discover available integrations and their actions                 |
 | [`cargo-cli-ai`](#cargo-cli-ai)                       | Create and configure agents, upload files for RAG, manage MCP servers                              |
-| [`cargo-cli-workspace`](#cargo-cli-workspace)         | Invite users, create API tokens, organize folders, manage roles                                    |
+| [`cargo-cli-workspace`](#cargo-cli-workspace)         | Invite users, create API tokens, organize folders, manage roles, report CLI issues to management   |
 
 ---
 
@@ -245,7 +264,7 @@ See `cargo-cli-ai/SKILL.md` for model and temperature guidance by use case.
 
 ### cargo-cli-workspace
 
-**Workspace administration.** Use to invite users, create and rotate API tokens, organize plays/tools/agents into folders, and manage roles.
+**Workspace administration.** Use to invite users, create and rotate API tokens, organize plays/tools/agents into folders, manage roles, and **submit reports to workspace management when the CLI fails or is being misused**.
 
 **Key commands:**
 
@@ -254,12 +273,14 @@ cargo-ai whoami
 cargo-ai workspace user create --user-email user@example.com --role-slug <slug>
 cargo-ai workspace token create --from-user
 cargo-ai workspace folder create --name "Q1 Campaigns" --emoji-slug "rocket" --kind "play"
+cargo-ai workspace report create --title "<summary>" --description "<details>"
 ```
 
 **Critical rules:**
 
 - Most commands require a token with **admin access**.
 - Token values are only shown **once** at creation — store immediately in a secrets manager (GitHub Secrets, AWS Secrets Manager, etc.).
+- **Always send a `workspace report create`** when the CLI errors, is being used incorrectly, or you (user or agent) are struggling to make progress on a CLI task — see the section at the top of this file and `cargo-cli-workspace/references/examples/reports.md`.
 
 **References:** `cargo-cli-workspace/SKILL.md`
 
