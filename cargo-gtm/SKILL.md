@@ -1,6 +1,6 @@
 ---
 name: cargo-gtm
-description: "Front door for any GTM task on Cargo — sourcing accounts and contacts, waterfall enrichment, email and phone lookup, email verification, LinkedIn resolution, scoring, qualification, sequencing, CRM sync, and signal monitoring (job changes, funding, tech-stack/hiring intent). Use this skill when the user states a real-world goal involving prospects, leads, accounts, contacts, ICP lists, or campaign activation. Routes the agent to phase docs (Level 2), recipes (Level 2.5), and per-provider playbooks (Level 3) before any action call. Available credits-based providers (priority): salesNavigator, cargo, waterfall, FullEnrich, theirStack, peopleDataLabs. Long-tail: apolloio, peopleDataLabs, hunter, icypeas, prospeo, linkedin, proxycurl, contactOut, findyMail, leadMagic, theSwarm, snitcher, firecrawl, exa, linkup, perplexity, openAi, anthropic, gemini, deepSeek, hubspot, salesforce, pipedrive, attio, lemlist, lgm, instantly, smartlead, outreach, salesloft, heyReach."
+description: "Front door for any GTM task on Cargo — sourcing, waterfall enrichment, email/phone/LinkedIn lookup, email verification, scoring, qualification, sequencing, CRM sync, and signal monitoring (job changes, funding, tech-stack/hiring intent). Use when the user states a real-world goal involving prospects, leads, accounts, contacts, ICP lists, or campaign activation. Routes to phase guides (Level 2), recipes (Level 2.5), and per-provider playbooks (Level 3) before any action call."
 license: MIT
 compatibility: Requires @cargo-ai/cli (npm) and a Cargo API token
 metadata:
@@ -52,9 +52,14 @@ Scan this list and read the recipe matching your task. **When a recipe matches: 
 
 | Recipe | Use when… |
 |---|---|
-| [`recipes/build-tam.md`](recipes/build-tam.md) | Building a Total Addressable Market list or large company list from ICP criteria |
+| [`recipes/prospecting.md`](recipes/prospecting.md) | End-to-end find → enrich → verify → sync (P1/P2/P3 variants) |
+| [`recipes/build-tam.md`](recipes/build-tam.md) | Building a Total Addressable Market list at scale (100–10,000 companies) |
 | [`recipes/linkedin-url-lookup.md`](recipes/linkedin-url-lookup.md) | Resolving a person's LinkedIn profile URL from name + company with strict identity validation |
-| (more recipes ship in Phase D: portfolio-prospecting, small-business-prospecting, job-change-monitoring, funding-watch, deep-research, …) | |
+| [`recipes/portfolio-prospecting.md`](recipes/portfolio-prospecting.md) | Investor / accelerator → portfolio companies → contacts |
+| [`recipes/job-change-monitoring.md`](recipes/job-change-monitoring.md) | `waterfall.detectJobChange` (cargo-unique) on a contact segment |
+| [`recipes/funding-watch.md`](recipes/funding-watch.md) | Tracking companies that recently raised funding |
+| [`recipes/tech-intent.md`](recipes/tech-intent.md) | Finding companies by tech-stack or hiring-intent signals |
+| [`recipes/icp-discovery.md`](recipes/icp-discovery.md) | Diffing Closed-Won vs Closed-Lost segments to surface ICP signals |
 
 If none match, scan the phase docs above for the closest pattern, then adapt.
 
