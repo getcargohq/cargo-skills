@@ -2,7 +2,7 @@
 
 When the priority stack (salesNavigator / cargo / waterfall / FullEnrich / theirStack / peopleDataLabs) can't serve the user's criteria, swap in providers from the long tail.
 
-For every alternative, see [`../../cargo-gtm/references/stage-action-map.md`](../../cargo-gtm/references/stage-action-map.md) for the cheapest credits-based action per stage across the full 120-integration catalog.
+For every alternative, see [`stage-action-map.md`](stage-action-map.md) for the cheapest credits-based action per stage across the full 120-integration catalog.
 
 ## When to swap providers
 
@@ -86,8 +86,8 @@ Examples:
 - "Get GitHub stars over time for a list of repos" — github connector + custom enrichment.
 - "Find every company that uses Stripe Atlas" — niche; might require custom scraping via firecrawl.
 
-For these: defer to [`cargo-gtm/SKILL.md`](../../cargo-gtm/SKILL.md) and its [`agents/execution-plan-creator.md`](../../cargo-gtm/agents/execution-plan-creator.md), which builds a custom chain citing the right long-tail providers.
+For these: defer to [`../SKILL.md`](../SKILL.md) and its [`../agents/execution-plan-creator.md`](../agents/execution-plan-creator.md), which builds a custom chain citing the right long-tail providers.
 
 ## Always escalate to a workspace report
 
-If the priority stack misses AND no documented alternative covers the gap, file a `cargo-ai workspace report create` describing the missing capability. See [`../../../cargo-infra/cargo-workspace-management/SKILL.md`](../../../cargo-infra/cargo-workspace-management/SKILL.md) (Reports section).
+If the priority stack misses AND no documented alternative covers the gap, file a `cargo-ai workspace report create` describing the missing capability. See [`../../cargo-workspace-management/SKILL.md`](../../cargo-workspace-management/SKILL.md) (Reports section).

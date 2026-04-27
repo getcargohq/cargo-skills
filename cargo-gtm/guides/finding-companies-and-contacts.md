@@ -125,7 +125,7 @@ cargo-ai orchestration action execute \
 
 ## Parallel execution
 
-For any source list with >10 items, use `action execute-batch` with `--records`. The platform fans out automatically and respects rate limits per provider. For very large runs (>500), pass via `batch create --workflow-uuid` with a saved tool — see [`../../../cargo-infra/cargo-orchestration/references/polling.md`](../../../cargo-infra/cargo-orchestration/references/polling.md) for polling strategies.
+For any source list with >10 items, use `action execute-batch` with `--records`. The platform fans out automatically and respects rate limits per provider. For very large runs (>500), pass via `batch create --workflow-uuid` with a saved tool — see [`../../cargo-orchestration/references/polling.md`](../../cargo-orchestration/references/polling.md) for polling strategies.
 
 ## When the cheapest source returns garbage
 

@@ -1,14 +1,4 @@
----
-name: cargo-job-change-monitoring
-description: "Detect job changes among contacts in a segment, surface MOVED contacts as a signal, and optionally write back to a model column or push to a CRM. Anchored in waterfall.detectJobChange — the only credits-based job-change action in the cargo catalog (cargo-unique vs other GTM platforms). Use when the user wants to monitor a contact list for job changes, identify newly-MOVED prospects for outbound timing, or track customer-side job changes for renewal risk."
-license: MIT
-compatibility: Requires @cargo-ai/cli (npm) and a Cargo API token, with waterfall connector authenticated
-metadata:
-  author: getcargo
-  version: "1.0"
----
-
-# Cargo Job Change Monitoring
+# Recipe — Detect job changes in a contact segment
 
 Use this skill when the user wants to detect job changes among a list of contacts. **The only provider in cargo's 120-integration catalog with a credits-based job-change action is `waterfall.detectJobChange`** — this skill exists to make that capability discoverable and reusable.
 
@@ -76,7 +66,7 @@ If a `current_company` or `last_job_change_at` column exists on the Contacts mod
 
 ```bash
 # Use cargo-ai storage / segment patterns to upsert.
-# See ../../cargo-infra/cargo-storage/SKILL.md.
+# See ../../cargo-storage/SKILL.md.
 ```
 
 For pushing the MOVED set to a CRM (HubSpot custom property, Salesforce field), defer to the future `cargo-crm-sync` skill (Phase D Tier 2).
@@ -89,7 +79,7 @@ For continuous monitoring (e.g. weekly job-change scan), build a play:
 3. Action node: `waterfall.detectJobChange`.
 4. Output: write `MOVED` rows to a "Job Changes — Recent" segment.
 
-See [`../cargo-recurring-workflow/SKILL.md`](../cargo-recurring-workflow/SKILL.md) (Phase D Tier 2) for the play setup pattern.
+For setting up a play / scheduled tool, see `../../cargo-orchestration/references/plays.md`.
 
 ## Credit budget
 
@@ -118,7 +108,7 @@ Pass as many as you have. More identifiers = better coverage.
 
 ## Output retrieval
 
-For batch runs, use `cargo-ai orchestration run download-outputs --workflow-uuid <uuid> --output-node-slug <slug>` to retrieve results. See [`../cargo-gtm/references/output-retrieval.md`](../cargo-gtm/references/output-retrieval.md).
+For batch runs, use `cargo-ai orchestration run download-outputs --workflow-uuid <uuid> --output-node-slug <slug>` to retrieve results. See [`../references/output-retrieval.md`](../references/output-retrieval.md).
 
 ## Cargo-unique strength
 

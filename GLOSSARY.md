@@ -36,7 +36,7 @@ The UUID returned by `batch create`. Used to poll batch status (`batch get`), do
 ## C
 
 **capability skill**
-A skill in `cargo-infra/` that documents one CLI domain (orchestration, storage, connection, AI, analytics, billing, workspace management). Capability skills are the "standard library" — the agent loads them when it needs the syntax for a specific CLI command. Capability skills never reference outcome skills (one-way dependency: outcome → capability).
+A skill that documents one CLI domain (orchestration, storage, connection, AI, analytics, billing, workspace management). Capability skills are the "standard library" — the agent loads them when it needs the syntax for a specific CLI command. They sit at the repo root alongside the outcome skill (`cargo-gtm`). Capability skills never reference outcome skills (one-way dependency: outcome → capability).
 
 **chat**
 A conversation session between a user and an agent. Created with `ai chat create --agent-uuid <uuid>`. Messages are sent to a chat via `ai message create --chat-uuid <uuid>`.
@@ -132,7 +132,7 @@ The set of activities for finding, qualifying, and engaging prospects: sourcing,
 The target prospect description used to filter sourcing and qualification: industry, size band, geography, tech stack, role, funding stage, etc. Every prospecting recipe begins by translating the user's stated ICP into provider filters.
 
 **ICP fit**
-The degree to which a record matches the ICP. Often expressed as a 0–10 score from a scoring agent (`anthropic.instruct` or similar) over enriched record fields. See `cargo-outcome/cargo-gtm/guides/writing-outreach.md` for scoring patterns.
+The degree to which a record matches the ICP. Often expressed as a 0–10 score from a scoring agent (`anthropic.instruct` or similar) over enriched record fields. See `cargo-gtm/guides/writing-outreach.md` for scoring patterns.
 
 **intent signal**
 An observable behavior suggesting a company is ready to buy: hiring for a relevant role, raising funding, adding/removing tech in their stack, posting recent LinkedIn updates, anonymous website visits, recent job changes among employees. Cargo surfaces intent signals via `cargo.enrichBusinessFunding…`, `theirStack.searchJobs`, `waterfall.detectJobChange`, `snitcher.searchSessions`, and others.
@@ -184,7 +184,7 @@ A directed acyclic graph (DAG) of nodes defining a workflow's execution steps. P
 ## O
 
 **outcome skill**
-A skill in `cargo-outcome/` that the agent loads when the user states a real-world goal (e.g. "build a TAM list", "find 5 fintech CTOs", "monitor job changes"). Outcome skills compose actions across multiple CLI domains and delegate to capability skills via relative paths (`../../cargo-infra/<name>/...`). They're the "application library" sitting on top of the capability "standard library".
+A skill the agent loads when the user states a real-world goal (e.g. "build a TAM list", "find 5 fintech CTOs", "monitor job changes"). The repo ships one outcome skill, **`cargo-gtm`**, which routes across all GTM scenarios via internal recipes (`cargo-gtm/recipes/*.md`). It composes actions across multiple CLI domains and delegates to capability skills via relative paths (`../<name>/...`). The "application library" sitting on top of the capability "standard library".
 
 **output node**
 The terminal node of a workflow / tool / play whose output is the canonical result of a run. Identified by its `slug` (typically `output` or `end`) on the deployed release. Required input to `cargo-ai orchestration run download-outputs --output-node-slug <slug>` for retrieving action results.
@@ -197,19 +197,19 @@ The terminal node of a workflow / tool / play whose output is the canonical resu
 A segment-driven workflow that reacts automatically to data changes (records added, updated, or removed from a segment). Listed via `orchestration play list`. Triggered via `batch create` (not `run create`).
 
 **polling**
-The pattern of repeatedly calling `run get`, `batch get`, or `message get` until the operation reaches a terminal state. See `cargo-infra/cargo-orchestration/references/polling.md` for intervals and shell snippets.
+The pattern of repeatedly calling `run get`, `batch get`, or `message get` until the operation reaches a terminal state. See `cargo-orchestration/references/polling.md` for intervals and shell snippets.
 
 **persona**
 A role / title shape that's part of the ICP. Example personas: "Head of RevOps at a B2B SaaS", "Founder at a seed-stage fintech". Used as filters for `salesNavigator.searchLeads`, `peopleDataLabs.searchPeople`, etc.
 
 **priority stack**
-The 6 default credits-based providers used as the spine of every recipe in `cargo-outcome/`: **salesNavigator** (sourcing), **cargo** native (firmographic + signal intelligence), **waterfall** (multi-source enrichment + verification + job-change signal), **FullEnrich** (premium contact lookup), **theirStack** (tech-stack + hiring intent), **peopleDataLabs** (heavyweight backfill). See `cargo-outcome/cargo-gtm/SKILL.md` for the full stack reference and per-provider playbooks.
+The 6 default credits-based providers used as the spine of every recipe in `cargo-gtm/`: **salesNavigator** (sourcing), **cargo** native (firmographic + signal intelligence), **waterfall** (multi-source enrichment + verification + job-change signal), **FullEnrich** (premium contact lookup), **theirStack** (tech-stack + hiring intent), **peopleDataLabs** (heavyweight backfill). See `cargo-gtm/SKILL.md` for the full stack reference and per-provider playbooks.
 
 **prospect**
 A person being marketed or sold to — typically resolved to a `prospect_id` via `cargo.matchProspect`. Distinct from a "lead" (which usually implies an inbound or marketing-qualified context); cargo uses "prospect" generically.
 
 **prospecting**
-The activity of finding prospects matching an ICP, enriching them with contact details and signals, and preparing them for outreach. Cargo's flagship outcome skill is `cargo-prospecting`.
+The activity of finding prospects matching an ICP, enriching them with contact details and signals, and preparing them for outreach. Cargo's prospecting recipe lives at `cargo-gtm/recipes/prospecting.md`.
 
 ---
 
@@ -263,7 +263,7 @@ A connected data warehouse (BigQuery, Snowflake, etc.) that Cargo can query via 
 ## T
 
 **TAM (Total Addressable Market)**
-The full universe of companies (and optionally contacts at those companies) matching an ICP. The `cargo-tam-build` outcome skill (Phase D) and the `cargo-outcome/cargo-gtm/recipes/build-tam.md` recipe both produce TAM lists, typically in the 100–10,000 company range.
+The full universe of companies (and optionally contacts at those companies) matching an ICP. Cargo's TAM-build recipe lives at `cargo-gtm/recipes/build-tam.md`, typically producing 100–10,000 company lists.
 
 **template**
 A pre-built blueprint for a workflow node graph (`orchestration template list`) or an AI agent (`ai template list`). Used to bootstrap common patterns without building from scratch.
@@ -286,7 +286,7 @@ A companion object to `jsonSchema` in action and extractor configs. While `jsonS
 ## W
 
 **waterfall enrichment**
-A pattern where multiple providers are run sequentially, each filling gaps the prior step missed. Cheap providers do the heavy lifting; premium providers fill the long tail. Implemented as N sequential `action execute-batch` calls with the records pruned between calls. See `cargo-outcome/cargo-gtm/references/waterfall-strategy.md` for canonical chains by enrichment goal.
+A pattern where multiple providers are run sequentially, each filling gaps the prior step missed. Cheap providers do the heavy lifting; premium providers fill the long tail. Implemented as N sequential `action execute-batch` calls with the records pruned between calls. See `cargo-gtm/references/waterfall-strategy.md` for canonical chains by enrichment goal.
 
 **workflow**
 A DAG of nodes that defines the execution logic for a play or tool. Workflows don't have a `name` field — find them by name via `play list` or `tool list`, then extract `workflowUuid`.

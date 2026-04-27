@@ -124,6 +124,6 @@ Every recipe in this skill that fans out across >50 records uses path 2 with `do
 
 ## See also
 
-- [`../../../cargo-infra/cargo-analytics/SKILL.md`](../../../cargo-infra/cargo-analytics/SKILL.md#downloading-run-results) — full reference for `run download` and `run download-outputs`.
-- [`../../../cargo-infra/cargo-orchestration/references/polling.md`](../../../cargo-infra/cargo-orchestration/references/polling.md) — polling strategies for async runs and batches.
-- [`../../../cargo-infra/cargo-orchestration/references/response-shapes.md`](../../../cargo-infra/cargo-orchestration/references/response-shapes.md) — full JSON shape of run / batch responses.
+- [`../../cargo-analytics/SKILL.md`](../../cargo-analytics/SKILL.md#downloading-run-results) — full reference for `run download` and `run download-outputs`.
+- [`../../cargo-orchestration/references/polling.md`](../../cargo-orchestration/references/polling.md) — polling strategies for async runs and batches.
+- [`../../cargo-orchestration/references/response-shapes.md`](../../cargo-orchestration/references/response-shapes.md) — full JSON shape of run / batch responses.

@@ -1,14 +1,4 @@
----
-name: cargo-funding-watch
-description: "Track companies that recently raised funding or were acquired, emit a 'recently funded' signal segment for outbound timing. Anchored in cargo.enrichBusinessFundingAndAcquisitions and cargo.fetchBusinessEvents. Use when the user wants to surface freshly-funded prospects, monitor a target list for funding events, or trigger outbound when a company hits a funding milestone."
-license: MIT
-compatibility: Requires @cargo-ai/cli (npm) and a Cargo API token, with cargo native connector authenticated
-metadata:
-  author: getcargo
-  version: "1.0"
----
-
-# Cargo Funding Watch
+# Recipe — Track recently-funded companies for outbound timing
 
 Use this skill when the user wants to identify or monitor companies that recently raised funding. Funding events are one of the strongest outbound-timing signals — a fresh round means budget, hiring, and a willingness to evaluate new tools.
 
@@ -74,7 +64,7 @@ For continuous monitoring (e.g. daily scan of target accounts):
 4. Output: write rows where new events found to a "Recently Funded" signal segment.
 5. Optional: post Slack notification per new funding event.
 
-See [`../cargo-recurring-workflow/SKILL.md`](../cargo-recurring-workflow/SKILL.md) (Phase D Tier 2) for the play setup pattern.
+For setting up a play / scheduled tool, see `../../cargo-orchestration/references/plays.md`.
 
 ## Credit budget
 

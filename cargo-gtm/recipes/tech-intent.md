@@ -1,14 +1,4 @@
----
-name: cargo-tech-intent
-description: "Surface companies showing tech-stack or hiring intent signals — 'everyone using Snowflake', 'everyone hiring data engineers', 'everyone running React + AWS + dbt'. Anchored in theirStack (searchTechnologies, searchJobs, searchCompanies) plus cargo.enrichBusinessTechnographics for per-company validation. Use when intent signal is the primary filter for sourcing or prioritization."
-license: MIT
-compatibility: Requires @cargo-ai/cli (npm) and a Cargo API token, with theirStack and cargo connectors authenticated
-metadata:
-  author: getcargo
-  version: "1.0"
----
-
-# Cargo Tech Intent
+# Recipe — Find companies by tech-stack or hiring intent
 
 Use this skill when the user wants to find or prioritize companies based on **what they use** (tech stack) or **what they're hiring for** (role intent). These are two of the strongest leading indicators in B2B GTM.
 
@@ -115,7 +105,7 @@ For continuous monitoring (e.g. weekly scan for "new companies hiring my buyer")
 3. Dedup against last week's results.
 4. Output: write new companies to a "Fresh Hiring Intent" segment.
 
-See [`../cargo-recurring-workflow/SKILL.md`](../cargo-recurring-workflow/SKILL.md) (Phase D Tier 2) for play setup.
+For setting up a play / scheduled tool, see `../../cargo-orchestration/references/plays.md`.
 
 ## Credit budget
 

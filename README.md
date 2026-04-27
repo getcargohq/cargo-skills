@@ -21,20 +21,28 @@ Works with Claude Code, Cursor, Windsurf, GitHub Copilot, and any agent that sup
 
 ## What this skill teaches
 
-**Cargo** connects your data models (companies, contacts, deals) to external integrations (CRMs, enrichment providers, AI agents) and runs them as automated workflows. The skill is organized into two layers:
+**Cargo** connects your data models (companies, contacts, deals) to external integrations (CRMs, enrichment providers, AI agents) and runs them as automated workflows. The repo ships eight skills at the root — one **outcome skill** (`cargo-gtm`, the front door for any GTM task) and seven **capability skills** (one per CLI domain).
 
-### Outcomes (`cargo-outcome/`) — goal-shaped skills
+### Outcome — `cargo-gtm`
 
-Load when the user states a real-world job.
+Load when the user states a real-world goal. `cargo-gtm` is the meta-skill — it routes to phase guides, scenario recipes, and per-provider playbooks all bundled inside the same skill.
 
-| Skill                  | What the agent does                                                                                                                                |
-| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **GTM**                | Front door for prospecting, enrichment, verification, sequencing, sync, and signals. Routes to phase docs, recipes, and per-provider playbooks.    |
-| **Prospecting**        | Find people matching a description, enrich, verify emails, sync to CRM. Flagship pipeline.                                                         |
+Built-in recipes:
 
-### Capabilities (`cargo-infra/`) — CLI surface
+| Recipe | Use when… |
+|---|---|
+| `prospecting.md` | Find people matching a description, enrich, verify, sync. End-to-end flagship. |
+| `tam-build.md` | Build a Total Addressable Market list at scale (100–10,000 companies). |
+| `linkedin-url-lookup.md` | Resolve a person's LinkedIn URL from name + company with strict identity validation. |
+| `portfolio-prospecting.md` | Find every company backed by a specific investor / accelerator, then prospect into them. |
+| `job-change-monitoring.md` | Detect job changes in a contact segment (waterfall.detectJobChange — cargo-unique). |
+| `funding-watch.md` | Track companies that recently raised funding for outbound timing. |
+| `tech-intent.md` | Find companies by tech-stack or hiring intent (theirStack-driven). |
+| `icp-discovery.md` | Diff Closed-Won vs Closed-Lost segments, surface differentiating ICP signals. |
 
-Load for a specific CLI domain.
+### Capabilities — CLI surface
+
+Load when you need the syntax for a specific CLI domain.
 
 | Domain            | What the agent learns                                                                                                                                              |
 | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -48,14 +56,15 @@ Load for a specific CLI domain.
 
 ## What can I ask for?
 
-The outcome skills handle prompts like:
+Prompts that route through `cargo-gtm`:
 
-- *"Find me 5 fintech CTOs in NYC and verify their emails."* — `cargo-prospecting`
-- *"Build a TAM list of seed-stage SaaS companies in Europe."* — `cargo-gtm` → `recipes/build-tam.md`
-- *"Resolve the LinkedIn profile for John Smith at Acme Corp."* — `cargo-gtm` → `recipes/linkedin-url-lookup.md`
-- *"Detect job changes among contacts in our customers segment."* — `cargo-gtm` → recipes
-- *"Find companies that recently raised funding and use Snowflake."* — `cargo-gtm` (funding + tech-stack signals)
-- *"Push these enriched leads to HubSpot."* — `cargo-gtm` → CRM sync patterns
+- *"Find me 5 fintech CTOs in NYC and verify their emails."* → `recipes/prospecting.md`
+- *"Build a TAM list of seed-stage SaaS companies in Europe."* → `recipes/tam-build.md`
+- *"Resolve the LinkedIn profile for John Smith at Acme Corp."* → `recipes/linkedin-url-lookup.md`
+- *"Detect job changes among contacts in our customers segment."* → `recipes/job-change-monitoring.md`
+- *"Find every company backed by Sequoia and prospect into the portfolio."* → `recipes/portfolio-prospecting.md`
+- *"Show me everyone hiring data engineers AND running Snowflake."* → `recipes/tech-intent.md`
+- *"What ICP signals differentiate our Closed-Won deals?"* → `recipes/icp-discovery.md`
 
 For ad-hoc CLI work (modify a model, list connectors, query the warehouse), load the matching capability skill directly.
 

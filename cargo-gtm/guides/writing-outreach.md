@@ -130,7 +130,7 @@ Cargo's `cargo-ai` skill (capability layer) lets you create persistent agents wi
 
 For one-shot scoring or personalization across a batch, raw `instruct` is simpler and cheaper.
 
-See [`../../../cargo-infra/cargo-ai/SKILL.md`](../../../cargo-infra/cargo-ai/SKILL.md) for the agent surface.
+See [`../../cargo-ai/SKILL.md`](../../cargo-ai/SKILL.md) for the agent surface.
 
 ## Action shape rules
 

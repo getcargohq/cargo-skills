@@ -70,7 +70,7 @@ Always present a cost estimate **before executing**. The user gets to approve / 
 
 ## Action shape rule (critical)
 
-Every recipe step must use the canonical action shape: `{"kind":"connector","integrationSlug":"<slug>","actionSlug":"<slug>","config":{}}`. **No `connectorUuid` in `config`.** See [`../../../cargo-infra/cargo-orchestration/references/actions.md`](../../../cargo-infra/cargo-orchestration/references/actions.md).
+Every recipe step must use the canonical action shape: `{"kind":"connector","integrationSlug":"<slug>","actionSlug":"<slug>","config":{}}`. **No `connectorUuid` in `config`.** See [`../../cargo-orchestration/references/actions.md`](../../cargo-orchestration/references/actions.md).
 
 ## Output retrieval
 

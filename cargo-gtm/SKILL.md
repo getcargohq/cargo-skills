@@ -44,7 +44,7 @@ These docs encode what works, what fails, and why. They contain validated parame
 | **Finding companies, finding people, building lead lists, prospecting, portfolio/VC sourcing, contact finding at known companies** | [`guides/finding-companies-and-contacts.md`](guides/finding-companies-and-contacts.md) | Provider filter schemas, cheapest-source decision tree, parallel patterns, role-based search rules, portfolio/VC shortcuts, contact-finding patterns. |
 | **Enriching companies or contacts, finding emails/phones/LinkedIn, waterfall enrichment, signal lookup (job change, funding, tech stack), coalescing data** | [`guides/enriching-and-researching.md`](guides/enriching-and-researching.md) | Waterfall patterns with fallback chains, when to use cargo-native vs waterfall vs FullEnrich vs peopleDataLabs, email/phone/LinkedIn fallback orders, signal segments, output retrieval via `run download-outputs`. |
 | **Writing cold emails, personalizing outreach, lead scoring, qualification, sequence design, campaign copy** | [`guides/writing-outreach.md`](guides/writing-outreach.md) | LLM provider routing (openAi/anthropic/perplexity/gemini), prompt templates, scoring rubrics, email length/tone rules, personalization patterns. |
-| **Building or modifying a recurring workflow** (cron / webhook / scheduled tool / play), designing step sequences, triggers, deploy/verify cycles | [`../../cargo-infra/cargo-orchestration/SKILL.md`](../../cargo-infra/cargo-orchestration/SKILL.md) (capability) + apply-patterns from this skill's recipes | Schema for tool/play workflows, node graph syntax, polling strategies, output retrieval. |
+| **Building or modifying a recurring workflow** (cron / webhook / scheduled tool / play), designing step sequences, triggers, deploy/verify cycles | [`../cargo-orchestration/SKILL.md`](../cargo-orchestration/SKILL.md) (capability) + apply-patterns from this skill's recipes | Schema for tool/play workflows, node graph syntax, polling strategies, output retrieval. |
 
 ### Recipes: step-by-step playbooks (check before executing)
 
@@ -102,18 +102,18 @@ cargo-ai orchestration run download-outputs \
   --is-finished
 ```
 
-Returns `{"url": "..."}` — a signed URL to a CSV/JSON containing only the output node's data. Faster and cheaper than `run download` (which pulls full run records). See [`references/output-retrieval.md`](references/output-retrieval.md) and [`../../cargo-infra/cargo-analytics/SKILL.md`](../../cargo-infra/cargo-analytics/SKILL.md).
+Returns `{"url": "..."}` — a signed URL to a CSV/JSON containing only the output node's data. Faster and cheaper than `run download` (which pulls full run records). See [`references/output-retrieval.md`](references/output-retrieval.md) and [`../cargo-analytics/SKILL.md`](../cargo-analytics/SKILL.md).
 
 ## 6) Action shape rules (every recipe)
 
-Every action JSON in this skill follows the rules in [`../../cargo-infra/cargo-orchestration/references/actions.md`](../../cargo-infra/cargo-orchestration/references/actions.md):
+Every action JSON in this skill follows the rules in [`../cargo-orchestration/references/actions.md`](../cargo-orchestration/references/actions.md):
 
 - `kind: "connector"` action shape: `{"kind":"connector","integrationSlug":"<slug>","actionSlug":"<slug>","config":{}}`. **`connectorUuid` is NOT in `config`** — the platform resolves the workspace's authenticated connector from `integrationSlug` automatically.
 - For multi-step node graphs: `connectorUuid` lives at the top level of the node, not in `config`. Cross-node interpolation uses `{{nodes.<slug>.<field>}}`. Agent node outputs wrap under `.answer` (read as `{{nodes.<slug>.answer.<field>}}`).
 
 ## 7) When stuck — file a workspace report
 
-If a recipe fails repeatedly and the cause isn't obvious, escalate via `cargo-ai workspace report create`. See [`../../cargo-infra/cargo-workspace-management/SKILL.md`](../../cargo-infra/cargo-workspace-management/SKILL.md) (Reports section).
+If a recipe fails repeatedly and the cause isn't obvious, escalate via `cargo-ai workspace report create`. See [`../cargo-workspace-management/SKILL.md`](../cargo-workspace-management/SKILL.md) (Reports section).
 
 ## 8) Provider playbooks
 

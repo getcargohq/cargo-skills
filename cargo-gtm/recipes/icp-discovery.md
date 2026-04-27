@@ -1,14 +1,4 @@
----
-name: cargo-icp-discovery
-description: "Surface the firmographic and tech signals that differentiate Closed-Won vs Closed-Lost accounts in the user's CRM data. Pure analytics play — pulls both segments from the system-of-record, enriches with cargo signals, diffs feature distributions, surfaces top differentiating signals. Use when the user wants to refine their ICP from real conversion data, not assumptions."
-license: MIT
-compatibility: Requires @cargo-ai/cli (npm) and a Cargo API token, with cargo native and theirStack connectors authenticated for signal validation
-metadata:
-  author: getcargo
-  version: "1.0"
----
-
-# Cargo ICP Discovery
+# Recipe — Surface ICP signals from Closed-Won vs Closed-Lost
 
 Use this skill when the user wants to **discover their real ICP from conversion data**, not from gut feel. The skill pulls Closed-Won and Closed-Lost segments from the system-of-record, enriches both with the same firmographic and tech signals, and surfaces the features that differ most between them. Output: a ranked list of "high-fit signals" the user can use to filter prospecting.
 
@@ -196,4 +186,4 @@ Plus a follow-up suggestion: "Want me to run `/cargo-tam-build` with these signa
 
 ## When stuck — file a workspace report
 
-If the SoR query fails or the deal model schema is unfamiliar, file via `cargo-ai workspace report create`. See [`../../cargo-infra/cargo-workspace-management/SKILL.md`](../../cargo-infra/cargo-workspace-management/SKILL.md).
+If the SoR query fails or the deal model schema is unfamiliar, file via `cargo-ai workspace report create`. See [`../../cargo-workspace-management/SKILL.md`](../../cargo-workspace-management/SKILL.md).

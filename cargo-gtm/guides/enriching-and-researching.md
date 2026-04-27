@@ -106,19 +106,19 @@ cargo-ai orchestration run download-outputs \
   --is-finished
 ```
 
-Returns `{"url": "..."}` — a signed URL to a CSV/JSON containing only the output node's data with input/output context per record. See [`../../../cargo-infra/cargo-analytics/SKILL.md`](../../../cargo-infra/cargo-analytics/SKILL.md#downloading-run-results) for the full reference.
+Returns `{"url": "..."}` — a signed URL to a CSV/JSON containing only the output node's data with input/output context per record. See [`../../cargo-analytics/SKILL.md`](../../cargo-analytics/SKILL.md#downloading-run-results) for the full reference.
 
-For ad-hoc `action execute` / `action execute-batch` runs (no saved tool), use `--wait-until-finished` and read the response directly. The response shape is documented in [`../../../cargo-infra/cargo-orchestration/references/response-shapes.md`](../../../cargo-infra/cargo-orchestration/references/response-shapes.md). Per-node output lives at `runContext.<nodeSlug>` for runs and per-record `output` fields for batches.
+For ad-hoc `action execute` / `action execute-batch` runs (no saved tool), use `--wait-until-finished` and read the response directly. The response shape is documented in [`../../cargo-orchestration/references/response-shapes.md`](../../cargo-orchestration/references/response-shapes.md). Per-node output lives at `runContext.<nodeSlug>` for runs and per-record `output` fields for batches.
 
 ## Action shape rules
 
-`kind: "connector"` action: `{"kind":"connector","integrationSlug":"<slug>","actionSlug":"<slug>","config":{}}`. **`connectorUuid` is NOT in `config`.** The platform resolves the workspace's authenticated connector from `integrationSlug`. See [`../../../cargo-infra/cargo-orchestration/references/actions.md`](../../../cargo-infra/cargo-orchestration/references/actions.md).
+`kind: "connector"` action: `{"kind":"connector","integrationSlug":"<slug>","actionSlug":"<slug>","config":{}}`. **`connectorUuid` is NOT in `config`.** The platform resolves the workspace's authenticated connector from `integrationSlug`. See [`../../cargo-orchestration/references/actions.md`](../../cargo-orchestration/references/actions.md).
 
 ## Polling guidance
 
 Small runs (< 50 records): use `--wait-until-finished` for ergonomics.
 
-Large runs (>= 100 records): poll. See [`../../../cargo-infra/cargo-orchestration/references/polling.md`](../../../cargo-infra/cargo-orchestration/references/polling.md) for retry strategy and rate-limit handling.
+Large runs (>= 100 records): poll. See [`../../cargo-orchestration/references/polling.md`](../../cargo-orchestration/references/polling.md) for retry strategy and rate-limit handling.
 
 ## When enrichment misses
 

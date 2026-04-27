@@ -1,14 +1,4 @@
----
-name: cargo-portfolio-prospecting
-description: "Find companies backed by a specific investor or accelerator, then find contacts at each portfolio company and build personalized outbound. Anchored in peopleDataLabs.queryCompanies (investor filter) → salesNavigator.searchLeads (per-company contact discovery) → FullEnrich.findEmail. Use when the user has an investor / accelerator in mind and wants to prospect into their portfolio."
-license: MIT
-compatibility: Requires @cargo-ai/cli (npm) and a Cargo API token, with peopleDataLabs, salesNavigator, FullEnrich, waterfall connectors authenticated
-metadata:
-  author: getcargo
-  version: "1.0"
----
-
-# Cargo Portfolio Prospecting
+# Recipe — Investor portfolio → contacts → outbound
 
 Use this skill when the user wants to **prospect into the portfolio of a specific investor or accelerator**. Common pattern: a partner / accelerator program is a known proxy for ICP fit, so all their portfolio companies are pre-qualified.
 
@@ -109,7 +99,7 @@ cargo-ai orchestration action execute-batch \
 
 ### Step 7 — Personalize outbound (optional)
 
-Use `cargo.enrichProspectDetails` to pull recent LinkedIn posts, then `anthropic.instruct` for a personalized opener referencing the investor + recent portfolio activity. See [`../cargo-gtm/guides/writing-outreach.md`](../cargo-gtm/guides/writing-outreach.md) for prompt patterns.
+Use `cargo.enrichProspectDetails` to pull recent LinkedIn posts, then `anthropic.instruct` for a personalized opener referencing the investor + recent portfolio activity. See [`../guides/writing-outreach.md`](../guides/writing-outreach.md) for prompt patterns.
 
 ## Credit budget
 
@@ -154,4 +144,4 @@ If `peopleDataLabs.queryCompanies` doesn't recognize the investor name (e.g. ver
 
 ## When stuck — file a workspace report
 
-See [`../../cargo-infra/cargo-workspace-management/SKILL.md`](../../cargo-infra/cargo-workspace-management/SKILL.md) (Reports section).
+See [`../../cargo-workspace-management/SKILL.md`](../../cargo-workspace-management/SKILL.md) (Reports section).

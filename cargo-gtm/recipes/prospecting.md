@@ -1,14 +1,57 @@
-# Prospecting recipes
+# Recipe — Prospecting (find → enrich → verify → sync)
 
-Three paste-and-tweak recipes for the priority-stack prospecting pipeline. All recipes hard-code the priority 6 providers — for non-priority alternatives see [`alternatives.md`](alternatives.md).
+**Use when**: the user states an end-to-end sourcing goal — find people matching a description, enrich them, verify emails, and prepare them for outreach. Cargo's flagship pipeline.
 
-Each recipe favors `--wait-until-finished` for ergonomics; for runs > 100 records, switch to polling per [`../../../cargo-infra/cargo-orchestration/references/polling.md`](../../../cargo-infra/cargo-orchestration/references/polling.md) and use `cargo-ai orchestration run download-outputs` to retrieve results.
+**Trigger phrases**:
+- *"Find me 5 fintech CTOs in NYC and verify their emails."*
+- *"Build me a list of seed-stage SaaS founders in the US."*
+- *"Source 200 RevOps leaders at companies hiring data engineers."*
+- *"Enrich these 100 domains and find a contact at each."*
+
+For sourcing-only / TAM list builds, see [`build-tam.md`](build-tam.md). For investor-portfolio outbound, see [`portfolio-prospecting.md`](portfolio-prospecting.md). For the writing-outreach phase that follows this recipe, see [`../guides/writing-outreach.md`](../guides/writing-outreach.md).
+
+## Pipeline spine
+
+```
+1. SOURCE    → salesNavigator.searchLeads / searchAccounts            (0.02–0.05/record)
+2. DEDUPE    → cargo.matchProspect / cargo.matchBusiness              (0.5/record)
+3. ENRICH    → cargo.enrichProspectDetails + …Firmographics
+               + waterfall.enrichContact / enrichCompany              (0.5–2/record)
+4. SIGNAL    → cargo.enrichBusinessFundingAndAcquisitions
+               + theirStack.searchJobs                                (0.5/record)
+5. CONTACT   → FullEnrich.findEmail (fallback peopleDataLabs)         (1–3/record)
+6. VERIFY    → waterfall.verifyEmail                                  (0.1/record)
+7. WRITEBACK → segment write / CRM upsert / CSV export                (free)
+```
+
+Adapt by phase: drop steps that aren't relevant. Pure sourcing → step 1 only. "Enrich list I already have" → steps 2–6.
+
+## Discovery sequence (run before any pipeline)
+
+```bash
+# 1. Confirm authentication
+cargo-ai whoami
+
+# 2. Confirm priority providers are connected
+for slug in salesNavigator FullEnrich waterfall theirStack cargo peopleDataLabs; do
+  cargo-ai connection connector list --integration-slug "$slug" \
+    | jq -e '.connectors | length > 0' > /dev/null \
+    && echo "✓ $slug" \
+    || echo "✗ $slug (NOT CONNECTED — recipe will fall back)"
+done
+
+# 3. Find the target model (Companies / Contacts) for write-back
+cargo-ai storage model list
+
+# 4. (optional) Find an existing segment to enrich, instead of fresh sourcing
+cargo-ai segmentation segment list
+```
 
 ---
 
 ## P1 — Mini-pipeline (10 prospects, end-to-end)
 
-**Use when**: validating the full pipeline on a small sample before fanning out, or when the user only needs ~10 prospects.
+**Use when**: validating the full pipeline on a small sample, or when the user only needs ~10 prospects.
 
 **User**: *"Find me 10 fintech CTOs in NYC, enrich, verify their emails."*
 
@@ -59,7 +102,7 @@ cargo-ai orchestration action execute-batch \
   --records "$(jq -c '[.results[] | select(.email) | {email}]' /tmp/p1-emails.json)" \
   --wait-until-finished > /tmp/p1-verified.json
 
-# Step 7 — Coalesce + summary (jq merge across files; show user a per-prospect summary)
+# Step 7 — Coalesce + summary
 jq -s '[.[0].results, .[1].results, .[2].results, .[3].results]
        | flatten
        | group_by(.input.full_name // .input.firstName)
@@ -147,20 +190,13 @@ cargo-ai orchestration action execute-batch \
 
 ### Step 7 — Write back to a segment
 
-If a Contacts model exists with the right shape:
-
-```bash
-# Use cargo-ai storage column create / segment patterns to upsert the enriched contacts.
-# See ../../cargo-infra/cargo-storage/SKILL.md for the segment write-back pattern.
-```
-
-For CRM push, defer to the future `cargo-crm-sync` skill (Phase D).
+If a Contacts model exists, upsert via `cargo-ai storage` patterns — see [`../../cargo-storage/SKILL.md`](../../cargo-storage/SKILL.md). For CRM push, defer to a future CRM-sync recipe.
 
 **Credit budget** (200 leads, ~95 unique companies):
 - theirStack searchJobs: 0.5
 - cargo.matchBusiness × 95: 47.5
 - cargo.enrichBusinessFirmographics × 95: 47.5
-- salesNavigator.searchLeads × 95: ~5.7 (≈ 0.02 × 3 contacts × 95)
+- salesNavigator.searchLeads × 95: ~5.7 (≈ 0.02 × 3 × 95)
 - cargo.matchProspect × 200: 100
 - cargo.enrichProspectDetails × 200: 400
 - FullEnrich.findEmail × 200: 200
@@ -171,7 +207,7 @@ For CRM push, defer to the future `cargo-crm-sync` skill (Phase D).
 
 ## P3 — Backfill mode (existing segment)
 
-**Use when**: the user already has a list of contacts in a segment / model and just wants to fill missing emails/phones/firmographics. No new sourcing.
+**Use when**: the user already has a list of contacts in a segment / model and wants to fill missing emails/phones/firmographics. No new sourcing.
 
 **User**: *"Enrich the leads in our 'New Inbound' segment — fill missing emails."*
 
@@ -230,15 +266,41 @@ cargo-ai orchestration action execute-batch \
 **Credit budget** (200 contacts missing email; assumes 60% hit on cargo, 25% on FullEnrich, 10% on PDL, 5% unresolvable):
 - cargo.matchProspect × 200: 100
 - cargo.enrichProspectDetails × 200: 400
-- FullEnrich.findEmail × 80 (40% miss after cargo): 80
-- peopleDataLabs.enrichPerson × 30 (15% miss after FullEnrich): 90
-- waterfall.verifyEmail × 190 (95% resolved): 19
+- FullEnrich.findEmail × 80: 80
+- peopleDataLabs.enrichPerson × 30: 90
+- waterfall.verifyEmail × 190: 19
 - **Total: ~689 credits for 190 verified emails** (~3.6 cred/email).
 
 The waterfall pattern saves ~50% vs running peopleDataLabs on everyone (which would be 600 credits just for enrich).
 
 ---
 
-## When recipes don't fit
+## Output retrieval
 
-If the user's request doesn't match any of P1/P2/P3, defer to [`../../cargo-gtm/SKILL.md`](../../cargo-gtm/SKILL.md) — its `agents/execution-plan-creator.md` builds custom plans citing specific provider+action slugs with cost estimates.
+After any batch finishes, retrieve enriched data with **`cargo-ai orchestration run download-outputs`** (not `run download`). See [`../references/output-retrieval.md`](../references/output-retrieval.md).
+
+## Polling
+
+Recipes use `--wait-until-finished` for runs ≤ 50 records. For larger runs, switch to async + polling per [`../../cargo-orchestration/references/polling.md`](../../cargo-orchestration/references/polling.md).
+
+## Credits accounting
+
+After every recipe run, surface the cost:
+
+```bash
+cargo-ai billing usage get-metrics \
+  --from <run-date> --to <today> \
+  --group-by integration_slug
+```
+
+## Alternatives
+
+When the priority stack misses the user's criteria, see [`../references/alternatives.md`](../references/alternatives.md) for non-priority provider chains.
+
+## Action shape rules
+
+`{"kind":"connector","integrationSlug":"<slug>","actionSlug":"<slug>","config":{}}`. **No `connectorUuid` in `config`** — see [`../../cargo-orchestration/references/actions.md`](../../cargo-orchestration/references/actions.md). Cross-node interpolation: `{{nodes.<slug>.<field>}}`.
+
+## When stuck — file a workspace report
+
+See [`../../cargo-workspace-management/SKILL.md`](../../cargo-workspace-management/SKILL.md) (Reports section).

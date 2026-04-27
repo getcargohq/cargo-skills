@@ -2,7 +2,38 @@
 
 **Use when**: the user wants a Total Addressable Market list of companies (and optionally contacts at those companies) matching ICP criteria.
 
-**Trigger phrases**: "Build me a TAM of …", "I need a list of all the X companies that …", "Source 500 fintech CTOs in EMEA."
+**Trigger phrases**:
+- *"Build me a TAM of fintech companies in the US, 50–500 employees."*
+- *"Source 1,000 SaaS companies hiring data engineers."*
+- *"Find every Series A-B startup running Snowflake."*
+- *"Give me all the e-commerce brands in the EU under 100 people."*
+
+## Sourcing decision tree
+
+The right step-1 provider depends on which filter is primary:
+
+| Primary filter | Provider | Cost (credits) | Notes |
+|---|---|---|---|
+| Industry / size / geo | `salesNavigator.searchAccounts` | 0.05 | LinkedIn-anchored. Default at-scale. |
+| Funding stage / investor / round size | `peopleDataLabs.queryCompanies` | 3 | PDL **SQL** string. Required for array-membership filters like `summary.investors LIKE %X%`. |
+| Tech stack | `theirStack.searchCompanies` (with techFields) | 0.5 | Tech-stack-driven sourcing. |
+| Hiring for role X | `theirStack.searchJobs` | 0.5 | Hiring-intent signal. |
+| Local SMBs / storefronts | `serper.searchPlaces` | 1 | Google Maps-style. |
+| Already have a domain list | (skip sourcing) | — | Go straight to step 2 (dedup + enrich). |
+
+For combined filters (e.g. fintech in US AND running Snowflake AND hiring data engineers), do parallel queries and intersect client-side.
+
+## Volume / cost guidance
+
+| Target volume | Recommended sourcing path | Estimated credits (sourcing only) |
+|---|---|---|
+| 100 companies | salesNavigator.searchAccounts | ~5 |
+| 500 companies | salesNavigator.searchAccounts | ~25 |
+| 1,000 companies | salesNavigator.searchAccounts | ~50 |
+| 5,000 companies | salesNavigator.searchAccounts (paginate) | ~250 |
+| 10,000 companies | peopleDataLabs.queryCompanies (high-quality, structured) | ~30,000 (3/company) |
+
+For 5,000+ companies, **always sample 50 first** to validate the data quality before paying for the full volume.
 
 ## Inputs you need
 
@@ -144,9 +175,9 @@ cargo-ai orchestration action execute-batch \
 
 ### Step 7 — Write to model / export / push to CRM
 
-If a Companies model exists in the workspace, write back via `cargo-ai storage column create` patterns (see [`../../../cargo-infra/cargo-storage/SKILL.md`](../../../cargo-infra/cargo-storage/SKILL.md)).
+If a Companies model exists in the workspace, write back via `cargo-ai storage column create` patterns (see [`../../cargo-storage/SKILL.md`](../../cargo-storage/SKILL.md)).
 
-For a CSV export, point the user at `cargo-ai segmentation segment download` (see [`../../../cargo-infra/cargo-analytics/references/examples/exports.md`](../../../cargo-infra/cargo-analytics/references/examples/exports.md)).
+For a CSV export, point the user at `cargo-ai segmentation segment download` (see [`../../cargo-analytics/references/examples/exports.md`](../../cargo-analytics/references/examples/exports.md)).
 
 For CRM push, defer to the future `cargo-crm-sync` skill (Phase D) or compose ad hoc with `hubspot.upsertRecords` / `salesforce.upsert`.
 
