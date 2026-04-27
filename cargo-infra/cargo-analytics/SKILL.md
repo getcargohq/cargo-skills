@@ -82,6 +82,12 @@ Supports: `--statuses`, `--batch-uuid`, `--release-uuid`, `--is-finished`, `--cr
 
 ## Downloading run results
 
+Two distinct commands — pick the right one for the job.
+
+### `run download` — full run records (metadata + per-node `runContext`)
+
+Returns each run as a JSON object with status, timing, executions, and `runContext.<nodeSlug>` containing per-node outputs. Best for debugging or when you need the full execution history.
+
 ```bash
 # All finished runs
 cargo-ai orchestration run download --workflow-uuid <uuid> --is-finished
@@ -96,6 +102,28 @@ cargo-ai orchestration run download --workflow-uuid <uuid> --statuses success,er
 # From a specific batch
 cargo-ai orchestration run download --workflow-uuid <uuid> --batch-uuid <uuid>
 ```
+
+### `run download-outputs` — output of a specific node (CSV/JSON via signed URL)
+
+**This is the canonical way to get action results out of the platform.** Maps to API `POST /v1/orchestration/runs/download-outputs`. Returns `{"url": "..."}` — a signed URL to a CSV (default) or JSON file containing only the output node's data with input/output context. Faster and cheaper than downloading whole run records when you only need the result.
+
+```bash
+# Required: --workflow-uuid + --output-node-slug
+cargo-ai orchestration run download-outputs \
+  --workflow-uuid <uuid> \
+  --output-node-slug <slug> \
+  --format json \
+  --is-finished
+
+# Filter by batch + status
+cargo-ai orchestration run download-outputs \
+  --workflow-uuid <uuid> \
+  --output-node-slug <slug> \
+  --batch-uuid <uuid> \
+  --statuses finished
+```
+
+To find the `output-node-slug`: `cargo-ai orchestration release get <release-uuid>` → look at `nodes[].slug`. The terminal output node is typically named `output` or `end`.
 
 ## Downloading batch results
 

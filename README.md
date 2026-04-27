@@ -21,17 +21,43 @@ Works with Claude Code, Cursor, Windsurf, GitHub Copilot, and any agent that sup
 
 ## What this skill teaches
 
-**Cargo** connects your data models (companies, contacts, deals) to external integrations (CRMs, enrichment providers, AI agents) and runs them as automated workflows. This skill covers the full CLI surface:
+**Cargo** connects your data models (companies, contacts, deals) to external integrations (CRMs, enrichment providers, AI agents) and runs them as automated workflows. The skill is organized into two layers:
+
+### Outcomes (`cargo-outcome/`) — goal-shaped skills
+
+Load when the user states a real-world job.
+
+| Skill                  | What the agent does                                                                                                                                |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **GTM**                | Front door for prospecting, enrichment, verification, sequencing, sync, and signals. Routes to phase docs, recipes, and per-provider playbooks.    |
+| **Prospecting**        | Find people matching a description, enrich, verify emails, sync to CRM. Flagship pipeline.                                                         |
+
+### Capabilities (`cargo-infra/`) — CLI surface
+
+Load for a specific CLI domain.
 
 | Domain            | What the agent learns                                                                                                                                              |
 | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | **Orchestration** | Execute single actions, chain actions into workflows, trigger batches across segments, poll async operations, query the data warehouse with SQL, fetch segment data |
 | **Storage**       | Inspect models and their DDL, create columns, navigate datasets, set relationships between models                                                                  |
-| **Connection**    | Authenticate connectors (HubSpot, Clearbit, Salesforce…), discover integration actions and their slugs                                                             |
+| **Connection**    | Authenticate connectors, discover integration actions and their slugs across 120+ integrations                                                                     |
 | **AI**            | Create and configure agents, upload files for RAG, connect MCP servers, inspect agent memories                                                                     |
-| **Analytics**     | Download run results, export segment data, monitor error rates and success metrics                                                                                 |
+| **Analytics**     | Download run results and outputs, export segment data, monitor error rates and success metrics                                                                     |
 | **Billing**       | Track credit consumption per workflow or connector, check subscription status, view invoices                                                                       |
 | **Workspace**     | Invite users, create and rotate API tokens, organize resources into folders, manage roles                                                                          |
+
+## What can I ask for?
+
+The outcome skills handle prompts like:
+
+- *"Find me 5 fintech CTOs in NYC and verify their emails."* — `cargo-prospecting`
+- *"Build a TAM list of seed-stage SaaS companies in Europe."* — `cargo-gtm` → `recipes/build-tam.md`
+- *"Resolve the LinkedIn profile for John Smith at Acme Corp."* — `cargo-gtm` → `recipes/linkedin-url-lookup.md`
+- *"Detect job changes among contacts in our customers segment."* — `cargo-gtm` → recipes
+- *"Find companies that recently raised funding and use Snowflake."* — `cargo-gtm` (funding + tech-stack signals)
+- *"Push these enriched leads to HubSpot."* — `cargo-gtm` → CRM sync patterns
+
+For ad-hoc CLI work (modify a model, list connectors, query the warehouse), load the matching capability skill directly.
 
 ## Use cases
 
@@ -39,7 +65,7 @@ Works with Claude Code, Cursor, Windsurf, GitHub Copilot, and any agent that sup
 
 Ask your agent to run one action on a record — it will pick the right action kind (connector, tool, or agent), execute it, and return the result.
 
-> "Enrich acme.com with Clearbit."
+> "Enrich acme.com with waterfall."
 > "Run the lead scorer on this contact."
 
 ### Run an existing workflow
@@ -53,7 +79,7 @@ Ask your agent to trigger a play or tool — it will discover the `workflowUuid`
 
 The agent can construct a full node graph — fetching the connector UUID, looking up the action slug, validating the graph, and executing it — without you touching the UI.
 
-> "Build and run a workflow that enriches company domains with Clearbit and writes the result back to the Companies model."
+> "Build and run a workflow that enriches company domains with waterfall and writes the result back to the Companies model."
 
 ### Query your data warehouse
 
@@ -83,7 +109,7 @@ The agent downloads a filtered, sorted export of any model segment directly to a
 
 The agent handles the full setup sequence: create models, add columns, set relationships, connect integrations, configure agents, and invite team members.
 
-> "Set up a fresh Cargo workspace with Companies and Contacts models, a Clearbit connector, and a GPT-4o scoring agent."
+> "Set up a fresh Cargo workspace with Companies and Contacts models, a waterfall connector, and a GPT-4o scoring agent."
 
 ### Track credit usage and costs
 

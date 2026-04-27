@@ -19,7 +19,12 @@ metadata:
 
 # Cargo CLI — Skills Overview
 
-This repository contains seven skills for the [Cargo](https://getcargo.ai) AI-native revenue infrastructure. Each skill covers a distinct domain. This file tells you which skill to load for any given task and how to combine them.
+This repository contains skills for the [Cargo](https://getcargo.ai) AI-native revenue infrastructure, organized into two layers:
+
+- **`cargo-outcome/`** — application library. Job-shaped skills the agent loads when the user states a real-world goal ("build a TAM list", "find 5 fintech CTOs", "monitor job changes"). Each skill knows how to compose the right actions end-to-end.
+- **`cargo-infra/`** — standard library. Capability skills that document the Cargo CLI surface (orchestration, storage, connection, AI, analytics, billing, workspace management). Loaded by outcome skills, or directly when you need a specific CLI domain.
+
+Outcome skills delegate to capability skills; capability skills never reference outcome skills (one-way dependency).
 
 ## Installation
 
@@ -53,11 +58,24 @@ Trigger conditions (any one is enough):
 - A documented behavior contradicts what you observe.
 - A feature appears to be missing entirely.
 
-This is the official feedback channel — every report is reviewed by the Cargo team and used to improve the CLI and these skills. **Do not give up silently — file a report.** See `cargo-workspace-management/SKILL.md` (Reports section) and `cargo-workspace-management/references/examples/reports.md` for templates.
+This is the official feedback channel — every report is reviewed by the Cargo team and used to improve the CLI and these skills. **Do not give up silently — file a report.** See `cargo-infra/cargo-workspace-management/SKILL.md` (Reports section) and `cargo-infra/cargo-workspace-management/references/examples/reports.md` for templates.
 
 ---
 
 ## Skills at a glance
+
+### Outcome skills (`cargo-outcome/`)
+
+Load when the user states a real-world goal.
+
+| Skill                                                 | Load when you need to…                                                                             |
+| ----------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| [`cargo-gtm`](#cargo-gtm)                     | Front door for any GTM task — sourcing, enrichment, verification, scoring, sequencing, sync, signals. Routes to phase docs, recipes, and per-provider playbooks. |
+| [`cargo-prospecting`](#cargo-prospecting)     | Find people matching a description, enrich, verify emails, and sync to CRM. Flagship pipeline using the priority provider stack. |
+
+### Capability skills (`cargo-infra/`)
+
+Load for a specific CLI domain.
 
 | Skill                                                 | Load when you need to…                                                                             |
 | ----------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
@@ -74,41 +92,50 @@ This is the official feedback channel — every report is reviewed by the Cargo 
 ## How the skills relate
 
 ```
-┌──────────────────────────────────────────────────────────────┐
-│                  cargo-workspace-management                  │
-│             Authentication, users, tokens, folders           │
-└──────────────────────────────────────────────────────────────┘
-
-  ┌─────────────────┐   ┌────────────────────┐   ┌─────────────────┐
-  │  cargo-storage  │   │  cargo-connection  │   │    cargo-ai     │
-  │ Models, columns,│   │ Connectors,        │   │ Agents, files,  │
-  │ datasets        │   │ integration actions│   │ MCP servers     │
-  └────────┬────────┘   └─────────┬──────────┘   └────────┬────────┘
-           │                      │  (UUIDs flow down)    │
-           └──────────────────────┼───────────────────────┘
-                                  ▼
-             ┌───────────────────────────────────────┐
-             │          cargo-orchestration          │
-             │   Runs, batches, plays, tools, SoR    │
-             └───────────────┬───────────────────────┘
-                             │
-              ┌──────────────┴──────────────┐
-              ▼                             ▼
- ┌────────────────────────┐  ┌───────────────────────────┐
- │    cargo-analytics     │  │       cargo-billing       │
- │  Results, metrics,     │  │    Credit usage, costs    │
- │  exports               │  │                           │
- └────────────────────────┘  └───────────────────────────┘
+┌──────────────────────────────────────────────────────────────────┐
+│  cargo-outcome/      (application library — goal-shaped skills)  │
+│  cargo-gtm  cargo-prospecting  …                                 │
+└──────────────────────────┬───────────────────────────────────────┘
+                           │ delegates to ↓ (one-way)
+┌──────────────────────────────────────────────────────────────────┐
+│  cargo-infra/        (standard library — CLI capability skills)  │
+│                                                                  │
+│  ┌──────────────────────────────────────────────────────────┐    │
+│  │              cargo-workspace-management                  │    │
+│  │         Authentication, users, tokens, folders           │    │
+│  └──────────────────────────────────────────────────────────┘    │
+│                                                                  │
+│  ┌─────────────┐  ┌─────────────────┐  ┌─────────────┐           │
+│  │cargo-storage│  │cargo-connection │  │  cargo-ai   │           │
+│  │Models, cols,│  │Connectors,      │  │Agents, RAG, │           │
+│  │datasets     │  │integration acts │  │MCP servers  │           │
+│  └──────┬──────┘  └────────┬────────┘  └──────┬──────┘           │
+│         │  (UUIDs flow down to cargo-orchestration)              │
+│         └─────────────────┬┴──────────────────┘                  │
+│                           ▼                                      │
+│         ┌───────────────────────────────────────┐                │
+│         │          cargo-orchestration          │                │
+│         │  Runs, batches, plays, tools, SoR     │                │
+│         └───────────────┬───────────────────────┘                │
+│                         │                                        │
+│            ┌────────────┴────────────┐                           │
+│            ▼                         ▼                           │
+│   ┌─────────────────┐      ┌─────────────────┐                   │
+│   │ cargo-analytics │      │  cargo-billing  │                   │
+│   │ Results, exports│      │ Credits, costs  │                   │
+│   └─────────────────┘      └─────────────────┘                   │
+└──────────────────────────────────────────────────────────────────┘
 ```
 
 **Dependency rules in practice:**
 
+- Outcome skills delegate to capability skills via relative paths (`../../cargo-infra/cargo-orchestration/...`). Capability skills never reference outcome skills.
 - `cargo-workspace-management` provides auth context for every skill — set it up first.
 - `cargo-storage`, `cargo-connection`, and `cargo-ai` are peer skills that supply UUIDs to `cargo-orchestration`. They don't depend on each other.
 - Before querying via system-of-record, load `cargo-storage` to get the DDL (exact table name).
 - Before building a workflow node graph, load `cargo-connection` to get `connectorUuid` and `actionSlug`.
 - Before executing a workflow that uses an agent node, load `cargo-ai` to get `agentUuid`.
-- After runs complete, load `cargo-analytics` to download results or measure performance.
+- After runs complete, load `cargo-analytics` to download results or measure performance. **For action output retrieval, prefer `cargo-ai orchestration run download-outputs` over `run download` — the former returns a signed-URL CSV/JSON of just the output node's data.**
 - Load `cargo-billing` to understand credit consumption for any of the above.
 
 ---
@@ -141,12 +168,12 @@ cargo-ai segmentation segment fetch --model-uuid <uuid> --filter '{"conjonction"
 
 **Critical rules:**
 
-- See the decision flowchart at the top of `cargo-orchestration/SKILL.md` for when to use `action execute` vs `run create` vs `batch create`.
+- See the decision flowchart at the top of `cargo-infra/cargo-orchestration/SKILL.md` for when to use `action execute` vs `run create` vs `batch create`.
 - Filter JSON uses `conjonction` (not `conjunction`) — breaks silently if misspelled.
 - Always get DDL before querying the system-of-record: `cargo-ai storage model get-ddl <model-uuid>`.
 - All operations are async — poll or pass `--wait-until-finished`. See [Async polling](#async-polling).
 
-**References:** `cargo-orchestration/SKILL.md`
+**References:** `cargo-infra/cargo-orchestration/SKILL.md`
 
 ---
 
@@ -169,7 +196,7 @@ cargo-ai segmentation segment download --model-uuid <uuid> --filter '{"conjoncti
 - For batch result download, get the `output-node-slug` from `release get <release-uuid>` → `nodes[].slug`.
 - For billing and credit usage, use `cargo-billing` instead.
 
-**References:** `cargo-analytics/SKILL.md`
+**References:** `cargo-infra/cargo-analytics/SKILL.md`
 
 ---
 
@@ -192,7 +219,7 @@ cargo-ai billing subscription get-invoices
 - Invoice amounts are in cents — divide by 100 for dollars.
 - `subscriptionAvailableCreditsCount - subscriptionCreditsUsedCount` from `subscription get` = remaining credits.
 
-**References:** `cargo-billing/SKILL.md`
+**References:** `cargo-infra/cargo-billing/SKILL.md`
 
 ---
 
@@ -214,7 +241,7 @@ cargo-ai storage relationship set --from-model-uuid <uuid> --to-model-uuid <uuid
 - Always run `model get-ddl` before querying via system-of-record — it contains the exact table name (e.g. `datasets_default.models_companies`).
 - For advanced record queries (filtering, sorting, pagination), use `segmentation segment fetch` from `cargo-orchestration`.
 
-**References:** `cargo-storage/SKILL.md`
+**References:** `cargo-infra/cargo-storage/SKILL.md`
 
 ---
 
@@ -236,7 +263,7 @@ cargo-ai connection native-integration get          # built-in Cargo actions onl
 - **Integration** = external service type (HubSpot, Clearbit, Salesforce, …)
 - **Connector** = authenticated instance of an integration (referenced by `connectorUuid` in nodes)
 
-**References:** `cargo-connection/SKILL.md`
+**References:** `cargo-infra/cargo-connection/SKILL.md`
 
 ---
 
@@ -256,9 +283,9 @@ cargo-ai ai mcp-server create --name "Internal Tools" --url "https://..."
 cargo-ai ai memory list --agent-uuid <uuid>
 ```
 
-See `cargo-ai/SKILL.md` for model and temperature guidance by use case.
+See `cargo-infra/cargo-ai/SKILL.md` for model and temperature guidance by use case.
 
-**References:** `cargo-ai/SKILL.md`
+**References:** `cargo-infra/cargo-ai/SKILL.md`
 
 ---
 
@@ -281,9 +308,9 @@ cargo-ai workspace report create --title "<summary>" --description "<details>"
 - Most commands require a token with **admin access**.
 - `workspace token create` requires `--name` (the legacy `--from-user` flag was removed). Pick a name that makes the token's purpose obvious in `token list` later.
 - Token values are only shown **once** at creation — store immediately in a secrets manager (GitHub Secrets, AWS Secrets Manager, etc.).
-- **Always send a `workspace report create`** when the CLI errors, is being used incorrectly, or you (user or agent) are struggling to make progress on a CLI task — see the section at the top of this file and `cargo-workspace-management/references/examples/reports.md`.
+- **Always send a `workspace report create`** when the CLI errors, is being used incorrectly, or you (user or agent) are struggling to make progress on a CLI task — see the section at the top of this file and `cargo-infra/cargo-workspace-management/references/examples/reports.md`.
 
-**References:** `cargo-workspace-management/SKILL.md`
+**References:** `cargo-infra/cargo-workspace-management/SKILL.md`
 
 ---
 
@@ -299,7 +326,7 @@ All operations are asynchronous. Pass `--wait-until-finished` to block, or poll:
 
 `action execute` returns a run; `action execute-batch` returns a batch — same polling applies.
 
-See `cargo-orchestration/references/polling.md` for retry strategies, error handling, and large-batch guidance.
+See `cargo-infra/cargo-orchestration/references/polling.md` for retry strategies, error handling, and large-batch guidance.
 
 ---
 
