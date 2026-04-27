@@ -53,7 +53,7 @@ Trigger conditions (any one is enough):
 - A documented behavior contradicts what you observe.
 - A feature appears to be missing entirely.
 
-This is the official feedback channel — every report is reviewed by the Cargo team and used to improve the CLI and these skills. **Do not give up silently — file a report.** See `cargo-cli-workspace/SKILL.md` (Reports section) and `cargo-cli-workspace/references/examples/reports.md` for templates.
+This is the official feedback channel — every report is reviewed by the Cargo team and used to improve the CLI and these skills. **Do not give up silently — file a report.** See `cargo-workspace-management/SKILL.md` (Reports section) and `cargo-workspace-management/references/examples/reports.md` for templates.
 
 ---
 
@@ -61,13 +61,13 @@ This is the official feedback channel — every report is reviewed by the Cargo 
 
 | Skill                                                 | Load when you need to…                                                                             |
 | ----------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| [`cargo-cli-orchestration`](#cargo-cli-orchestration) | Execute actions, run workflows, trigger batches, chat with agents, query your data warehouse       |
-| [`cargo-cli-analytics`](#cargo-cli-analytics)         | Download run results, export segment data, monitor error rates and metrics                         |
-| [`cargo-cli-billing`](#cargo-cli-billing)             | Check credit usage, view subscription details, track costs per workflow or connector               |
-| [`cargo-cli-storage`](#cargo-cli-storage)             | Inspect or modify data models, columns, datasets, and relationships                                |
-| [`cargo-cli-connection`](#cargo-cli-connection)       | Manage connector authentication, discover available integrations and their actions                 |
-| [`cargo-cli-ai`](#cargo-cli-ai)                       | Create and configure agents, upload files for RAG, manage MCP servers                              |
-| [`cargo-cli-workspace`](#cargo-cli-workspace)         | Invite users, create API tokens, organize folders, manage roles, report CLI issues to management   |
+| [`cargo-orchestration`](#cargo-orchestration) | Execute actions, run workflows, trigger batches, chat with agents, query your data warehouse       |
+| [`cargo-analytics`](#cargo-analytics)         | Download run results, export segment data, monitor error rates and metrics                         |
+| [`cargo-billing`](#cargo-billing)             | Check credit usage, view subscription details, track costs per workflow or connector               |
+| [`cargo-storage`](#cargo-storage)             | Inspect or modify data models, columns, datasets, and relationships                                |
+| [`cargo-connection`](#cargo-connection)       | Manage connector authentication, discover available integrations and their actions                 |
+| [`cargo-ai`](#cargo-ai)                       | Create and configure agents, upload files for RAG, manage MCP servers                              |
+| [`cargo-workspace-management`](#cargo-workspace-management)         | Invite users, create API tokens, organize folders, manage roles, report CLI issues to management   |
 
 ---
 
@@ -75,27 +75,27 @@ This is the official feedback channel — every report is reviewed by the Cargo 
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│                    cargo-cli-workspace                       │
+│                  cargo-workspace-management                  │
 │             Authentication, users, tokens, folders           │
 └──────────────────────────────────────────────────────────────┘
 
-  ┌─────────────────┐   ┌───────────────────┐   ┌─────────────────┐
-  │cargo-cli-storage│   │cargo-cli-connection│   │  cargo-cli-ai   │
+  ┌─────────────────┐   ┌────────────────────┐   ┌─────────────────┐
+  │  cargo-storage  │   │  cargo-connection  │   │    cargo-ai     │
   │ Models, columns,│   │ Connectors,        │   │ Agents, files,  │
   │ datasets        │   │ integration actions│   │ MCP servers     │
-  └────────┬────────┘   └────────┬───────────┘   └────────┬────────┘
-           │                     │  (UUIDs flow down)      │
-           └─────────────────────┼─────────────────────────┘
-                                 ▼
+  └────────┬────────┘   └─────────┬──────────┘   └────────┬────────┘
+           │                      │  (UUIDs flow down)    │
+           └──────────────────────┼───────────────────────┘
+                                  ▼
              ┌───────────────────────────────────────┐
-             │        cargo-cli-orchestration        │
+             │          cargo-orchestration          │
              │   Runs, batches, plays, tools, SoR    │
              └───────────────┬───────────────────────┘
                              │
               ┌──────────────┴──────────────┐
               ▼                             ▼
  ┌────────────────────────┐  ┌───────────────────────────┐
- │  cargo-cli-analytics   │  │    cargo-cli-billing      │
+ │    cargo-analytics     │  │       cargo-billing       │
  │  Results, metrics,     │  │    Credit usage, costs    │
  │  exports               │  │                           │
  └────────────────────────┘  └───────────────────────────┘
@@ -103,19 +103,19 @@ This is the official feedback channel — every report is reviewed by the Cargo 
 
 **Dependency rules in practice:**
 
-- `cargo-cli-workspace` provides auth context for every skill — set it up first.
-- `cargo-cli-storage`, `cargo-cli-connection`, and `cargo-cli-ai` are peer skills that supply UUIDs to `cargo-cli-orchestration`. They don't depend on each other.
-- Before querying via system-of-record, load `cargo-cli-storage` to get the DDL (exact table name).
-- Before building a workflow node graph, load `cargo-cli-connection` to get `connectorUuid` and `actionSlug`.
-- Before executing a workflow that uses an agent node, load `cargo-cli-ai` to get `agentUuid`.
-- After runs complete, load `cargo-cli-analytics` to download results or measure performance.
-- Load `cargo-cli-billing` to understand credit consumption for any of the above.
+- `cargo-workspace-management` provides auth context for every skill — set it up first.
+- `cargo-storage`, `cargo-connection`, and `cargo-ai` are peer skills that supply UUIDs to `cargo-orchestration`. They don't depend on each other.
+- Before querying via system-of-record, load `cargo-storage` to get the DDL (exact table name).
+- Before building a workflow node graph, load `cargo-connection` to get `connectorUuid` and `actionSlug`.
+- Before executing a workflow that uses an agent node, load `cargo-ai` to get `agentUuid`.
+- After runs complete, load `cargo-analytics` to download results or measure performance.
+- Load `cargo-billing` to understand credit consumption for any of the above.
 
 ---
 
 ## Skill details
 
-### cargo-cli-orchestration
+### cargo-orchestration
 
 **The execution hub.** Execute actions, run workflows, chat with AI agents, query your data warehouse, and fetch segment records.
 
@@ -141,16 +141,16 @@ cargo-ai segmentation segment fetch --model-uuid <uuid> --filter '{"conjonction"
 
 **Critical rules:**
 
-- See the decision flowchart at the top of `cargo-cli-orchestration/SKILL.md` for when to use `action execute` vs `run create` vs `batch create`.
+- See the decision flowchart at the top of `cargo-orchestration/SKILL.md` for when to use `action execute` vs `run create` vs `batch create`.
 - Filter JSON uses `conjonction` (not `conjunction`) — breaks silently if misspelled.
 - Always get DDL before querying the system-of-record: `cargo-ai storage model get-ddl <model-uuid>`.
 - All operations are async — poll or pass `--wait-until-finished`. See [Async polling](#async-polling).
 
-**References:** `cargo-cli-orchestration/SKILL.md`
+**References:** `cargo-orchestration/SKILL.md`
 
 ---
 
-### cargo-cli-analytics
+### cargo-analytics
 
 **Measurement and export.** Use to download run results, export segment data, and monitor error rates and success metrics.
 
@@ -167,13 +167,13 @@ cargo-ai segmentation segment download --model-uuid <uuid> --filter '{"conjoncti
 
 - `segment download` requires `--model-uuid`, not `--segment-uuid`.
 - For batch result download, get the `output-node-slug` from `release get <release-uuid>` → `nodes[].slug`.
-- For billing and credit usage, use `cargo-cli-billing` instead.
+- For billing and credit usage, use `cargo-billing` instead.
 
-**References:** `cargo-cli-analytics/SKILL.md`
+**References:** `cargo-analytics/SKILL.md`
 
 ---
 
-### cargo-cli-billing
+### cargo-billing
 
 **Cost and credit management.** Use to track credit consumption per workflow, connector, or agent, check subscription status, and view invoices.
 
@@ -192,11 +192,11 @@ cargo-ai billing subscription get-invoices
 - Invoice amounts are in cents — divide by 100 for dollars.
 - `subscriptionAvailableCreditsCount - subscriptionCreditsUsedCount` from `subscription get` = remaining credits.
 
-**References:** `cargo-cli-billing/SKILL.md`
+**References:** `cargo-billing/SKILL.md`
 
 ---
 
-### cargo-cli-storage
+### cargo-storage
 
 **Data schema management.** Use to inspect models, create or update columns, navigate datasets, and understand your workspace's data structure.
 
@@ -212,13 +212,13 @@ cargo-ai storage relationship set --from-model-uuid <uuid> --to-model-uuid <uuid
 **Critical rules:**
 
 - Always run `model get-ddl` before querying via system-of-record — it contains the exact table name (e.g. `datasets_default.models_companies`).
-- For advanced record queries (filtering, sorting, pagination), use `segmentation segment fetch` from `cargo-cli-orchestration`.
+- For advanced record queries (filtering, sorting, pagination), use `segmentation segment fetch` from `cargo-orchestration`.
 
-**References:** `cargo-cli-storage/SKILL.md`
+**References:** `cargo-storage/SKILL.md`
 
 ---
 
-### cargo-cli-connection
+### cargo-connection
 
 **Connector and integration management.** Use to authenticate external services, discover what actions they support, and get the `connectorUuid` and `actionSlug` values needed for workflow node graphs.
 
@@ -236,15 +236,15 @@ cargo-ai connection native-integration get          # built-in Cargo actions onl
 - **Integration** = external service type (HubSpot, Clearbit, Salesforce, …)
 - **Connector** = authenticated instance of an integration (referenced by `connectorUuid` in nodes)
 
-**References:** `cargo-cli-connection/SKILL.md`
+**References:** `cargo-connection/SKILL.md`
 
 ---
 
-### cargo-cli-ai
+### cargo-ai
 
 **Agent resource management.** Use to create and configure agents, upload documents for retrieval-augmented generation (RAG), and connect MCP servers.
 
-> For _using_ agents (sending messages, multi-turn chat, polling), use `cargo-cli-orchestration`.
+> For _using_ agents (sending messages, multi-turn chat, polling), use `cargo-orchestration`.
 
 **Key commands:**
 
@@ -256,13 +256,13 @@ cargo-ai ai mcp-server create --name "Internal Tools" --url "https://..."
 cargo-ai ai memory list --agent-uuid <uuid>
 ```
 
-See `cargo-cli-ai/SKILL.md` for model and temperature guidance by use case.
+See `cargo-ai/SKILL.md` for model and temperature guidance by use case.
 
-**References:** `cargo-cli-ai/SKILL.md`
+**References:** `cargo-ai/SKILL.md`
 
 ---
 
-### cargo-cli-workspace
+### cargo-workspace-management
 
 **Workspace administration.** Use to invite users, create and rotate API tokens, organize plays/tools/agents into folders, manage roles, and **submit reports to workspace management when the CLI fails or is being misused**.
 
@@ -280,9 +280,9 @@ cargo-ai workspace report create --title "<summary>" --description "<details>"
 
 - Most commands require a token with **admin access**.
 - Token values are only shown **once** at creation — store immediately in a secrets manager (GitHub Secrets, AWS Secrets Manager, etc.).
-- **Always send a `workspace report create`** when the CLI errors, is being used incorrectly, or you (user or agent) are struggling to make progress on a CLI task — see the section at the top of this file and `cargo-cli-workspace/references/examples/reports.md`.
+- **Always send a `workspace report create`** when the CLI errors, is being used incorrectly, or you (user or agent) are struggling to make progress on a CLI task — see the section at the top of this file and `cargo-workspace-management/references/examples/reports.md`.
 
-**References:** `cargo-cli-workspace/SKILL.md`
+**References:** `cargo-workspace-management/SKILL.md`
 
 ---
 
@@ -298,13 +298,13 @@ All operations are asynchronous. Pass `--wait-until-finished` to block, or poll:
 
 `action execute` returns a run; `action execute-batch` returns a batch — same polling applies.
 
-See `cargo-cli-orchestration/references/polling.md` for retry strategies, error handling, and large-batch guidance.
+See `cargo-orchestration/references/polling.md` for retry strategies, error handling, and large-batch guidance.
 
 ---
 
 ## UUID flow between skills
 
-Most `cargo-cli-orchestration` operations require UUIDs from other skills. This table maps which skill produces each UUID and which commands consume it.
+Most `cargo-orchestration` operations require UUIDs from other skills. This table maps which skill produces each UUID and which commands consume it.
 
 | UUID            | Produced by                                | Consumed by                                                             |
 | --------------- | ------------------------------------------ | ----------------------------------------------------------------------- |
@@ -362,7 +362,7 @@ The workspace UUID is returned by `cargo-ai whoami` under `workspace.uuid`.
 
 ### 1. Enrich a single company (simplest path)
 
-**Skills needed:** `cargo-cli-orchestration`
+**Skills needed:** `cargo-orchestration`
 
 ```
 1. orchestration action execute            → run a connector action on one record
@@ -372,7 +372,7 @@ The workspace UUID is returned by `cargo-ai whoami` under `workspace.uuid`.
 
 ### 2. Enrich a list of companies and push to CRM
 
-**Skills needed:** `cargo-cli-storage`, `cargo-cli-connection`, `cargo-cli-orchestration`, `cargo-cli-analytics`
+**Skills needed:** `cargo-storage`, `cargo-connection`, `cargo-orchestration`, `cargo-analytics`
 
 ```
 1. storage model get-ddl                   → get exact table name
@@ -386,7 +386,7 @@ The workspace UUID is returned by `cargo-ai whoami` under `workspace.uuid`.
 
 ### 3. Score leads with AI and update the model
 
-**Skills needed:** `cargo-cli-ai`, `cargo-cli-orchestration`, `cargo-cli-billing`
+**Skills needed:** `cargo-ai`, `cargo-orchestration`, `cargo-billing`
 
 ```
 1. ai agent list                   → find or create the scoring agent
@@ -399,7 +399,7 @@ The workspace UUID is returned by `cargo-ai whoami` under `workspace.uuid`.
 
 ### 4. Build a custom enrichment workflow from scratch
 
-**Skills needed:** `cargo-cli-connection`, `cargo-cli-orchestration`
+**Skills needed:** `cargo-connection`, `cargo-orchestration`
 
 ```
 1. connection connector list               → get connector UUID
@@ -411,7 +411,7 @@ The workspace UUID is returned by `cargo-ai whoami` under `workspace.uuid`.
 
 ### 5. Monitor workflow health and alert on errors
 
-**Skills needed:** `cargo-cli-orchestration`, `cargo-cli-analytics`
+**Skills needed:** `cargo-orchestration`, `cargo-analytics`
 
 ```
 1. orchestration tool list / play list    → discover workflowUuid
@@ -422,7 +422,7 @@ The workspace UUID is returned by `cargo-ai whoami` under `workspace.uuid`.
 
 ### 6. Bootstrap a fresh workspace
 
-**Skills needed:** `cargo-cli-workspace`, `cargo-cli-storage`, `cargo-cli-connection`, `cargo-cli-ai`
+**Skills needed:** `cargo-workspace-management`, `cargo-storage`, `cargo-connection`, `cargo-ai`
 
 ```
 1. workspace token create          → create a dedicated API token
@@ -438,7 +438,7 @@ The workspace UUID is returned by `cargo-ai whoami` under `workspace.uuid`.
 
 ### 7. Export and analyze segment data
 
-**Skills needed:** `cargo-cli-storage`, `cargo-cli-analytics`
+**Skills needed:** `cargo-storage`, `cargo-analytics`
 
 ```
 1. storage model list              → get modelUuid
