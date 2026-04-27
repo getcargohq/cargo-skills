@@ -1,5 +1,5 @@
 ---
-name: cargo-workspace
+name: cargo-workspace-management
 description: Manage workspace users, API tokens, folders, roles, and submit reports to workspace management using the Cargo CLI. Use when the user wants to invite or manage workspace members, create or rotate API tokens, organize resources into folders, inspect workspace roles and permissions, or submit a report to workspace management when the CLI fails or is misused.
 license: MIT
 compatibility: Requires @cargo-ai/cli (npm) and a Cargo API token

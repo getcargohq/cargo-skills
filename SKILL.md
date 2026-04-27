@@ -53,7 +53,7 @@ Trigger conditions (any one is enough):
 - A documented behavior contradicts what you observe.
 - A feature appears to be missing entirely.
 
-This is the official feedback channel — every report is reviewed by the Cargo team and used to improve the CLI and these skills. **Do not give up silently — file a report.** See `cargo-workspace/SKILL.md` (Reports section) and `cargo-workspace/references/examples/reports.md` for templates.
+This is the official feedback channel — every report is reviewed by the Cargo team and used to improve the CLI and these skills. **Do not give up silently — file a report.** See `cargo-workspace-management/SKILL.md` (Reports section) and `cargo-workspace-management/references/examples/reports.md` for templates.
 
 ---
 
@@ -67,7 +67,7 @@ This is the official feedback channel — every report is reviewed by the Cargo 
 | [`cargo-storage`](#cargo-storage)             | Inspect or modify data models, columns, datasets, and relationships                                |
 | [`cargo-connection`](#cargo-connection)       | Manage connector authentication, discover available integrations and their actions                 |
 | [`cargo-ai`](#cargo-ai)                       | Create and configure agents, upload files for RAG, manage MCP servers                              |
-| [`cargo-workspace`](#cargo-workspace)         | Invite users, create API tokens, organize folders, manage roles, report CLI issues to management   |
+| [`cargo-workspace-management`](#cargo-workspace-management)         | Invite users, create API tokens, organize folders, manage roles, report CLI issues to management   |
 
 ---
 
@@ -75,27 +75,27 @@ This is the official feedback channel — every report is reviewed by the Cargo 
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│                    cargo-workspace                       │
+│                  cargo-workspace-management                  │
 │             Authentication, users, tokens, folders           │
 └──────────────────────────────────────────────────────────────┘
 
-  ┌─────────────────┐   ┌───────────────────┐   ┌─────────────────┐
-  │cargo-storage│   │cargo-connection│   │  cargo-ai   │
+  ┌─────────────────┐   ┌────────────────────┐   ┌─────────────────┐
+  │  cargo-storage  │   │  cargo-connection  │   │    cargo-ai     │
   │ Models, columns,│   │ Connectors,        │   │ Agents, files,  │
   │ datasets        │   │ integration actions│   │ MCP servers     │
-  └────────┬────────┘   └────────┬───────────┘   └────────┬────────┘
-           │                     │  (UUIDs flow down)      │
-           └─────────────────────┼─────────────────────────┘
-                                 ▼
+  └────────┬────────┘   └─────────┬──────────┘   └────────┬────────┘
+           │                      │  (UUIDs flow down)    │
+           └──────────────────────┼───────────────────────┘
+                                  ▼
              ┌───────────────────────────────────────┐
-             │        cargo-orchestration        │
+             │          cargo-orchestration          │
              │   Runs, batches, plays, tools, SoR    │
              └───────────────┬───────────────────────┘
                              │
               ┌──────────────┴──────────────┐
               ▼                             ▼
  ┌────────────────────────┐  ┌───────────────────────────┐
- │  cargo-analytics   │  │    cargo-billing      │
+ │    cargo-analytics     │  │       cargo-billing       │
  │  Results, metrics,     │  │    Credit usage, costs    │
  │  exports               │  │                           │
  └────────────────────────┘  └───────────────────────────┘
@@ -103,7 +103,7 @@ This is the official feedback channel — every report is reviewed by the Cargo 
 
 **Dependency rules in practice:**
 
-- `cargo-workspace` provides auth context for every skill — set it up first.
+- `cargo-workspace-management` provides auth context for every skill — set it up first.
 - `cargo-storage`, `cargo-connection`, and `cargo-ai` are peer skills that supply UUIDs to `cargo-orchestration`. They don't depend on each other.
 - Before querying via system-of-record, load `cargo-storage` to get the DDL (exact table name).
 - Before building a workflow node graph, load `cargo-connection` to get `connectorUuid` and `actionSlug`.
@@ -262,7 +262,7 @@ See `cargo-ai/SKILL.md` for model and temperature guidance by use case.
 
 ---
 
-### cargo-workspace
+### cargo-workspace-management
 
 **Workspace administration.** Use to invite users, create and rotate API tokens, organize plays/tools/agents into folders, manage roles, and **submit reports to workspace management when the CLI fails or is being misused**.
 
@@ -280,9 +280,9 @@ cargo-ai workspace report create --title "<summary>" --description "<details>"
 
 - Most commands require a token with **admin access**.
 - Token values are only shown **once** at creation — store immediately in a secrets manager (GitHub Secrets, AWS Secrets Manager, etc.).
-- **Always send a `workspace report create`** when the CLI errors, is being used incorrectly, or you (user or agent) are struggling to make progress on a CLI task — see the section at the top of this file and `cargo-workspace/references/examples/reports.md`.
+- **Always send a `workspace report create`** when the CLI errors, is being used incorrectly, or you (user or agent) are struggling to make progress on a CLI task — see the section at the top of this file and `cargo-workspace-management/references/examples/reports.md`.
 
-**References:** `cargo-workspace/SKILL.md`
+**References:** `cargo-workspace-management/SKILL.md`
 
 ---
 
@@ -422,7 +422,7 @@ The workspace UUID is returned by `cargo-ai whoami` under `workspace.uuid`.
 
 ### 6. Bootstrap a fresh workspace
 
-**Skills needed:** `cargo-workspace`, `cargo-storage`, `cargo-connection`, `cargo-ai`
+**Skills needed:** `cargo-workspace-management`, `cargo-storage`, `cargo-connection`, `cargo-ai`
 
 ```
 1. workspace token create          → create a dedicated API token

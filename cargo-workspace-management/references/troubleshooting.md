@@ -1,6 +1,6 @@
 # Troubleshooting
 
-Common errors and recovery steps for `cargo-workspace` commands.
+Common errors and recovery steps for `cargo-workspace-management` commands.
 
 > **If the table below does not resolve the issue, or you (user or agent) are stuck on any Cargo CLI command after ≥ 2 failed attempts, send a workspace management report:**
 >

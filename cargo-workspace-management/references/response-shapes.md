@@ -1,6 +1,6 @@
 # Response shapes
 
-JSON response structures returned by Cargo CLI commands used in the `cargo-workspace` skill.
+JSON response structures returned by Cargo CLI commands used in the `cargo-workspace-management` skill.
 
 ## cargo-ai whoami
 

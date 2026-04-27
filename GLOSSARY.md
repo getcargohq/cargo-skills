@@ -112,7 +112,7 @@ A dynamic config value in a node graph. Either a `templateExpression` using `{{n
 A JSON object used to select records from a model or segment. Always has the structure `{"conjonction": "and"|"or", "groups": [...]}`. See `cargo-orchestration/references/filter-syntax.md` for the full reference.
 
 **folder**
-An organizational container for plays, tools, and agents in the Cargo app. Managed via `cargo-workspace`. Has no effect on workflow execution.
+An organizational container for plays, tools, and agents in the Cargo app. Managed via `cargo-workspace-management`. Has no effect on workflow execution.
 
 ---
 
@@ -242,4 +242,4 @@ A DAG of nodes that defines the execution logic for a play or tool. Workflows do
 The UUID of a workflow. The primary key for most orchestration, analytics, and billing commands. Get it from `play list` or `tool list` → `.workflowUuid`.
 
 **workspace**
-The top-level organizational unit in Cargo. All resources (models, agents, workflows, connectors) belong to a workspace. Identified by a `workspaceUuid`. Managed via `cargo-workspace`.
+The top-level organizational unit in Cargo. All resources (models, agents, workflows, connectors) belong to a workspace. Identified by a `workspaceUuid`. Managed via `cargo-workspace-management`.
