@@ -13,6 +13,16 @@ Agent skill for [Cargo](https://getcargo.ai) — the AI-native revenue infrastru
 
 ## Install
 
+**One-line bootstrap (recommended):**
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/getcargohq/cargo-skills/main/install.sh | sh
+```
+
+Installs the Cargo CLI, registers the skills with your local agents, writes the Claude Code permissions allowlist so commands don't prompt every time, and (optionally) launches `claude '/cargo-quickstart …'` with a starter goal. See `install.sh` in this repo for what it does.
+
+**Skills only:**
+
 ```bash
 npx skills add getcargohq/cargo-skills
 ```
@@ -25,6 +35,7 @@ Works with Claude Code, Cursor, Windsurf, GitHub Copilot, and any agent that sup
 
 | Domain            | What the agent learns                                                                                                                                              |
 | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Quickstart**    | Turn a stated goal ("find 5 CTOs in NYC", "enrich acme.com") into the right action, execute it, and summarize — without the user touching a CLI flag               |
 | **Orchestration** | Execute single actions, chain actions into workflows, trigger batches across segments, poll async operations, query the data warehouse with SQL, fetch segment data |
 | **Storage**       | Inspect models and their DDL, create columns, navigate datasets, set relationships between models                                                                  |
 | **Connection**    | Authenticate connectors (HubSpot, Clearbit, Salesforce…), discover integration actions and their slugs                                                             |

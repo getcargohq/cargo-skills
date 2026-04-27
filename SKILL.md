@@ -61,6 +61,7 @@ This is the official feedback channel — every report is reviewed by the Cargo 
 
 | Skill                                                 | Load when you need to…                                                                             |
 | ----------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| [`cargo-quickstart`](#cargo-quickstart)       | The user states a real-world goal ("find 5 CTOs in NYC", "enrich acme.com") and wants a result, not a CLI tour. Front door / dispatcher. |
 | [`cargo-orchestration`](#cargo-orchestration) | Execute actions, run workflows, trigger batches, chat with agents, query your data warehouse       |
 | [`cargo-analytics`](#cargo-analytics)         | Download run results, export segment data, monitor error rates and metrics                         |
 | [`cargo-billing`](#cargo-billing)             | Check credit usage, view subscription details, track costs per workflow or connector               |
@@ -74,6 +75,12 @@ This is the official feedback channel — every report is reviewed by the Cargo 
 ## How the skills relate
 
 ```
+                ┌──────────────────────────────────┐
+                │         cargo-quickstart         │
+                │  Goal → dispatch → execute → say │
+                │  (front door for real outcomes)  │
+                └─────────────────┬────────────────┘
+                                  │ delegates to ↓
 ┌──────────────────────────────────────────────────────────────┐
 │                  cargo-workspace-management                  │
 │             Authentication, users, tokens, folders           │
@@ -103,6 +110,7 @@ This is the official feedback channel — every report is reviewed by the Cargo 
 
 **Dependency rules in practice:**
 
+- `cargo-quickstart` is the **front door** when the user states a real-world outcome. It chooses one of the lower skills, drives the discovery sequence, and executes. Load it when the user says what they want, not how to do it.
 - `cargo-workspace-management` provides auth context for every skill — set it up first.
 - `cargo-storage`, `cargo-connection`, and `cargo-ai` are peer skills that supply UUIDs to `cargo-orchestration`. They don't depend on each other.
 - Before querying via system-of-record, load `cargo-storage` to get the DDL (exact table name).
@@ -114,6 +122,24 @@ This is the official feedback channel — every report is reviewed by the Cargo 
 ---
 
 ## Skill details
+
+### cargo-quickstart
+
+**The front door.** Use when the user states a real-world goal (a *what*, not a *how*) and wants a result — not a tour of the CLI.
+
+**Trigger phrases:**
+
+- "Find 5 CTOs in NYC and get their verified work emails."
+- "Enrich acme.com with Clearbit."
+- "Score the leads added this week."
+- "Push our new MQLs to HubSpot."
+- "How many companies in our model are headquartered in the US?"
+
+**What it does:** classifies the goal → picks one of `action execute`, `action execute-batch`, `run create` / `batch create`, `ai message create`, or `system-of-record query` → runs the discovery sequence → executes → summarizes. Defers to the relevant lower skill for any *construction* task (creating models, designing node graphs, configuring agents).
+
+**References:** `cargo-quickstart/SKILL.md`, `cargo-quickstart/references/classification.md`, `cargo-quickstart/references/recipes.md`
+
+---
 
 ### cargo-orchestration
 
