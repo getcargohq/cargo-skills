@@ -34,22 +34,39 @@ cargo-ai orchestration action execute \
   --wait-until-finished > /tmp/companies.json
 ```
 
-Filter mismatch? Fall back to `peopleDataLabs.queryCompanies` (3 cred/company, ES-style structured filters):
+Filter mismatch? Fall back to peopleDataLabs. Pick the right action by filter shape:
+
+- **`searchCompanies`** (cargo's `{conjonction, groups, conditions}` filter shape) for simple AND/OR criteria:
+
+```bash
+cargo-ai orchestration action execute \
+  --action '{"kind":"connector","integrationSlug":"peopleDataLabs","actionSlug":"searchCompanies","config":{}}' \
+  --data '{
+    "filter": {
+      "conjonction": "and",
+      "groups": [{
+        "conjonction": "and",
+        "conditions": [
+          {"propertyName": "industry", "operator": "is", "value": "financial services"},
+          {"propertyName": "employee_count", "operator": "greaterThanOrEquals", "value": 50},
+          {"propertyName": "employee_count", "operator": "lowerThanOrEquals", "value": 500},
+          {"propertyName": "location.country", "operator": "is", "value": "united states"}
+        ]
+      }]
+    },
+    "limit": 500
+  }' \
+  --wait-until-finished > /tmp/companies.json
+```
+
+- **`queryCompanies`** (PDL **SQL string**) when criteria require array-membership, joins, or complex bool combinations:
 
 ```bash
 cargo-ai orchestration action execute \
   --action '{"kind":"connector","integrationSlug":"peopleDataLabs","actionSlug":"queryCompanies","config":{}}' \
   --data '{
-    "query": {
-      "bool": {
-        "must": [
-          {"term": {"industry": "financial services"}},
-          {"range": {"employee_count": {"gte": 50, "lte": 500}}},
-          {"term": {"location_country": "united states"}}
-        ]
-      }
-    },
-    "size": 500
+    "query": "SELECT * FROM company WHERE industry = '\''financial services'\'' AND employee_count >= 50 AND employee_count <= 500 AND location.country = '\''united states'\''",
+    "limit": 500
   }' \
   --wait-until-finished > /tmp/companies.json
 ```
@@ -156,6 +173,6 @@ Cut steps the user doesn't need (skip step 3 funding/tech if not part of ICP, sk
 
 - User wants local SMBs / storefronts → use `serper.searchPlaces` for sourcing instead of salesNavigator.
 - User wants "everyone hiring for X role" → use `theirStack.searchJobs` then dedup to companies.
-- User wants investor-backed companies → start with `peopleDataLabs.queryCompanies` filtering on `funding_rounds.investors.name`.
+- User wants investor-backed companies → start with `peopleDataLabs.queryCompanies` (PDL SQL) filtering on `summary.investors LIKE %X%`. See `cargo-portfolio-prospecting/SKILL.md` for the full pattern.
 
 For these patterns, see the dedicated recipes in Phase D (`small-business-prospecting.md`, `tech-intent.md`, `portfolio-prospecting.md`).

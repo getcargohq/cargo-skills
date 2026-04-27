@@ -63,7 +63,7 @@ cargo-ai orchestration action execute-batch \
   --wait-until-finished
 ```
 
-If salesNavigator filters don't cover the criteria you need, fall back to `peopleDataLabs.queryCompanies` (3-credit tier but supports structured ES-style filters).
+If salesNavigator filters don't cover the criteria you need, fall back to peopleDataLabs. Use `searchCompanies` (3) when criteria fit cargo's `{conjonction, groups, conditions}` filter shape; drop to `queryCompanies` (3) when you need a PDL **SQL** query (required for array-membership like investor name).
 
 ### Pattern B — Contact discovery at known companies
 
@@ -117,7 +117,7 @@ cargo-ai orchestration action execute \
 # Step 1 — query companies by investor (peopleDataLabs is the reliable source)
 cargo-ai orchestration action execute \
   --action '{"kind":"connector","integrationSlug":"peopleDataLabs","actionSlug":"queryCompanies","config":{}}' \
-  --data '{"query":{"bool":{"must":[{"term":{"funding_rounds.investors.name":"Sequoia"}}]}}}' \
+  --data '{"query":"SELECT * FROM company WHERE summary.investors LIKE %Sequoia%"}' \
   --wait-until-finished > /tmp/portfolio.json
 
 # Step 2 — fan out searchLeads per portfolio company (Pattern B above)

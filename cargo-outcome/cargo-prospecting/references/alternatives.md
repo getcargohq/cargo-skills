@@ -19,7 +19,7 @@ Default rule: **don't swap to chase 2× cheaper if hit-rate drops 30%**. The tot
 | Goal | Priority | Alternative | When to swap |
 |---|---|---|---|
 | At-scale lead search | salesNavigator.searchLeads (0.02) | icypeas.findPeople (0.02) | When LinkedIn coverage is thin (e.g., privacy-focused industries). |
-| At-scale account search | salesNavigator.searchAccounts (0.05) | peopleDataLabs.queryCompanies (3) | When ES-style structured filters needed (funding, complex bool). |
+| At-scale account search | salesNavigator.searchAccounts (0.05) | peopleDataLabs.searchCompanies (3) for cargo-filter shape, or queryCompanies (3) for SQL | When salesNavigator's filters miss (funding, investor, complex bool). |
 | Tech-intent sourcing | theirStack.searchJobs / searchCompanies (0.5) | (no priority alternative — theirStack IS priority) | n/a |
 | SMB / local | (none in priority — priority skips SMB) | serper.searchPlaces (1), firecrawl.scrape (0.05) | Always for local/storefront. |
 | Visitor de-anonymization | (none — niche) | snitcher.searchSessions (0) | Always for visitor ID — free credits-tier. |

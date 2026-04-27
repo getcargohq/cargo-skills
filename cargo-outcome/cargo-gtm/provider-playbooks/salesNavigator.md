@@ -82,7 +82,7 @@ Per-record `--data`:
 
 ## Fallback chain
 
-If `salesNavigator.searchAccounts` doesn't have your filter (e.g., you need to filter by funding round → not in salesNavigator), escalate to `peopleDataLabs.queryCompanies` (3 credits, ES-style structured filters). Never escalate to `searchLeadsLegacy`.
+If `salesNavigator.searchAccounts` doesn't have your filter (e.g., you need to filter by investor or funding round → not in salesNavigator), escalate to `peopleDataLabs.queryCompanies` (3 credits, PDL **SQL** query). Never escalate to `searchLeadsLegacy`.
 
 For people search niches salesNavigator misses:
 - **Local SMBs**: `serper.searchPlaces` (Google Maps).

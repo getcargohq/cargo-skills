@@ -14,7 +14,7 @@ Prices are credits/record. "Priority?" marks providers in the priority stack (sa
 | linkup | search | 0.5 |   | Web search with structured answers. |
 | contactOut | search | 1 |   | Mid-tier when other sources miss. |
 | oceanio | searchPeople | 1 |   | Mid-tier. |
-| peopleDataLabs | searchPeople / queryPeople | 3 | ✅ | Heavyweight; structured ES-style queries. |
+| peopleDataLabs | searchPeople / queryPeople | 3 | ✅ | Heavyweight. `searchPeople` uses cargo's `{conjonction, groups, conditions}` filter; `queryPeople` takes a PDL **SQL string**. |
 | waterfall | searchProspects | 3 | ✅ | Multi-source; useful when LinkedIn isn't enough. |
 
 ## Sourcing — Search companies
@@ -25,7 +25,7 @@ Prices are credits/record. "Priority?" marks providers in the priority stack (sa
 | salesNavigator | searchAccounts | 0.05 | ✅ | LinkedIn-anchored. Default at-scale. |
 | theirStack | searchCompanies | 0.5 | ✅ | Tech-stack + hiring-intent filter. |
 | oceanio | searchCompanies | 1 |   | Mid-tier. |
-| peopleDataLabs | searchCompanies / queryCompanies | 3 | ✅ | Investor/funding queries; ES-style filters. |
+| peopleDataLabs | searchCompanies / queryCompanies | 3 | ✅ | `searchCompanies` uses cargo's `{conjonction, groups, conditions}` filter shape; `queryCompanies` takes a PDL **SQL string**. Investor/funding filters require the SQL variant. |
 
 ## Sourcing — Local SMBs
 
