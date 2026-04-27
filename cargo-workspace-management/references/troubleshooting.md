@@ -34,10 +34,11 @@ Common errors and recovery steps for `cargo-workspace-management` commands.
 | Symptom | Cause | Fix |
 |---------|-------|-----|
 | `token create` exits with `error: required option '--name <name>' not specified` | `--name` is required since the named-token migration | Pass `--name "<descriptive label>"` (e.g. `--name "CI/CD pipeline"`) |
-| `token create` rejected with `error: unknown option '--from-user'` | Legacy flag — removed when tokens gained `name` and `permissions` | Drop `--from-user`; use `--name <name>` instead |
+| `token create` rejected with `error: unknown option '--from-user'` | Legacy flag — removed when tokens gained `name` and `permissions` | Drop `--from-user`; use `--name <name>` instead. CLI-created tokens already inherit the creating user's permissions (`permissions: null`) |
 | Lost the token value after creation | Token value only shown once | Remove the token and create a new one (with the same `--name`); store the new value securely |
 | `token remove` fails | Token is currently in use by active processes | Wait for processes to finish, or rotate to a new token first then remove the old one |
-| `Unauthorized` errors in CI/CD | Token expired, removed, or scoped permissions are too narrow | Verify the token still exists with `workspace token list`; check its `permissions` field; if scoped, widen via the API/app or create a new full-access token |
+| `Unauthorized` errors in CI/CD with a CLI-created token | Token mirrors the creating user's permissions; that user lost access (role downgraded, removed, etc.) | Verify the token still exists with `workspace token list`; check the role of the user in `userUuid` (`workspace user list`); restore the user's permissions, or recreate the token under a user with the access you need |
+| `Unauthorized` errors in CI/CD with an explicitly scoped token | `permissions` array is too narrow for the action being attempted | Inspect the token's `permissions` field via `workspace token list`; widen via the API/app, or replace with a `permissions: null` token created by a user that has the required access |
 | Two tokens look identical in `token list` | Both were created without a meaningful `--name` | Use `--name` consistently — the name is the only label distinguishing tokens in the listing |
 
 ## Folders

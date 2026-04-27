@@ -1,6 +1,6 @@
 # API token examples
 
-Every token has a human-readable `name` and a `permissions` field. The CLI's `token create` always issues a token with full workspace access (`permissions: null`); use the API or the Cargo app to scope a token to a subset of actions / resources.
+Every token has a human-readable `name` and a `permissions` field. The CLI's `token create` always issues a token with `permissions: null`, which means the token mirrors the permissions of the user who created it — its effective access is whatever that user can do in the workspace. Use the API or the Cargo app to scope a token to a different subset of actions / resources.
 
 ## List all tokens
 
@@ -19,6 +19,8 @@ cargo-ai workspace token create --name "CI/CD pipeline"
 ```
 
 The response includes the `token` field — this is the only time the token value is shown. Store it immediately in a secrets manager.
+
+> The new token inherits the permissions of the user running `token create`. If you need a token with broader or narrower access than your user, create it under the appropriate user account, or scope it explicitly via the API / Cargo app after creation.
 
 ## Rotate a token (replace an old one)
 

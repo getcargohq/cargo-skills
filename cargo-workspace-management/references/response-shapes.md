@@ -78,7 +78,7 @@ JSON response structures returned by Cargo CLI commands used in the `cargo-works
 **Key fields:**
 
 - `name`: human-readable label assigned at creation (`--name` flag).
-- `permissions`: `null` means the token has full workspace access. When non-null, it is an array of permission rules `{ effect, resources, actions }` that scope the token to specific actions / resources. CLI-created tokens are always `null`; scoped tokens are configured via the API or the Cargo app.
+- `permissions`: `null` means the token mirrors the permissions of its owning user (the user identified by `userUuid`) — its effective access is bounded by what that user can do. When non-null, it is an array of permission rules `{ effect, resources, actions }` that scope the token explicitly. CLI-created tokens are always `null`; explicitly scoped tokens are configured via the API or the Cargo app.
 - `deletedAt`: `null` for active tokens; an ISO timestamp once the token has been removed.
 
 ## cargo-ai workspace token create
@@ -98,11 +98,11 @@ JSON response structures returned by Cargo CLI commands used in the `cargo-works
 }
 ```
 
-**Important:** Save the `token` value immediately — it is shown only once and cannot be retrieved again. The `name` you pass via `--name` is echoed back in the response and shown in `token list`.
+**Important:** Save the `token` value immediately — it is shown only once and cannot be retrieved again. The `name` you pass via `--name` is echoed back in the response and shown in `token list`. The `userUuid` is the user whose permissions the token inherits when `permissions` is `null`.
 
 ### Permission shape (when not null)
 
-When a token has been scoped (via API or app), `permissions` is an array of rules:
+When a token has been explicitly scoped (via API or app), `permissions` is an array of rules:
 
 ```json
 [
@@ -122,6 +122,8 @@ When a token has been scoped (via API or app), `permissions` is an array of rule
 - `effect`: `"allow"` or `"deny"`.
 - `resources`: array of resource UUIDs (workflow, folder, etc.) that the rule applies to, or `null` for workspace-wide.
 - `actions`: array of dotted action strings, e.g. `"orchestration:*"`, `"orchestration:workflow:read"`, `"workspaceManagement:folder:write"`, `"ai:agent:write"`. The `*` wildcard at any level grants every action below it.
+
+When `permissions` is non-null, the rules are evaluated independently of the owning user — the token's access is exactly what the rules describe, regardless of what `userUuid` can do.
 
 ## cargo-ai workspace folder list
 

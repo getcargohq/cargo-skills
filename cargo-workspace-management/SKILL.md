@@ -96,7 +96,7 @@ Always check available roles before inviting users — use the `slug` from `role
 
 ## API tokens
 
-Each token has a human-readable `name` and a `permissions` field. Tokens created via the CLI are issued with full workspace access (`permissions: null`); fine-grained permission scoping is configured via the API or the Cargo app.
+Each token has a human-readable `name` and a `permissions` field. Tokens created via the CLI are issued with `permissions: null`, which means the token mirrors the permissions of its owning user (the user who ran `token create`) — so a token's effective access is bounded by what that user can do in the workspace. Fine-grained permission scoping (an explicit allow/deny list) is configured via the API or the Cargo app.
 
 ```bash
 # List all API tokens (includes name and permissions of each token)
