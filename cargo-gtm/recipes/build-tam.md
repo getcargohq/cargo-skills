@@ -179,7 +179,7 @@ If a Companies model exists in the workspace, write back via `cargo-ai storage c
 
 For a CSV export, point the user at `cargo-ai segmentation segment download` (see [`../../cargo-analytics/references/examples/exports.md`](../../cargo-analytics/references/examples/exports.md)).
 
-For CRM push, defer to the future `cargo-crm-sync` skill (Phase D) or compose ad hoc with `hubspot.upsertRecords` / `salesforce.upsert`.
+For CRM push, compose ad hoc with `hubspot.upsertRecords` / `salesforce.upsert` — discover the action via `cargo-ai connection integration get hubspot` (or `salesforce`) and run via `orchestration action execute-batch`.
 
 ## Credit budget (rough)
 
@@ -204,6 +204,6 @@ Cut steps the user doesn't need (skip step 3 funding/tech if not part of ICP, sk
 
 - User wants local SMBs / storefronts → use `serper.searchPlaces` for sourcing instead of salesNavigator.
 - User wants "everyone hiring for X role" → use `theirStack.searchJobs` then dedup to companies.
-- User wants investor-backed companies → start with `peopleDataLabs.queryCompanies` (PDL SQL) filtering on `summary.investors LIKE %X%`. See `cargo-portfolio-prospecting/SKILL.md` for the full pattern.
+- User wants investor-backed companies → start with `peopleDataLabs.queryCompanies` (PDL SQL) filtering on `summary.investors LIKE %X%`. See [`portfolio-prospecting.md`](portfolio-prospecting.md) for the full pattern.
 
-For these patterns, see the dedicated recipes in Phase D (`small-business-prospecting.md`, `tech-intent.md`, `portfolio-prospecting.md`).
+For these patterns, see [`tech-intent.md`](tech-intent.md) and [`portfolio-prospecting.md`](portfolio-prospecting.md).

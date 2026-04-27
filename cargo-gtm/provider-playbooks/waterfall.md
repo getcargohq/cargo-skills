@@ -58,7 +58,7 @@ Pass any combination of identifiers; multi-identifier inputs improve coverage. R
 - `NO_CHANGE` — same role / company.
 - `UNKNOWN` — no signal available.
 
-Filter to `MOVED` for outbound timing. See the (Phase D) `cargo-job-change-monitoring` recipe for the full pattern including segment write-back.
+Filter to `MOVED` for outbound timing. See [`../recipes/job-change-monitoring.md`](../recipes/job-change-monitoring.md) for the full pattern including segment write-back.
 
 ### Pattern C — Fallback contact enrichment
 

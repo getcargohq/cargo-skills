@@ -118,7 +118,7 @@ If the user wants the enriched + scored data in their CRM:
 | **pipedrive** | (CRUD) | Person / Organization / Deal objects. |
 | **attio** | (CRUD) | Custom-object friendly. |
 
-CRM CRUD is free (no credits). Drives a separate `cargo-crm-sync` skill in Phase D.
+CRM CRUD is free (no credits). Compose ad hoc — discover actions via `cargo-ai connection integration get <slug>` and run via `orchestration action execute-batch`.
 
 ## When to use Cargo AI agents instead of raw LLM `instruct`
 

@@ -69,7 +69,7 @@ If a `current_company` or `last_job_change_at` column exists on the Contacts mod
 # See ../../cargo-storage/SKILL.md.
 ```
 
-For pushing the MOVED set to a CRM (HubSpot custom property, Salesforce field), defer to the future `cargo-crm-sync` skill (Phase D Tier 2).
+For pushing the MOVED set to a CRM (HubSpot custom property, Salesforce field), compose ad hoc with `hubspot.upsertRecords` / `salesforce.upsert` — discover the action via `cargo-ai connection integration get hubspot` and run it via `orchestration action execute-batch`.
 
 ## Recurring monitoring (cron / play)
 

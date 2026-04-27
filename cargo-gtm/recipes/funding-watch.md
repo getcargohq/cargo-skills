@@ -82,8 +82,8 @@ For long-running monitoring, prefer `fetchBusinessEvents` with `timestamp_from` 
 
 The output of this skill is a list of company records with funding events. Useful next steps:
 
-- **Outbound timing**: hand the list to a sequencer (lemlist / lgm / instantly) for a fresh-funding-triggered campaign. Defer to `cargo-outbound-launch` (Phase D Tier 2).
-- **CRM enrichment**: write a `last_funding_round_at` column on the Companies model, push to HubSpot. Defer to `cargo-crm-sync` (Phase D Tier 2).
+- **Outbound timing**: hand the list to a sequencer (lemlist / lgm / instantly) for a fresh-funding-triggered campaign — discover the launch action via `cargo-ai connection integration get lemlist` and run via `orchestration action execute-batch`.
+- **CRM enrichment**: write a `last_funding_round_at` column on the Companies model, push to HubSpot via `hubspot.upsertRecords` (compose ad hoc — see [`build-tam.md`](build-tam.md) for the CRM-push pattern).
 - **Sales notification**: post to Slack when a tier-1 account hits a funding milestone. Use `slack` connector or `http.call` for webhook patterns.
 
 ## Action shape
