@@ -271,7 +271,7 @@ See `cargo-ai/SKILL.md` for model and temperature guidance by use case.
 ```bash
 cargo-ai whoami
 cargo-ai workspace user create --user-email user@example.com --role-slug <slug>
-cargo-ai workspace token create --from-user
+cargo-ai workspace token create --name "CI/CD pipeline"
 cargo-ai workspace folder create --name "Q1 Campaigns" --emoji-slug "rocket" --kind "play"
 cargo-ai workspace report create --title "<summary>" --description "<details>"
 ```
@@ -279,6 +279,7 @@ cargo-ai workspace report create --title "<summary>" --description "<details>"
 **Critical rules:**
 
 - Most commands require a token with **admin access**.
+- `workspace token create` requires `--name` (the legacy `--from-user` flag was removed). Pick a name that makes the token's purpose obvious in `token list` later.
 - Token values are only shown **once** at creation — store immediately in a secrets manager (GitHub Secrets, AWS Secrets Manager, etc.).
 - **Always send a `workspace report create`** when the CLI errors, is being used incorrectly, or you (user or agent) are struggling to make progress on a CLI task — see the section at the top of this file and `cargo-workspace-management/references/examples/reports.md`.
 
@@ -425,7 +426,7 @@ The workspace UUID is returned by `cargo-ai whoami` under `workspace.uuid`.
 **Skills needed:** `cargo-workspace-management`, `cargo-storage`, `cargo-connection`, `cargo-ai`
 
 ```
-1. workspace token create          → create a dedicated API token
+1. workspace token create --name <label>   → create a dedicated, named API token
 2. workspace role list             → discover available roles
 3. workspace user create           → invite team members
 4. storage model create            → create Companies and Contacts models
@@ -461,7 +462,7 @@ The workspace UUID is returned by `cargo-ai whoami` under `workspace.uuid`.
 | `run create` vs `batch create`     | `run create` only works with **tool** workflows. Using a play's `workflowUuid` returns `playNotCompatible`.                                                                                                                                   |
 | `--model-uuid` vs `--segment-uuid` | `segment fetch` and `segment download` require `--model-uuid`. Get it from `segment list` → `.modelUuid`.                                                                                                                                     |
 | DDL before SQL                     | Never guess table names. Always run `model get-ddl <uuid>` first. Table names look like `datasets_default.models_companies`.                                                                                                                  |
-| Token shown once                   | API token values are only returned at creation. Store immediately.                                                                                                                                                                            |
+| Token shown once                   | API token values are only returned at creation. Store immediately. `workspace token create` requires `--name` (no more `--from-user`).                                                                                                        |
 | Invoice amounts in cents           | `subscription get-invoices` returns `amount` in cents. Divide by 100.                                                                                                                                                                         |
 | Plays vs tools                     | **Play** = reacts to data changes (segment-driven). **Tool** = triggered on demand (manual, API, cron).                                                                                                                                       |
 | Batch data kinds                   | Play workflows accept: `segment`, `change`, `filter`, `recordIds`. Tool workflows accept: `file`, `records`.                                                                                                                                  |
