@@ -122,7 +122,7 @@ cargo-ai orchestration action execute-batch \
     "kind": "connector",
     "integrationSlug": "<email-provider>",
     "actionSlug": "verify_email",
-    "config": {"connectorUuid": "<uuid>"}
+    "config": {}
   }' \
   --records '[ ...output of step 2... ]' \
   --wait-until-finished
@@ -135,7 +135,6 @@ cargo-ai orchestration action execute-batch \
 User: *"Enrich acme.com with Clearbit."*
 
 ```bash
-cargo-ai connection connector list | jq '.connectors[] | select(.integrationSlug=="clearbit")'
 cargo-ai connection integration get clearbit  # confirm actionSlug
 
 cargo-ai orchestration action execute \
@@ -143,7 +142,7 @@ cargo-ai orchestration action execute \
     "kind": "connector",
     "integrationSlug": "clearbit",
     "actionSlug": "company_enrich",
-    "config": {"connectorUuid": "<uuid>"}
+    "config": {}
   }' \
   --data '{"domain":"acme.com"}' \
   --wait-until-finished
@@ -169,7 +168,7 @@ cargo-ai orchestration action execute-batch \
     "kind":"connector",
     "integrationSlug":"clearbit",
     "actionSlug":"company_enrich",
-    "config":{"connectorUuid":"<uuid>"}
+    "config":{}
   }' \
   --records "$(jq -c '.records' /tmp/records.json)" \
   --wait-until-finished

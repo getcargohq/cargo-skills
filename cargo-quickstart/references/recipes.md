@@ -7,15 +7,14 @@ Recipes are paste-and-tweak templates for the most common goals. Each recipe is 
 User: *"Push these 100 companies to HubSpot."*
 
 ```bash
-cargo-ai connection connector list | jq '.connectors[] | select(.integrationSlug=="hubspot")'
-cargo-ai connection integration get hubspot
+cargo-ai connection integration get hubspot   # confirm actionSlug
 
 cargo-ai orchestration action execute-batch \
   --action '{
     "kind":"connector",
     "integrationSlug":"hubspot",
     "actionSlug":"upsert_company",
-    "config":{"connectorUuid":"<uuid>"}
+    "config":{}
   }' \
   --records '[{"domain":"acme.com","name":"Acme"}, ... ]' \
   --wait-until-finished
@@ -25,26 +24,34 @@ cargo-ai orchestration action execute-batch \
 
 User: *"Find 20 series-A SaaS companies, enrich them, and score for ICP fit."*
 
-Build a one-off node graph rather than three sequential actions — the run executes all three steps server-side and returns a single result set.
+Run as three sequential `action execute` / `action execute-batch` calls, piping each step's output into the next. This keeps the quickstart in pure-action territory — for a reusable graph, defer to `cargo-orchestration` to build a tool.
 
 ```bash
-cargo-ai connection native-integration get   # confirm find-companies actionSlug
-cargo-ai connection integration get clearbit # confirm enrich actionSlug
-cargo-ai ai agent list                       # find scoring agentUuid
-
-cargo-ai orchestration node validate --nodes '[
-  {"slug":"find","kind":"native","actionSlug":"find_companies","config":{...}},
-  {"slug":"enrich","kind":"connector","integrationSlug":"clearbit","actionSlug":"company_enrich","config":{"connectorUuid":"<uuid>"},"input":{"domain":"{{find.domain}}"}},
-  {"slug":"score","kind":"agent","agentUuid":"<uuid>","input":{"company":"{{enrich}}"}}
-]'
-
-cargo-ai orchestration run create \
-  --nodes '<same nodes>' \
+# 1. Find — one-shot native action
+cargo-ai connection native-integration get | jq '.actions[] | select(.slug|test("find_compan"))'
+cargo-ai orchestration action execute \
+  --action '{"kind":"native","actionSlug":"find_companies","config":{}}' \
   --data '{"stage":"series-a","industry":"saas","limit":20}' \
+  --wait-until-finished > /tmp/found.json
+
+# 2. Enrich — fan-out across the results from step 1
+#    (extract per-record inputs from /tmp/found.json — exact jq path depends on the
+#     find action's output shape; inspect run.runContext.<slug> to confirm)
+cargo-ai connection integration get clearbit
+cargo-ai orchestration action execute-batch \
+  --action '{"kind":"connector","integrationSlug":"clearbit","actionSlug":"company_enrich","config":{}}' \
+  --records '<JSON array of {"domain":"..."} extracted from step 1>' \
+  --wait-until-finished > /tmp/enriched.json
+
+# 3. Score — pass enriched records through the scoring agent
+AGENT_UUID=$(cargo-ai ai agent list | jq -r '.agents[] | select(.name|test("score";"i")) | .uuid')
+cargo-ai orchestration action execute-batch \
+  --action "$(jq -nc --arg uuid "$AGENT_UUID" '{kind:"agent",agentUuid:$uuid,config:{}}')" \
+  --records '<JSON array of enriched records extracted from step 2>' \
   --wait-until-finished
 ```
 
-> If this pattern shows up repeatedly, suggest the user save it as a tool (defer to `cargo-orchestration`).
+> Reaching for `run create --nodes` to chain these in one server-side run? That's a node graph — load `cargo-orchestration` and use the `{{nodes.<slug>.<field>}}` interpolation syntax documented in its `references/nodes.md`. Inside a node graph, `connectorUuid` lives at the **top level of the node**, not inside `config`.
 
 ## R8 — Health check on a saved tool
 
