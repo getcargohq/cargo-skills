@@ -1,13 +1,3 @@
----
-name: cargo-skills
-description: Master skill index for the Cargo CLI. Use this file to understand which skill to load, how the skills relate to each other, and how to chain them together to accomplish end-to-end revenue automation tasks on the Cargo platform.
-license: MIT
-compatibility: Requires @cargo-ai/cli (npm) and a Cargo API token
-metadata:
-  author: getcargo
-  version: "1.0"
----
-
 ```
 ██████    ████    █████    ██████   ██████
 ██    ░  ██  ██░  ██  ██   ██    ░  ██  ██░
@@ -19,7 +9,12 @@ metadata:
 
 # Cargo CLI — Skills Overview
 
-This repository contains seven skills for the [Cargo](https://getcargo.ai) AI-native revenue infrastructure. Each skill covers a distinct domain. This file tells you which skill to load for any given task and how to combine them.
+This repository contains 8 skills at the repo root: one **outcome skill** (`cargo-gtm`) and seven **capability skills**.
+
+- **`cargo-gtm`** — application library. The front door for any GTM task ("build a TAM list", "find 5 fintech CTOs", "monitor job changes"). Routes via internal recipes (`cargo-gtm/recipes/*.md`) and provider playbooks (`cargo-gtm/provider-playbooks/*.md`).
+- **Capability skills** — standard library. One per CLI domain (orchestration, storage, connection, AI, analytics, billing, workspace management). Loaded by `cargo-gtm`, or directly when you need a specific CLI domain.
+
+`cargo-gtm` delegates to capability skills; capability skills never reference `cargo-gtm` (one-way dependency).
 
 ## Installation
 
@@ -59,24 +54,44 @@ This is the official feedback channel — every report is reviewed by the Cargo 
 
 ## Skills at a glance
 
-| Skill                                                 | Load when you need to…                                                                             |
-| ----------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| [`cargo-orchestration`](#cargo-orchestration) | Execute actions, run workflows, trigger batches, chat with agents, query your data warehouse       |
-| [`cargo-analytics`](#cargo-analytics)         | Download run results, export segment data, monitor error rates and metrics                         |
-| [`cargo-billing`](#cargo-billing)             | Check credit usage, view subscription details, track costs per workflow or connector               |
-| [`cargo-storage`](#cargo-storage)             | Inspect or modify data models, columns, datasets, and relationships                                |
-| [`cargo-connection`](#cargo-connection)       | Manage connector authentication, discover available integrations and their actions                 |
-| [`cargo-ai`](#cargo-ai)                       | Create and configure agents, upload files for RAG, manage MCP servers                              |
-| [`cargo-workspace-management`](#cargo-workspace-management)         | Invite users, create API tokens, organize folders, manage roles, report CLI issues to management   |
+### Outcome skill
+
+Load when the user states a real-world goal.
+
+| Skill                                     | Load when you need to…                                                                             |
+| ----------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| [`cargo-gtm`](#cargo-gtm)                 | Any GTM task — sourcing, enrichment, verification, scoring, sequencing, CRM sync, signal monitoring (job changes, funding, tech-stack/hiring intent). Routes via recipes (`recipes/`), guides (`guides/`), and provider playbooks (`provider-playbooks/`). |
+
+### Capability skills
+
+Load for a specific CLI domain.
+
+| Skill                                                                 | Load when you need to…                                                                             |
+| --------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| [`cargo-orchestration`](#cargo-orchestration)                         | Execute actions, run workflows, trigger batches, chat with agents, query your data warehouse       |
+| [`cargo-analytics`](#cargo-analytics)                                 | Download run results, export segment data, monitor error rates and metrics                         |
+| [`cargo-billing`](#cargo-billing)                                     | Check credit usage, view subscription details, track costs per workflow or connector               |
+| [`cargo-storage`](#cargo-storage)                                     | Inspect or modify data models, columns, datasets, and relationships                                |
+| [`cargo-connection`](#cargo-connection)                               | Manage connector authentication, discover available integrations and their actions                 |
+| [`cargo-ai`](#cargo-ai)                                               | Create and configure agents, upload files for RAG, manage MCP servers                              |
+| [`cargo-workspace-management`](#cargo-workspace-management)           | Invite users, create API tokens, organize folders, manage roles, report CLI issues to management   |
 
 ---
 
 ## How the skills relate
 
 ```
+            ┌─────────────────────────────────────┐
+            │              cargo-gtm              │
+            │   Outcome / front door for GTM      │
+            │   Recipes, guides, provider-playbks │
+            └─────────────────┬───────────────────┘
+                              │ delegates to ↓ (one-way)
+       ┌──────────────────────┴──────────────────────┐
+       │                                             │
 ┌──────────────────────────────────────────────────────────────┐
-│                  cargo-workspace-management                  │
-│             Authentication, users, tokens, folders           │
+│              cargo-workspace-management                      │
+│         Authentication, users, tokens, folders               │
 └──────────────────────────────────────────────────────────────┘
 
   ┌─────────────────┐   ┌────────────────────┐   ┌─────────────────┐
@@ -103,41 +118,51 @@ This is the official feedback channel — every report is reviewed by the Cargo 
 
 **Dependency rules in practice:**
 
+- `cargo-gtm` delegates to capability skills via relative paths (`../cargo-orchestration/...`). Capability skills never reference `cargo-gtm`.
 - `cargo-workspace-management` provides auth context for every skill — set it up first.
 - `cargo-storage`, `cargo-connection`, and `cargo-ai` are peer skills that supply UUIDs to `cargo-orchestration`. They don't depend on each other.
 - Before querying via system-of-record, load `cargo-storage` to get the DDL (exact table name).
 - Before building a workflow node graph, load `cargo-connection` to get `connectorUuid` and `actionSlug`.
 - Before executing a workflow that uses an agent node, load `cargo-ai` to get `agentUuid`.
-- After runs complete, load `cargo-analytics` to download results or measure performance.
+- After runs complete, load `cargo-analytics` to download results or measure performance. **For action output retrieval, prefer `cargo-ai orchestration run download-outputs` over `run download` — the former returns a signed-URL CSV/JSON of just the output node's data.**
 - Load `cargo-billing` to understand credit consumption for any of the above.
 
 ---
 
 ## Skill details
 
+### cargo-gtm
+
+**The outcome skill — front door for any GTM task.** Bundles routing (`SKILL.md`), phase guides (`guides/`), scenario recipes (`recipes/`), per-provider playbooks (`provider-playbooks/`), references (`references/`), and a sub-agent (`agents/`).
+
+**Recipes shipped:**
+
+| Recipe | Use when… |
+|---|---|
+| `recipes/prospecting.md` | End-to-end find → enrich → verify → sync (P1/P2/P3 variants). |
+| `recipes/build-tam.md` | Build a Total Addressable Market list at scale (100–10,000 companies). |
+| `recipes/linkedin-url-lookup.md` | Resolve LinkedIn URL from name + company with strict validation. |
+| `recipes/portfolio-prospecting.md` | Investor / accelerator → portfolio companies → contacts. |
+| `recipes/job-change-monitoring.md` | `waterfall.detectJobChange` (cargo-unique) on a contact segment. |
+| `recipes/funding-watch.md` | Track companies that recently raised funding. |
+| `recipes/tech-intent.md` | Find companies by tech-stack or hiring-intent signals. |
+| `recipes/icp-discovery.md` | Diff Closed-Won vs Closed-Lost segments, surface ICP signals. |
+
+**Priority provider stack** (recipes lead with these): salesNavigator (sourcing), cargo native (firmographics + signals), waterfall (multi-source enrichment + email verify + job-change), FullEnrich (premium contact lookup), theirStack (tech-stack + hiring intent), peopleDataLabs (heavyweight backfill).
+
+**Critical rules:**
+- All recipes use credits-based actions (`cargo-ai connection integration list` → 141 credits-based actions across 120 integrations).
+- Action shape: `{"kind":"connector","integrationSlug":"<slug>","actionSlug":"<slug>","config":{}}` — **no `connectorUuid` in `config`**.
+- Output retrieval: `cargo-ai orchestration run download-outputs --output-node-slug <slug>` (NOT `run download`).
+- peopleDataLabs filter shape: `searchX` uses cargo's `{conjonction, groups, conditions}` shape; `queryX` takes a PDL **SQL string** — never Elasticsearch.
+
+**References:** `cargo-gtm/SKILL.md`
+
+---
+
 ### cargo-orchestration
 
 **The execution hub.** Execute actions, run workflows, chat with AI agents, query your data warehouse, and fetch segment records.
-
-**Key commands:**
-
-```bash
-# Single actions (no workflow needed)
-cargo-ai orchestration action execute --action '{"kind":"tool","toolUuid":"<uuid>","config":{}}' --data '{...}'
-cargo-ai orchestration action execute-batch --action '{"kind":"connector","integrationSlug":"...","actionSlug":"...","config":{}}' --records '[{...},{...}]'
-
-# Workflows (chain multiple actions)
-cargo-ai orchestration run create --workflow-uuid <uuid> --data '{...}'
-cargo-ai orchestration run create --data '{...}' --nodes '[...]'
-cargo-ai orchestration batch create --workflow-uuid <uuid> --data '{"kind":"segment","segmentUuid":"..."}'
-
-# AI agents
-cargo-ai ai message create --chat-uuid <uuid> --parts '[{"type":"text","text":"..."}]'
-
-# Data
-cargo-ai system-of-record client query "SELECT * FROM <table> LIMIT 10"
-cargo-ai segmentation segment fetch --model-uuid <uuid> --filter '{"conjonction":"and","groups":[]}'
-```
 
 **Critical rules:**
 
@@ -152,16 +177,7 @@ cargo-ai segmentation segment fetch --model-uuid <uuid> --filter '{"conjonction"
 
 ### cargo-analytics
 
-**Measurement and export.** Use to download run results, export segment data, and monitor error rates and success metrics.
-
-**Key commands:**
-
-```bash
-cargo-ai orchestration run get-metrics --workflow-uuid <uuid>
-cargo-ai orchestration run download --workflow-uuid <uuid> --is-finished
-cargo-ai orchestration run count --workflow-uuid <uuid> --statuses error
-cargo-ai segmentation segment download --model-uuid <uuid> --filter '{"conjonction":"and","groups":[]}'
-```
+**Measurement and export.** Download run results, export segment data, and monitor error rates and success metrics.
 
 **Critical rules:**
 
@@ -175,16 +191,7 @@ cargo-ai segmentation segment download --model-uuid <uuid> --filter '{"conjoncti
 
 ### cargo-billing
 
-**Cost and credit management.** Use to track credit consumption per workflow, connector, or agent, check subscription status, and view invoices.
-
-**Key commands:**
-
-```bash
-cargo-ai billing usage get-metrics --from <YYYY-MM-DD> --to <YYYY-MM-DD>
-cargo-ai billing usage get-metrics --from <date> --to <date> --group-by workflow_uuid
-cargo-ai billing subscription get
-cargo-ai billing subscription get-invoices
-```
+**Cost and credit management.** Track credit consumption per workflow, connector, or agent; check subscription status; view invoices.
 
 **Critical rules:**
 
@@ -198,16 +205,7 @@ cargo-ai billing subscription get-invoices
 
 ### cargo-storage
 
-**Data schema management.** Use to inspect models, create or update columns, navigate datasets, and understand your workspace's data structure.
-
-**Key commands:**
-
-```bash
-cargo-ai storage model list
-cargo-ai storage model get-ddl <model-uuid>   # always run before SoR queries
-cargo-ai storage column list --model-uuid <uuid>
-cargo-ai storage relationship set --from-model-uuid <uuid> --to-model-uuid <uuid>
-```
+**Data schema management.** Inspect models, create or update columns, navigate datasets, understand workspace data structure.
 
 **Critical rules:**
 
@@ -220,16 +218,7 @@ cargo-ai storage relationship set --from-model-uuid <uuid> --to-model-uuid <uuid
 
 ### cargo-connection
 
-**Connector and integration management.** Use to authenticate external services, discover what actions they support, and get the `connectorUuid` and `actionSlug` values needed for workflow node graphs.
-
-**Key commands:**
-
-```bash
-cargo-ai connection connector list
-cargo-ai connection integration list
-cargo-ai connection integration get <slug>          # third-party actions (HubSpot, Salesforce, etc.)
-cargo-ai connection native-integration get          # built-in Cargo actions only (NOT third-party)
-```
+**Connector and integration management.** Authenticate external services, discover supported actions, get the `connectorUuid` and `actionSlug` values needed for workflow node graphs.
 
 **Key concepts:**
 
@@ -242,19 +231,9 @@ cargo-ai connection native-integration get          # built-in Cargo actions onl
 
 ### cargo-ai
 
-**Agent resource management.** Use to create and configure agents, upload documents for retrieval-augmented generation (RAG), and connect MCP servers.
+**Agent resource management.** Create and configure agents, upload documents for retrieval-augmented generation (RAG), connect MCP servers.
 
 > For _using_ agents (sending messages, multi-turn chat, polling), use `cargo-orchestration`.
-
-**Key commands:**
-
-```bash
-cargo-ai ai agent list
-cargo-ai ai agent create --name "Lead Researcher" --language-model-slug gpt-4o --temperature 0.3
-cargo-ai ai file upload --file-path ./knowledge-base.pdf
-cargo-ai ai mcp-server create --name "Internal Tools" --url "https://..."
-cargo-ai ai memory list --agent-uuid <uuid>
-```
 
 See `cargo-ai/SKILL.md` for model and temperature guidance by use case.
 
@@ -264,17 +243,7 @@ See `cargo-ai/SKILL.md` for model and temperature guidance by use case.
 
 ### cargo-workspace-management
 
-**Workspace administration.** Use to invite users, create and rotate API tokens, organize plays/tools/agents into folders, manage roles, and **submit reports to workspace management when the CLI fails or is being misused**.
-
-**Key commands:**
-
-```bash
-cargo-ai whoami
-cargo-ai workspace user create --user-email user@example.com --role-slug <slug>
-cargo-ai workspace token create --name "CI/CD pipeline"
-cargo-ai workspace folder create --name "Q1 Campaigns" --emoji-slug "rocket" --kind "play"
-cargo-ai workspace report create --title "<summary>" --description "<details>"
-```
+**Workspace administration.** Invite users, create and rotate API tokens, organize plays/tools/agents into folders, manage roles, and **submit reports to workspace management when the CLI fails or is being misused**.
 
 **Critical rules:**
 
