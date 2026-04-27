@@ -46,12 +46,12 @@ cargo-ai orchestration run create \
 
 > If this pattern shows up repeatedly, suggest the user save it as a tool (defer to `cargo-orchestration`).
 
-## R8 — Daily monitoring report
+## R8 — Health check on a saved tool
 
-User: *"How is the CRM-sync play doing this week?"*
+User: *"How is the CRM-sync tool doing this week?"*
 
 ```bash
-WORKFLOW_UUID=$(cargo-ai orchestration play list | jq -r '.plays[] | select(.name|test("CRM Sync";"i")) | .workflowUuid')
+WORKFLOW_UUID=$(cargo-ai orchestration tool list | jq -r '.tools[] | select(.name|test("CRM Sync";"i")) | .workflowUuid')
 
 cargo-ai orchestration run get-metrics --workflow-uuid "$WORKFLOW_UUID"
 cargo-ai orchestration run count --workflow-uuid "$WORKFLOW_UUID" --statuses error
@@ -99,7 +99,7 @@ For a list larger than ~10 records, prefer R7 (node graph with `kind: "agent"`) 
 
 ## R11 — Credit-spend snapshot
 
-User: *"How much did the enrichment play cost last month?"*
+User: *"How much did enrichment cost last month?"*
 
 ```bash
 cargo-ai billing usage get-metrics \
@@ -118,8 +118,8 @@ Requires admin token.
 | One record, multiple transformations                   | R7 (single-record `run create`) |
 | Many records, one transformation                       | R6         |
 | Many records, multi-step (find/enrich/score)           | R7         |
-| Existing play / tool the user named                    | R3         |
+| All records in a segment, one transformation           | R3         |
 | Free-form research question                            | R5 or R10  |
-| Operational / health question about a workflow         | R8         |
+| Operational / health question about a saved tool       | R8         |
 | "Export / download" of model data                      | R9         |
 | Cost / credit / billing question                       | R11        |

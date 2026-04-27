@@ -40,14 +40,18 @@ User states a goal
 │ ───────────────────────────────────────     │
 │ a single record /    → action execute       │
 │   one domain                                │
-│ a list / segment /   → action execute-batch │
-│   "all X that Y"       OR batch create      │
+│ a list of records /  → action execute-batch │
+│   "for each of these"  (with --records)     │
+│ a segment, "all X    → segment fetch first, │
+│   that Y"              then action          │
+│                        execute-batch        │
 │ "score / research /  → ai message create    │
 │   ask the agent"       (chat-uuid)          │
 │ "how many / which /  → system-of-record     │
 │   what's the avg"      query (after DDL)    │
-│ "trigger / run the   → run create or        │
-│   <play|tool> X"       batch create         │
+│                                             │
+│ Anything that needs a saved workflow        │
+│   → defer to cargo-orchestration            │
 └─────────────────────────────────────────────┘
        │
        ▼
@@ -60,8 +64,8 @@ User states a goal
 │ Need a built-in action   → connection       │
 │   (find_people, …)         native-          │
 │                            integration get  │
-│ Need a saved workflow    → orchestration    │
-│                            tool/play list   │
+│ Need a saved tool        → orchestration    │
+│                            tool list        │
 │ Need a model + DDL       → storage model    │
 │   (for SQL or segments)    list / get-ddl   │
 │ Need an AI agent         → ai agent list    │
@@ -145,18 +149,30 @@ cargo-ai orchestration action execute \
   --wait-until-finished
 ```
 
-### R3 — Run a saved play on a segment
+### R3 — Run an action across every record in a segment
 
-User: *"Trigger the scoring play on this week's MQLs."*
+User: *"Enrich every company in our 'New Inbound' segment with Clearbit."*
 
 ```bash
-cargo-ai orchestration play list                        # find workflowUuid
-cargo-ai segmentation segment list                      # find segmentUuid
-cargo-ai orchestration batch create \
-  --workflow-uuid <workflowUuid> \
-  --data '{"kind":"segment","segmentUuid":"<segmentUuid>"}' \
+MODEL_UUID=$(cargo-ai storage model list | jq -r '.models[] | select(.slug=="companies") | .uuid')
+
+# Pull the segment's records
+cargo-ai segmentation segment fetch \
+  --model-uuid "$MODEL_UUID" \
+  --filter '{"conjonction":"and","groups":[{"conjonction":"and","conditions":[
+    {"kind":"string","columnSlug":"lifecycle_stage","operator":"is","values":["new_inbound"]}
+  ]}]}' > /tmp/records.json
+
+# Run the action across them
+cargo-ai orchestration action execute-batch \
+  --action '{
+    "kind":"connector",
+    "integrationSlug":"clearbit",
+    "actionSlug":"company_enrich",
+    "config":{"connectorUuid":"<uuid>"}
+  }' \
+  --records "$(jq -c '.records' /tmp/records.json)" \
   --wait-until-finished
-cargo-ai orchestration run get-metrics --workflow-uuid <workflowUuid>
 ```
 
 ### R4 — Ask an AI agent

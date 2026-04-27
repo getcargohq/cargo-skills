@@ -7,9 +7,9 @@ How to map a natural-language goal to one of the five execution paths in `SKILL.
 | Phrase shape in the user's request                           | Path                          |
 | ------------------------------------------------------------ | ----------------------------- |
 | "enrich X", "score X", "verify X" — single record            | `action execute`              |
-| "enrich these N", "for each of these records"                | `action execute-batch`        |
-| "all X that Y", "everyone in segment Z"                      | `batch create` with segment   |
-| "trigger / run / kick off the <play\|tool>"                  | `run create` or `batch create` (workflow-uuid) |
+| "enrich these N", "for each of these records"                | `action execute-batch` with `--records` |
+| "all X that Y", "everyone in segment Z"                      | `segmentation segment fetch`, then `action execute-batch` |
+| "trigger / run / kick off the saved tool X"                  | defer to `cargo-orchestration` |
 | "research X with the agent", "ask the agent about Y"         | `ai message create`           |
 | "how many / which / what's the average / list me all"        | `system-of-record query`      |
 | "export …", "download all …"                                 | `segmentation segment download` |
@@ -35,15 +35,15 @@ Do **not** ask for clarification when:
 
 ### "Find people who match X"
 
-This is *almost always* `action execute` against a `find_people`-shaped native or connector action — not a tool, not a batch. Find-people actions accept a search-spec as `--data` and return records inline. Only escalate to a tool/play when the user explicitly says "set this up to run repeatedly" or "every time a new company gets added".
+This is *almost always* `action execute` against a `find_people`-shaped native or connector action — not a saved workflow, not a batch. Find-people actions accept a search-spec as `--data` and return records inline. Only escalate to a saved workflow when the user explicitly says "set this up to run repeatedly" or "every time a new company gets added".
 
 ### "Sync to CRM" / "push to HubSpot"
 
-If the user says "push *this list*" → `action execute-batch` with `--records`. If they say "set up a sync" → defer to `cargo-orchestration` to build a play. The quickstart is for one-shots, not for designing recurring automations.
+If the user says "push *this list*" → `action execute-batch` with `--records`. If they say "set up a sync" → defer to `cargo-orchestration`. The quickstart is for one-shots, not for designing recurring automations.
 
 ### "Score the leads"
 
-Almost always wants the existing scoring play. Run `orchestration play list | grep -i score` first; if found, use `batch create --workflow-uuid …`. Only fall back to `action execute --kind agent` if no scoring play exists.
+Use the AI agent path: `ai agent list` to find a scoring agent (usually named "Lead Scorer" or similar), then either `action execute --kind agent` per record, or fan-out across `--records` with `action execute-batch`. If the user references a saved scoring workflow, defer to `cargo-orchestration`.
 
 ### "How many X"
 
