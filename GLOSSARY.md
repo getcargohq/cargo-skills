@@ -16,7 +16,7 @@ A string identifier for a specific action on a workflow node. Present on both `k
 - **Connector nodes** — third-party service-specific actions discovered via `cargo-ai connection integration get <slug>` (e.g. `integration get hubspot`). Examples: `company_enrich`, `create_contact`, `send_message`. **Do not use `native-integration get` for these** — it will not return HubSpot, Salesforce, or other connector-specific actions.
 
 **agent**
-An AI resource with configured instructions, a language model, and optional actions. Created and configured via `cargo-cli-ai`. Used in workflows as a `kind: "agent"` node, or messaged directly via `cargo-cli-orchestration`.
+An AI resource with configured instructions, a language model, and optional actions. Created and configured via `cargo-ai`. Used in workflows as a `kind: "agent"` node, or messaged directly via `cargo-orchestration`.
 
 **autocomplete**
 A mechanism to fetch the list of allowed values for an action config field at runtime. When an action's `uiSchema` marks a field with `"ui:widget": "IntegrationAutocompleteWidget"`, its valid values must be retrieved via `cargo-ai connection connector autocomplete --connector-uuid <uuid> --slug <slug> --params '<json>'`. The autocomplete slug and params come from the field's `ui:options` in the `uiSchema`. Returns `{ "results": [{ "label": "...", "value": "..." }] }` — use the `value` in node configs.
@@ -42,7 +42,7 @@ A conversation session between a user and an agent. Created with `ai chat create
 The intentional French spelling used as the key name in Cargo filter JSON objects. Always `"conjonction"`, never `"conjunction"`. A typo here silently returns no records — no error is thrown.
 
 **column**
-A typed field on a Cargo model. Each column has a `slug`, `type` (see **column type** below), `label`, and `kind` (see **column kind** below). Columns have no `uuid` — they are identified by `slug` within the model. Managed via `cargo-cli-storage` (`storage column list|create|update|remove|reorder`). Column `slug` values are used in filter conditions and in system-of-record SQL queries.
+A typed field on a Cargo model. Each column has a `slug`, `type` (see **column type** below), `label`, and `kind` (see **column kind** below). Columns have no `uuid` — they are identified by `slug` within the model. Managed via `cargo-storage` (`storage column list|create|update|remove|reorder`). Column `slug` values are used in filter conditions and in system-of-record SQL queries.
 
 **column type**
 The data type of a model column. Stored as the `type` field on the column object. Set on `column create --type <value>` and returned as `type` in `column list` and `model list` responses.
@@ -60,7 +60,7 @@ When building a filter condition, the condition's `kind` field must match the ta
 | `vector`  | Embedding vectors        | `isNull`, `isNotNull`                                                                                       |
 | `any`     | Untyped / mixed values   | `isNull`, `isNotNull`                                                                                       |
 
-See `cargo-cli-orchestration/references/filter-syntax.md` for the full filter reference with examples for each kind.
+See `cargo-orchestration/references/filter-syntax.md` for the full filter reference with examples for each kind.
 
 **column kind**
 How a column is sourced. Stored as the `kind` field on the column object. Determines whether the column is raw data or derived.
@@ -82,7 +82,7 @@ An authenticated instance of an integration. For example, a specific HubSpot acc
 The UUID of a specific authenticated connector. Required for `kind: "connector"` nodes in workflow graphs and for filtering billing metrics.
 
 **credit**
-The unit of consumption on Cargo. Workflows consume credits when they execute nodes — particularly connector and agent nodes. Tracked via `cargo-cli-billing`.
+The unit of consumption on Cargo. Workflows consume credits when they execute nodes — particularly connector and agent nodes. Tracked via `cargo-billing`.
 
 ---
 
@@ -109,10 +109,10 @@ A dynamic config value in a node graph. Either a `templateExpression` using `{{n
 ## F
 
 **filter**
-A JSON object used to select records from a model or segment. Always has the structure `{"conjonction": "and"|"or", "groups": [...]}`. See `cargo-cli-orchestration/references/filter-syntax.md` for the full reference.
+A JSON object used to select records from a model or segment. Always has the structure `{"conjonction": "and"|"or", "groups": [...]}`. See `cargo-orchestration/references/filter-syntax.md` for the full reference.
 
 **folder**
-An organizational container for plays, tools, and agents in the Cargo app. Managed via `cargo-cli-workspace`. Has no effect on workflow execution.
+An organizational container for plays, tools, and agents in the Cargo app. Managed via `cargo-workspace`. Has no effect on workflow execution.
 
 ---
 
@@ -136,7 +136,7 @@ The identifier for an LLM used by an agent or inline agent node. Examples: `gpt-
 ## M
 
 **MCP server**
-A Model Context Protocol server that exposes additional actions to agents. Connected via `cargo-cli-ai`. Once connected, agents can call MCP actions automatically during conversations or workflow runs.
+A Model Context Protocol server that exposes additional actions to agents. Connected via `cargo-ai`. Once connected, agents can call MCP actions automatically during conversations or workflow runs.
 
 **memory**
 A piece of information an agent stores from a conversation for future reference. Listed via `ai memory list --agent-uuid <uuid>`. Can be cleared with `ai memory remove`.
@@ -168,7 +168,7 @@ A directed acyclic graph (DAG) of nodes defining a workflow's execution steps. P
 A segment-driven workflow that reacts automatically to data changes (records added, updated, or removed from a segment). Listed via `orchestration play list`. Triggered via `batch create` (not `run create`).
 
 **polling**
-The pattern of repeatedly calling `run get`, `batch get`, or `message get` until the operation reaches a terminal state. See `cargo-cli-orchestration/references/polling.md` for intervals and shell snippets.
+The pattern of repeatedly calling `run get`, `batch get`, or `message get` until the operation reaches a terminal state. See `cargo-orchestration/references/polling.md` for intervals and shell snippets.
 
 ---
 
@@ -229,7 +229,7 @@ An on-demand workflow triggered manually, via API, or on a cron schedule. Listed
 ## U
 
 **uiSchema**
-A companion object to `jsonSchema` in action and extractor configs. While `jsonSchema` defines the types and structure of fields, `uiSchema` provides UI rendering hints. The most important hint for CLI usage is `"ui:widget": "IntegrationAutocompleteWidget"` — this signals that the field's allowed values must be fetched dynamically using `connector autocomplete` rather than set to a freeform value. The `ui:options.slug` identifies which autocomplete endpoint to call, and `ui:options.params` (if present) specifies dependencies on other fields. See `cargo-cli-connection` for the full autocomplete workflow.
+A companion object to `jsonSchema` in action and extractor configs. While `jsonSchema` defines the types and structure of fields, `uiSchema` provides UI rendering hints. The most important hint for CLI usage is `"ui:widget": "IntegrationAutocompleteWidget"` — this signals that the field's allowed values must be fetched dynamically using `connector autocomplete` rather than set to a freeform value. The `ui:options.slug` identifies which autocomplete endpoint to call, and `ui:options.params` (if present) specifies dependencies on other fields. See `cargo-connection` for the full autocomplete workflow.
 
 ---
 
@@ -242,4 +242,4 @@ A DAG of nodes that defines the execution logic for a play or tool. Workflows do
 The UUID of a workflow. The primary key for most orchestration, analytics, and billing commands. Get it from `play list` or `tool list` → `.workflowUuid`.
 
 **workspace**
-The top-level organizational unit in Cargo. All resources (models, agents, workflows, connectors) belong to a workspace. Identified by a `workspaceUuid`. Managed via `cargo-cli-workspace`.
+The top-level organizational unit in Cargo. All resources (models, agents, workflows, connectors) belong to a workspace. Identified by a `workspaceUuid`. Managed via `cargo-workspace`.
