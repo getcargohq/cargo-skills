@@ -32,7 +32,7 @@ Built-in recipes:
 | Recipe | Use when… |
 |---|---|
 | `prospecting.md` | Find people matching a description, enrich, verify, sync. End-to-end flagship. |
-| `tam-build.md` | Build a Total Addressable Market list at scale (100–10,000 companies). |
+| `build-tam.md` | Build a Total Addressable Market list at scale (100–10,000 companies). |
 | `linkedin-url-lookup.md` | Resolve a person's LinkedIn URL from name + company with strict identity validation. |
 | `portfolio-prospecting.md` | Find every company backed by a specific investor / accelerator, then prospect into them. |
 | `job-change-monitoring.md` | Detect job changes in a contact segment (waterfall.detectJobChange — cargo-unique). |
@@ -59,7 +59,7 @@ Load when you need the syntax for a specific CLI domain.
 Prompts that route through `cargo-gtm`:
 
 - *"Find me 5 fintech CTOs in NYC and verify their emails."* → `recipes/prospecting.md`
-- *"Build a TAM list of seed-stage SaaS companies in Europe."* → `recipes/tam-build.md`
+- *"Build a TAM list of seed-stage SaaS companies in Europe."* → `recipes/build-tam.md`
 - *"Resolve the LinkedIn profile for John Smith at Acme Corp."* → `recipes/linkedin-url-lookup.md`
 - *"Detect job changes among contacts in our customers segment."* → `recipes/job-change-monitoring.md`
 - *"Find every company backed by Sequoia and prospect into the portfolio."* → `recipes/portfolio-prospecting.md`
