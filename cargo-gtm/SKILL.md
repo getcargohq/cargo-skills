@@ -61,11 +61,11 @@ Scan this list and read the recipe matching your task. **When a recipe matches: 
 | [`recipes/tech-intent.md`](recipes/tech-intent.md) | Finding companies by tech-stack or hiring-intent signals |
 | [`recipes/icp-discovery.md`](recipes/icp-discovery.md) | Diffing Closed-Won vs Closed-Lost segments to surface ICP signals |
 
-If none match, scan the phase docs above for the closest pattern, then adapt.
+If none match, scan the phase docs above for the closest pattern and adapt — or invoke [`agents/execution-plan-creator.md`](agents/execution-plan-creator.md) to compose a custom chain with provider/action slugs and cost estimates.
 
 ## 3) Priority provider stack (recipes lead with these 6)
 
-These six credits-based providers cover the full prospecting → enrichment → verification → signal pipeline at the lowest credit cost in the catalog. Every recipe in this skill's `recipes/` and the top-level `cargo-prospecting` skill leads with this stack:
+These six credits-based providers cover the full prospecting → enrichment → verification → signal pipeline at the lowest credit cost in the catalog. Every recipe in this skill's `recipes/` leads with this stack:
 
 | Provider | Role | Key actions (cost in credits) |
 |---|---|---|
@@ -122,7 +122,7 @@ If a recipe fails repeatedly and the cause isn't obvious, escalate via `cargo-ai
 
 ## 8) Provider playbooks
 
-Phase B ships the priority 6. Long-tail playbooks are added in Phase D (one PR per ~5 playbooks).
+Per-provider deep dives for the priority stack. Long-tail providers don't have dedicated playbooks yet — fall back to [`references/alternatives.md`](references/alternatives.md) and [`references/stage-action-map.md`](references/stage-action-map.md).
 
 **Priority stack:**
 - [`provider-playbooks/salesNavigator.md`](provider-playbooks/salesNavigator.md) — cheapest sourcing in the catalog (0.02–0.05/record).
@@ -131,3 +131,11 @@ Phase B ships the priority 6. Long-tail playbooks are added in Phase D (one PR p
 - [`provider-playbooks/FullEnrich.md`](provider-playbooks/FullEnrich.md) — premium contact lookup; `reverseEmailLookup` is unique.
 - [`provider-playbooks/theirStack.md`](provider-playbooks/theirStack.md) — tech-stack + hiring-intent signals.
 - [`provider-playbooks/peopleDataLabs.md`](provider-playbooks/peopleDataLabs.md) — heavyweight backfill at flat 3-credit tier.
+
+## 9) References
+
+- [`references/stage-action-map.md`](references/stage-action-map.md) — cheapest credits-based action per stage across the full 120-integration catalog.
+- [`references/credits-cost-table.md`](references/credits-cost-table.md) — auto-generated cost table for all 141 credits-based actions.
+- [`references/waterfall-strategy.md`](references/waterfall-strategy.md) — canonical waterfall chains by enrichment goal (every recipe's "fallback" follows these).
+- [`references/alternatives.md`](references/alternatives.md) — provider swap-ins from the long tail when the priority stack can't serve.
+- [`references/output-retrieval.md`](references/output-retrieval.md) — `run download-outputs` patterns for fetching action data.
