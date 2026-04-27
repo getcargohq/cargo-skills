@@ -33,9 +33,12 @@ Common errors and recovery steps for `cargo-workspace-management` commands.
 
 | Symptom | Cause | Fix |
 |---------|-------|-----|
-| Lost the token value after creation | Token value only shown once | Remove the token and create a new one; store the new value securely |
+| `token create` exits with `error: required option '--name <name>' not specified` | `--name` is required since the named-token migration | Pass `--name "<descriptive label>"` (e.g. `--name "CI/CD pipeline"`) |
+| `token create` rejected with `error: unknown option '--from-user'` | Legacy flag — removed when tokens gained `name` and `permissions` | Drop `--from-user`; use `--name <name>` instead |
+| Lost the token value after creation | Token value only shown once | Remove the token and create a new one (with the same `--name`); store the new value securely |
 | `token remove` fails | Token is currently in use by active processes | Wait for processes to finish, or rotate to a new token first then remove the old one |
-| `Unauthorized` errors in CI/CD | Token expired or removed | Create a new token and update the secret in your CI/CD environment |
+| `Unauthorized` errors in CI/CD | Token expired, removed, or scoped permissions are too narrow | Verify the token still exists with `workspace token list`; check its `permissions` field; if scoped, widen via the API/app or create a new full-access token |
+| Two tokens look identical in `token list` | Both were created without a meaningful `--name` | Use `--name` consistently — the name is the only label distinguishing tokens in the listing |
 
 ## Folders
 

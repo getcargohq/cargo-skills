@@ -62,9 +62,12 @@ JSON response structures returned by Cargo CLI commands used in the `cargo-works
   "tokens": [
     {
       "uuid": "token-uuid",
+      "name": "CI/CD pipeline",
+      "permissions": null,
       "workspaceUuid": "workspace-uuid",
       "userUuid": "user-uuid",
-      "createdAt": "2025-01-01T00:00:00Z"
+      "createdAt": "2025-01-01T00:00:00Z",
+      "deletedAt": null
     }
   ]
 }
@@ -72,21 +75,53 @@ JSON response structures returned by Cargo CLI commands used in the `cargo-works
 
 **Note:** Token values are not returned in `token list`. The actual token string is only returned once at creation time.
 
+**Key fields:**
+
+- `name`: human-readable label assigned at creation (`--name` flag).
+- `permissions`: `null` means the token has full workspace access. When non-null, it is an array of permission rules `{ effect, resources, actions }` that scope the token to specific actions / resources. CLI-created tokens are always `null`; scoped tokens are configured via the API or the Cargo app.
+- `deletedAt`: `null` for active tokens; an ISO timestamp once the token has been removed.
+
 ## cargo-ai workspace token create
 
 ```json
 {
   "token": {
     "uuid": "token-uuid",
-    "token": "cai_live_xxxxxxxxxxxxxxxxxxxx",
+    "token": "<token-value>",
+    "name": "CI/CD pipeline",
+    "permissions": null,
     "workspaceUuid": "workspace-uuid",
     "userUuid": "user-uuid",
-    "createdAt": "2025-01-01T00:00:00Z"
+    "createdAt": "2025-01-01T00:00:00Z",
+    "deletedAt": null
   }
 }
 ```
 
-**Important:** Save the `token` value immediately — it is shown only once and cannot be retrieved again.
+**Important:** Save the `token` value immediately — it is shown only once and cannot be retrieved again. The `name` you pass via `--name` is echoed back in the response and shown in `token list`.
+
+### Permission shape (when not null)
+
+When a token has been scoped (via API or app), `permissions` is an array of rules:
+
+```json
+[
+  {
+    "effect": "allow",
+    "resources": ["<workflow-uuid>", "<folder-uuid>"],
+    "actions": ["orchestration:workflow:read", "orchestration:workflow:write"]
+  },
+  {
+    "effect": "deny",
+    "resources": null,
+    "actions": ["workspaceManagement:write"]
+  }
+]
+```
+
+- `effect`: `"allow"` or `"deny"`.
+- `resources`: array of resource UUIDs (workflow, folder, etc.) that the rule applies to, or `null` for workspace-wide.
+- `actions`: array of dotted action strings, e.g. `"orchestration:*"`, `"orchestration:workflow:read"`, `"workspaceManagement:folder:write"`, `"ai:agent:write"`. The `*` wildcard at any level grants every action below it.
 
 ## cargo-ai workspace folder list
 

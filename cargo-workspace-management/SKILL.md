@@ -50,7 +50,7 @@ cargo-ai whoami
 cargo-ai workspace user list
 cargo-ai workspace user create --user-email <email> --role-slug <slug>
 cargo-ai workspace token list
-cargo-ai workspace token create --from-user
+cargo-ai workspace token create --name <name>
 cargo-ai workspace token remove <token-uuid>
 cargo-ai workspace folder list
 cargo-ai workspace folder create --name <name> --emoji-slug <slug> --kind <kind>
@@ -96,17 +96,21 @@ Always check available roles before inviting users — use the `slug` from `role
 
 ## API tokens
 
+Each token has a human-readable `name` and a `permissions` field. Tokens created via the CLI are issued with full workspace access (`permissions: null`); fine-grained permission scoping is configured via the API or the Cargo app.
+
 ```bash
-# List all API tokens
+# List all API tokens (includes name and permissions of each token)
 cargo-ai workspace token list
 
-# Create a new token (scoped to your user)
-cargo-ai workspace token create --from-user
+# Create a new token — --name is required
+cargo-ai workspace token create --name "CI/CD pipeline"
 # → Returns the token value — store it securely, it won't be shown again
 
 # Remove a token
 cargo-ai workspace token remove <token-uuid>
 ```
+
+**Naming:** Pick a `--name` that makes the token's purpose obvious in `token list` later (e.g. `"GitHub Actions — production"`, `"Local dev — alice"`, `"Zapier integration"`). The name is the only way to tell tokens apart in the listing.
 
 **Security:** Token values are only shown once at creation. Store them in a secrets manager (e.g. GitHub Secrets, AWS Secrets Manager).
 
