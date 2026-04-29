@@ -89,7 +89,7 @@ cargo-ai storage model update --uuid <model-uuid> --name "New Name"
 cargo-ai storage model remove <model-uuid>
 ```
 
-**Querying:** Use `cargo-ai storage query execute "<sql>"` to run SQL against your warehouse. Tables are referenced as `<datasetSlug>.<modelSlug>` (e.g. `default.companies`) and rewritten to the underlying warehouse table under the hood — no DDL lookup is needed for the table name. Run `model get-ddl` for column types and SQL dialect when writing more involved queries. See the `cargo-orchestration` skill for query examples.
+**Querying:** Use `cargo-ai storage query execute "<sql>"` to query storage. Tables are referenced as `<datasetSlug>.<modelSlug>` (e.g. `default.companies`). Run `model get-ddl` for column types and SQL dialect when writing more involved queries. See the `cargo-orchestration` skill for query examples.
 
 ## Datasets
 
