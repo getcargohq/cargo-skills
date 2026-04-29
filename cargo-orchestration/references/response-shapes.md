@@ -416,9 +416,9 @@ Tables are referenced as `<datasetSlug>.<modelSlug>` and rewritten to the underl
 { "reason": "unknown" }
 ```
 
-## cargo-ai system-of-record client fetch
+## cargo-ai system-of-record client download
 
-Used for paginated reads. Returns the legacy discriminated union — always check `outcome` first:
+Used for full exports. Returns the legacy discriminated union — always check `outcome` first:
 
 **Success:**
 
@@ -440,7 +440,7 @@ Used for paginated reads. Returns the legacy discriminated union — always chec
 }
 ```
 
-`fetch` and `download` still expect the warehouse-native table name from the DDL (e.g. `datasets_default.models_companies`).
+`download` still expects the warehouse-native table name from the DDL (e.g. `datasets_default.models_companies`).
 
 ## cargo-ai system-of-record client get-documentation
 

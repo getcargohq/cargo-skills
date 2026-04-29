@@ -65,23 +65,18 @@ cargo-ai storage query execute \
   "SELECT country, SUM(revenue) as total_revenue, AVG(employee_count) as avg_employees FROM default.companies GROUP BY country"
 ```
 
-## Pagination with fetch
+## Pagination
 
-`storage query execute` returns the full result set in one call. For paginated results, use `system-of-record client fetch` with `--limit` and `--offset` (note: this command still expects the warehouse-native table name from the DDL, e.g. `datasets_default.models_companies`).
+Page through large result sets with SQL `LIMIT` and `OFFSET` clauses. Always include an `ORDER BY` so pages are stable across calls.
 
 ```bash
-# Get the warehouse table name from the DDL first
-cargo-ai storage model get-ddl <model-uuid>
-
 # First page
-cargo-ai system-of-record client fetch \
-  --query "SELECT * FROM datasets_default.models_companies ORDER BY name" \
-  --limit 100 --offset 0
+cargo-ai storage query execute \
+  "SELECT * FROM default.companies ORDER BY name LIMIT 100 OFFSET 0"
 
 # Second page
-cargo-ai system-of-record client fetch \
-  --query "SELECT * FROM datasets_default.models_companies ORDER BY name" \
-  --limit 100 --offset 100
+cargo-ai storage query execute \
+  "SELECT * FROM default.companies ORDER BY name LIMIT 100 OFFSET 100"
 ```
 
 ## Download full results

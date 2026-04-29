@@ -256,7 +256,7 @@ cargo-ai storage query execute \
 # → { "rows": [...] } on success; non-zero exit with { "errorMessage": "..." } on error
 ```
 
-Get column slugs from `storage column list --model-uuid <uuid>` (or run `storage model get-ddl <model-uuid>` for full schema). For paginated results, large exports, or SoR docs, use `cargo-ai system-of-record client fetch | download | get-documentation` (these still use the warehouse-native table name from the DDL — e.g. `datasets_default.models_companies`). See `references/queries.md` for WHERE clauses, aggregations, joins, date queries, and pagination.
+Get column slugs from `storage column list --model-uuid <uuid>` (or run `storage model get-ddl <model-uuid>` for full schema). Page through large result sets with `LIMIT` / `OFFSET` directly in the SQL. For full exports, use `cargo-ai system-of-record client download`; for SoR docs, use `cargo-ai system-of-record client get-documentation` (both still use the warehouse-native table name from the DDL — e.g. `datasets_default.models_companies`). See `references/queries.md` for WHERE clauses, aggregations, joins, date queries, and pagination.
 
 ## Fetch segment data
 

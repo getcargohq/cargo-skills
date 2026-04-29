@@ -209,7 +209,7 @@ Load for a specific CLI domain.
 
 **Critical rules:**
 
-- Query via `cargo-ai storage query execute "<sql>"` using `<datasetSlug>.<modelSlug>` table names (e.g. `default.companies`). `model get-ddl` is optional — useful for column types and SQL dialect, and required only for the legacy `system-of-record client fetch | download` commands.
+- Query via `cargo-ai storage query execute "<sql>"` using `<datasetSlug>.<modelSlug>` table names (e.g. `default.companies`). `model get-ddl` is optional — useful for column types and SQL dialect, and required only for the legacy `system-of-record client download` commands.
 - For advanced record queries (filtering, sorting, pagination), use `segmentation segment fetch` from `cargo-orchestration`.
 
 **References:** `cargo-storage/SKILL.md`
@@ -431,7 +431,7 @@ The workspace UUID is returned by `cargo-ai whoami` under `workspace.uuid`.
 | `conjonction` spelling             | Filter JSON uses `conjonction` (not `conjunction`). This is intentional. A typo here fails silently — no records returned.                                                                                                                    |
 | `run create` vs `batch create`     | `run create` only works with **tool** workflows. Using a play's `workflowUuid` returns `playNotCompatible`.                                                                                                                                   |
 | `--model-uuid` vs `--segment-uuid` | `segment fetch` and `segment download` require `--model-uuid`. Get it from `segment list` → `.modelUuid`.                                                                                                                                     |
-| Storage query table names          | `storage query execute` references tables as `<datasetSlug>.<modelSlug>` (e.g. `default.companies`) — they're rewritten under the hood. The DDL form `datasets_default.models_companies` is only needed by `system-of-record client fetch | download`.                  |
+| Storage query table names          | `storage query execute` references tables as `<datasetSlug>.<modelSlug>` (e.g. `default.companies`) — they're rewritten under the hood. The DDL form `datasets_default.models_companies` is only needed by `system-of-record client download`.                  |
 | Token shown once                   | API token values are only returned at creation. Store immediately. `workspace token create` requires `--name` (no more `--from-user`).                                                                                                        |
 | Invoice amounts in cents           | `subscription get-invoices` returns `amount` in cents. Divide by 100.                                                                                                                                                                         |
 | Plays vs tools                     | **Play** = reacts to data changes (segment-driven). **Tool** = triggered on demand (manual, API, cron).                                                                                                                                       |
