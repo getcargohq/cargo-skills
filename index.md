@@ -20,9 +20,10 @@ This repository contains 8 skills at the repo root: one **outcome skill** (`carg
 
 ```bash
 npm install -g @cargo-ai/cli
-cargo-ai login --token <your-api-token>
-# Optional: target a specific workspace
-cargo-ai login --token <your-api-token> --workspace-uuid <uuid>
+cargo-ai login --oauth                                   # browser sign-in (recommended)
+# or: cargo-ai login --token <your-api-token>            # use an existing workspace-scoped API token
+# Optional: pin a default workspace at login
+cargo-ai login --oauth --workspace-uuid <uuid>
 # Verify
 cargo-ai whoami
 ```
