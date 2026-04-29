@@ -134,4 +134,4 @@ cargo-ai storage column reorder --model-uuid <uuid> --column-slug website_url --
 | `metric`   | Aggregated values from a related model                      | `relationshipUuid`, `aggregation.function`, `aggregation.columnSlug`; optionally `filter`                |
 | `lookup`   | A single field value pulled from a related model via a join | `join.toModelUuid`, `join.fromColumnSlug`, `join.toColumnSlug`, `extractColumnSlug`; optionally `filter` |
 
-Column `slug` values are used in filter conditions (see `cargo-orchestration` skill's `references/filter-syntax.md`) and in system-of-record SQL queries.
+Column `slug` values are used in filter conditions (see `cargo-orchestration` skill's `references/filter-syntax.md`) and in `storage query execute` SQL queries.

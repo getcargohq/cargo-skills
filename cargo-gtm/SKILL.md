@@ -118,7 +118,7 @@ Every action JSON in this skill follows the rules in [`../cargo-orchestration/re
 
 ## 7) When stuck — file a workspace report
 
-If a recipe fails repeatedly and the cause isn't obvious, escalate via `cargo-ai workspace report create`. See [`../cargo-workspace-management/SKILL.md`](../cargo-workspace-management/SKILL.md) (Reports section).
+If a recipe fails repeatedly and the cause isn't obvious, escalate via `cargo-ai workspaceManagement report create`. See [`../cargo-workspace-management/SKILL.md`](../cargo-workspace-management/SKILL.md) (Reports section).
 
 ## 8) Provider playbooks
 

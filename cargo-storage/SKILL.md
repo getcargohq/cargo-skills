@@ -70,9 +70,9 @@ cargo-ai storage model list --dataset-uuid <uuid>
 # Get a single model (includes columns)
 cargo-ai storage model get <model-uuid>
 
-# Get the DDL (exact table name and columns for SQL queries)
+# Get the DDL (full schema, table name and SQL dialect)
 cargo-ai storage model get-ddl <model-uuid>
-# → Always do this before running system-of-record queries — the table name is in the DDL
+# → Useful for column discovery and SQL dialect (BigQuery vs Snowflake) before writing queries
 
 # Create a model
 cargo-ai storage model create \
@@ -89,7 +89,7 @@ cargo-ai storage model update --uuid <model-uuid> --name "New Name"
 cargo-ai storage model remove <model-uuid>
 ```
 
-**Important:** When querying a model via the system of record, always get the DDL first to find the exact table name (e.g. `datasets_default.models_companies`). Do not guess table names. See the `cargo-orchestration` skill for system-of-record query examples.
+**Querying:** Use `cargo-ai storage query execute "<sql>"` to query storage. Tables are referenced as `<datasetSlug>.<modelSlug>` (e.g. `default.companies`). Run `model get-ddl` for column types and SQL dialect when writing more involved queries. See the `cargo-orchestration` skill for query examples.
 
 ## Datasets
 

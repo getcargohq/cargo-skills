@@ -1,40 +1,25 @@
-# System of record query examples
+# Storage query examples
 
-**Rule: always get the DDL first.** Do not guess table names or column names.
+Run SQL against your connected data warehouse with `cargo-ai storage query execute`. Tables are referenced as `<datasetSlug>.<modelSlug>` and rewritten to the underlying warehouse table under the hood. No DDL lookup is required for the table name — just use the dataset and model slugs.
 
-## Basic query flow (DDL first)
+For column slugs, run `cargo-ai storage column list --model-uuid <uuid>` or `cargo-ai storage model get-ddl <model-uuid>` (the DDL also shows column types and the SQL dialect).
 
-```bash
-# 1. List models to find the one you need
-cargo-ai storage model list
-# → Find model by name (e.g. "Companies"), extract uuid
-
-# 2. Get DDL — this gives you the exact table name and all columns
-cargo-ai storage model get-ddl <model-uuid>
-```
-
-DDL response:
-
-```json
-{
-  "ddl": "CREATE TABLE `project.datasets_default.models_companies` (\n  `_id` STRING,\n  `name` STRING,\n  `domain` STRING,\n  `employee_count` INT64\n);",
-  "language": "bigquery"
-}
-```
-
-Use `datasets_default.models_companies` as the table name.
+## Basic query flow
 
 ```bash
-# 3. Query using the table name from DDL
-cargo-ai system-of-record client query \
-  "SELECT name, domain, employee_count FROM datasets_default.models_companies LIMIT 10"
+# 1. Discover the dataset slug and the model slug
+cargo-ai storage dataset list   # → datasets[].slug (e.g. "default")
+cargo-ai storage model list     # → models[].slug   (e.g. "companies")
+
+# 2. Query using <datasetSlug>.<modelSlug> as the table name
+cargo-ai storage query execute \
+  "SELECT name, domain, employee_count FROM default.companies LIMIT 10"
 ```
 
 Success response:
 
 ```json
 {
-  "outcome": "queried",
   "rows": [
     { "name": "Acme Corp", "domain": "acme.com", "employee_count": 500 },
     { "name": "Globex", "domain": "globex.com", "employee_count": 1200 }
@@ -42,89 +27,86 @@ Success response:
 }
 ```
 
-Always check `outcome` first — `"notQueried"` means an error occurred (see the error handling section below).
+Failed commands exit non-zero with `{"errorMessage": "..."}` (or `{"reason": "clientNotFound"|"unknown"}`). See the error handling section below.
 
 ## Query with WHERE clauses
 
 ```bash
-# Get DDL first
-cargo-ai storage model get-ddl <model-uuid>
-
 # Filter by a column
-cargo-ai system-of-record client query \
-  "SELECT name, domain FROM datasets_default.models_companies WHERE employee_count > 100"
+cargo-ai storage query execute \
+  "SELECT name, domain FROM default.companies WHERE employee_count > 100"
 
 # Multiple conditions
-cargo-ai system-of-record client query \
-  "SELECT name, domain, revenue FROM datasets_default.models_companies WHERE employee_count > 100 AND country = 'US'"
+cargo-ai storage query execute \
+  "SELECT name, domain, revenue FROM default.companies WHERE employee_count > 100 AND country = 'US'"
 
 # LIKE for partial matches
-cargo-ai system-of-record client query \
-  "SELECT name, domain FROM datasets_default.models_companies WHERE name LIKE '%tech%'"
+cargo-ai storage query execute \
+  "SELECT name, domain FROM default.companies WHERE name LIKE '%tech%'"
 
 # NULL checks
-cargo-ai system-of-record client query \
-  "SELECT name, domain FROM datasets_default.models_companies WHERE email IS NOT NULL"
+cargo-ai storage query execute \
+  "SELECT name, domain FROM default.companies WHERE email IS NOT NULL"
 ```
 
 ## Aggregation queries
 
 ```bash
 # Count records
-cargo-ai system-of-record client query \
-  "SELECT COUNT(*) as total FROM datasets_default.models_companies"
+cargo-ai storage query execute \
+  "SELECT COUNT(*) as total FROM default.companies"
 
 # Group by with counts
-cargo-ai system-of-record client query \
-  "SELECT country, COUNT(*) as count FROM datasets_default.models_companies GROUP BY country ORDER BY count DESC"
+cargo-ai storage query execute \
+  "SELECT country, COUNT(*) as count FROM default.companies GROUP BY country ORDER BY count DESC"
 
 # Sum and average
-cargo-ai system-of-record client query \
-  "SELECT country, SUM(revenue) as total_revenue, AVG(employee_count) as avg_employees FROM datasets_default.models_companies GROUP BY country"
+cargo-ai storage query execute \
+  "SELECT country, SUM(revenue) as total_revenue, AVG(employee_count) as avg_employees FROM default.companies GROUP BY country"
 ```
 
-## Pagination with fetch
+## Pagination
 
-For large result sets, use `fetch` with `--limit` and `--offset`.
+Page through large result sets with SQL `LIMIT` and `OFFSET` clauses. Always include an `ORDER BY` so pages are stable across calls.
 
 ```bash
 # First page
-cargo-ai system-of-record client fetch \
-  --query "SELECT * FROM datasets_default.models_companies ORDER BY name" \
-  --limit 100 --offset 0
+cargo-ai storage query execute \
+  "SELECT * FROM default.companies ORDER BY name LIMIT 100 OFFSET 0"
 
 # Second page
-cargo-ai system-of-record client fetch \
-  --query "SELECT * FROM datasets_default.models_companies ORDER BY name" \
-  --limit 100 --offset 100
+cargo-ai storage query execute \
+  "SELECT * FROM default.companies ORDER BY name LIMIT 100 OFFSET 100"
 ```
 
 ## Download full results
 
-For exporting to a file.
+For exporting full result sets to a file, use `storage query download`:
 
 ```bash
-cargo-ai system-of-record client download \
-  --query "SELECT name, domain, employee_count, revenue FROM datasets_default.models_companies ORDER BY revenue DESC"
+cargo-ai storage query download \
+  "SELECT name, domain, employee_count, revenue FROM default.companies ORDER BY revenue DESC"
 ```
 
 ## Query across multiple models
 
-Get the DDL for each model, then join.
+Just join on `<datasetSlug>.<modelSlug>` table references:
 
 ```bash
-# 1. Get DDL for both models
-cargo-ai storage model get-ddl <companies-model-uuid>
-cargo-ai storage model get-ddl <deals-model-uuid>
+cargo-ai storage query execute \
+  "SELECT c.name, c.domain, d.stage, d.amount FROM default.companies c JOIN default.deals d ON c._id = d.company_id WHERE d.amount > 10000"
+```
 
-# 2. Join query
-cargo-ai system-of-record client query \
-  "SELECT c.name, c.domain, d.stage, d.amount FROM datasets_default.models_companies c JOIN datasets_default.models_deals d ON c._id = d.company_id WHERE d.amount > 10000"
+## Common table expressions
+
+```bash
+cargo-ai storage query execute \
+  "WITH recent AS (SELECT * FROM default.companies WHERE created_at >= CURRENT_DATE - INTERVAL '30' DAY) SELECT count(*) FROM recent"
 ```
 
 ## Get SoR documentation
 
-Useful to understand available tables and conventions before querying.
+Useful to understand available tables and warehouse-specific SQL dialect conventions.
 
 ```bash
 # List all systems of record
@@ -138,31 +120,35 @@ cargo-ai system-of-record client get-documentation <slug>
 
 ```bash
 # Records created in the last 30 days
-cargo-ai system-of-record client query \
-  "SELECT name, created_at FROM datasets_default.models_companies WHERE created_at >= DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY)"
+cargo-ai storage query execute \
+  "SELECT name, created_at FROM default.companies WHERE created_at >= DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY)"
 
 # Records in a specific range
-cargo-ai system-of-record client query \
-  "SELECT name, created_at FROM datasets_default.models_companies WHERE created_at BETWEEN '2025-01-01' AND '2025-03-31'"
+cargo-ai storage query execute \
+  "SELECT name, created_at FROM default.companies WHERE created_at BETWEEN '2025-01-01' AND '2025-03-31'"
 ```
 
 ## Subqueries
 
 ```bash
 # Companies with above-average employee count
-cargo-ai system-of-record client query \
-  "SELECT name, employee_count FROM datasets_default.models_companies WHERE employee_count > (SELECT AVG(employee_count) FROM datasets_default.models_companies)"
+cargo-ai storage query execute \
+  "SELECT name, employee_count FROM default.companies WHERE employee_count > (SELECT AVG(employee_count) FROM default.companies)"
 ```
 
 ## Error handling
 
-If a query fails, the response has `outcome: "notQueried"`:
+If a query fails, the command exits non-zero. Failure shapes:
 
 ```json
-{ "outcome": "notQueried", "errorMessage": "Table not found: datasets_default.models_nonexistent" }
+{ "errorMessage": "Table not found: default.nonexistent" }
+```
+
+```json
+{ "reason": "clientNotFound" }
 ```
 
 Common causes:
-- Wrong table name → re-check DDL output
-- Syntax error → check SQL syntax for your warehouse dialect (BigQuery vs Snowflake)
-- Permission error → verify SoR connection is active
+- Wrong dataset or model slug → re-check with `storage dataset list` and `storage model list`
+- Syntax error → check SQL syntax for your warehouse dialect (BigQuery vs Snowflake) — `storage model get-ddl` reports `language`
+- `clientNotFound` → no SoR client is configured for this workspace; verify with `system-of-record sor list`

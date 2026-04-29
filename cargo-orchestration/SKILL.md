@@ -36,7 +36,7 @@ Need to run something?
 > `references/agents.md` — AI agent chat examples
 > `references/nodes.md` — full node creation guide (kinds, native actions, expressions, validation, routing)
 > `references/templates.md` — pre-built workflow templates
-> `references/queries.md` — system of record query examples
+> `references/queries.md` — `storage query execute` SQL examples
 > `references/segments.md` — segment fetch and filter examples
 > `references/response-shapes.md` — full JSON response structures
 > `references/filter-syntax.md` — complete filter condition reference
@@ -104,7 +104,7 @@ cargo-ai orchestration batch create --workflow-uuid <uuid> --data '{"kind":"segm
 cargo-ai ai message create --chat-uuid <uuid> --parts '[{"type":"text","text":"..."}]'
 
 # Data
-cargo-ai system-of-record client query "SELECT * FROM companies LIMIT 10"
+cargo-ai storage query execute "SELECT * FROM default.companies LIMIT 10"
 cargo-ai segmentation segment fetch --model-uuid <uuid> --filter '{"conjonction":"and","groups":[]}' --fetching-limit 100
 cargo-ai storage model get-ddl <model-uuid>
 ```
@@ -250,18 +250,15 @@ cargo-ai orchestration record cancel --workflow-uuid <uuid> --ids record-id-1,re
 
 ## Query the system of record
 
-Run SQL against your connected data warehouse. **Always get the DDL first** — it contains the exact table name and columns. Do not guess table names.
+Run SQL against your connected data warehouse with `storage query execute`. Tables are referenced as `<datasetSlug>.<modelSlug>` and rewritten to the underlying warehouse table under the hood — no DDL lookup needed for the table name.
 
 ```bash
-cargo-ai storage model get-ddl <model-uuid>
-# → Use the table name from DDL (e.g. datasets_default.models_companies)
-
-cargo-ai system-of-record client query \
-  "SELECT * FROM datasets_default.models_companies LIMIT 10"
-# → Check outcome: "queried" (success) or "notQueried" (error)
+cargo-ai storage query execute \
+  "SELECT name, domain FROM default.companies LIMIT 10"
+# → { "rows": [...] } on success; non-zero exit with { "errorMessage": "..." } on error
 ```
 
-Also supports `fetch` (paginated), `download` (full export), and `get-documentation` (plain text, not JSON). See `references/queries.md` for WHERE clauses, aggregations, joins, date queries, and pagination.
+Get column slugs from `storage column list --model-uuid <uuid>` (or run `storage model get-ddl <model-uuid>` for full schema). Page through large result sets with `LIMIT` / `OFFSET` directly in the SQL. For full exports, use `cargo-ai storage query download "<sql>"`. For SoR docs, use `cargo-ai system-of-record client get-documentation`. See `references/queries.md` for WHERE clauses, aggregations, joins, date queries, and pagination.
 
 ## Fetch segment data
 
