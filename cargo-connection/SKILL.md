@@ -2,7 +2,7 @@
 name: cargo-connection
 description: Manage connectors and integrations using the Cargo CLI. Use when the user wants to list, create, update, or remove connectors, discover available integrations, or understand what connector actions are available for use in workflows.
 license: MIT
-compatibility: Requires @cargo-ai/cli (npm) and a Cargo API token
+compatibility: Requires @cargo-ai/cli (npm) and a Cargo account (browser sign-in via --oauth, or an API token)
 metadata:
   author: getcargo
   version: "1.0"
@@ -22,8 +22,10 @@ Connector and integration management: listing connectors, discovering available 
 
 ```bash
 npm install -g @cargo-ai/cli
-cargo-ai login --token <your-api-token>
-cargo-ai login --token <your-api-token> --workspace-uuid <uuid>
+cargo-ai login --oauth                                  # browser sign-in (recommended)
+# or: cargo-ai login --token <your-api-token>           # workspace-scoped API token (non-interactive)
+# Pin a default workspace at login (with --oauth)
+cargo-ai login --oauth --workspace-uuid <uuid>
 ```
 
 Verify with `cargo-ai whoami`. All commands output JSON to stdout. Without a global install, prefix every command with `npx @cargo-ai/cli` instead of `cargo-ai`.

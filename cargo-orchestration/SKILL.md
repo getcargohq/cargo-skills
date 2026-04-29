@@ -2,7 +2,7 @@
 name: cargo-orchestration
 description: Interact with the Cargo platform via CLI. Use when the user wants to execute an action, run a workflow, trigger a batch, message an AI agent, query a data warehouse, fetch segment records, or inspect a model schema.
 license: MIT
-compatibility: Requires @cargo-ai/cli (npm) and a Cargo API token
+compatibility: Requires @cargo-ai/cli (npm) and a Cargo account (browser sign-in via --oauth, or an API token)
 metadata:
   author: getcargo
   version: "1.4"
@@ -47,8 +47,10 @@ Need to run something?
 
 ```bash
 npm install -g @cargo-ai/cli
-cargo-ai login --token <your-api-token>
-cargo-ai login --token <your-api-token> --workspace-uuid <uuid>
+cargo-ai login --oauth                                  # browser sign-in (recommended)
+# or: cargo-ai login --token <your-api-token>           # workspace-scoped API token (non-interactive)
+# Pin a default workspace at login (with --oauth)
+cargo-ai login --oauth --workspace-uuid <uuid>
 ```
 
 Verify with `cargo-ai whoami`. All commands output JSON to stdout. Without a global install, prefix every command with `npx @cargo-ai/cli` instead of `cargo-ai`.
