@@ -130,11 +130,12 @@ The agent queries billing metrics broken down by workflow, connector, or date ra
 
 ```bash
 npm install -g @cargo-ai/cli
-cargo-ai login --token <your-api-token>
+cargo-ai login --oauth                          # browser sign-in (recommended)
+# or: cargo-ai login --token <your-api-token>   # workspace-scoped API token
 cargo-ai whoami
 ```
 
-Get an API token from your workspace under **Settings > API**. Token values are shown only once — store immediately in a secrets manager.
+`--oauth` runs the OAuth 2.0 Device Authorization Flow against the Cargo OAuth provider — no setup required. For non-interactive environments (CI, scripts), use `--token` with a workspace-scoped API token from **Settings > API**. Token values are shown only once — store immediately in a secrets manager.
 
 ## Links
 

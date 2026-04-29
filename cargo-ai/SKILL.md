@@ -2,7 +2,7 @@
 name: cargo-ai
 description: Create and configure AI agents, upload files for RAG, manage MCP servers, and handle agent memories using the Cargo CLI. Use when the user wants to create or update agents, upload knowledge base files, connect MCP tool servers, or manage agent memories. For sending messages to agents, use the cargo-orchestration skill instead.
 license: MIT
-compatibility: Requires @cargo-ai/cli (npm) and a Cargo API token
+compatibility: Requires @cargo-ai/cli (npm) and a Cargo account (browser sign-in via --oauth, or an API token)
 metadata:
   author: getcargo
   version: "1.1"
@@ -13,6 +13,7 @@ metadata:
 Agent resource management: creating and configuring agents, uploading files for retrieval-augmented generation (RAG), connecting MCP servers, and managing agent memories.
 
 > For *using* agents (sending messages, multi-turn chat, polling), use `cargo-orchestration`.
+> For workspace administration — folders (used to organize agents and files), users, API tokens, roles, and submitting reports when the CLI fails — use [`cargo-workspace-management`](../cargo-workspace-management/SKILL.md).
 
 > See `references/response-shapes.md` for full JSON response structures.
 > See `references/troubleshooting.md` for common errors and how to fix them.
@@ -24,8 +25,10 @@ Agent resource management: creating and configuring agents, uploading files for 
 
 ```bash
 npm install -g @cargo-ai/cli
-cargo-ai login --token <your-api-token>
-cargo-ai login --token <your-api-token> --workspace-uuid <uuid>
+cargo-ai login --oauth                                  # browser sign-in (recommended)
+# or: cargo-ai login --token <your-api-token>           # workspace-scoped API token (non-interactive)
+# Pin a default workspace at login (with --oauth)
+cargo-ai login --oauth --workspace-uuid <uuid>
 ```
 
 Verify with `cargo-ai whoami`. All commands output JSON to stdout. Without a global install, prefix every command with `npx @cargo-ai/cli` instead of `cargo-ai`.
@@ -101,7 +104,7 @@ cargo-ai ai agent update --uuid <agent-uuid> \
   --name "Senior Lead Researcher" \
   --description "Updated description"
 
-# Move to a folder
+# Move to a folder (find folder UUIDs via cargo-workspace-management)
 cargo-ai ai agent update --uuid <agent-uuid> --folder-uuid <folder-uuid>
 
 # Remove an agent
@@ -109,6 +112,8 @@ cargo-ai ai agent remove <agent-uuid>
 ```
 
 **Agent icon:** `--icon-color` must be one of: `grey`, `green`, `purple`, `yellow`, `blue`, `red`. `--icon-face` is an emoji string.
+
+**Folders:** Folder creation, listing, and management lives in [`cargo-workspace-management`](../cargo-workspace-management/SKILL.md) (`cargo-ai workspaceManagement folder list/create/...`). Use that skill to discover or create the `<folder-uuid>` you pass to `--folder-uuid` here.
 
 ## Releases
 

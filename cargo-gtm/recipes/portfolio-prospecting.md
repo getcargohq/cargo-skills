@@ -140,7 +140,7 @@ If `peopleDataLabs.queryCompanies` doesn't recognize the investor name (e.g. ver
 
 - `apolloio` if its investor coverage is stronger for the niche.
 - `firecrawl.scrape` on the investor's portfolio page (if public) → LLM extract via `anthropic.instruct`.
-- File a `cargo-ai workspace report create` if neither works — surfaces the gap to the cargo team.
+- File a `cargo-ai workspaceManagement report create` if neither works — surfaces the gap to the cargo team.
 
 ## When stuck — file a workspace report
 

@@ -186,4 +186,4 @@ Plus a follow-up suggestion: "Want me to run `/cargo-tam-build` with these signa
 
 ## When stuck — file a workspace report
 
-If `storage query execute` fails or the deal model schema is unfamiliar, file via `cargo-ai workspace report create`. See [`../../cargo-workspace-management/SKILL.md`](../../cargo-workspace-management/SKILL.md).
+If `storage query execute` fails or the deal model schema is unfamiliar, file via `cargo-ai workspaceManagement report create`. See [`../../cargo-workspace-management/SKILL.md`](../../cargo-workspace-management/SKILL.md).

@@ -10,7 +10,7 @@ Common errors and recovery steps for `cargo-orchestration` commands.
 | -------------------------------------------- | -------------------------------- | ------------------------------------------------------------------------- |
 | `{"errorMessage": "..."}` with non-zero exit | Any CLI error                    | Read the `errorMessage` — it usually says exactly what's wrong            |
 | `command not found: cargo-ai`                | CLI not installed or not in PATH | Run `npm install -g @cargo-ai/cli` or prefix with `npx @cargo-ai/cli`     |
-| `Unauthorized` or `Forbidden`                | Bad or expired API token         | Re-run `cargo-ai login --token <token>` and verify with `cargo-ai whoami` |
+| `Unauthorized` or `Forbidden`                | Bad or expired credentials       | Re-run `cargo-ai login --oauth` (browser sign-in) or `cargo-ai login --token <token>`; verify with `cargo-ai whoami` |
 
 ## Runs and batches
 

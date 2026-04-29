@@ -16,7 +16,7 @@ Your API token may lack the required permissions. Verify with `cargo-ai whoami` 
 The agent UUID does not exist or has been deleted. Re-run `cargo-ai ai agent list` to get the current list of agents.
 
 **`folderNotFound`**
-The folder UUID passed to `--folder-uuid` does not exist. Run `cargo-ai workspace folder list` to find valid folder UUIDs.
+The folder UUID passed to `--folder-uuid` does not exist. Folders are managed by the [`cargo-workspace-management`](../../cargo-workspace-management/SKILL.md) skill — run `cargo-ai workspaceManagement folder list` to find valid folder UUIDs, or `cargo-ai workspaceManagement folder create --kind agent ...` to create one.
 
 **Agent has no deployed release**
 If `agent get` shows `deployedRelease: null`, the agent has never been deployed. Follow the release workflow:
@@ -52,7 +52,7 @@ The template slug does not exist. Run `cargo-ai ai template list` to see availab
 The file UUID does not exist or has been deleted. Run `cargo-ai ai file list` to get the current list.
 
 **`folderNotFound`**
-The folder UUID passed to `--folder-uuid` on file update does not exist. Run `cargo-ai workspace folder list` to find valid folder UUIDs.
+The folder UUID passed to `--folder-uuid` on file update does not exist. Folders are managed by the [`cargo-workspace-management`](../../cargo-workspace-management/SKILL.md) skill — run `cargo-ai workspaceManagement folder list` to find valid folder UUIDs, or `cargo-ai workspaceManagement folder create --kind file ...` to create one.
 
 **Upload fails or times out**
 Large files may take longer to upload. Ensure the file path is correct and the file is not locked by another process.

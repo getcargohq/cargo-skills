@@ -2,7 +2,7 @@
 name: cargo-billing
 description: Pull usage metrics, check subscription status, view invoices, and manage credits using the Cargo CLI. Use when the user wants billing analytics, usage reports, credit usage, cost analysis, subscription details, or invoice history for their Cargo workspace.
 license: MIT
-compatibility: Requires @cargo-ai/cli (npm) and a Cargo API token
+compatibility: Requires @cargo-ai/cli (npm) and a Cargo account (browser sign-in via --oauth, or an API token)
 metadata:
   author: getcargo
   version: "1.0"
@@ -20,8 +20,10 @@ Billing and credit management: pulling usage metrics, checking subscription stat
 
 ```bash
 npm install -g @cargo-ai/cli
-cargo-ai login --token <your-api-token>
-cargo-ai login --token <your-api-token> --workspace-uuid <uuid>
+cargo-ai login --oauth                                  # browser sign-in (recommended)
+# or: cargo-ai login --token <your-api-token>           # workspace-scoped API token (non-interactive)
+# Pin a default workspace at login (with --oauth)
+cargo-ai login --oauth --workspace-uuid <uuid>
 ```
 
 Verify with `cargo-ai whoami`. All commands output JSON to stdout. Without a global install, prefix every command with `npx @cargo-ai/cli` instead of `cargo-ai`.

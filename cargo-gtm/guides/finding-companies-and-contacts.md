@@ -134,4 +134,4 @@ Two failure modes for sourcing:
 1. **Filter mismatch** — provider doesn't expose the filter you need (e.g. salesNavigator can't filter by funding round). Move to a richer provider (`peopleDataLabs.queryCompanies`).
 2. **Coverage gap** — provider doesn't have data for the niche (e.g. local SMBs aren't well-covered by salesNavigator). Move to a niche provider (`serper.searchPlaces` for SMBs, `theirStack.searchCompanies` for tech-driven).
 
-If the user's request can't be served at all, file a `workspace report` describing the gap.
+If the user's request can't be served at all, file a `workspaceManagement report` describing the gap.

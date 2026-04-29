@@ -5,7 +5,7 @@ Common errors and recovery steps for `cargo-workspace-management` commands.
 > **If the table below does not resolve the issue, or you (user or agent) are stuck on any Cargo CLI command after ≥ 2 failed attempts, send a workspace management report:**
 >
 > ```bash
-> cargo-ai workspace report create \
+> cargo-ai workspaceManagement report create \
 >   --title "<one-line summary>" \
 >   --description "<command run, error message, what you expected, UUIDs involved>"
 > ```
@@ -18,14 +18,14 @@ Common errors and recovery steps for `cargo-workspace-management` commands.
 |---------|-------|-----|
 | `{"errorMessage": "..."}` with non-zero exit | Any CLI error | Read the `errorMessage` — it usually says exactly what's wrong |
 | `command not found: cargo-ai` | CLI not installed or not in PATH | Run `npm install -g @cargo-ai/cli` or prefix with `npx @cargo-ai/cli` |
-| `Unauthorized` or `Forbidden` | Bad or expired token, or insufficient permissions | Re-run `cargo-ai login --token <token>`; verify with `cargo-ai whoami`; use an admin token for workspace management |
+| `Unauthorized` or `Forbidden` | Bad or expired credentials, or insufficient permissions | Re-run `cargo-ai login --oauth` (browser sign-in) or `cargo-ai login --token <token>`; verify with `cargo-ai whoami`; use an admin account/token for workspace management |
 
 ## Users
 
 | Symptom | Cause | Fix |
 |---------|-------|-----|
 | `user create` fails with permission error | Token lacks admin access | Use a token belonging to a workspace admin |
-| `user create` fails with "role not found" | Wrong role UUID | Run `workspace role list` to get valid role UUIDs |
+| `user create` fails with "role not found" | Wrong role UUID | Run `workspaceManagement role list` to get valid role UUIDs |
 | `user remove` fails | Attempting to remove the last admin | Promote another user to admin before removing |
 | User can't log in after being created | Email invitation not accepted | Ask the user to check their email for the workspace invitation |
 
@@ -37,8 +37,8 @@ Common errors and recovery steps for `cargo-workspace-management` commands.
 | `token create` rejected with `error: unknown option '--from-user'` | Legacy flag — removed when tokens gained `name` and `permissions` | Drop `--from-user`; use `--name <name>` instead. CLI-created tokens already inherit the creating user's permissions (`permissions: null`) |
 | Lost the token value after creation | Token value only shown once | Remove the token and create a new one (with the same `--name`); store the new value securely |
 | `token remove` fails | Token is currently in use by active processes | Wait for processes to finish, or rotate to a new token first then remove the old one |
-| `Unauthorized` errors in CI/CD with a CLI-created token | Token mirrors the creating user's permissions; that user lost access (role downgraded, removed, etc.) | Verify the token still exists with `workspace token list`; check the role of the user in `userUuid` (`workspace user list`); restore the user's permissions, or recreate the token under a user with the access you need |
-| `Unauthorized` errors in CI/CD with an explicitly scoped token | `permissions` array is too narrow for the action being attempted | Inspect the token's `permissions` field via `workspace token list`; widen via the API/app, or replace with a `permissions: null` token created by a user that has the required access |
+| `Unauthorized` errors in CI/CD with a CLI-created token | Token mirrors the creating user's permissions; that user lost access (role downgraded, removed, etc.) | Verify the token still exists with `workspaceManagement token list`; check the role of the user in `userUuid` (`workspaceManagement user list`); restore the user's permissions, or recreate the token under a user with the access you need |
+| `Unauthorized` errors in CI/CD with an explicitly scoped token | `permissions` array is too narrow for the action being attempted | Inspect the token's `permissions` field via `workspaceManagement token list`; widen via the API/app, or replace with a `permissions: null` token created by a user that has the required access |
 | Two tokens look identical in `token list` | Both were created without a meaningful `--name` | Use `--name` consistently — the name is the only label distinguishing tokens in the listing |
 
 ## Folders
@@ -60,7 +60,7 @@ Common errors and recovery steps for `cargo-workspace-management` commands.
 Whenever the CLI is failing in a way none of the tables above explain, the syntax for a flag is unclear, the agent is looping on the same task, or a needed capability appears to be missing — escalate by submitting a workspace management report:
 
 ```bash
-cargo-ai workspace report create \
+cargo-ai workspaceManagement report create \
   --title "<short summary>" \
   --description "<exact command, errorMessage, expected vs actual, UUIDs>"
 ```
