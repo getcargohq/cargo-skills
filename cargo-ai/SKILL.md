@@ -13,6 +13,7 @@ metadata:
 Agent resource management: creating and configuring agents, uploading files for retrieval-augmented generation (RAG), connecting MCP servers, and managing agent memories.
 
 > For *using* agents (sending messages, multi-turn chat, polling), use `cargo-orchestration`.
+> For workspace administration — folders (used to organize agents and files), users, API tokens, roles, and submitting reports when the CLI fails — use [`cargo-workspace-management`](../cargo-workspace-management/SKILL.md).
 
 > See `references/response-shapes.md` for full JSON response structures.
 > See `references/troubleshooting.md` for common errors and how to fix them.
@@ -101,7 +102,7 @@ cargo-ai ai agent update --uuid <agent-uuid> \
   --name "Senior Lead Researcher" \
   --description "Updated description"
 
-# Move to a folder
+# Move to a folder (find folder UUIDs via cargo-workspace-management)
 cargo-ai ai agent update --uuid <agent-uuid> --folder-uuid <folder-uuid>
 
 # Remove an agent
@@ -109,6 +110,8 @@ cargo-ai ai agent remove <agent-uuid>
 ```
 
 **Agent icon:** `--icon-color` must be one of: `grey`, `green`, `purple`, `yellow`, `blue`, `red`. `--icon-face` is an emoji string.
+
+**Folders:** Folder creation, listing, and management lives in [`cargo-workspace-management`](../cargo-workspace-management/SKILL.md) (`cargo-ai workspace folder list/create/...`). Use that skill to discover or create the `<folder-uuid>` you pass to `--folder-uuid` here.
 
 ## Releases
 
