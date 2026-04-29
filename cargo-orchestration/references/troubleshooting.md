@@ -32,14 +32,15 @@ Common errors and recovery steps for `cargo-orchestration` commands.
 | `Chat not found`                                                     | Wrong UUID or chat was deleted           | Re-create with `chat create`                                               |
 | `Agent not found`                                                    | Wrong UUID                               | Re-run `agent list` to get current UUIDs                                   |
 
-## System of record queries
+## Storage queries (`storage query execute`)
 
-| Symptom                                        | Cause                                  | Fix                                                                               |
-| ---------------------------------------------- | -------------------------------------- | --------------------------------------------------------------------------------- |
-| `outcome: "notQueried"` with "Table not found" | Wrong table name                       | Re-run `storage model get-ddl <uuid>` and use the exact table name from the DDL   |
-| `outcome: "notQueried"` with syntax error      | SQL dialect mismatch                   | Check whether your SoR is BigQuery, Snowflake, etc. and adjust syntax accordingly |
-| `outcome: "notQueried"` with permission error  | SoR connection issue                   | Verify the connection is active in Cargo; try `sor list` to check status          |
-| Query returns empty rows                       | Filter too restrictive, or wrong table | Verify table name with DDL; try a broader query first (`SELECT * ... LIMIT 5`)    |
+| Symptom                                                   | Cause                                  | Fix                                                                                                |
+| --------------------------------------------------------- | -------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `errorMessage` with "Table not found"                     | Wrong dataset or model slug            | Verify with `storage dataset list` and `storage model list`. Tables are `<datasetSlug>.<modelSlug>` |
+| `errorMessage` with syntax error                          | SQL dialect mismatch                   | Check whether your SoR is BigQuery, Snowflake, etc. and adjust syntax accordingly                  |
+| `reason: "clientNotFound"`                                | No SoR client configured               | Verify the connection is active; try `system-of-record sor list` to check status                   |
+| Query returns empty `rows`                                | Filter too restrictive, or wrong model | Try a broader query first (`SELECT * FROM <dataset>.<model> LIMIT 5`)                              |
+| Column not found                                          | Wrong column slug                      | Run `storage column list --model-uuid <uuid>` to get exact slugs                                   |
 
 ## Debugging a workflow run
 
@@ -126,7 +127,7 @@ When a run reaches `status: "error"`, follow this sequence:
 | Agent `maxSteps` exceeded | Agent ran too many tool calls | Increase `--max-steps` on the message, or simplify the agent's task |
 | `filter` node stopped execution | Record didn't meet the filter condition | This is expected behavior, not an error — adjust the filter if needed |
 | Null reference in expression | Upstream node returned empty/null | Add a `filter` node before the failing node to skip records with missing data |
-| `outcome: "notQueried"` on SoR | Wrong table name or SQL syntax error | Re-run `model get-ddl <uuid>` and use the exact table name |
+| `errorMessage` on `storage query execute` | Wrong dataset/model slug or SQL syntax error | Verify slugs with `storage dataset list` / `storage model list`; check warehouse dialect (BigQuery vs Snowflake) |
 
 4. **Re-trigger after fixing:** Create a new run with the corrected data or node config.
 5. **For systematic failures:** Use `run download --statuses error` to export all failed records, fix the data, then re-batch with `batch create --data '{"kind":"recordIds",...}'`.
