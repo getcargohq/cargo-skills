@@ -387,9 +387,38 @@ Poll until `status` is `success`, `error`, or `cancelled`. Note: `batch get` als
 
 The table name in the DDL follows the pattern `datasets_{datasetSlug}.models_{modelSlug}` (or `datasets_{datasetSlug}__models_{modelSlug}` in BigQuery dataset-scoped). Use this name in SoR queries.
 
-## cargo-ai system-of-record client query / fetch
+## cargo-ai storage query execute
 
-Returns a discriminated union — always check `outcome` first:
+Tables are referenced as `<datasetSlug>.<modelSlug>` and rewritten to the underlying warehouse table under the hood.
+
+**Success:**
+
+```json
+{
+  "rows": [
+    { "name": "Acme Corp", "domain": "acme.com", "employee_count": 500 },
+    { "name": "Globex", "domain": "globex.com", "employee_count": 1200 }
+  ]
+}
+```
+
+**Failure (non-zero exit):**
+
+```json
+{ "errorMessage": "Table not found: default.nonexistent" }
+```
+
+```json
+{ "reason": "clientNotFound" }
+```
+
+```json
+{ "reason": "unknown" }
+```
+
+## cargo-ai system-of-record client fetch
+
+Used for paginated reads. Returns the legacy discriminated union — always check `outcome` first:
 
 **Success:**
 
@@ -397,8 +426,7 @@ Returns a discriminated union — always check `outcome` first:
 {
   "outcome": "queried",
   "rows": [
-    { "name": "Acme Corp", "domain": "acme.com", "employee_count": 500 },
-    { "name": "Globex", "domain": "globex.com", "employee_count": 1200 }
+    { "name": "Acme Corp", "domain": "acme.com", "employee_count": 500 }
   ]
 }
 ```
@@ -412,7 +440,7 @@ Returns a discriminated union — always check `outcome` first:
 }
 ```
 
-Always check `outcome === "queried"` before reading `rows`. On `"notQueried"`, read `errorMessage` for the SQL error.
+`fetch` and `download` still expect the warehouse-native table name from the DDL (e.g. `datasets_default.models_companies`).
 
 ## cargo-ai system-of-record client get-documentation
 

@@ -1,6 +1,6 @@
 # Recipe — Surface ICP signals from Closed-Won vs Closed-Lost
 
-Use this skill when the user wants to **discover their real ICP from conversion data**, not from gut feel. The skill pulls Closed-Won and Closed-Lost segments from the system-of-record, enriches both with the same firmographic and tech signals, and surfaces the features that differ most between them. Output: a ranked list of "high-fit signals" the user can use to filter prospecting.
+Use this skill when the user wants to **discover their real ICP from conversion data**, not from gut feel. The skill pulls Closed-Won and Closed-Lost segments via `storage query execute`, enriches both with the same firmographic and tech signals, and surfaces the features that differ most between them. Output: a ranked list of "high-fit signals" the user can use to filter prospecting.
 
 **Trigger phrases:**
 - *"What does our ideal customer look like?"*
@@ -12,7 +12,7 @@ Use this skill when the user wants to **discover their real ICP from conversion 
 
 Most prospecting skills are forward-looking ("find me X" / "enrich Y"). ICP discovery is **backward-looking** — analyze what worked, then turn the patterns into filters. It exercises:
 
-- The system-of-record (`cargo-ai system-of-record client query`) to pull Won/Lost segments.
+- The system-of-record (`cargo-ai storage query execute`) to pull Won/Lost segments.
 - Cargo native enrichments (`enrichBusinessFirmographics`, `…Technographics`, `…FundingAndAcquisitions`) to fill comparison signals.
 - LLM analysis (`anthropic.instruct`) to surface non-obvious patterns.
 
@@ -23,35 +23,35 @@ Most prospecting skills are forward-looking ("find me X" / "enrich Y"). ICP disc
 ```bash
 # Find the model holding deals (usually a Deals or Opportunities model in the workspace)
 cargo-ai storage model list
+cargo-ai storage dataset list
 
-# Get its DDL — the SoR table name lives there
+# Optional — fetch the DDL for column types and SQL dialect
 cargo-ai storage model get-ddl <deals-model-uuid>
-# → Look for table name like datasets_default.models_deals
 ```
 
-Pull both segments via SoR:
+Pull both segments via `storage query execute` (tables are referenced as `<datasetSlug>.<modelSlug>` and rewritten to the warehouse table under the hood):
 
 ```bash
 # Closed-Won deals + their associated companies
-cargo-ai system-of-record client query "
+cargo-ai storage query execute "
   SELECT d.uuid as deal_uuid, c.uuid as company_uuid, c.domain, c.name
-  FROM datasets_default.models_deals d
-  JOIN datasets_default.models_companies c ON d.company_uuid = c.uuid
+  FROM default.deals d
+  JOIN default.companies c ON d.company_uuid = c.uuid
   WHERE d.stage = 'closed-won'
   AND d.closed_at >= CURRENT_DATE - INTERVAL '12 months'
 " > /tmp/won.json
 
 # Closed-Lost deals + their associated companies
-cargo-ai system-of-record client query "
+cargo-ai storage query execute "
   SELECT d.uuid as deal_uuid, c.uuid as company_uuid, c.domain, c.name
-  FROM datasets_default.models_deals d
-  JOIN datasets_default.models_companies c ON d.company_uuid = c.uuid
+  FROM default.deals d
+  JOIN default.companies c ON d.company_uuid = c.uuid
   WHERE d.stage = 'closed-lost'
   AND d.closed_at >= CURRENT_DATE - INTERVAL '12 months'
 " > /tmp/lost.json
 ```
 
-(Adjust the table names to match the user's DDL output. Adjust the stage filter to match the user's pipeline stage labels.)
+(Swap `default` for the user's dataset slug if it differs, and adjust the stage filter to match the user's pipeline stage labels.)
 
 ### Step 2 — Match each company to cargo
 
@@ -118,7 +118,7 @@ For deal sets > 100 records, do the diff in Python directly — LLM is more reli
 For each surfaced signal, validate by running it as a filter against the Won segment and checking hit rate:
 
 ```bash
-# Example: signal is "uses Snowflake" → query the SoR + cargo technographics
+# Example: signal is "uses Snowflake" → query storage + cargo technographics
 cargo-ai orchestration action execute \
   --action '{"kind":"connector","integrationSlug":"theirStack","actionSlug":"searchTechnologies","config":{}}' \
   --data '{"fields":{"keywords":"snowflake"},"limit":1}' \
@@ -186,4 +186,4 @@ Plus a follow-up suggestion: "Want me to run `/cargo-tam-build` with these signa
 
 ## When stuck — file a workspace report
 
-If the SoR query fails or the deal model schema is unfamiliar, file via `cargo-ai workspace report create`. See [`../../cargo-workspace-management/SKILL.md`](../../cargo-workspace-management/SKILL.md).
+If `storage query execute` fails or the deal model schema is unfamiliar, file via `cargo-ai workspace report create`. See [`../../cargo-workspace-management/SKILL.md`](../../cargo-workspace-management/SKILL.md).

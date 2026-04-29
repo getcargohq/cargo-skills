@@ -23,9 +23,9 @@ cargo-ai storage model get <model-uuid>
 # → Returns the model with all columns, their types and slugs
 ```
 
-## Get the DDL (for SQL queries)
+## Get the DDL (column types and SQL dialect)
 
-Always get the DDL before writing system-of-record queries — it contains the exact table name.
+`storage query execute` rewrites `<datasetSlug>.<modelSlug>` (e.g. `default.companies`) to the underlying warehouse table, so you don't need the DDL just for the table name. Run `model get-ddl` when you need column types, the SQL dialect, or the warehouse-native table name (the latter is required by the legacy `system-of-record client fetch | download` commands).
 
 ```bash
 cargo-ai storage model get-ddl <model-uuid>
@@ -39,7 +39,7 @@ Example response:
 }
 ```
 
-Extract the table name from the `ddl` field: `datasets_default.models_companies`.
+The `language` field tells you which SQL dialect to use. The warehouse-native name (`datasets_default.models_companies`) is needed only for `system-of-record client fetch | download`; `storage query execute` accepts the slug-based name directly.
 
 ## Create a model
 
@@ -75,16 +75,15 @@ Note: This will fail if the model is referenced by segments, plays, or tools. Re
 Full flow to understand a model before querying it:
 
 ```bash
-# 1. Find the model
+# 1. Find the model and its dataset slug
 cargo-ai storage model list
+cargo-ai storage dataset list
 
-# 2. Get the full schema with column types
+# 2. Get the full schema with column types (optional — also returns SQL dialect)
 cargo-ai storage model get <model-uuid>
-
-# 3. Get the exact table name for SQL
 cargo-ai storage model get-ddl <model-uuid>
 
-# 4. Now you can write a system-of-record query using the exact table name and column slugs
-cargo-ai system-of-record client query \
-  "SELECT uuid, name, domain FROM datasets_default.models_companies LIMIT 10"
+# 3. Query using <datasetSlug>.<modelSlug> as the table name
+cargo-ai storage query execute \
+  "SELECT uuid, name, domain FROM default.companies LIMIT 10"
 ```

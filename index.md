@@ -121,7 +121,7 @@ Load for a specific CLI domain.
 - `cargo-gtm` delegates to capability skills via relative paths (`../cargo-orchestration/...`). Capability skills never reference `cargo-gtm`.
 - `cargo-workspace-management` provides auth context for every skill — set it up first.
 - `cargo-storage`, `cargo-connection`, and `cargo-ai` are peer skills that supply UUIDs to `cargo-orchestration`. They don't depend on each other.
-- Before querying via system-of-record, load `cargo-storage` to get the DDL (exact table name).
+- For SQL queries against the system-of-record, use `cargo-ai storage query execute "<sql>"` (tables as `<datasetSlug>.<modelSlug>`). Load `cargo-storage` to discover dataset and model slugs, and to fetch the DDL when you need column types or the SQL dialect.
 - Before building a workflow node graph, load `cargo-connection` to get `connectorUuid` and `actionSlug`.
 - Before executing a workflow that uses an agent node, load `cargo-ai` to get `agentUuid`.
 - After runs complete, load `cargo-analytics` to download results or measure performance. **For action output retrieval, prefer `cargo-ai orchestration run download-outputs` over `run download` — the former returns a signed-URL CSV/JSON of just the output node's data.**
@@ -168,7 +168,7 @@ Load for a specific CLI domain.
 
 - See the decision flowchart at the top of `cargo-orchestration/SKILL.md` for when to use `action execute` vs `run create` vs `batch create`.
 - Filter JSON uses `conjonction` (not `conjunction`) — breaks silently if misspelled.
-- Always get DDL before querying the system-of-record: `cargo-ai storage model get-ddl <model-uuid>`.
+- Query the system-of-record with `cargo-ai storage query execute "<sql>"` using `<datasetSlug>.<modelSlug>` table names (e.g. `default.companies`). Run `cargo-ai storage model get-ddl <model-uuid>` for column types or SQL dialect.
 - All operations are async — poll or pass `--wait-until-finished`. See [Async polling](#async-polling).
 
 **References:** `cargo-orchestration/SKILL.md`
@@ -209,7 +209,7 @@ Load for a specific CLI domain.
 
 **Critical rules:**
 
-- Always run `model get-ddl` before querying via system-of-record — it contains the exact table name (e.g. `datasets_default.models_companies`).
+- Query via `cargo-ai storage query execute "<sql>"` using `<datasetSlug>.<modelSlug>` table names (e.g. `default.companies`). `model get-ddl` is optional — useful for column types and SQL dialect, and required only for the legacy `system-of-record client fetch | download` commands.
 - For advanced record queries (filtering, sorting, pagination), use `segmentation segment fetch` from `cargo-orchestration`.
 
 **References:** `cargo-storage/SKILL.md`
@@ -279,7 +279,7 @@ Most `cargo-orchestration` operations require UUIDs from other skills. This tabl
 | UUID            | Produced by                                | Consumed by                                                             |
 | --------------- | ------------------------------------------ | ----------------------------------------------------------------------- |
 | `workflowUuid`  | `orchestration play list` / `tool list`    | `run create`, `batch create`, `run get-metrics`, `run download`         |
-| `modelUuid`     | `storage model list`                       | `segment fetch`, `segment download`, `system-of-record query` (via DDL) |
+| `modelUuid`     | `storage model list`                       | `segment fetch`, `segment download`, `model get-ddl`. Note: `storage query execute` references models by slug, not UUID |
 | `segmentUuid`   | `segmentation segment list`                | `batch create --data '{"kind":"segment",...}'`                          |
 | `agentUuid`     | `ai agent list`                            | `ai chat create`, node graph (`kind: "agent"`)                          |
 | `connectorUuid` | `connection connector list`                | Node graph (`kind: "connector"`), `billing usage --connector-uuid`      |
@@ -299,9 +299,10 @@ cargo-ai whoami
 cargo-ai orchestration tool list
 cargo-ai orchestration play list
 
-# 3. Find the model and get its DDL (if querying via SoR)
+# 3. Find the model (and dataset slug) for SoR queries
 cargo-ai storage model list
-cargo-ai storage model get-ddl <model-uuid>
+cargo-ai storage dataset list
+cargo-ai storage model get-ddl <model-uuid>   # optional — for column types and SQL dialect
 
 # 4. Find connectors needed by the workflow nodes
 cargo-ai connection connector list
@@ -430,7 +431,7 @@ The workspace UUID is returned by `cargo-ai whoami` under `workspace.uuid`.
 | `conjonction` spelling             | Filter JSON uses `conjonction` (not `conjunction`). This is intentional. A typo here fails silently — no records returned.                                                                                                                    |
 | `run create` vs `batch create`     | `run create` only works with **tool** workflows. Using a play's `workflowUuid` returns `playNotCompatible`.                                                                                                                                   |
 | `--model-uuid` vs `--segment-uuid` | `segment fetch` and `segment download` require `--model-uuid`. Get it from `segment list` → `.modelUuid`.                                                                                                                                     |
-| DDL before SQL                     | Never guess table names. Always run `model get-ddl <uuid>` first. Table names look like `datasets_default.models_companies`.                                                                                                                  |
+| Storage query table names          | `storage query execute` references tables as `<datasetSlug>.<modelSlug>` (e.g. `default.companies`) — they're rewritten under the hood. The DDL form `datasets_default.models_companies` is only needed by `system-of-record client fetch | download`.                  |
 | Token shown once                   | API token values are only returned at creation. Store immediately. `workspace token create` requires `--name` (no more `--from-user`).                                                                                                        |
 | Invoice amounts in cents           | `subscription get-invoices` returns `amount` in cents. Divide by 100.                                                                                                                                                                         |
 | Plays vs tools                     | **Play** = reacts to data changes (segment-driven). **Tool** = triggered on demand (manual, API, cron).                                                                                                                                       |

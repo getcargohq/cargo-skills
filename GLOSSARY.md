@@ -45,7 +45,7 @@ A conversation session between a user and an agent. Created with `ai chat create
 The intentional French spelling used as the key name in Cargo filter JSON objects. Always `"conjonction"`, never `"conjunction"`. A typo here silently returns no records — no error is thrown.
 
 **column**
-A typed field on a Cargo model. Each column has a `slug`, `type` (see **column type** below), `label`, and `kind` (see **column kind** below). Columns have no `uuid` — they are identified by `slug` within the model. Managed via `cargo-storage` (`storage column list|create|update|remove|reorder`). Column `slug` values are used in filter conditions and in system-of-record SQL queries.
+A typed field on a Cargo model. Each column has a `slug`, `type` (see **column type** below), `label`, and `kind` (see **column kind** below). Columns have no `uuid` — they are identified by `slug` within the model. Managed via `cargo-storage` (`storage column list|create|update|remove|reorder`). Column `slug` values are used in filter conditions and in `storage query execute` SQL queries.
 
 **column type**
 The data type of a model column. Stored as the `type` field on the column object. Set on `column create --type <value>` and returned as `type` in `column list` and `model list` responses.
@@ -95,7 +95,7 @@ The unit of consumption on Cargo. Workflows consume credits when they execute no
 A logical grouping of models in the Cargo workspace. Similar to a schema or folder. Models belong to datasets. Listed via `storage dataset list`.
 
 **DDL**
-Data Definition Language. In Cargo context, the result of `storage model get-ddl <uuid>` — contains the exact SQL table name and column definitions needed to query the system of record. Always run this before writing SQL.
+Data Definition Language. In Cargo context, the result of `storage model get-ddl <uuid>` — contains the warehouse-native SQL table name, column definitions, and SQL dialect (`language`). For `storage query execute`, the slug-based name `<datasetSlug>.<modelSlug>` is enough; run the DDL when you need column types, the SQL dialect, or the warehouse-native name (required by the legacy `system-of-record client fetch | download`).
 
 ---
 
@@ -164,7 +164,7 @@ A piece of information an agent stores from a conversation for future reference.
 A structured data table in the Cargo workspace — e.g. Companies, Contacts, Deals. Has columns, relationships, and an associated SQL table in the system of record. Not to be confused with a language model.
 
 **modelUuid**
-The UUID of a Cargo data model (table). Required for `segment fetch`, `segment download`, and as input to `model get-ddl` before SoR queries.
+The UUID of a Cargo data model (table). Required for `segment fetch`, `segment download`, and as input to `model get-ddl`. Note: `storage query execute` references models by their **slug** (`<datasetSlug>.<modelSlug>`), not their UUID.
 
 ---
 
@@ -256,7 +256,7 @@ See **intent signal**. In cargo recipes, signals are the basis for segment const
 The activity of finding companies or people matching ICP criteria. Cheapest at-scale options: `salesNavigator.searchLeads` (0.02 cred/record), `salesNavigator.searchAccounts` (0.05). For investor / funding / complex filters: `peopleDataLabs.queryCompanies` (3). For local SMBs: `serper.searchPlaces` (1).
 
 **system of record (SoR)**
-A connected data warehouse (BigQuery, Snowflake, etc.) that Cargo can query via SQL. Queried with `system-of-record client query`. Always requires a DDL lookup first to get the exact table name.
+A connected data warehouse (BigQuery, Snowflake, etc.) that Cargo can query via SQL. Queried with `cargo-ai storage query execute "<sql>"`, which references tables as `<datasetSlug>.<modelSlug>` (e.g. `default.companies`) and rewrites them to the underlying warehouse table under the hood — no DDL lookup is required. The legacy `system-of-record client fetch | download | get-documentation` commands still operate on the warehouse-native table name from the DDL.
 
 ---
 

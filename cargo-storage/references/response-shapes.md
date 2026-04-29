@@ -72,9 +72,9 @@ Same structure as a single item from `model list`, nested under `model`:
 }
 ```
 
-**Key fields:** `ddl` (contains the exact table name and column names), `language` (SQL dialect).
+**Key fields:** `ddl` (contains the warehouse-native table name and column names), `language` (SQL dialect).
 
-Always extract the table name from `ddl` before writing system-of-record queries. The table name pattern is typically `datasets_<dataset-slug>.models_<model-slug>`.
+For `cargo-ai storage query execute`, reference tables as `<datasetSlug>.<modelSlug>` (e.g. `default.companies`) — the slug form is rewritten to the underlying warehouse table. The warehouse-native name from `ddl` (typically `datasets_<dataset-slug>.models_<model-slug>`) is only needed for the legacy `system-of-record client fetch | download` commands.
 
 ## cargo-ai storage dataset list
 
