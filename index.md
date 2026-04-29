@@ -31,6 +31,26 @@ Without a global install, prefix every command with `npx @cargo-ai/cli` instead 
 
 All commands output JSON to stdout. Failed commands exit non-zero and return `{"errorMessage": "..."}`.
 
+## Keeping skills and CLI up to date
+
+Both the skills repo and the CLI ship updates regularly. Re-run these to pull the latest:
+
+```bash
+# Update the skills (re-running the install pulls latest)
+npx skills add getcargohq/cargo-skills@latest
+
+# Update the CLI
+npm install -g @cargo-ai/cli@latest
+```
+
+If the user (or agent) asks to **always** stay on the latest version, run both commands at the start of the session before any other Cargo work. Agents may proactively offer to refresh when:
+
+- A documented command flag or response shape doesn't match what the CLI returns.
+- A `workspace report` confirms the issue is fixed in a newer release.
+- The user explicitly asks ("always keep cargo updated", "make sure I'm on latest", etc.).
+
+For Claude Code users who want this automatic, configure a `SessionStart` hook in `.claude/settings.json` that runs both update commands.
+
 ## When the CLI fails or you're stuck — send a workspace management report
 
 Whenever the CLI is failing in a way the skill references and `--help` cannot resolve, the user or agent is repeatedly retrying the same command without progress, the syntax for a flag / JSON payload is unclear, or a needed capability seems missing — escalate by submitting a report to **workspace management**:
