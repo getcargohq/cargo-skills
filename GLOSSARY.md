@@ -95,7 +95,7 @@ The unit of consumption on Cargo. Workflows consume credits when they execute no
 A logical grouping of models in the Cargo workspace. Similar to a schema or folder. Models belong to datasets. Listed via `storage dataset list`.
 
 **DDL**
-Data Definition Language. In Cargo context, the result of `storage model get-ddl <uuid>` — contains the warehouse-native SQL table name, column definitions, and SQL dialect (`language`). For `storage query execute`, the slug-based name `<datasetSlug>.<modelSlug>` is enough; run the DDL when you need column types, the SQL dialect, or the warehouse-native name (required by the legacy `system-of-record client download`).
+Data Definition Language. In Cargo context, the result of `storage model get-ddl <uuid>` — contains the SQL table name, column definitions, and SQL dialect (`language`). Run when you need column types or the SQL dialect; `storage query execute` and `storage query download` reference tables by `<datasetSlug>.<modelSlug>` directly.
 
 ---
 
@@ -256,7 +256,7 @@ See **intent signal**. In cargo recipes, signals are the basis for segment const
 The activity of finding companies or people matching ICP criteria. Cheapest at-scale options: `salesNavigator.searchLeads` (0.02 cred/record), `salesNavigator.searchAccounts` (0.05). For investor / funding / complex filters: `peopleDataLabs.queryCompanies` (3). For local SMBs: `serper.searchPlaces` (1).
 
 **system of record (SoR)**
-A connected data warehouse (BigQuery, Snowflake, etc.) that Cargo can query via SQL. Queried with `cargo-ai storage query execute "<sql>"`, which references tables as `<datasetSlug>.<modelSlug>` (e.g. `default.companies`) and rewrites them to the underlying warehouse table under the hood — no DDL lookup is required. The legacy `system-of-record client download | get-documentation` commands still operate on the warehouse-native table name from the DDL.
+A connected data warehouse (BigQuery, Snowflake, etc.) that Cargo can query via SQL. Queried with `cargo-ai storage query execute "<sql>"` (or `storage query download "<sql>"` for full exports), which references tables as `<datasetSlug>.<modelSlug>` (e.g. `default.companies`). For SoR docs, use `cargo-ai system-of-record client get-documentation`.
 
 ---
 

@@ -81,13 +81,11 @@ cargo-ai storage query execute \
 
 ## Download full results
 
-For exporting to a file, use `system-of-record client download` (also expects the warehouse-native table name):
+For exporting full result sets to a file, use `storage query download`:
 
 ```bash
-cargo-ai storage model get-ddl <model-uuid>
-
-cargo-ai system-of-record client download \
-  --query "SELECT name, domain, employee_count, revenue FROM datasets_default.models_companies ORDER BY revenue DESC"
+cargo-ai storage query download \
+  "SELECT name, domain, employee_count, revenue FROM default.companies ORDER BY revenue DESC"
 ```
 
 ## Query across multiple models

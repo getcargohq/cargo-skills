@@ -416,31 +416,25 @@ Tables are referenced as `<datasetSlug>.<modelSlug>` and rewritten to the underl
 { "reason": "unknown" }
 ```
 
-## cargo-ai system-of-record client download
+## cargo-ai storage query download
 
-Used for full exports. Returns the legacy discriminated union — always check `outcome` first:
+Used for full exports. Same table-naming convention as `storage query execute` (`<datasetSlug>.<modelSlug>`).
 
 **Success:**
 
 ```json
 {
-  "outcome": "queried",
   "rows": [
     { "name": "Acme Corp", "domain": "acme.com", "employee_count": 500 }
   ]
 }
 ```
 
-**Failure:**
+**Failure (non-zero exit):**
 
 ```json
-{
-  "outcome": "notQueried",
-  "errorMessage": "Table not found: datasets_default.models_nonexistent"
-}
+{ "errorMessage": "Table not found: default.nonexistent" }
 ```
-
-`download` still expects the warehouse-native table name from the DDL (e.g. `datasets_default.models_companies`).
 
 ## cargo-ai system-of-record client get-documentation
 
