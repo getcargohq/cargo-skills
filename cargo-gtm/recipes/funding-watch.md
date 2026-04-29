@@ -100,4 +100,4 @@ For batch runs, use `cargo-ai orchestration run download-outputs --workflow-uuid
 
 ## When stuck — file a workspace report
 
-If a target company has known recent funding but `cargo.enrichBusinessFundingAndAcquisitions` returns empty: file a `cargo-ai workspace report create` with the domain so cargo can verify catalog coverage.
+If a target company has known recent funding but `cargo.enrichBusinessFundingAndAcquisitions` returns empty: file a `cargo-ai workspaceManagement report create` with the domain so cargo can verify catalog coverage.

@@ -37,7 +37,7 @@ Folders are managed by the [`cargo-workspace-management`](../../../cargo-workspa
 
 ```bash
 # 1. Find the folder (kind: "file")
-cargo-ai workspace folder list
+cargo-ai workspaceManagement folder list
 
 # 2. Upload and assign
 cargo-ai ai file upload --file-path ./notes.pdf

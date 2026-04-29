@@ -111,7 +111,7 @@ cargo-ai ai agent remove <agent-uuid>
 
 **Agent icon:** `--icon-color` must be one of: `grey`, `green`, `purple`, `yellow`, `blue`, `red`. `--icon-face` is an emoji string.
 
-**Folders:** Folder creation, listing, and management lives in [`cargo-workspace-management`](../cargo-workspace-management/SKILL.md) (`cargo-ai workspace folder list/create/...`). Use that skill to discover or create the `<folder-uuid>` you pass to `--folder-uuid` here.
+**Folders:** Folder creation, listing, and management lives in [`cargo-workspace-management`](../cargo-workspace-management/SKILL.md) (`cargo-ai workspaceManagement folder list/create/...`). Use that skill to discover or create the `<folder-uuid>` you pass to `--folder-uuid` here.
 
 ## Releases
 

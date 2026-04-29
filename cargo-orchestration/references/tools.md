@@ -145,7 +145,7 @@ Poll until `status` is `success`, `error`, or `cancelled`:
 Before running a tool on records from a file, you must upload the CSV first. The upload returns the `s3Filename` needed by batch commands.
 
 ```bash
-cargo-ai workspace file upload --file-path ./my-companies.csv
+cargo-ai workspaceManagement file upload --file-path ./my-companies.csv
 ```
 
 Response:
@@ -161,7 +161,7 @@ Response:
 You can also inspect which columns the file contains:
 
 ```bash
-cargo-ai workspace file list-columns --s3-filename abc123-my-companies.csv
+cargo-ai workspaceManagement file list-columns --s3-filename abc123-my-companies.csv
 ```
 
 ## Run a tool on records from a file
@@ -172,7 +172,7 @@ cargo-ai orchestration tool list
 # → Extract tool.workflowUuid
 
 # 2. Upload the CSV
-cargo-ai workspace file upload --file-path ./my-companies.csv
+cargo-ai workspaceManagement file upload --file-path ./my-companies.csv
 # → Extract s3Filename from the response
 
 

@@ -27,7 +27,7 @@ cargo-ai ai agent create \
 Folders are managed by the [`cargo-workspace-management`](../../../cargo-workspace-management/SKILL.md) skill — see its `references/examples/folders.md` for create/list/update.
 
 ```bash
-cargo-ai workspace folder list
+cargo-ai workspaceManagement folder list
 # → Find the folder UUID (kind: "agent")
 
 cargo-ai ai agent create \

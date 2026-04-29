@@ -19,7 +19,7 @@ JSON response structures returned by Cargo CLI commands used in the `cargo-works
 }
 ```
 
-## cargo-ai workspace user list
+## cargo-ai workspaceManagement user list
 
 ```json
 {
@@ -38,7 +38,7 @@ JSON response structures returned by Cargo CLI commands used in the `cargo-works
 
 **Key fields:** `uuid`, `email`, `firstName`, `lastName`, `role.slug` (the assigned role).
 
-## cargo-ai workspace role list
+## cargo-ai workspaceManagement role list
 
 ```json
 {
@@ -55,7 +55,7 @@ JSON response structures returned by Cargo CLI commands used in the `cargo-works
 }
 ```
 
-## cargo-ai workspace token list
+## cargo-ai workspaceManagement token list
 
 ```json
 {
@@ -81,7 +81,7 @@ JSON response structures returned by Cargo CLI commands used in the `cargo-works
 - `permissions`: `null` means the token mirrors the permissions of its owning user (the user identified by `userUuid`) — its effective access is bounded by what that user can do. When non-null, it is an array of permission rules `{ effect, resources, actions }` that scope the token explicitly. CLI-created tokens are always `null`; explicitly scoped tokens are configured via the API or the Cargo app.
 - `deletedAt`: `null` for active tokens; an ISO timestamp once the token has been removed.
 
-## cargo-ai workspace token create
+## cargo-ai workspaceManagement token create
 
 ```json
 {
@@ -125,7 +125,7 @@ When a token has been explicitly scoped (via API or app), `permissions` is an ar
 
 When `permissions` is non-null, the rules are evaluated independently of the owning user — the token's access is exactly what the rules describe, regardless of what `userUuid` can do.
 
-## cargo-ai workspace folder list
+## cargo-ai workspaceManagement folder list
 
 ```json
 {
@@ -148,7 +148,7 @@ When `permissions` is non-null, the rules are evaluated independently of the own
 
 **Key fields:** `uuid`, `name`, `kind` (`play`, `tool`, `agent`, or `file`), `emojiSlug`, `parentUuid` (null for root folders).
 
-## cargo-ai workspace file list-columns
+## cargo-ai workspaceManagement file list-columns
 
 ```json
 {
