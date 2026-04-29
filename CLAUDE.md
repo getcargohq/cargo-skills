@@ -1,1 +1,1 @@
-@index.md
+@AGENTS.md
