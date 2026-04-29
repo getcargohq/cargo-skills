@@ -90,4 +90,4 @@ For these: defer to [`../SKILL.md`](../SKILL.md) and its [`../agents/execution-p
 
 ## Always escalate to a workspace report
 
-If the priority stack misses AND no documented alternative covers the gap, file a `cargo-ai workspace report create` describing the missing capability. See [`../../cargo-workspace-management/SKILL.md`](../../cargo-workspace-management/SKILL.md) (Reports section).
+If the priority stack misses AND no documented alternative covers the gap, file a `cargo-ai workspaceManagement report create` describing the missing capability. See [`../../cargo-workspace-management/SKILL.md`](../../cargo-workspace-management/SKILL.md) (Reports section).

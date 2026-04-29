@@ -33,9 +33,11 @@ cargo-ai ai release deploy-draft --agent-uuid <agent-uuid> \
 
 ## Upload to a folder
 
+Folders are managed by the [`cargo-workspace-management`](../../../cargo-workspace-management/SKILL.md) skill — see its `references/examples/folders.md` for create/list/update.
+
 ```bash
-# 1. Find the folder
-cargo-ai workspace folder list
+# 1. Find the folder (kind: "file")
+cargo-ai workspaceManagement folder list
 
 # 2. Upload and assign
 cargo-ai ai file upload --file-path ./notes.pdf

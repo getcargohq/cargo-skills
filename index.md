@@ -57,7 +57,7 @@ For Claude Code users who want this automatic, configure a `SessionStart` hook i
 Whenever the CLI is failing in a way the skill references and `--help` cannot resolve, the user or agent is repeatedly retrying the same command without progress, the syntax for a flag / JSON payload is unclear, or a needed capability seems missing — escalate by submitting a report to **workspace management**:
 
 ```bash
-cargo-ai workspace report create \
+cargo-ai workspaceManagement report create \
   --title "<one-line summary of the problem>" \
   --description "<exact command(s) tried, errorMessage, expected vs actual, UUIDs involved>"
 ```
@@ -269,9 +269,9 @@ See `cargo-ai/SKILL.md` for model and temperature guidance by use case.
 **Critical rules:**
 
 - Most commands require a token with **admin access**.
-- `workspace token create` requires `--name` (the legacy `--from-user` flag was removed). Pick a name that makes the token's purpose obvious in `token list` later.
+- `workspaceManagement token create` requires `--name` (the legacy `--from-user` flag was removed). Pick a name that makes the token's purpose obvious in `token list` later.
 - Token values are only shown **once** at creation — store immediately in a secrets manager (GitHub Secrets, AWS Secrets Manager, etc.).
-- **Always send a `workspace report create`** when the CLI errors, is being used incorrectly, or you (user or agent) are struggling to make progress on a CLI task — see the section at the top of this file and `cargo-workspace-management/references/examples/reports.md`.
+- **Always send a `workspaceManagement report create`** when the CLI errors, is being used incorrectly, or you (user or agent) are struggling to make progress on a CLI task — see the section at the top of this file and `cargo-workspace-management/references/examples/reports.md`.
 
 **References:** `cargo-workspace-management/SKILL.md`
 
@@ -307,8 +307,8 @@ Most `cargo-orchestration` operations require UUIDs from other skills. This tabl
 | `actionSlug`    | `connection integration get <slug>` (third-party) or `connection native-integration get` (built-in) | Node graph (`kind: "connector"` or `kind: "native"`) |
 | `releaseUuid`   | `orchestration batch get` → `.releaseUuid` | `orchestration release get`, `batch download`                           |
 | `batchUuid`     | `orchestration batch create`               | `batch get`, `batch download`, `run get-metrics --batch-uuid`           |
-| `folderUuid`    | `workspace folder list`                    | `play list --folder-uuid`, `tool list --folder-uuid`                    |
-| `roleSlug`      | `workspace role list`                      | `workspace user create --role-slug`                                     |
+| `folderUuid`    | `workspaceManagement folder list`                    | `play list --folder-uuid`, `tool list --folder-uuid`                    |
+| `roleSlug`      | `workspaceManagement role list`                      | `workspaceManagement user create --role-slug`                                     |
 
 **Standard discovery sequence** before running a workflow:
 
@@ -416,15 +416,15 @@ The workspace UUID is returned by `cargo-ai whoami` under `workspace.uuid`.
 **Skills needed:** `cargo-workspace-management`, `cargo-storage`, `cargo-connection`, `cargo-ai`
 
 ```
-1. workspace token create --name <label>   → create a dedicated, named API token
-2. workspace role list             → discover available roles
-3. workspace user create           → invite team members
+1. workspaceManagement token create --name <label>   → create a dedicated, named API token
+2. workspaceManagement role list             → discover available roles
+3. workspaceManagement user create           → invite team members
 4. storage model create            → create Companies and Contacts models
 5. storage column create           → add columns (name, domain, employee_count, etc.)
 6. storage relationship set        → link Contacts → Companies
 7. connection connector create     → connect enrichment and CRM integrations
 8. ai agent create                 → configure an AI agent for research or scoring
-9. workspace folder create         → organize plays and tools into folders
+9. workspaceManagement folder create         → organize plays and tools into folders
 ```
 
 ### 7. Export and analyze segment data
@@ -452,7 +452,7 @@ The workspace UUID is returned by `cargo-ai whoami` under `workspace.uuid`.
 | `run create` vs `batch create`     | `run create` only works with **tool** workflows. Using a play's `workflowUuid` returns `playNotCompatible`.                                                                                                                                   |
 | `--model-uuid` vs `--segment-uuid` | `segment fetch` and `segment download` require `--model-uuid`. Get it from `segment list` → `.modelUuid`.                                                                                                                                     |
 | DDL before SQL                     | Never guess table names. Always run `model get-ddl <uuid>` first. Table names look like `datasets_default.models_companies`.                                                                                                                  |
-| Token shown once                   | API token values are only returned at creation. Store immediately. `workspace token create` requires `--name` (no more `--from-user`).                                                                                                        |
+| Token shown once                   | API token values are only returned at creation. Store immediately. `workspaceManagement token create` requires `--name` (no more `--from-user`).                                                                                                        |
 | Invoice amounts in cents           | `subscription get-invoices` returns `amount` in cents. Divide by 100.                                                                                                                                                                         |
 | Plays vs tools                     | **Play** = reacts to data changes (segment-driven). **Tool** = triggered on demand (manual, API, cron).                                                                                                                                       |
 | Batch data kinds                   | Play workflows accept: `segment`, `change`, `filter`, `recordIds`. Tool workflows accept: `file`, `records`.                                                                                                                                  |

@@ -1,6 +1,6 @@
 # Report examples
 
-`cargo-ai workspace report create` submits a report to **workspace management** — the Cargo team's official feedback channel for the CLI and its skills.
+`cargo-ai workspaceManagement report create` submits a report to **workspace management** — the Cargo team's official feedback channel for the CLI and its skills.
 
 **Always send a report when:**
 
@@ -15,7 +15,7 @@ Reports are how these skills and the CLI improve. **Do not give up silently — 
 ## Submit a report
 
 ```bash
-cargo-ai workspace report create \
+cargo-ai workspaceManagement report create \
   --title "<one-line summary of the problem>" \
   --description "<exact command, error, expected vs actual, relevant UUIDs>"
 ```
@@ -38,7 +38,7 @@ Always include, when relevant:
 ### CLI command fails with an unhelpful error
 
 ```bash
-cargo-ai workspace report create \
+cargo-ai workspaceManagement report create \
   --title "orchestration run create returns 'playNotCompatible' on a tool workflow" \
   --description "Ran: cargo-ai orchestration run create --workflow-uuid abc-123 --data '{\"domain\":\"acme.com\"}'. Got: {\"errorMessage\":\"playNotCompatible\"}. The workflow UUID was returned by 'orchestration tool list', so it should be a tool workflow. Skill consulted: cargo-orchestration/SKILL.md decision flowchart."
 ```
@@ -46,7 +46,7 @@ cargo-ai workspace report create \
 ### Filter syntax is unclear / silently returns empty
 
 ```bash
-cargo-ai workspace report create \
+cargo-ai workspaceManagement report create \
   --title "segment fetch returns 0 records despite UI showing matches" \
   --description "Ran: cargo-ai segmentation segment fetch --model-uuid <uuid> --filter '{\"conjonction\":\"and\",\"groups\":[{\"conjonction\":\"and\",\"conditions\":[{\"kind\":\"string\",\"columnSlug\":\"country\",\"operator\":\"is\",\"values\":[\"US\"]}]}]}'. Got 0 records. The same filter in the app UI shows 1,200 matches. Tried 'conjunction' and 'conjonction' spellings — both return 0."
 ```
@@ -54,7 +54,7 @@ cargo-ai workspace report create \
 ### Agent is struggling with the CLI after multiple retries
 
 ```bash
-cargo-ai workspace report create \
+cargo-ai workspaceManagement report create \
   --title "Agent unable to determine correct --action JSON for HubSpot company_create" \
   --description "Tried 4 variants of cargo-ai orchestration action execute --action '{\"kind\":\"connector\",\"integrationSlug\":\"hubspot\",\"actionSlug\":\"company_create\",\"config\":{}}' --data '{...}'. Each fails with a different validation error ('config.portalId required', then 'data.properties required', etc.). The required shape is not documented in cargo-connection or cargo-orchestration. Need a worked example or a schema reference."
 ```
@@ -62,7 +62,7 @@ cargo-ai workspace report create \
 ### Missing capability
 
 ```bash
-cargo-ai workspace report create \
+cargo-ai workspaceManagement report create \
   --title "No CLI command to bulk re-run failed records from a previous batch" \
   --description "Trying to re-run only the failed records from batch <uuid>. 'analytics run download --statuses error' produces a CSV but there is no documented way to feed that CSV back into 'orchestration batch create' as the input set without manual transformation. A '--from-failed-batch <uuid>' option (or equivalent) appears to be missing."
 ```
@@ -70,7 +70,7 @@ cargo-ai workspace report create \
 ### Documentation contradicts observed behavior
 
 ```bash
-cargo-ai workspace report create \
+cargo-ai workspaceManagement report create \
   --title "billing usage get-metrics --group-by workflow_uuid returns connector_uuid groupings" \
   --description "Ran: cargo-ai billing usage get-metrics --from 2025-01-01 --to 2025-01-31 --group-by workflow_uuid. Response groups results by connector_uuid instead of workflow_uuid. cargo-billing/SKILL.md says workflow_uuid is a valid --group-by value."
 ```
