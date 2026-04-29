@@ -16,7 +16,7 @@ Common errors and recovery steps for `cargo-storage` commands.
 |---------|-------|-----|
 | `model get` returns not found | Wrong UUID | Re-run `model list` to get the correct UUID |
 | `model get-ddl` returns empty DDL | Model has no sync connection to the warehouse | Confirm the model has an extractor configured and has synced at least once |
-| Table not found when querying SoR | Using the model name instead of the DDL table name | Always use `model get-ddl` to get the exact table name before querying |
+| Table not found in `storage query execute` | Wrong dataset or model slug | Verify with `dataset list` and `model list`; tables are referenced as `<datasetSlug>.<modelSlug>` |
 | `model remove` returns an error | Model is referenced by segments, plays, or tools | Remove or update the dependent resources before deleting the model |
 
 ## Columns

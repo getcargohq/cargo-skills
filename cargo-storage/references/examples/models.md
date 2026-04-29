@@ -25,7 +25,7 @@ cargo-ai storage model get <model-uuid>
 
 ## Get the DDL (column types and SQL dialect)
 
-`storage query execute` rewrites `<datasetSlug>.<modelSlug>` (e.g. `default.companies`) to the underlying warehouse table, so you don't need the DDL just for the table name. Run `model get-ddl` when you need column types, the SQL dialect, or the warehouse-native table name (the latter is required by the legacy `system-of-record client download` command).
+`storage query execute` rewrites `<datasetSlug>.<modelSlug>` (e.g. `default.companies`) to the underlying warehouse table, so you don't need the DDL just for the table name. Run `model get-ddl` when you need column types or the SQL dialect.
 
 ```bash
 cargo-ai storage model get-ddl <model-uuid>
@@ -39,7 +39,7 @@ Example response:
 }
 ```
 
-The `language` field tells you which SQL dialect to use. The warehouse-native name (`datasets_default.models_companies`) is needed only for `system-of-record client download`; `storage query execute` accepts the slug-based name directly.
+The `language` field tells you which SQL dialect to use. `storage query execute` accepts the slug-based name (`<datasetSlug>.<modelSlug>`) directly — you don't need to extract the warehouse-native name from the DDL.
 
 ## Create a model
 
