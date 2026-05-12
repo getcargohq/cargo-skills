@@ -89,7 +89,7 @@ Load for a specific CLI domain.
 
 | Skill                                                                 | Load when you need to…                                                                             |
 | --------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| [`cargo-orchestration`](#cargo-orchestration)                         | Execute actions, run workflows, trigger batches, chat with agents, query storage with SQL          |
+| [`cargo-orchestration`](#cargo-orchestration)                         | Execute actions, run workflows, trigger batches, chat with agents, query orchestration with SQL (ClickHouse) |
 | [`cargo-analytics`](#cargo-analytics)                                 | Download run results, export segment data, monitor error rates and metrics                         |
 | [`cargo-billing`](#cargo-billing)                                     | Check credit usage, view subscription details, track costs per workflow or connector               |
 | [`cargo-storage`](#cargo-storage)                                     | Inspect or modify data models, columns, datasets, and relationships                                |
