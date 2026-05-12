@@ -21,7 +21,7 @@ Works with Claude Code, Cursor, Windsurf, GitHub Copilot, and any agent that sup
 
 ## What this skill teaches
 
-**Cargo** connects your data models (companies, contacts, deals) to external integrations (CRMs, enrichment providers, AI agents) and runs them as automated workflows. The repo ships eight skills at the root — one **outcome skill** (`cargo-gtm`, the front door for any GTM task) and seven **capability skills** (one per CLI domain).
+**Cargo** connects your data models (companies, contacts, deals) to external integrations (CRMs, enrichment providers, AI agents) and runs them as automated workflows. The repo ships nine skills at the root — one **outcome skill** (`cargo-gtm`, the front door for any GTM task) and eight **capability skills** (one per CLI domain).
 
 ### Outcome — `cargo-gtm`
 
@@ -50,6 +50,7 @@ Load when you need the syntax for a specific CLI domain.
 | **Storage**       | Inspect models and their DDL, create columns, navigate datasets, set relationships between models                                                                  |
 | **Connection**    | Authenticate connectors, discover integration actions and their slugs across 120+ integrations                                                                     |
 | **AI**            | Create and configure agents, upload files for RAG, connect MCP servers, inspect agent memories                                                                     |
+| **Context**       | Browse, read, write, and edit the workspace's git-backed context repo (markdown/MDX GTM knowledge base); run shell commands in its runtime sandbox; inspect the knowledge graph |
 | **Analytics**     | Download run results and outputs, export segment data, monitor error rates and success metrics                                                                     |
 | **Billing**       | Track credit consumption per workflow or connector, check subscription status, view invoices                                                                       |
 | **Workspace**     | Invite users, create and rotate API tokens, organize resources into folders, manage roles                                                                          |
@@ -66,7 +67,7 @@ Prompts that route through `cargo-gtm`:
 - *"Show me everyone hiring data engineers AND running Snowflake."* → `recipes/tech-intent.md`
 - *"What ICP signals differentiate our Closed-Won deals?"* → `recipes/icp-discovery.md`
 
-For ad-hoc CLI work (modify a model, list connectors, query the warehouse), load the matching capability skill directly.
+For ad-hoc CLI work (modify a model, list connectors, query the warehouse, edit the GTM context repo), load the matching capability skill directly.
 
 ## Use cases
 
@@ -101,6 +102,13 @@ The agent fetches the DDL first (to get the exact table name), then writes and e
 The agent creates or finds a configured Cargo agent, sends a message, polls for the response, and surfaces the result.
 
 > "Use the lead researcher agent to find the LinkedIn of every contact added this week."
+
+### Edit the workspace's GTM context
+
+The agent browses, reads, and edits the git-backed context repo (personas, plays, proof, objections, etc.) via the runtime sandbox, and uses the knowledge graph to audit cross-references.
+
+> "Add a persona file for Head of RevOps at mid-market SaaS."
+> "Find every play that references the funding signal but has no proof attached."
 
 ### Monitor workflow health
 
