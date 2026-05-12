@@ -150,8 +150,9 @@ Load for a specific CLI domain.
 - `cargo-gtm` delegates to capability skills via relative paths (`../cargo-orchestration/...`). Capability skills never reference `cargo-gtm`.
 - `cargo-workspace-management` provides auth context for every skill — set it up first.
 - `cargo-storage`, `cargo-connection`, and `cargo-ai` are peer skills that supply UUIDs to `cargo-orchestration`. They don't depend on each other.
-- `cargo-context` is **orthogonal** to the workflow-execution flow. It touches the git-backed GTM knowledge base (markdown/MDX), not the system-of-record data warehouse or workflow runs. Use it for capturing/editing the workspace's prose context — personas, plays, proof, objections, signals — and for inspecting the typed knowledge graph.
-- For SQL queries against the system-of-record, use `cargo-ai storage query execute "<sql>"` (tables as `<datasetSlug>.<modelSlug>`). Load `cargo-storage` to discover dataset and model slugs, and to fetch the DDL when you need column types or the SQL dialect.
+- `cargo-context` is **orthogonal** to the workflow-execution flow. It touches the git-backed GTM knowledge base (markdown/MDX), not the data warehouse or workflow runs. Use it for capturing/editing the workspace's prose context — personas, plays, proof, objections, signals — and for inspecting the typed knowledge graph.
+- For SQL queries against the connected data warehouse, use `cargo-ai storage query execute "<sql>"` (tables as `<datasetSlug>.<modelSlug>`). Load `cargo-storage` to discover dataset and model slugs, and to fetch the DDL when you need column types or the SQL dialect.
+- For SQL queries against orchestration runtime tables (`runs`, `batches`, `spans`, `records`) — error rates, per-node failures, time-series — use `cargo-ai orchestration query execute "<sql>"`. Workspace scoping is automatic; tables are referenced without a schema prefix.
 - Before building a workflow node graph, load `cargo-connection` to get `connectorUuid` and `actionSlug`.
 - Before executing a workflow that uses an agent node, load `cargo-ai` to get `agentUuid`.
 - After runs complete, load `cargo-analytics` to download results or measure performance. **For action output retrieval, prefer `cargo-ai orchestration run download-outputs` over `run download` — the former returns a signed-URL CSV/JSON of just the output node's data.**
@@ -198,7 +199,8 @@ Load for a specific CLI domain.
 
 - See the decision flowchart at the top of `cargo-orchestration/SKILL.md` for when to use `action execute` vs `run create` vs `batch create`.
 - Filter JSON uses `conjonction` (not `conjunction`) — breaks silently if misspelled.
-- Query the system-of-record with `cargo-ai storage query execute "<sql>"` using `<datasetSlug>.<modelSlug>` table names (e.g. `default.companies`). Run `cargo-ai storage model get-ddl <model-uuid>` for column types or SQL dialect.
+- Query the data warehouse with `cargo-ai storage query execute "<sql>"` using `<datasetSlug>.<modelSlug>` table names (e.g. `default.companies`). Run `cargo-ai storage model get-ddl <model-uuid>` for column types or SQL dialect.
+- Query orchestration runtime tables with `cargo-ai orchestration query execute "<sql>"` against `runs`, `batches`, `spans`, `records` (no schema prefix; workspace scoping is automatic).
 - All operations are async — poll or pass `--wait-until-finished`. See [Async polling](#async-polling).
 
 **References:** `cargo-orchestration/SKILL.md`

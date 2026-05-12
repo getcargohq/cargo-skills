@@ -36,7 +36,7 @@ Need to run something?
 > `references/agents.md` — AI agent chat examples
 > `references/nodes.md` — full node creation guide (kinds, native actions, expressions, validation, routing)
 > `references/templates.md` — pre-built workflow templates
-> `references/queries.md` — `storage query execute` SQL examples
+> `references/queries.md` — `storage query` (data warehouse) and `orchestration query` (spans/runs/batches/records) SQL examples
 > `references/segments.md` — segment fetch and filter examples
 > `references/response-shapes.md` — full JSON response structures
 > `references/filter-syntax.md` — complete filter condition reference
@@ -71,7 +71,6 @@ cargo-ai ai template list                  # all AI agent templates (slug, name,
 cargo-ai storage model list                # all models (uuid, name, slug, columns)
 cargo-ai storage dataset list              # all datasets
 cargo-ai segmentation segment list         # all segments (uuid, name, modelUuid)
-cargo-ai system-of-record sor list         # all systems of record
 cargo-ai connection connector list         # all connectors
 ```
 
@@ -104,7 +103,8 @@ cargo-ai orchestration batch create --workflow-uuid <uuid> --data '{"kind":"segm
 cargo-ai ai message create --chat-uuid <uuid> --parts '[{"type":"text","text":"..."}]'
 
 # Data
-cargo-ai storage query execute "SELECT * FROM default.companies LIMIT 10"
+cargo-ai storage query execute "SELECT * FROM default.companies LIMIT 10"          # warehouse / SoR
+cargo-ai orchestration query execute "SELECT count() FROM runs WHERE status='error'" # orchestration history (spans, runs, batches, records)
 cargo-ai segmentation segment fetch --model-uuid <uuid> --filter '{"conjonction":"and","groups":[]}' --fetching-limit 100
 cargo-ai storage model get-ddl <model-uuid>
 ```
@@ -248,7 +248,7 @@ cargo-ai orchestration record get-metrics --workflow-uuid <uuid>
 cargo-ai orchestration record cancel --workflow-uuid <uuid> --ids record-id-1,record-id-2
 ```
 
-## Query the system of record
+## Query the data warehouse (storage query)
 
 Run SQL against your connected data warehouse with `storage query execute`. Tables are referenced as `<datasetSlug>.<modelSlug>` and rewritten to the underlying warehouse table under the hood — no DDL lookup needed for the table name.
 
@@ -258,7 +258,19 @@ cargo-ai storage query execute \
 # → { "rows": [...] } on success; non-zero exit with { "errorMessage": "..." } on error
 ```
 
-Get column slugs from `storage column list --model-uuid <uuid>` (or run `storage model get-ddl <model-uuid>` for full schema). Page through large result sets with `LIMIT` / `OFFSET` directly in the SQL. For full exports, use `cargo-ai storage query download "<sql>"`. For SoR docs, use `cargo-ai system-of-record client get-documentation`. See `references/queries.md` for WHERE clauses, aggregations, joins, date queries, and pagination.
+Get column slugs from `storage column list --model-uuid <uuid>` (or run `storage model get-ddl <model-uuid>` for full schema). Page through large result sets with `LIMIT` / `OFFSET` directly in the SQL. For full exports, use `cargo-ai storage query download --query "<sql>"`. See `references/queries.md` for WHERE clauses, aggregations, joins, date queries, and pagination.
+
+## Query orchestration history (orchestration query)
+
+Run SQL against orchestration runtime tables — `spans`, `runs`, `batches`, `records` — with `orchestration query execute`. Use this for ad-hoc analytics on workflow execution (error rates, throughput, slowest nodes) without the workflow-scoped filters of `run get-metrics` / `run count`.
+
+```bash
+cargo-ai orchestration query execute "SELECT count() FROM runs WHERE status = 'error'"
+cargo-ai orchestration query execute "SELECT status, count() FROM batches GROUP BY status"
+cargo-ai orchestration query execute "SELECT * FROM spans ORDER BY execution_started_at DESC LIMIT 10"
+```
+
+Tables are referenced without a schema prefix — just `spans`, `runs`, `batches`, or `records`. Workspace scoping is applied automatically. The query is read-only; DDL, table functions, dictionary accessors, and introspection are denied. See `references/queries.md` for the schemas, example queries, and limits.
 
 ## Fetch segment data
 
@@ -315,5 +327,6 @@ cargo-ai orchestration run create --help
 cargo-ai orchestration template list --help
 cargo-ai orchestration node validate --help
 cargo-ai ai message create --help
-cargo-ai system-of-record client --help
+cargo-ai orchestration query execute --help
+cargo-ai storage query execute --help
 ```

@@ -418,15 +418,13 @@ Tables are referenced as `<datasetSlug>.<modelSlug>` and rewritten to the underl
 
 ## cargo-ai storage query download
 
-Used for full exports. Same table-naming convention as `storage query execute` (`<datasetSlug>.<modelSlug>`).
+Used for full exports. Same table-naming convention as `storage query execute` (`<datasetSlug>.<modelSlug>`). Pass the SQL via `--query`; the response is a signed URL.
 
 **Success:**
 
 ```json
 {
-  "rows": [
-    { "name": "Acme Corp", "domain": "acme.com", "employee_count": 500 }
-  ]
+  "url": "https://signed-url-to-csv-or-parquet-file"
 }
 ```
 
@@ -436,9 +434,30 @@ Used for full exports. Same table-naming convention as `storage query execute` (
 { "errorMessage": "Table not found: default.nonexistent" }
 ```
 
-## cargo-ai system-of-record client get-documentation
+## cargo-ai orchestration query execute
 
-**Returns plain text (not JSON).** This is the only CLI command that does not return JSON. The output is the SoR documentation string which may include markdown formatting.
+Tables (`spans`, `runs`, `batches`, `records`) are referenced without a schema prefix; workspace scoping is applied automatically.
+
+**Success:**
+
+```json
+{
+  "rows": [
+    { "status": "success", "count()": 1248 },
+    { "status": "error",   "count()": 42 }
+  ]
+}
+```
+
+**Failure (non-zero exit):**
+
+```json
+{ "errorMessage": "Code: 60. Table orchestration.unknown doesn't exist" }
+```
+
+```json
+{ "errorMessage": "Code: 158. Memory limit exceeded ..." }
+```
 
 ## cargo-ai orchestration release list
 

@@ -275,7 +275,7 @@ See **intent signal**. In cargo recipes, signals are the basis for segment const
 The activity of finding companies or people matching ICP criteria. Cheapest at-scale options: `salesNavigator.searchLeads` (0.02 cred/record), `salesNavigator.searchAccounts` (0.05). For investor / funding / complex filters: `peopleDataLabs.queryCompanies` (3). For local SMBs: `serper.searchPlaces` (1).
 
 **system of record (SoR)**
-A connected data warehouse (BigQuery, Snowflake, etc.) that Cargo can query via SQL. Queried with `cargo-ai storage query execute "<sql>"` (or `storage query download "<sql>"` for full exports), which references tables as `<datasetSlug>.<modelSlug>` (e.g. `default.companies`). For SoR docs, use `cargo-ai system-of-record client get-documentation`. Distinct from the **context repository** (markdown/MDX knowledge base, not relational data).
+A connected data warehouse (BigQuery, Snowflake, etc.) that Cargo can query via SQL. Queried with `cargo-ai storage query execute "<sql>"` (or `storage query download --query "<sql>"` for full exports), which references tables as `<datasetSlug>.<modelSlug>` (e.g. `default.companies`). Use `cargo-ai storage model get-ddl <model-uuid>` for column types and SQL dialect. Distinct from the **context repository** (markdown/MDX knowledge base, not relational data) and from the **orchestration query** surface (`cargo-ai orchestration query execute`, which targets the `runs`/`batches`/`spans`/`records` runtime tables).
 
 ---
 
