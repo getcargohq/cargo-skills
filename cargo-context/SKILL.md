@@ -22,6 +22,7 @@ The **context** is a git-backed repository of typed markdown/MDX files that capt
 > See `references/conventions.md` for the full context repo structure and per-domain templates.
 > See `references/troubleshooting.md` for common errors and how to fix them.
 > See `references/examples/authoring.md` for end-to-end add / edit / delete recipes.
+> See `references/examples/bootstrap-and-update.md` for the bootstrap-from-public-sources + refresh-from-calls playbook.
 > See `references/examples/graph-queries.md` for inspecting the knowledge graph.
 
 ## Prerequisites
@@ -69,6 +70,16 @@ Two important behaviors to remember:
 
 - **`write` and `edit` push to the default branch** of the context repo. They are not local-only.
 - **`execute` does *not* push.** Changes made to files by a shell command run via `execute` stay in the sandbox and are discarded — use `execute` for builds, tests, or inspection, not for committing edits.
+
+Because writes push immediately, **confirm the target workspace before the first `write`/`edit`**:
+
+```bash
+cargo-ai whoami   # → workspace.uuid, workspace.name
+```
+
+Read the workspace name back to the user. If the session is for a specific client, make sure `workspace.name` matches before authoring anything — there is no dry-run mode. If `workspace.name` is generic or ambiguous (e.g. "Main", "Test", a person's name, an internal codename), don't guess — ask the user for the company name and canonical domain (`example.com`) and confirm both before the first write. If you logged in without pinning a workspace, re-run `cargo-ai login --oauth --workspace-uuid <uuid>` (or `--token <workspace-scoped-token>` for non-interactive use).
+
+Edits derived from sales-call analysis should be applied **one at a time with human review**, not batched. Looping an agent over many calls tends to overweight the loudest signal and miss nuance — see `references/examples/bootstrap-and-update.md` for the call-refresh playbook.
 
 ### Browse and read
 
@@ -213,6 +224,15 @@ The Cargo context repo is a typed knowledge base. The canonical example — and 
    ```
 
 For full per-domain templates and worked examples, see `references/conventions.md` and `references/examples/authoring.md`.
+
+### Workflow: bootstrap and refresh
+
+To stand up a new workspace's context repo from scratch, or to refresh an existing one on a cadence, follow the two-phase playbook in `references/examples/bootstrap-and-update.md`:
+
+1. **Bootstrap (one-time):** scrape public sources in parallel → seed `global/`, `persona/`, `client/`, `proof/`, `objection/`, `signal/` from those digests → open a fresh agent session against the seeded repo.
+2. **Refresh (every 2–4 weeks):** pull the last ~3 months of sales-call transcripts → analyze one at a time, human-in-the-loop → apply a repetition threshold before promoting any claim to context → validate by generating sequence permutations → diff the graph before/after and retire stale entries.
+
+The repetition threshold (how many calls a claim must appear in before it lands in context) is documented in `references/conventions.md`.
 
 ## Knowledge graph
 

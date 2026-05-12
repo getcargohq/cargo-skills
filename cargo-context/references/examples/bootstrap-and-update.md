@@ -1,0 +1,134 @@
+# Bootstrap and update a context repo
+
+The repeatable playbook for building and refreshing a workspace's context repo from real data. Two phases: a one-time **bootstrap** from public sources, then a **refresh loop** driven by sales-call analysis. Use this when standing up a new workspace, or as a periodic rehydration (recommended cadence: every 2–4 weeks).
+
+The phases are deliberately separated. Bootstrapping from public data gets you to a baseline fast; call-driven refinement is where the quality lives. Step 5 (turning a single call into context edits) cannot be safely automated end-to-end — keep a human in the loop on every edit.
+
+## Before you start — confirm the target workspace
+
+Each Cargo workspace maps to one company. `runtime write` and `runtime edit` push to **that workspace's** context repo immediately, so the first thing to do is confirm you're pointed at the right one. This matters most for consultants and operators managing several client workspaces.
+
+```bash
+cargo-ai whoami
+# → user.email, workspace.uuid, workspace.name
+```
+
+Read back the `workspace.name` to the human and confirm it matches the company you intend to harden context for. **If the name is generic or ambiguous** — `"Main"`, `"Test"`, a person's name, an internal codename, anything that doesn't unambiguously identify the company — stop and ask: "What's the company name and canonical domain (e.g. `acme.com`)?" Workspace names are user-set and frequently don't match the customer-facing brand; the domain is the disambiguator. If you logged in without pinning a workspace, re-login with the right one:
+
+```bash
+cargo-ai login --oauth --workspace-uuid <uuid>
+# or, non-interactive:
+cargo-ai login --token <workspace-scoped-token>
+```
+
+Capture three things before the first scrape kicks off — every sub-agent and every threshold decision downstream depends on them:
+
+- **Company name + canonical domain** — what the public-source scrapers will target.
+- **Workspace UUID** — so every CLI call lands in the right repo. If you're working across multiple clients in one session, prefix the workspace name in your notes for every claim you record.
+- **Call volume estimate** — drives the repetition threshold in step 5b (call-rich → 3, medium → 2, call-poor → 1). Get this from the user, or by sampling the call source (Gong / Chorus / etc.).
+
+## Phase 1 — Bootstrap from public sources
+
+Goal: seed every domain with enough public information that a fresh agent session can hold a coherent conversation about the company.
+
+### 1. Scrape public sources in parallel
+
+Hand off research to sub-agents. Suggested sources per workspace:
+
+- Website (home, product, pricing, customers, careers)
+- Blog and changelog
+- Job posts (signals about org structure, hiring intent, tooling)
+- Review sites (G2, Capterra) — surfaces objections and competitor mentions
+- Reddit / Hacker News / niche communities — surfaces unprompted voice-of-customer
+- News (funding announcements, leadership changes, launches)
+
+Have each sub-agent return a structured digest (key claims + source URL), not raw scraped text. The digests are what get distilled into context files in step 2.
+
+### 2. Seed the context repo with public data
+
+For each digest, write to the matching domain. Read the template before authoring:
+
+```bash
+cargo-ai context runtime read --path global/_template.md
+cargo-ai context runtime read --path persona/_template.md
+cargo-ai context runtime read --path alternative/_template.md
+```
+
+Then `runtime write` one file per concept. Typical bootstrap coverage:
+
+| Source | Lands in |
+|---|---|
+| Website home / about | `global/positioning.md`, `global/narrative.md`, `global/mission.md` |
+| Pricing page | `global/pricing.md` |
+| Careers / job posts | `persona/...`, `signal/hiring-intent-...` |
+| Customer page | `client/...`, `proof/...` |
+| Blog / launches | `insight/...`, `proof/...` |
+| Review sites | `objection/...`, `alternative/...` |
+| Reddit / HN | `objection/...`, `insight/...` |
+| News / funding | `signal/...` |
+
+Keep `proof/` atomic — one metric or quote per file. Skip anything you cannot source; a thin context beats a fabricated one.
+
+### 3. Start a fresh session with the seeded context
+
+Once the bootstrap commit lands, open a new agent session so the seeded files load clean (rather than mixed with scratch context from Phase 1). Verify with:
+
+```bash
+cargo-ai context runtime browse
+cargo-ai context graph get | jq '.nodes | length'
+```
+
+## Phase 2 — Refresh from real calls
+
+Goal: replace assumptions with evidence. Public sources tell you what the company *says*; calls tell you what prospects *do*.
+
+### 4. Pull the last ~3 months of sales calls
+
+Export transcripts from Gong / Chorus / Fathom / etc. Three months is a good default — long enough to see patterns, short enough that the language is current. For low-volume workspaces, take what you have.
+
+### 5. Analyze one call at a time, human in the loop
+
+For each call:
+
+1. Have an agent summarize the call against the existing context: which personas were on the call, which objections came up, which proof points were referenced or missed, which signals would have flagged this account.
+2. The agent proposes edits — new `objection/...`, updated `persona/...` pains, additional `proof/...` quotes, etc.
+3. A human approves each edit before it lands via `runtime write` or `runtime edit`.
+
+Do **not** batch this. An agent processing 30 calls in a loop overweights the loudest objection and underweights nuance.
+
+### 5b. Apply a repetition threshold
+
+A single call's claim is anecdote. Before promoting a claim into context, require it to surface across multiple calls:
+
+| Workspace volume | Threshold |
+|---|---|
+| Call-rich (≥ 50 transcripts / quarter) | **3 occurrences** before commit |
+| Medium volume | **2 occurrences** |
+| New / call-poor (< 10 transcripts) | **1 occurrence** — note the source in the file body |
+
+Track candidates in a scratch doc (or draft `insight/` entries) until they cross the threshold. The threshold applies to *claims* — objections, pains, missed proof points. It does not apply to direct facts a call confirms (a customer name, a quote attributable to one named person, a competitor explicitly mentioned).
+
+### 6. Validate by generating sequences
+
+Before treating the context as production-ready, run permutations through the workspace's sequence-generating play or agent and read the outputs. Useful permutations:
+
+- A persona + a play + an objection
+- Two different personas with the same play
+- A play with and without a specific proof point
+
+If the generated sequences read like a different company between permutations, the context has internal contradictions. Find them by walking the knowledge graph for orphans and conflicting cross-refs — see `graph-queries.md` for queries that catch the common cases.
+
+### 7. Push to production
+
+`runtime write` and `runtime edit` already push to the default branch — there is no separate deploy step. "Push to production" here means flipping downstream agents and plays to read from the refreshed context. If your workspace pins a specific branch or commit, update the pin now.
+
+### 8. Repeat every 2–4 weeks
+
+Re-run Phase 2 on a cadence. Re-run Phase 1 only when something changes materially in public sources (rebrand, new pricing, new persona launch). On each refresh:
+
+- Snapshot `cargo-ai context graph get` before and after, then diff to see what moved.
+- Retire context not referenced in the last two cycles — staleness is the failure mode, not coverage gaps.
+
+## What not to automate
+
+Full automation of steps 5 / 5b does not reach acceptable quality in practice. The nuance lives in three decisions: which claim is worth committing, which file it belongs in, and whether an existing file should be edited or a new one created. Keep a human on each of those.
