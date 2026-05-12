@@ -92,7 +92,7 @@ Load for a specific CLI domain.
 | [`cargo-orchestration`](#cargo-orchestration)                         | Execute actions, run workflows, trigger batches, chat with agents, query orchestration with SQL (ClickHouse) |
 | [`cargo-analytics`](#cargo-analytics)                                 | Download run results, export segment data, monitor error rates and metrics                         |
 | [`cargo-billing`](#cargo-billing)                                     | Check credit usage, view subscription details, track costs per workflow or connector               |
-| [`cargo-storage`](#cargo-storage)                                     | Inspect or modify data models, columns, datasets, and relationships                                |
+| [`cargo-storage`](#cargo-storage)                                     | Inspect or modify data models, columns, datasets, and relationships; query workspace storage with SQL |
 | [`cargo-connection`](#cargo-connection)                               | Manage connector authentication, discover available integrations and their actions                 |
 | [`cargo-ai`](#cargo-ai)                                               | Create and configure agents, upload files for RAG, manage MCP servers                              |
 | [`cargo-context`](#cargo-context)                                     | Browse/read/write/edit the workspace's git-backed GTM context repo, run commands in its runtime sandbox, inspect the knowledge graph |
@@ -193,14 +193,14 @@ Load for a specific CLI domain.
 
 ### cargo-orchestration
 
-**The execution hub.** Execute actions, run workflows, chat with AI agents, query storage with SQL, and fetch segment records.
+**The execution hub.** Execute actions, run workflows, chat with AI agents, query orchestration runtime tables (`runs`/`batches`/`spans`/`records`) with SQL, and fetch segment records.
 
 **Critical rules:**
 
 - See the decision flowchart at the top of `cargo-orchestration/SKILL.md` for when to use `action execute` vs `run create` vs `batch create`.
 - Filter JSON uses `conjonction` (not `conjunction`) — breaks silently if misspelled.
-- Query storage with `cargo-ai storage query execute "<sql>"` using `<datasetSlug>.<modelSlug>` table names (e.g. `default.companies`). Run `cargo-ai storage model get-ddl <model-uuid>` for column types or SQL dialect.
-- Query orchestration runtime tables with `cargo-ai orchestration query execute "<sql>"` against `runs`, `batches`, `spans`, `records` (no schema prefix; workspace scoping is automatic).
+- Query orchestration runtime tables (ClickHouse) with `cargo-ai orchestration query execute "<sql>"` against `runs`, `batches`, `spans`, `records` (no schema prefix; workspace scoping is automatic).
+- For SQL against workspace storage (Companies, Contacts, …), use `cargo-ai storage query execute "<sql>"` — documented in `cargo-storage`.
 - All operations are async — poll or pass `--wait-until-finished`. See [Async polling](#async-polling).
 
 **References:** `cargo-orchestration/SKILL.md`
@@ -237,11 +237,12 @@ Load for a specific CLI domain.
 
 ### cargo-storage
 
-**Data schema management.** Inspect models, create or update columns, navigate datasets, understand workspace data structure.
+**Data schema management and SQL queries.** Inspect models, create or update columns, navigate datasets, understand workspace data structure, and run SQL against workspace storage.
 
 **Critical rules:**
 
-- Query via `cargo-ai storage query execute "<sql>"` (or `storage query download "<sql>"` for full exports) using `<datasetSlug>.<modelSlug>` table names (e.g. `default.companies`). `model get-ddl` is optional — useful for column types and SQL dialect.
+- Query via `cargo-ai storage query execute "<sql>"` (or `storage query download --query "<sql>"` for full exports) using `<datasetSlug>.<modelSlug>` table names (e.g. `default.companies`). `model get-ddl` is optional — useful for column types and SQL dialect.
+- For SQL against orchestration runtime tables (`runs`/`batches`/`spans`/`records`), use `cargo-ai orchestration query execute "<sql>"` — documented in `cargo-orchestration`.
 - For advanced record queries (filtering, sorting, pagination), use `segmentation segment fetch` from `cargo-orchestration`.
 
 **References:** `cargo-storage/SKILL.md`

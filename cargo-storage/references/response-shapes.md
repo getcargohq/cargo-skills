@@ -200,3 +200,50 @@ Kind-specific fields are included alongside the base fields:
   ]
 }
 ```
+
+## cargo-ai storage query execute
+
+Tables are referenced as `<datasetSlug>.<modelSlug>` and rewritten to the underlying storage table under the hood.
+
+**Success:**
+
+```json
+{
+  "rows": [
+    { "name": "Acme Corp", "domain": "acme.com", "employee_count": 500 },
+    { "name": "Globex", "domain": "globex.com", "employee_count": 1200 }
+  ]
+}
+```
+
+**Failure (non-zero exit):**
+
+```json
+{ "errorMessage": "Table not found: default.nonexistent" }
+```
+
+```json
+{ "reason": "clientNotFound" }
+```
+
+```json
+{ "reason": "unknown" }
+```
+
+## cargo-ai storage query download
+
+Used for full exports. Same table-naming convention as `storage query execute` (`<datasetSlug>.<modelSlug>`). Pass the SQL via `--query`; the response is a signed URL.
+
+**Success:**
+
+```json
+{
+  "url": "https://signed-url-to-csv-or-parquet-file"
+}
+```
+
+**Failure (non-zero exit):**
+
+```json
+{ "errorMessage": "Table not found: default.nonexistent" }
+```

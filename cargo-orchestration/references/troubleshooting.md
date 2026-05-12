@@ -32,15 +32,7 @@ Common errors and recovery steps for `cargo-orchestration` commands.
 | `Chat not found`                                                     | Wrong UUID or chat was deleted           | Re-create with `chat create`                                               |
 | `Agent not found`                                                    | Wrong UUID                               | Re-run `agent list` to get current UUIDs                                   |
 
-## Storage queries (`storage query execute`)
-
-| Symptom                                                   | Cause                                  | Fix                                                                                                |
-| --------------------------------------------------------- | -------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| `errorMessage` with "Table not found"                     | Wrong dataset or model slug            | Verify with `storage dataset list` and `storage model list`. Tables are `<datasetSlug>.<modelSlug>` |
-| `errorMessage` with syntax error                          | SQL dialect mismatch                   | Check whether your storage backend is BigQuery, Snowflake, etc. and adjust syntax accordingly. `storage model get-ddl` reports `language` |
-| `reason: "clientNotFound"`                                | No storage client configured           | Verify the workspace has an active storage connection                                              |
-| Query returns empty `rows`                                | Filter too restrictive, or wrong model | Try a broader query first (`SELECT * FROM <dataset>.<model> LIMIT 5`)                              |
-| Column not found                                          | Wrong column slug                      | Run `storage column list --model-uuid <uuid>` to get exact slugs                                   |
+> For `storage query execute` / `storage query download` troubleshooting, see the `cargo-storage` skill's `references/troubleshooting.md`.
 
 ## Orchestration queries (`orchestration query execute`)
 
@@ -138,7 +130,6 @@ When a run reaches `status: "error"`, follow this sequence:
 | Agent `maxSteps` exceeded | Agent ran too many tool calls | Increase `--max-steps` on the message, or simplify the agent's task |
 | `filter` node stopped execution | Record didn't meet the filter condition | This is expected behavior, not an error — adjust the filter if needed |
 | Null reference in expression | Upstream node returned empty/null | Add a `filter` node before the failing node to skip records with missing data |
-| `errorMessage` on `storage query execute` | Wrong dataset/model slug or SQL syntax error | Verify slugs with `storage dataset list` / `storage model list`; check storage SQL dialect (BigQuery vs Snowflake) |
 | `errorMessage` on `orchestration query execute` | Schema-prefixed table name or hit a query cap | Reference tables as `runs`/`batches`/`spans`/`records`; narrow the time window if you hit memory/row caps |
 
 4. **Re-trigger after fixing:** Create a new run with the corrected data or node config.

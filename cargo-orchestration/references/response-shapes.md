@@ -387,53 +387,6 @@ Poll until `status` is `success`, `error`, or `cancelled`. Note: `batch get` als
 
 The table name in the DDL follows the pattern `datasets_{datasetSlug}.models_{modelSlug}` (or `datasets_{datasetSlug}__models_{modelSlug}` in BigQuery dataset-scoped). Use this name in SoR queries.
 
-## cargo-ai storage query execute
-
-Tables are referenced as `<datasetSlug>.<modelSlug>` and rewritten to the underlying storage table under the hood.
-
-**Success:**
-
-```json
-{
-  "rows": [
-    { "name": "Acme Corp", "domain": "acme.com", "employee_count": 500 },
-    { "name": "Globex", "domain": "globex.com", "employee_count": 1200 }
-  ]
-}
-```
-
-**Failure (non-zero exit):**
-
-```json
-{ "errorMessage": "Table not found: default.nonexistent" }
-```
-
-```json
-{ "reason": "clientNotFound" }
-```
-
-```json
-{ "reason": "unknown" }
-```
-
-## cargo-ai storage query download
-
-Used for full exports. Same table-naming convention as `storage query execute` (`<datasetSlug>.<modelSlug>`). Pass the SQL via `--query`; the response is a signed URL.
-
-**Success:**
-
-```json
-{
-  "url": "https://signed-url-to-csv-or-parquet-file"
-}
-```
-
-**Failure (non-zero exit):**
-
-```json
-{ "errorMessage": "Table not found: default.nonexistent" }
-```
-
 ## cargo-ai orchestration query execute
 
 Tables (`spans`, `runs`, `batches`, `records`) are referenced without a schema prefix; workspace scoping is applied automatically.
