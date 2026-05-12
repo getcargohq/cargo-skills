@@ -60,7 +60,7 @@ cargo-ai segmentation segment download --model-uuid <uuid> --filter '{"conjoncti
 - `run get-metrics` / `run count` — workflow-scoped, predefined aggregations. Best when you already have a `workflowUuid`.
 - `orchestration query execute` — ad-hoc SQL across the entire workspace (`runs`, `batches`, `spans`, `records`). Best for cross-workflow analytics, per-node breakdowns, and time-series.
 - `run download` / `run download-outputs` — per-record output retrieval.
-- `segment download` / `storage query execute` — warehouse data (Companies, Contacts, …).
+- `segment download` / `storage query execute` — storage data (Companies, Contacts, …).
 
 ## Workflow run metrics
 

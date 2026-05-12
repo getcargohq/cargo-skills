@@ -1,6 +1,6 @@
 ---
 name: cargo-orchestration
-description: Interact with the Cargo platform via CLI. Use when the user wants to execute an action, run a workflow, trigger a batch, message an AI agent, query a data warehouse, fetch segment records, or inspect a model schema.
+description: Interact with the Cargo platform via CLI. Use when the user wants to execute an action, run a workflow, trigger a batch, message an AI agent, query storage with SQL, fetch segment records, or inspect a model schema.
 license: MIT
 compatibility: Requires @cargo-ai/cli (npm) and a Cargo account (browser sign-in via --oauth, or an API token)
 metadata:
@@ -36,7 +36,7 @@ Need to run something?
 > `references/agents.md` — AI agent chat examples
 > `references/nodes.md` — full node creation guide (kinds, native actions, expressions, validation, routing)
 > `references/templates.md` — pre-built workflow templates
-> `references/queries.md` — `storage query` (data warehouse) and `orchestration query` (spans/runs/batches/records) SQL examples
+> `references/queries.md` — `storage query` (workspace storage) and `orchestration query` (spans/runs/batches/records) SQL examples
 > `references/segments.md` — segment fetch and filter examples
 > `references/response-shapes.md` — full JSON response structures
 > `references/filter-syntax.md` — complete filter condition reference
@@ -103,7 +103,7 @@ cargo-ai orchestration batch create --workflow-uuid <uuid> --data '{"kind":"segm
 cargo-ai ai message create --chat-uuid <uuid> --parts '[{"type":"text","text":"..."}]'
 
 # Data
-cargo-ai storage query execute "SELECT * FROM default.companies LIMIT 10"          # warehouse / SoR
+cargo-ai storage query execute "SELECT * FROM default.companies LIMIT 10"          # workspace storage
 cargo-ai orchestration query execute "SELECT count() FROM runs WHERE status='error'" # orchestration history (spans, runs, batches, records)
 cargo-ai segmentation segment fetch --model-uuid <uuid> --filter '{"conjonction":"and","groups":[]}' --fetching-limit 100
 cargo-ai storage model get-ddl <model-uuid>
@@ -248,9 +248,9 @@ cargo-ai orchestration record get-metrics --workflow-uuid <uuid>
 cargo-ai orchestration record cancel --workflow-uuid <uuid> --ids record-id-1,record-id-2
 ```
 
-## Query the data warehouse (storage query)
+## Query storage with SQL (storage query)
 
-Run SQL against your connected data warehouse with `storage query execute`. Tables are referenced as `<datasetSlug>.<modelSlug>` and rewritten to the underlying warehouse table under the hood — no DDL lookup needed for the table name.
+Run SQL against workspace storage with `storage query execute`. Tables are referenced as `<datasetSlug>.<modelSlug>` and rewritten to the underlying storage table under the hood — no DDL lookup needed for the table name.
 
 ```bash
 cargo-ai storage query execute \

@@ -85,7 +85,7 @@ An authenticated instance of an integration. For example, a specific HubSpot acc
 The UUID of a specific authenticated connector. Required for `kind: "connector"` nodes in workflow graphs and for filtering billing metrics.
 
 **context**
-The workspace's git-backed knowledge base of typed markdown/MDX files capturing GTM truth: company narrative, ICPs, personas, JTBDs, plays, proof, objections, signals, mediums, alternatives, clients, insights. Read and written by both humans and agents. Managed via `cargo-context` (`cargo-ai context runtime ...` and `cargo-ai context graph ...`). Distinct from the **system of record** (a connected data warehouse queried with SQL) and from agent **memories** (per-agent mem0 entries).
+The workspace's git-backed knowledge base of typed markdown/MDX files capturing GTM truth: company narrative, ICPs, personas, JTBDs, plays, proof, objections, signals, mediums, alternatives, clients, insights. Read and written by both humans and agents. Managed via `cargo-context` (`cargo-ai context runtime ...` and `cargo-ai context graph ...`). Distinct from the **system of record** (Cargo storage queried with SQL) and from agent **memories** (per-agent mem0 entries).
 
 **context repository**
 The GitHub repository that backs the workspace's context. Files in this repo follow strict conventions: `kebab-case.md` filenames, YAML frontmatter with required `title` and `description`, and `domain/slug` cross-refs without `.md`. The canonical example is [`getcargohq/cargo-workspaces`](https://github.com/getcargohq/cargo-workspaces). See `cargo-context/references/conventions.md` for the full domain list and per-domain templates.
@@ -275,7 +275,7 @@ See **intent signal**. In cargo recipes, signals are the basis for segment const
 The activity of finding companies or people matching ICP criteria. Cheapest at-scale options: `salesNavigator.searchLeads` (0.02 cred/record), `salesNavigator.searchAccounts` (0.05). For investor / funding / complex filters: `peopleDataLabs.queryCompanies` (3). For local SMBs: `serper.searchPlaces` (1).
 
 **system of record (SoR)**
-A connected data warehouse (BigQuery, Snowflake, etc.) that Cargo can query via SQL. Queried with `cargo-ai storage query execute "<sql>"` (or `storage query download --query "<sql>"` for full exports), which references tables as `<datasetSlug>.<modelSlug>` (e.g. `default.companies`). Use `cargo-ai storage model get-ddl <model-uuid>` for column types and SQL dialect. Distinct from the **context repository** (markdown/MDX knowledge base, not relational data) and from the **orchestration query** surface (`cargo-ai orchestration query execute`, which targets the `runs`/`batches`/`spans`/`records` runtime tables).
+Cargo's storage layer, backed by a customer-connected database (BigQuery, Snowflake, etc.) that Cargo queries via SQL. Queried with `cargo-ai storage query execute "<sql>"` (or `storage query download --query "<sql>"` for full exports), which references tables as `<datasetSlug>.<modelSlug>` (e.g. `default.companies`). Use `cargo-ai storage model get-ddl <model-uuid>` for column types and SQL dialect. Distinct from the **context repository** (markdown/MDX knowledge base, not relational data) and from the **orchestration query** surface (`cargo-ai orchestration query execute`, which targets the `runs`/`batches`/`spans`/`records` runtime tables).
 
 ---
 

@@ -389,7 +389,7 @@ The table name in the DDL follows the pattern `datasets_{datasetSlug}.models_{mo
 
 ## cargo-ai storage query execute
 
-Tables are referenced as `<datasetSlug>.<modelSlug>` and rewritten to the underlying warehouse table under the hood.
+Tables are referenced as `<datasetSlug>.<modelSlug>` and rewritten to the underlying storage table under the hood.
 
 **Success:**
 

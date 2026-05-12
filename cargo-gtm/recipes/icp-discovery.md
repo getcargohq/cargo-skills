@@ -12,7 +12,7 @@ Use this skill when the user wants to **discover their real ICP from conversion 
 
 Most prospecting skills are forward-looking ("find me X" / "enrich Y"). ICP discovery is **backward-looking** — analyze what worked, then turn the patterns into filters. It exercises:
 
-- The connected data warehouse (`cargo-ai storage query execute`) to pull Won/Lost segments.
+- Storage (`cargo-ai storage query execute`) to pull Won/Lost segments.
 - Cargo native enrichments (`enrichBusinessFirmographics`, `…Technographics`, `…FundingAndAcquisitions`) to fill comparison signals.
 - LLM analysis (`anthropic.instruct`) to surface non-obvious patterns.
 
@@ -29,7 +29,7 @@ cargo-ai storage dataset list
 cargo-ai storage model get-ddl <deals-model-uuid>
 ```
 
-Pull both segments via `storage query execute` (tables are referenced as `<datasetSlug>.<modelSlug>` and rewritten to the warehouse table under the hood):
+Pull both segments via `storage query execute` (tables are referenced as `<datasetSlug>.<modelSlug>` and rewritten to the underlying storage table under the hood):
 
 ```bash
 # Closed-Won deals + their associated companies

@@ -2,16 +2,16 @@
 
 Two read-only SQL surfaces are exposed by the CLI:
 
-- **`cargo-ai storage query execute "<sql>"`** — your connected data warehouse (Companies, Contacts, Deals…). Tables are referenced as `<datasetSlug>.<modelSlug>`.
+- **`cargo-ai storage query execute "<sql>"`** — workspace storage (Companies, Contacts, Deals…). Tables are referenced as `<datasetSlug>.<modelSlug>`.
 - **`cargo-ai orchestration query execute "<sql>"`** — orchestration runtime tables (`spans`, `runs`, `batches`, `records`) for execution analytics. Tables are referenced by short name; workspace scoping is applied automatically.
 
 Both are read-only, exit non-zero on error with `{"errorMessage": "..."}`, and return `{"rows": [...]}` on success.
 
 ---
 
-## Storage queries — data warehouse
+## Storage queries
 
-Run SQL against your connected data warehouse with `cargo-ai storage query execute`. Tables are referenced as `<datasetSlug>.<modelSlug>` and rewritten to the underlying warehouse table under the hood. No DDL lookup is required for the table name — just use the dataset and model slugs.
+Run SQL against workspace storage with `cargo-ai storage query execute`. Tables are referenced as `<datasetSlug>.<modelSlug>` and rewritten to the underlying storage table under the hood. No DDL lookup is required for the table name — just use the dataset and model slugs.
 
 For column slugs, run `cargo-ai storage column list --model-uuid <uuid>` or `cargo-ai storage model get-ddl <model-uuid>` (the DDL also shows column types and the SQL dialect).
 
@@ -153,8 +153,8 @@ If a query fails, the command exits non-zero. Failure shapes:
 
 Common causes:
 - Wrong dataset or model slug → re-check with `storage dataset list` and `storage model list`
-- Syntax error → check SQL syntax for your warehouse dialect (BigQuery vs Snowflake) — `storage model get-ddl` reports `language`
-- `clientNotFound` → no warehouse client is configured for this workspace
+- Syntax error → check SQL syntax for your storage SQL dialect (BigQuery vs Snowflake) — `storage model get-ddl` reports `language`
+- `clientNotFound` → no storage client is configured for this workspace
 
 ---
 
@@ -266,7 +266,7 @@ Common causes:
 ## Discovery commands
 
 ```bash
-# Discover warehouse datasets and models
+# Discover storage datasets and models
 cargo-ai storage dataset list
 cargo-ai storage model list
 
