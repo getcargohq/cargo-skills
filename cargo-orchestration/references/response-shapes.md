@@ -387,17 +387,17 @@ Poll until `status` is `success`, `error`, or `cancelled`. Note: `batch get` als
 
 The table name in the DDL follows the pattern `datasets_{datasetSlug}.models_{modelSlug}` (or `datasets_{datasetSlug}__models_{modelSlug}` in BigQuery dataset-scoped). Use this name in SoR queries.
 
-## cargo-ai storage query execute
+## cargo-ai orchestration query execute
 
-Tables are referenced as `<datasetSlug>.<modelSlug>` and rewritten to the underlying warehouse table under the hood.
+Tables (`spans`, `runs`, `batches`, `records`) are referenced without a schema prefix; workspace scoping is applied automatically.
 
 **Success:**
 
 ```json
 {
   "rows": [
-    { "name": "Acme Corp", "domain": "acme.com", "employee_count": 500 },
-    { "name": "Globex", "domain": "globex.com", "employee_count": 1200 }
+    { "status": "success", "count()": 1248 },
+    { "status": "error",   "count()": 42 }
   ]
 }
 ```
@@ -405,40 +405,12 @@ Tables are referenced as `<datasetSlug>.<modelSlug>` and rewritten to the underl
 **Failure (non-zero exit):**
 
 ```json
-{ "errorMessage": "Table not found: default.nonexistent" }
+{ "errorMessage": "Code: 60. Table orchestration.unknown doesn't exist" }
 ```
 
 ```json
-{ "reason": "clientNotFound" }
+{ "errorMessage": "Code: 158. Memory limit exceeded ..." }
 ```
-
-```json
-{ "reason": "unknown" }
-```
-
-## cargo-ai storage query download
-
-Used for full exports. Same table-naming convention as `storage query execute` (`<datasetSlug>.<modelSlug>`).
-
-**Success:**
-
-```json
-{
-  "rows": [
-    { "name": "Acme Corp", "domain": "acme.com", "employee_count": 500 }
-  ]
-}
-```
-
-**Failure (non-zero exit):**
-
-```json
-{ "errorMessage": "Table not found: default.nonexistent" }
-```
-
-## cargo-ai system-of-record client get-documentation
-
-**Returns plain text (not JSON).** This is the only CLI command that does not return JSON. The output is the SoR documentation string which may include markdown formatting.
 
 ## cargo-ai orchestration release list
 

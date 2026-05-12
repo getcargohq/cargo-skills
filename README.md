@@ -46,8 +46,8 @@ Load when you need the syntax for a specific CLI domain.
 
 | Domain            | What the agent learns                                                                                                                                              |
 | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Orchestration** | Execute single actions, chain actions into workflows, trigger batches across segments, poll async operations, query the data warehouse with SQL, fetch segment data |
-| **Storage**       | Inspect models and their DDL, create columns, navigate datasets, set relationships between models                                                                  |
+| **Orchestration** | Execute single actions, chain actions into workflows, trigger batches across segments, poll async operations, query orchestration runtime tables (`runs`/`batches`/`spans`/`records`) with SQL, fetch segment data |
+| **Storage**       | Inspect models and their DDL, create columns, navigate datasets, set relationships between models, query workspace storage with SQL                              |
 | **Connection**    | Authenticate connectors, discover integration actions and their slugs across 120+ integrations                                                                     |
 | **AI**            | Create and configure agents, upload files for RAG, connect MCP servers, inspect agent memories                                                                     |
 | **Context**       | Browse, read, write, and edit the workspace's git-backed context repo (markdown/MDX GTM knowledge base); run shell commands in its runtime sandbox; inspect the knowledge graph |
@@ -67,7 +67,7 @@ Prompts that route through `cargo-gtm`:
 - *"Show me everyone hiring data engineers AND running Snowflake."* → `recipes/tech-intent.md`
 - *"What ICP signals differentiate our Closed-Won deals?"* → `recipes/icp-discovery.md`
 
-For ad-hoc CLI work (modify a model, list connectors, query the warehouse, edit the GTM context repo), load the matching capability skill directly.
+For ad-hoc CLI work (modify a model, list connectors, query storage, edit the GTM context repo), load the matching capability skill directly.
 
 ## Use cases
 
@@ -91,7 +91,7 @@ The agent can construct a full node graph — fetching the connector UUID, looki
 
 > "Build and run a workflow that enriches company domains with waterfall and writes the result back to the Companies model."
 
-### Query your data warehouse
+### Query storage with SQL
 
 The agent fetches the DDL first (to get the exact table name), then writes and executes the SQL query.
 

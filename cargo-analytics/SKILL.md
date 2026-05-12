@@ -51,8 +51,16 @@ cargo-ai storage model list                # all models (uuid, name, slug)
 cargo-ai orchestration run get-metrics --workflow-uuid <uuid>
 cargo-ai orchestration run download --workflow-uuid <uuid> --is-finished
 cargo-ai orchestration run count --workflow-uuid <uuid> --statuses error
+cargo-ai orchestration query execute "SELECT status, count() FROM runs GROUP BY status"
 cargo-ai segmentation segment download --model-uuid <uuid> --filter '{"conjonction":"and","groups":[]}'
 ```
+
+**Picking the right command:**
+
+- `run get-metrics` / `run count` — workflow-scoped, predefined aggregations. Best when you already have a `workflowUuid`.
+- `orchestration query execute` — ad-hoc SQL across the entire workspace (`runs`, `batches`, `spans`, `records`). Best for cross-workflow analytics, per-node breakdowns, and time-series.
+- `run download` / `run download-outputs` — per-record output retrieval.
+- `segment download` / `storage query execute` — storage data (Companies, Contacts, …).
 
 ## Workflow run metrics
 
@@ -81,6 +89,32 @@ cargo-ai orchestration run count --workflow-uuid <uuid> --batch-uuid <uuid>
 ```
 
 Supports: `--statuses`, `--batch-uuid`, `--release-uuid`, `--is-finished`, `--created-after`, `--created-before`, `--record-id`, `--record-title`.
+
+For cross-workflow analytics or shapes that `run count` doesn't expose (per-node failure breakdowns, p95 durations, error rate over time), use `orchestration query execute` — see the [Ad-hoc execution analytics](#ad-hoc-execution-analytics-orchestration-query) section.
+
+## Ad-hoc execution analytics (`orchestration query`)
+
+Run SQL against orchestration runtime tables — `runs`, `batches`, `spans`, `records` — for analytics that the canned metrics commands don't cover. Tables are referenced without a schema prefix; workspace scoping is automatic. See `cargo-orchestration/references/queries.md` for schemas and limits.
+
+```bash
+# Error rate across the workspace in the last day
+cargo-ai orchestration query execute \
+  "SELECT countIf(status='error') / count() AS error_rate FROM runs WHERE created_at > now() - INTERVAL 1 DAY"
+
+# Failed runs per workflow this week
+cargo-ai orchestration query execute \
+  "SELECT workflow_uuid, count() AS errors FROM runs WHERE status='error' AND created_at > now() - INTERVAL 7 DAY GROUP BY workflow_uuid ORDER BY errors DESC"
+
+# Per-node failure counts (last 24h)
+cargo-ai orchestration query execute \
+  "SELECT node_slug, count() AS failures FROM spans WHERE execution_status='error' AND execution_started_at > now() - INTERVAL 1 DAY GROUP BY node_slug ORDER BY failures DESC"
+
+# Credit spend by workflow this month
+cargo-ai orchestration query execute \
+  "SELECT workflow_uuid, sum(credits_used_count) AS credits FROM batches WHERE created_at >= toStartOfMonth(now()) GROUP BY workflow_uuid ORDER BY credits DESC"
+```
+
+Read-only and capped: 30s execution time, 10 000 result rows, 10 000 000 rows scanned. Narrow with a `created_at`/`execution_started_at` predicate to stay under the row-scan cap.
 
 ## Downloading run results
 

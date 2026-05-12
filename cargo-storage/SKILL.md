@@ -1,22 +1,23 @@
 ---
 name: cargo-storage
-description: Manage models, datasets, columns, and relationships using the Cargo CLI. Use when the user wants to inspect or modify data models, create or update columns, list datasets, set model relationships, or understand the schema of their Cargo workspace.
+description: Manage models, datasets, columns, and relationships and query workspace storage with SQL using the Cargo CLI. Use when the user wants to inspect or modify data models, create or update columns, list datasets, set model relationships, understand the schema, or run SQL against storage.
 license: MIT
 compatibility: Requires @cargo-ai/cli (npm) and a Cargo account (browser sign-in via --oauth, or an API token)
 metadata:
   author: getcargo
-  version: "1.0"
+  version: "1.1"
 ---
 
 # Cargo CLI — Storage
 
-Data layer management: inspecting and modifying models, datasets, columns, relationships, and records.
+Data layer management: inspecting and modifying models, datasets, columns, relationships, and records, and running SQL queries against workspace storage.
 
 > See `references/response-shapes.md` for full JSON response structures.
 > See `references/troubleshooting.md` for common errors and how to fix them.
 > See `references/examples/models.md` for model CRUD, DDL inspection, and schema discovery examples.
 > See `references/examples/datasets.md` for dataset listing and navigation examples.
 > See `references/examples/columns.md` for column creation and management examples.
+> See `references/examples/queries.md` for `storage query execute` / `storage query download` SQL examples (WHERE, aggregations, joins, pagination, exports).
 
 ## Prerequisites
 
@@ -54,6 +55,8 @@ cargo-ai storage dataset list
 cargo-ai storage column list --model-uuid <uuid>
 cargo-ai storage relationship list --model-uuid <uuid>
 cargo-ai storage record list --model-uuid <uuid>
+cargo-ai storage query execute "SELECT * FROM default.companies LIMIT 10"
+cargo-ai storage query download --query "SELECT * FROM default.companies"
 ```
 
 ## Models
@@ -89,7 +92,7 @@ cargo-ai storage model update --uuid <model-uuid> --name "New Name"
 cargo-ai storage model remove <model-uuid>
 ```
 
-**Querying:** Use `cargo-ai storage query execute "<sql>"` to query storage. Tables are referenced as `<datasetSlug>.<modelSlug>` (e.g. `default.companies`). Run `model get-ddl` for column types and SQL dialect when writing more involved queries. See the `cargo-orchestration` skill for query examples.
+**Querying:** Use `cargo-ai storage query execute "<sql>"` (or `storage query download --query "<sql>"` for full exports) to run SQL against storage. Tables are referenced as `<datasetSlug>.<modelSlug>` (e.g. `default.companies`) and rewritten to the underlying storage table under the hood. See [Query with SQL](#query-with-sql) below.
 
 ## Datasets
 
@@ -155,6 +158,30 @@ cargo-ai storage record list --model-uuid <uuid>
 
 For advanced record queries (filtering, sorting, pagination), use `segmentation segment fetch` from the `cargo-orchestration` skill.
 
+## Query with SQL
+
+Run SQL against workspace storage with `storage query execute`. Tables are referenced as `<datasetSlug>.<modelSlug>` (e.g. `default.companies`) and rewritten to the underlying storage table under the hood — no DDL lookup is needed for the table name.
+
+```bash
+cargo-ai storage query execute \
+  "SELECT name, domain FROM default.companies LIMIT 10"
+# → { "rows": [...] } on success; non-zero exit with { "errorMessage": "..." } on error
+```
+
+For full exports, use `storage query download` — it returns a signed URL to a CSV (default) or Parquet file:
+
+```bash
+cargo-ai storage query download \
+  --query "SELECT name, domain, revenue FROM default.companies ORDER BY revenue DESC"
+
+cargo-ai storage query download \
+  --query "SELECT * FROM default.companies" --format parquet
+```
+
+Get column slugs from `storage column list --model-uuid <uuid>` (or run `storage model get-ddl <model-uuid>` for the full schema and SQL dialect). Page through large result sets with `LIMIT` / `OFFSET` directly in the SQL.
+
+See `references/examples/queries.md` for WHERE clauses, aggregations, joins, date queries, pagination, and the failure shapes returned on error.
+
 ## Help
 
 Every command supports `--help`:
@@ -163,4 +190,6 @@ Every command supports `--help`:
 cargo-ai storage model list --help
 cargo-ai storage column create --help
 cargo-ai storage relationship set --help
+cargo-ai storage query execute --help
+cargo-ai storage query download --help
 ```

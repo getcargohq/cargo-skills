@@ -1,154 +1,108 @@
-# Storage query examples
+# Orchestration query examples
 
-Run SQL against your connected data warehouse with `cargo-ai storage query execute`. Tables are referenced as `<datasetSlug>.<modelSlug>` and rewritten to the underlying warehouse table under the hood. No DDL lookup is required for the table name — just use the dataset and model slugs.
+Run SQL against orchestration runtime tables — `runs`, `batches`, `spans`, `records` — with `cargo-ai orchestration query execute`. Use this for ad-hoc analytics on workflow execution (error rates, throughput, slowest nodes, per-node failure breakdowns) without the workflow-scoped filters of `run get-metrics` / `run count`.
 
-For column slugs, run `cargo-ai storage column list --model-uuid <uuid>` or `cargo-ai storage model get-ddl <model-uuid>` (the DDL also shows column types and the SQL dialect).
+The backing store is ClickHouse; queries are read-only and exit non-zero with `{"errorMessage": "..."}` on error.
+
+> For SQL against workspace storage (Companies, Contacts, Deals…), use `cargo-ai storage query execute "<sql>"` — documented in the `cargo-storage` skill (`references/examples/queries.md`).
 
 ## Basic query flow
 
 ```bash
-# 1. Discover the dataset slug and the model slug
-cargo-ai storage dataset list   # → datasets[].slug (e.g. "default")
-cargo-ai storage model list     # → models[].slug   (e.g. "companies")
-
-# 2. Query using <datasetSlug>.<modelSlug> as the table name
-cargo-ai storage query execute \
-  "SELECT name, domain, employee_count FROM default.companies LIMIT 10"
+cargo-ai orchestration query execute \
+  "SELECT count() FROM runs WHERE status = 'error'"
 ```
 
 Success response:
 
 ```json
 {
-  "rows": [
-    { "name": "Acme Corp", "domain": "acme.com", "employee_count": 500 },
-    { "name": "Globex", "domain": "globex.com", "employee_count": 1200 }
-  ]
+  "rows": [{ "count()": 42 }]
 }
 ```
 
-Failed commands exit non-zero with `{"errorMessage": "..."}` (or `{"reason": "clientNotFound"|"unknown"}`). See the error handling section below.
+## Tables
 
-## Query with WHERE clauses
+Tables are referenced **without** a schema prefix. The query engine scopes every read to your workspace automatically.
 
-```bash
-# Filter by a column
-cargo-ai storage query execute \
-  "SELECT name, domain FROM default.companies WHERE employee_count > 100"
+| Table     | Use it for                                                                 |
+| --------- | -------------------------------------------------------------------------- |
+| `runs`    | Per-record workflow executions (status, timing, executions array, batch)   |
+| `batches` | Batch-level rows: counts (`runs_count`, `failed_runs_count`), credit usage |
+| `spans`   | Flattened per-node execution rows (one row per node execution)             |
+| `records` | Materialized view over `runs` keyed by record id                           |
 
-# Multiple conditions
-cargo-ai storage query execute \
-  "SELECT name, domain, revenue FROM default.companies WHERE employee_count > 100 AND country = 'US'"
+Common columns: `workspace_uuid`, `workflow_uuid`, `batch_uuid`, `release_uuid`, `status`, `created_at`, `updated_at`, `finished_at`, `credits_used_count`. See the migration files in `apps/backend/src/domains/orchestration/migrations/` for the full schema.
 
-# LIKE for partial matches
-cargo-ai storage query execute \
-  "SELECT name, domain FROM default.companies WHERE name LIKE '%tech%'"
-
-# NULL checks
-cargo-ai storage query execute \
-  "SELECT name, domain FROM default.companies WHERE email IS NOT NULL"
-```
-
-## Aggregation queries
+## Example queries
 
 ```bash
-# Count records
-cargo-ai storage query execute \
-  "SELECT COUNT(*) as total FROM default.companies"
+# Error rate across the whole workspace
+cargo-ai orchestration query execute \
+  "SELECT countIf(status='error') / count() AS error_rate FROM runs WHERE created_at > now() - INTERVAL 1 DAY"
 
-# Group by with counts
-cargo-ai storage query execute \
-  "SELECT country, COUNT(*) as count FROM default.companies GROUP BY country ORDER BY count DESC"
+# Errors per workflow over the last week
+cargo-ai orchestration query execute \
+  "SELECT workflow_uuid, count() AS errors FROM runs WHERE status='error' AND created_at > now() - INTERVAL 7 DAY GROUP BY workflow_uuid ORDER BY errors DESC"
 
-# Sum and average
-cargo-ai storage query execute \
-  "SELECT country, SUM(revenue) as total_revenue, AVG(employee_count) as avg_employees FROM default.companies GROUP BY country"
-```
+# Batch status breakdown
+cargo-ai orchestration query execute \
+  "SELECT status, count() FROM batches GROUP BY status"
 
-## Pagination
+# Slowest node executions in the last hour
+cargo-ai orchestration query execute \
+  "SELECT node_slug, node_kind, dateDiff('second', execution_started_at, execution_finished_at) AS duration_s
+   FROM spans
+   WHERE execution_finished_at > now() - INTERVAL 1 HOUR
+   ORDER BY duration_s DESC
+   LIMIT 20"
 
-Page through large result sets with SQL `LIMIT` and `OFFSET` clauses. Always include an `ORDER BY` so pages are stable across calls.
+# Per-node failure counts
+cargo-ai orchestration query execute \
+  "SELECT node_slug, count() AS failures
+   FROM spans
+   WHERE execution_status='error' AND execution_started_at > now() - INTERVAL 1 DAY
+   GROUP BY node_slug
+   ORDER BY failures DESC"
 
-```bash
-# First page
-cargo-ai storage query execute \
-  "SELECT * FROM default.companies ORDER BY name LIMIT 100 OFFSET 0"
-
-# Second page
-cargo-ai storage query execute \
-  "SELECT * FROM default.companies ORDER BY name LIMIT 100 OFFSET 100"
-```
-
-## Download full results
-
-For exporting full result sets to a file, use `storage query download`:
-
-```bash
-cargo-ai storage query download \
-  "SELECT name, domain, employee_count, revenue FROM default.companies ORDER BY revenue DESC"
-```
-
-## Query across multiple models
-
-Just join on `<datasetSlug>.<modelSlug>` table references:
-
-```bash
-cargo-ai storage query execute \
-  "SELECT c.name, c.domain, d.stage, d.amount FROM default.companies c JOIN default.deals d ON c._id = d.company_id WHERE d.amount > 10000"
+# Credit spend by workflow this month
+cargo-ai orchestration query execute \
+  "SELECT workflow_uuid, sum(credits_used_count) AS credits
+   FROM batches
+   WHERE created_at >= toStartOfMonth(now())
+   GROUP BY workflow_uuid
+   ORDER BY credits DESC"
 ```
 
 ## Common table expressions
 
 ```bash
-cargo-ai storage query execute \
-  "WITH recent AS (SELECT * FROM default.companies WHERE created_at >= CURRENT_DATE - INTERVAL '30' DAY) SELECT count(*) FROM recent"
+cargo-ai orchestration query execute \
+  "WITH recent AS (SELECT * FROM runs WHERE created_at > now() - INTERVAL 1 DAY)
+   SELECT status, count() FROM recent GROUP BY status"
 ```
 
-## Get SoR documentation
+## Limits and restrictions
 
-Useful to understand available tables and warehouse-specific SQL dialect conventions.
+Orchestration queries run as a read-only ClickHouse user with per-query caps:
 
-```bash
-# List all systems of record
-cargo-ai system-of-record sor list
+| Limit                | Value      |
+| -------------------- | ---------- |
+| `max_execution_time` | 30s        |
+| `max_result_rows`    | 10 000     |
+| `max_rows_to_read`   | 10 000 000 |
+| `max_columns_to_read`| 50         |
+| `max_subquery_depth` | 5          |
 
-# Get documentation for a specific SoR (returns plain text, not JSON)
-cargo-ai system-of-record client get-documentation <slug>
-```
-
-## Date queries
-
-```bash
-# Records created in the last 30 days
-cargo-ai storage query execute \
-  "SELECT name, created_at FROM default.companies WHERE created_at >= DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY)"
-
-# Records in a specific range
-cargo-ai storage query execute \
-  "SELECT name, created_at FROM default.companies WHERE created_at BETWEEN '2025-01-01' AND '2025-03-31'"
-```
-
-## Subqueries
-
-```bash
-# Companies with above-average employee count
-cargo-ai storage query execute \
-  "SELECT name, employee_count FROM default.companies WHERE employee_count > (SELECT AVG(employee_count) FROM default.companies)"
-```
+DDL, introspection functions, table functions (`merge`, `cluster`, `remote`, `url`, `s3`, `file`, …), dictionary accessors, and the query cache are all denied. Wrap heavy aggregations in time filters (`created_at > now() - INTERVAL N DAY`) to stay under the row-scan cap.
 
 ## Error handling
 
-If a query fails, the command exits non-zero. Failure shapes:
-
 ```json
-{ "errorMessage": "Table not found: default.nonexistent" }
-```
-
-```json
-{ "reason": "clientNotFound" }
+{ "errorMessage": "Code: 158. Memory limit exceeded ..." }
 ```
 
 Common causes:
-- Wrong dataset or model slug → re-check with `storage dataset list` and `storage model list`
-- Syntax error → check SQL syntax for your warehouse dialect (BigQuery vs Snowflake) — `storage model get-ddl` reports `language`
-- `clientNotFound` → no SoR client is configured for this workspace; verify with `system-of-record sor list`
+- Scanned too many rows → narrow the time window with a `created_at`/`execution_started_at` predicate
+- Forbidden function (e.g. `system.tables`, `cluster()`, `url()`) → use only `SELECT` against the four tables above
+- Too many result rows → add a `LIMIT` or aggregate before returning
