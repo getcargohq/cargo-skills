@@ -19,6 +19,11 @@ The **context** is a git-backed repository of typed markdown/MDX files that capt
 > For uploading runtime-independent files (CSVs, PDFs) used in batch runs, use [`cargo-workspace-management`](../cargo-workspace-management/SKILL.md) (`cargo-ai workspaceManagement file upload`) instead.
 > For RAG file attachments to agents, use [`cargo-ai`](../cargo-ai/SKILL.md) (`cargo-ai ai file upload`).
 
+> See `references/conventions.md` for the full context repo structure and per-domain templates.
+> See `references/troubleshooting.md` for common errors and how to fix them.
+> See `references/examples/authoring.md` for end-to-end add / edit / delete recipes.
+> See `references/examples/graph-queries.md` for inspecting the knowledge graph.
+
 ## Prerequisites
 
 ```bash
@@ -168,7 +173,7 @@ cargo-ai context runtime execute --command pwd
 
 ## Context repository structure and conventions
 
-The Cargo context repo is a typed knowledge base. The canonical example — and the source of the conventions below — is [`getcargohq/cargo-workspaces`](https://github.com/getcargohq/cargo-workspaces); read its `README.md` and `_template.md` files in each domain before writing new entries.
+The Cargo context repo is a typed knowledge base. The canonical example — and the source of the conventions below — is [`getcargohq/cargo-workspaces`](https://github.com/getcargohq/cargo-workspaces); read its `README.md` and `_template.md` files in each domain before writing new entries. For the full domain reference, see `references/conventions.md`.
 
 ### Domains
 
@@ -207,6 +212,8 @@ The Cargo context repo is a typed knowledge base. The canonical example — and 
    cargo-ai context graph get
    ```
 
+For full per-domain templates and worked examples, see `references/conventions.md` and `references/examples/authoring.md`.
+
 ## Knowledge graph
 
 `context graph get` builds (or loads from cache) the knowledge graph over every markdown/MDX file in the context repo. Use it to:
@@ -219,7 +226,7 @@ The Cargo context repo is a typed knowledge base. The canonical example — and 
 cargo-ai context graph get
 ```
 
-The response shape includes the parsed frontmatter and outbound `domain/slug` references for each node — pipe it through `jq` to slice it.
+The response includes the parsed frontmatter and outbound `domain/slug` references for each node — pipe it through `jq` to slice it. See `references/examples/graph-queries.md` for ready-to-run queries.
 
 ## Help
 
