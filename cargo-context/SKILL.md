@@ -1,6 +1,6 @@
 ---
 name: cargo-context
-description: Inspect and edit the workspace's git-backed context repository (the GTM knowledge base of markdown/MDX files) and its runtime sandbox using the Cargo CLI. Use when the user wants to configure which repo backs context, browse/read/write/edit context files, run a command in the sandbox, or inspect the context knowledge graph.
+description: Inspect and edit the workspace's git-backed context repository (the GTM knowledge base of markdown/MDX files) and its runtime sandbox using the Cargo CLI. Use when the user wants to browse/read/write/edit context files, run a command in the sandbox, or inspect the context knowledge graph.
 license: MIT
 compatibility: Requires @cargo-ai/cli (npm) and a Cargo account (browser sign-in via --oauth, or an API token)
 metadata:
@@ -10,10 +10,9 @@ metadata:
 
 # Cargo CLI — Context
 
-The **context** is a git-backed repository of typed markdown/MDX files that captures a workspace's GTM knowledge (company narrative, ICPs, personas, plays, proof, objections, etc.) and is read/written by both humans and agents. The `cargo-ai context` domain has three subdomains:
+The **context** is a git-backed repository of typed markdown/MDX files that captures a workspace's GTM knowledge (company narrative, ICPs, personas, plays, proof, objections, etc.) and is read/written by both humans and agents. The `cargo-ai context` domain has two subdomains you'll use:
 
-- **repository** — configure which GitHub repo backs the workspace's context, and inspect that configuration.
-- **runtime** — browse, read, write, edit, and execute against the workspace's runtime sandbox (a checked-out copy of the context repo). Writes to `write`/`edit` are pushed to the default branch; `execute` runs are **not** pushed.
+- **runtime** — browse, read, write, edit, and execute against the workspace's runtime sandbox (a checked-out copy of the context repo). `write`/`edit` are pushed to the default branch; `execute` runs are **not** pushed.
 - **graph** — build/load the knowledge graph derived from every markdown/MDX file in the context repo.
 
 > The canonical example of a context repository is [`getcargohq/cargo-workspaces`](https://github.com/getcargohq/cargo-workspaces). Read its `README.md` to understand the domain layout and file conventions before writing new entries.
@@ -36,10 +35,9 @@ Failed commands exit non-zero and return `{"errorMessage": "..."}`.
 
 ## Discover the context first
 
-Before editing anything, find out which repo is wired up and what's in it:
+Before editing anything, see what's in the context repo:
 
 ```bash
-cargo-ai context repository get                 # which GitHub repo + default branch backs context
 cargo-ai context runtime browse                 # list entries at the runtime sandbox root
 cargo-ai context graph get                      # full knowledge graph derived from the repo's md/mdx files
 ```
@@ -47,10 +45,6 @@ cargo-ai context graph get                      # full knowledge graph derived f
 ## Quick reference
 
 ```bash
-# Repository configuration
-cargo-ai context repository get
-cargo-ai context repository update --source <json> --repository-owner <owner> --repository-name <name> --default-branch <branch>
-
 # Runtime sandbox (checked-out copy of the context repo)
 cargo-ai context runtime browse [--path <path>]
 cargo-ai context runtime read --path <path> [--start-line <n>] [--end-line <n>]
@@ -62,41 +56,13 @@ cargo-ai context runtime execute --command <command> [--args <json>]
 cargo-ai context graph get
 ```
 
-## Repository
-
-The **context repository** is the GitHub repo that backs the workspace's context. Two source kinds are supported:
-
-- `managed` — Cargo provisions and owns the repo.
-- `custom` — point at an existing GitHub repo you own (connected via a Cargo GitHub connector).
-
-```bash
-# Inspect the current configuration (source kind, repository owner/name, default branch)
-cargo-ai context repository get
-
-# Switch to a Cargo-managed repository
-cargo-ai context repository update --source '{"kind":"managed"}'
-
-# Point at your own GitHub repo (via an existing Cargo GitHub connector)
-cargo-ai context repository update \
-  --source '{"kind":"custom","connectorUuid":"<connector-uuid>"}' \
-  --repository-owner <github-owner> \
-  --repository-name <github-repo> \
-  --default-branch main
-```
-
-**Notes:**
-
-- `--source` is JSON. For `custom`, `connectorUuid` must reference an existing GitHub connector — list connectors via `cargo-ai connection connector list`.
-- `--default-branch` is the branch the runtime sandbox writes get pushed to (typically `main`).
-- All four `update` flags are optional; pass only what's changing.
-
 ## Runtime sandbox
 
 The **runtime sandbox** is a checked-out, executable copy of the context repository. It's the surface you use to read and modify context files, and to run commands against them.
 
 Two important behaviors to remember:
 
-- **`write` and `edit` push to the default branch** configured via `repository update`. They are not local-only.
+- **`write` and `edit` push to the default branch** of the context repo. They are not local-only.
 - **`execute` does *not* push.** Changes made to files by a shell command run via `execute` stay in the sandbox and are discarded — use `execute` for builds, tests, or inspection, not for committing edits.
 
 ### Browse and read
@@ -261,7 +227,6 @@ Every command supports `--help`:
 
 ```bash
 cargo-ai context --help
-cargo-ai context repository update --help
 cargo-ai context runtime browse --help
 cargo-ai context runtime read --help
 cargo-ai context runtime write --help
