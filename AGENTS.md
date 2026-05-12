@@ -9,10 +9,10 @@
 
 # Cargo CLI — Skills Overview
 
-This repository contains 8 skills at the repo root: one **outcome skill** (`cargo-gtm`) and seven **capability skills**.
+This repository contains 9 skills at the repo root: one **outcome skill** (`cargo-gtm`) and eight **capability skills**.
 
 - **`cargo-gtm`** — application library. The front door for any GTM task ("build a TAM list", "find 5 fintech CTOs", "monitor job changes"). Routes via internal recipes (`cargo-gtm/recipes/*.md`) and provider playbooks (`cargo-gtm/provider-playbooks/*.md`).
-- **Capability skills** — standard library. One per CLI domain (orchestration, storage, connection, AI, analytics, billing, workspace management). Loaded by `cargo-gtm`, or directly when you need a specific CLI domain.
+- **Capability skills** — standard library. One per CLI domain (orchestration, storage, connection, AI, context, analytics, billing, workspace management). Loaded by `cargo-gtm`, or directly when you need a specific CLI domain.
 
 `cargo-gtm` delegates to capability skills; capability skills never reference `cargo-gtm` (one-way dependency).
 
@@ -95,6 +95,7 @@ Load for a specific CLI domain.
 | [`cargo-storage`](#cargo-storage)                                     | Inspect or modify data models, columns, datasets, and relationships                                |
 | [`cargo-connection`](#cargo-connection)                               | Manage connector authentication, discover available integrations and their actions                 |
 | [`cargo-ai`](#cargo-ai)                                               | Create and configure agents, upload files for RAG, manage MCP servers                              |
+| [`cargo-context`](#cargo-context)                                     | Browse/read/write/edit the workspace's git-backed GTM context repo, run commands in its runtime sandbox, inspect the knowledge graph |
 | [`cargo-workspace-management`](#cargo-workspace-management)           | Invite users, create API tokens, organize folders, manage roles, report CLI issues to management   |
 
 ---
@@ -135,6 +136,13 @@ Load for a specific CLI domain.
  │  Results, metrics,     │  │    Credit usage, costs    │
  │  exports               │  │                           │
  └────────────────────────┘  └───────────────────────────┘
+
+             ┌───────────────────────────────────────┐
+             │             cargo-context             │
+             │  Git-backed GTM markdown knowledge:   │
+             │  personas, plays, proof, signals…     │
+             └───────────────────────────────────────┘
+           (orthogonal: not part of the workflow flow)
 ```
 
 **Dependency rules in practice:**
@@ -142,6 +150,7 @@ Load for a specific CLI domain.
 - `cargo-gtm` delegates to capability skills via relative paths (`../cargo-orchestration/...`). Capability skills never reference `cargo-gtm`.
 - `cargo-workspace-management` provides auth context for every skill — set it up first.
 - `cargo-storage`, `cargo-connection`, and `cargo-ai` are peer skills that supply UUIDs to `cargo-orchestration`. They don't depend on each other.
+- `cargo-context` is **orthogonal** to the workflow-execution flow. It touches the git-backed GTM knowledge base (markdown/MDX), not the system-of-record data warehouse or workflow runs. Use it for capturing/editing the workspace's prose context — personas, plays, proof, objections, signals — and for inspecting the typed knowledge graph.
 - For SQL queries against the system-of-record, use `cargo-ai storage query execute "<sql>"` (tables as `<datasetSlug>.<modelSlug>`). Load `cargo-storage` to discover dataset and model slugs, and to fetch the DDL when you need column types or the SQL dialect.
 - Before building a workflow node graph, load `cargo-connection` to get `connectorUuid` and `actionSlug`.
 - Before executing a workflow that uses an agent node, load `cargo-ai` to get `agentUuid`.
@@ -259,6 +268,27 @@ Load for a specific CLI domain.
 See `cargo-ai/SKILL.md` for model and temperature guidance by use case.
 
 **References:** `cargo-ai/SKILL.md`
+
+---
+
+### cargo-context
+
+**GTM context repository.** Browse, read, write, and edit the workspace's git-backed knowledge base of typed markdown/MDX files — personas, plays, proof, objections, signals, ICPs, etc. — via the runtime sandbox. Inspect cross-references with the knowledge graph.
+
+**Key concepts:**
+
+- **Context repository** = the GitHub repo backing the workspace's context. Canonical example: [`getcargohq/cargo-workspaces`](https://github.com/getcargohq/cargo-workspaces). Files use `kebab-case.md` names, YAML frontmatter with required `title` + `description`, and `domain/slug` cross-refs (no `.md`).
+- **Runtime sandbox** = a checked-out, executable copy of the context repo. `runtime write` and `runtime edit` push to the default branch; `runtime execute` does **not** push.
+- **Knowledge graph** = the typed graph over every md/mdx file, with frontmatter and outbound cross-refs per node. Built via `cargo-ai context graph get`.
+
+**Critical rules:**
+
+- `runtime write` / `runtime edit` commit and push. `runtime execute` is ephemeral — use it for `grep`/`ls`/inspection, never for persistent changes.
+- `runtime edit --old-string` must match the file content **exactly once**. Read first, copy whitespace verbatim.
+- Every file requires both `title` and `description` in frontmatter — missing values break the knowledge graph.
+- For domains, conventions, and per-domain templates, see `cargo-context/references/conventions.md`.
+
+**References:** `cargo-context/SKILL.md`
 
 ---
 
@@ -443,6 +473,19 @@ The workspace UUID is returned by `cargo-ai whoami` under `workspace.uuid`.
    --sort '[{"columnSlug":"created_at","kind":"desc"}]'
 ```
 
+### 8. Author and audit the workspace's GTM context repo
+
+**Skills needed:** `cargo-context`
+
+```
+1. context runtime browse                          → see the domain layout
+2. context runtime read --path persona/_template.md → grab the template for the target domain
+3. context runtime write --path persona/<slug>.md  → add the entry (frontmatter + body, pushes to default branch)
+4. context graph get | jq …                        → audit cross-refs, find plays missing proof, etc.
+```
+
+See `cargo-context/references/examples/authoring.md` and `cargo-context/references/examples/graph-queries.md` for full recipes.
+
 ---
 
 ## Common gotchas
@@ -458,3 +501,5 @@ The workspace UUID is returned by `cargo-ai whoami` under `workspace.uuid`.
 | Plays vs tools                     | **Play** = reacts to data changes (segment-driven). **Tool** = triggered on demand (manual, API, cron).                                                                                                                                       |
 | Batch data kinds                   | Play workflows accept: `segment`, `change`, `filter`, `recordIds`. Tool workflows accept: `file`, `records`.                                                                                                                                  |
 | Third-party connector rate limits  | Only `kind: "connector"` nodes (Clearbit, HubSpot, etc.) have rate limits — native nodes do not. Errors grow silently as the batch runs. Start at 1 record, then 50, then 500 before full-scale. Add `retry` with backoff to connector nodes. |
+| `context runtime execute` is ephemeral | `context runtime execute` runs commands in the sandbox but **does not push** any file changes. Use `runtime write` / `runtime edit` for persistent edits to the context repo.                                                          |
+| `context runtime edit` must match exactly once | `--old-string` must occur exactly once in the file. Whitespace counts — read the file first and copy the substring verbatim. For multi-spot changes, do multiple targeted edits or use `write` to overwrite the whole file. |
