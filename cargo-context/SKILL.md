@@ -77,7 +77,7 @@ Because writes push immediately, **confirm the target workspace before the first
 cargo-ai whoami   # → workspace.uuid, workspace.name
 ```
 
-Read the workspace name back to the user. If the session is for a specific client, make sure `workspace.name` matches before authoring anything — there is no dry-run mode. If you logged in without pinning a workspace, re-run `cargo-ai login --oauth --workspace-uuid <uuid>` (or `--token <workspace-scoped-token>` for non-interactive use).
+Read the workspace name back to the user. If the session is for a specific client, make sure `workspace.name` matches before authoring anything — there is no dry-run mode. If `workspace.name` is generic or ambiguous (e.g. "Main", "Test", a person's name, an internal codename), don't guess — ask the user for the company name and canonical domain (`example.com`) and confirm both before the first write. If you logged in without pinning a workspace, re-run `cargo-ai login --oauth --workspace-uuid <uuid>` (or `--token <workspace-scoped-token>` for non-interactive use).
 
 Edits derived from sales-call analysis should be applied **one at a time with human review**, not batched. Looping an agent over many calls tends to overweight the loudest signal and miss nuance — see `references/examples/bootstrap-and-update.md` for the call-refresh playbook.
 

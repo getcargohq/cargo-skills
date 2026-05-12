@@ -13,7 +13,7 @@ cargo-ai whoami
 # → user.email, workspace.uuid, workspace.name
 ```
 
-Read back the `workspace.name` to the human and confirm it matches the company you intend to harden context for. If you logged in without pinning a workspace, re-login with the right one:
+Read back the `workspace.name` to the human and confirm it matches the company you intend to harden context for. **If the name is generic or ambiguous** — `"Main"`, `"Test"`, a person's name, an internal codename, anything that doesn't unambiguously identify the company — stop and ask: "What's the company name and canonical domain (e.g. `acme.com`)?" Workspace names are user-set and frequently don't match the customer-facing brand; the domain is the disambiguator. If you logged in without pinning a workspace, re-login with the right one:
 
 ```bash
 cargo-ai login --oauth --workspace-uuid <uuid>
