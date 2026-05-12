@@ -237,3 +237,8 @@ _Cross-ref `persona/...` — who raises this most._
 - **Title is a label, description is a hook.** `title` shows up in lists; `description` is the one-line that explains why this entry exists.
 - **Cross-refs over duplication.** If a fact already lives in `proof/...`, link to it from the play or objection rather than re-stating it.
 - **Atomic proof.** Each `proof/` entry is one fact / quote / metric. Bundled proof points break filtering in the knowledge graph.
+- **Repetition threshold for call-derived claims.** A single sales call is anecdote, not evidence. Before promoting an objection / pain / missed-proof claim from call analysis into the context repo, require it to surface across multiple calls. Suggested defaults:
+  - Call-rich workspaces (≥ 50 transcripts / quarter): **3 occurrences**.
+  - Medium volume: **2 occurrences**.
+  - New / call-poor workspaces (< 10 transcripts): **1 occurrence**, and cite the source in the file body.
+  The threshold applies to claims, not to facts a call directly confirms (a named customer, a verbatim quote, a competitor explicitly mentioned). See `examples/bootstrap-and-update.md` for the full refresh loop.
