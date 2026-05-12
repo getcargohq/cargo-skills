@@ -4,6 +4,29 @@ The repeatable playbook for building and refreshing a workspace's context repo f
 
 The phases are deliberately separated. Bootstrapping from public data gets you to a baseline fast; call-driven refinement is where the quality lives. Step 5 (turning a single call into context edits) cannot be safely automated end-to-end — keep a human in the loop on every edit.
 
+## Before you start — confirm the target workspace
+
+Each Cargo workspace maps to one company. `runtime write` and `runtime edit` push to **that workspace's** context repo immediately, so the first thing to do is confirm you're pointed at the right one. This matters most for consultants and operators managing several client workspaces.
+
+```bash
+cargo-ai whoami
+# → user.email, workspace.uuid, workspace.name
+```
+
+Read back the `workspace.name` to the human and confirm it matches the company you intend to harden context for. If you logged in without pinning a workspace, re-login with the right one:
+
+```bash
+cargo-ai login --oauth --workspace-uuid <uuid>
+# or, non-interactive:
+cargo-ai login --token <workspace-scoped-token>
+```
+
+Capture three things before the first scrape kicks off — every sub-agent and every threshold decision downstream depends on them:
+
+- **Company name + canonical domain** — what the public-source scrapers will target.
+- **Workspace UUID** — so every CLI call lands in the right repo. If you're working across multiple clients in one session, prefix the workspace name in your notes for every claim you record.
+- **Call volume estimate** — drives the repetition threshold in step 5b (call-rich → 3, medium → 2, call-poor → 1). Get this from the user, or by sampling the call source (Gong / Chorus / etc.).
+
 ## Phase 1 — Bootstrap from public sources
 
 Goal: seed every domain with enough public information that a fresh agent session can hold a coherent conversation about the company.

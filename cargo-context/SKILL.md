@@ -71,6 +71,14 @@ Two important behaviors to remember:
 - **`write` and `edit` push to the default branch** of the context repo. They are not local-only.
 - **`execute` does *not* push.** Changes made to files by a shell command run via `execute` stay in the sandbox and are discarded — use `execute` for builds, tests, or inspection, not for committing edits.
 
+Because writes push immediately, **confirm the target workspace before the first `write`/`edit`**:
+
+```bash
+cargo-ai whoami   # → workspace.uuid, workspace.name
+```
+
+Read the workspace name back to the user. If the session is for a specific client, make sure `workspace.name` matches before authoring anything — there is no dry-run mode. If you logged in without pinning a workspace, re-run `cargo-ai login --oauth --workspace-uuid <uuid>` (or `--token <workspace-scoped-token>` for non-interactive use).
+
 Edits derived from sales-call analysis should be applied **one at a time with human review**, not batched. Looping an agent over many calls tends to overweight the loudest signal and miss nuance — see `references/examples/bootstrap-and-update.md` for the call-refresh playbook.
 
 ### Browse and read
