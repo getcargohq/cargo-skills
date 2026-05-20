@@ -1,1 +1,1 @@
-@AGENTS.md
+@cargo/SKILL.md
