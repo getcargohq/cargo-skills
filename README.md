@@ -21,7 +21,11 @@ Works with Claude Code, Cursor, Windsurf, GitHub Copilot, and any agent that sup
 
 ## What this skill teaches
 
-**Cargo** connects your data models (companies, contacts, deals) to external integrations (CRMs, enrichment providers, AI agents) and runs them as automated workflows. The repo ships nine skills at the root — one **outcome skill** (`cargo-gtm`, the front door for any GTM task) and eight **capability skills** (one per CLI domain).
+**Cargo** connects your data models (companies, contacts, deals) to external integrations (CRMs, enrichment providers, AI agents) and runs them as automated workflows. The repo ships ten skills at the root — one **router skill** (`cargo`, the overview / front door for any Cargo CLI task), one **outcome skill** (`cargo-gtm`, the front door for any GTM task), and eight **capability skills** (one per CLI domain).
+
+### Router — `cargo`
+
+Always-loadable overview. Explains the skill graph (router → outcome → capabilities), the UUID flow between skills, async polling, end-to-end use cases, and the most common gotchas. Bundles [`cargo/references/glossary.md`](cargo/references/glossary.md) for term-by-term definitions. Load first when starting any Cargo CLI task or when stitching multiple capability skills together.
 
 ### Outcome — `cargo-gtm`
 
