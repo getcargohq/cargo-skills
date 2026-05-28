@@ -64,7 +64,7 @@ For continuous monitoring (e.g. daily scan of target accounts):
 4. Output: write rows where new events found to a "Recently Funded" signal segment.
 5. Optional: post Slack notification per new funding event.
 
-For setting up a play / scheduled tool, see `../../cargo-orchestration/references/plays.md`.
+For setting up a play / scheduled tool, see `../../cargo-orchestration/references/examples/plays.md`.
 
 ## Credit budget
 

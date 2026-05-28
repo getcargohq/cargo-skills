@@ -195,7 +195,7 @@ cargo-ai workspaceManagement file list-columns --s3-filename <s3-filename>
 # → Returns column names to use when mapping to workflow inputs
 ```
 
-The `s3-filename` is returned when uploading a file via `cargo-ai workspaceManagement file upload`. See the `cargo-orchestration` skill's `references/tools.md` for the full file upload and batch run workflow.
+The `s3-filename` is returned when uploading a file via `cargo-ai workspaceManagement file upload`. See the `cargo-orchestration` skill's `references/examples/tools.md` for the full file upload and batch run workflow.
 
 ## Help
 

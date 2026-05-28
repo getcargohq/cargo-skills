@@ -30,6 +30,7 @@ The **context** is a git-backed repository of typed markdown/MDX files that capt
 > For RAG file attachments to agents, use [`cargo-ai`](../cargo-ai/SKILL.md) (`cargo-ai ai file upload`).
 
 > See `references/conventions.md` for the full context repo structure and per-domain templates.
+> See `references/response-shapes.md` for the JSON shapes returned by each `cargo-ai context` command.
 > See `references/troubleshooting.md` for common errors and how to fix them.
 > See `references/examples/authoring.md` for end-to-end add / edit / delete recipes.
 > See `references/examples/lifecycle.md` for the bootstrap + refresh-from-calls playbook.

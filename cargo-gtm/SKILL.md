@@ -121,7 +121,7 @@ Returns `{"url": "..."}` — a signed URL to a CSV/JSON containing only the outp
 
 ## 6) Action shape rules (every recipe)
 
-Every action JSON in this skill follows the rules in [`../cargo-orchestration/references/actions.md`](../cargo-orchestration/references/actions.md):
+Every action JSON in this skill follows the rules in [`../cargo-orchestration/references/examples/actions.md`](../cargo-orchestration/references/examples/actions.md):
 
 - `kind: "connector"` action shape: `{"kind":"connector","integrationSlug":"<slug>","actionSlug":"<slug>","config":{}}`. **`connectorUuid` is NOT in `config`** — the platform resolves the workspace's authenticated connector from `integrationSlug` automatically.
 - For multi-step node graphs: `connectorUuid` lives at the top level of the node, not in `config`. Cross-node interpolation uses `{{nodes.<slug>.<field>}}`. Agent node outputs wrap under `.answer` (read as `{{nodes.<slug>.answer.<field>}}`).

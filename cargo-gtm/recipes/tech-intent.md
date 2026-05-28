@@ -105,7 +105,7 @@ For continuous monitoring (e.g. weekly scan for "new companies hiring my buyer")
 3. Dedup against last week's results.
 4. Output: write new companies to a "Fresh Hiring Intent" segment.
 
-For setting up a play / scheduled tool, see `../../cargo-orchestration/references/plays.md`.
+For setting up a play / scheduled tool, see `../../cargo-orchestration/references/examples/plays.md`.
 
 ## Credit budget
 
