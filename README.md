@@ -26,7 +26,69 @@ clawhub install getcargohq/cargo-skills           # current workspace's skills/
 clawhub install getcargohq/cargo-skills --global  # ~/.openclaw/skills (shared)
 ```
 
-Each skill ships a `metadata.openclaw.install` block that pulls `@cargo-ai/cli` from npm and exposes the `cargo-ai` bin on first run, so no separate prerequisite step is needed.
+Each skill ships a `metadata.openclaw.install` block that pulls `@cargo-ai/cli@latest` from npm and exposes the `cargo-ai` bin on first run, so no separate prerequisite step is needed.
+
+## Staying current
+
+The Cargo CLI and these skills ship updates regularly. To always run the latest:
+
+### Claude Code
+
+The `cargo` router skill instructs the agent to refresh CLI + skills at the start of every session ([see `cargo/SKILL.md`](cargo/SKILL.md)) — works out of the box. If you want guaranteed enforcement instead of prompt-level guidance, drop a `SessionStart` hook into your project's `.claude/` folder:
+
+`.claude/hooks/session-start.sh`:
+
+```bash
+#!/bin/bash
+set -euo pipefail
+
+# Only run in Claude Code on the web; local sessions manage CLI versions themselves.
+if [ "${CLAUDE_CODE_REMOTE:-}" != "true" ]; then
+  exit 0
+fi
+
+npm install -g @cargo-ai/cli@latest
+npx -y skills add getcargohq/cargo-skills --all
+```
+
+`.claude/settings.json`:
+
+```json
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/session-start.sh"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+Make the script executable (`chmod +x .claude/hooks/session-start.sh`) and you're done — every Claude Code on the web session against that project will refresh both before the agent loop starts.
+
+### OpenClaw
+
+`metadata.openclaw.install` pins `@cargo-ai/cli@latest` so first install always fetches the latest CLI. To refresh an already-installed bundle:
+
+```bash
+clawhub install getcargohq/cargo-skills           # re-run to pull latest skills
+npm install -g @cargo-ai/cli@latest               # bump the CLI
+```
+
+### Cursor / Windsurf / Copilot / other skills.sh agents
+
+Re-run the install command — `skills add` clones the repo fresh each time, so the bundle is always current:
+
+```bash
+npx skills add getcargohq/cargo-skills            # refreshes skills
+npm install -g @cargo-ai/cli@latest               # bumps the CLI
+```
 
 ### Publishing new versions to ClawHub
 
