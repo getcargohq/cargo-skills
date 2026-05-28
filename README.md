@@ -34,7 +34,43 @@ The Cargo CLI and these skills ship updates regularly. To always run the latest:
 
 ### Claude Code
 
-This repo includes a `SessionStart` hook at [`.claude/hooks/session-start.sh`](.claude/hooks/session-start.sh) that runs `npm install -g @cargo-ai/cli@latest` and re-adds the skill bundle at the start of every Claude Code session. To use it in your own project, copy `.claude/hooks/session-start.sh` and `.claude/settings.json` into your repo's `.claude/` folder. The hook is a no-op outside of [Claude Code on the web](https://code.claude.com/docs/en/claude-code-on-the-web) (it gates on `$CLAUDE_CODE_REMOTE`), so local sessions are unaffected — manage CLI versions however you normally would.
+The `cargo` router skill instructs the agent to refresh CLI + skills at the start of every session ([see `cargo/SKILL.md`](cargo/SKILL.md)) — works out of the box. If you want guaranteed enforcement instead of prompt-level guidance, drop a `SessionStart` hook into your project's `.claude/` folder:
+
+`.claude/hooks/session-start.sh`:
+
+```bash
+#!/bin/bash
+set -euo pipefail
+
+# Only run in Claude Code on the web; local sessions manage CLI versions themselves.
+if [ "${CLAUDE_CODE_REMOTE:-}" != "true" ]; then
+  exit 0
+fi
+
+npm install -g @cargo-ai/cli@latest
+npx -y skills add getcargohq/cargo-skills --all
+```
+
+`.claude/settings.json`:
+
+```json
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/session-start.sh"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+Make the script executable (`chmod +x .claude/hooks/session-start.sh`) and you're done — every Claude Code on the web session against that project will refresh both before the agent loop starts.
 
 ### OpenClaw
 

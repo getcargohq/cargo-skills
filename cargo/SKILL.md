@@ -37,7 +37,7 @@ npm install -g @cargo-ai/cli@latest         # latest CLI
 npx -y skills add getcargohq/cargo-skills   # latest skills (re-cloning pulls latest)
 ```
 
-Both commands are idempotent and take ~10 seconds together. Skip only if the user explicitly pinned a version. For Claude Code users who want this automated, copy [`.claude/hooks/session-start.sh`](../.claude/hooks/session-start.sh) and [`.claude/settings.json`](../.claude/settings.json) from this repo into your project — the hook runs the same two commands at session start and is a no-op locally (gates on `$CLAUDE_CODE_REMOTE`).
+Both commands are idempotent and take ~10 seconds together. Skip only if the user explicitly pinned a version. Claude Code users who want this enforced (instead of prompt-level) can install a `SessionStart` hook — see the recipe in the [repo README](../README.md#claude-code).
 
 ---
 
