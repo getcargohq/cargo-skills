@@ -1,6 +1,6 @@
 # Bootstrap and update a context repo
 
-The repeatable playbook for building and refreshing a workspace's context repo from real data. Two phases: a one-time **bootstrap** from public sources, then a **refresh loop** driven by sales-call analysis. Use this when standing up a new workspace, or as a periodic rehydration (recommended cadence: every 2–4 weeks).
+The repeatable playbook for keeping a workspace's context repo healthy over time. Two phases: a one-time **bootstrap** from public sources (now packaged as a cargo-gtm recipe), then a **refresh loop** driven by sales-call analysis (this doc's focus). Use this when standing up a new workspace, or as a periodic rehydration (recommended cadence: every 2–4 weeks).
 
 The phases are deliberately separated. Bootstrapping from public data gets you to a baseline fast; call-driven refinement is where the quality lives. Step 5 (turning a single call into context edits) cannot be safely automated end-to-end — keep a human in the loop on every edit.
 
@@ -29,54 +29,9 @@ Capture three things before the first scrape kicks off — every sub-agent and e
 
 ## Phase 1 — Bootstrap from public sources
 
-Goal: seed every domain with enough public information that a fresh agent session can hold a coherent conversation about the company.
+For the automatable seed step, use [`cargo-gtm/recipes/bootstrap-context-from-domain.md`](../../../cargo-gtm/recipes/bootstrap-context-from-domain.md). It takes a domain, inventories existing files via `runtime browse` + `graph get` so it only fills gaps, enriches via cargo native, scrapes public sources in parallel sub-agents, and writes one file per atomic concept through `context runtime write`.
 
-### 1. Scrape public sources in parallel
-
-Hand off research to sub-agents. Suggested sources per workspace:
-
-- Website (home, product, pricing, customers, careers)
-- Blog and changelog
-- Job posts (signals about org structure, hiring intent, tooling)
-- Review sites (G2, Capterra) — surfaces objections and competitor mentions
-- Reddit / Hacker News / niche communities — surfaces unprompted voice-of-customer
-- News (funding announcements, leadership changes, launches)
-
-Have each sub-agent return a structured digest (key claims + source URL), not raw scraped text. The digests are what get distilled into context files in step 2.
-
-### 2. Seed the context repo with public data
-
-For each digest, write to the matching domain. Read the template before authoring:
-
-```bash
-cargo-ai context runtime read --path global/_template.md
-cargo-ai context runtime read --path persona/_template.md
-cargo-ai context runtime read --path alternative/_template.md
-```
-
-Then `runtime write` one file per concept. Typical bootstrap coverage:
-
-| Source | Lands in |
-|---|---|
-| Website home / about | `global/positioning.md`, `global/narrative.md`, `global/mission.md` |
-| Pricing page | `global/pricing.md` |
-| Careers / job posts | `persona/...`, `signal/hiring-intent-...` |
-| Customer page | `client/...`, `proof/...` |
-| Blog / launches | `insight/...`, `proof/...` |
-| Review sites | `objection/...`, `alternative/...` |
-| Reddit / HN | `objection/...`, `insight/...` |
-| News / funding | `signal/...` |
-
-Keep `proof/` atomic — one metric or quote per file. Skip anything you cannot source; a thin context beats a fabricated one.
-
-### 3. Start a fresh session with the seeded context
-
-Once the bootstrap commit lands, open a new agent session so the seeded files load clean (rather than mixed with scratch context from Phase 1). Verify with:
-
-```bash
-cargo-ai context runtime browse
-cargo-ai context graph get | jq '.nodes | length'
-```
+Once the bootstrap commit lands, open a new agent session so the seeded files load clean (rather than mixed with scratch context from the bootstrap run), then continue with Phase 2.
 
 ## Phase 2 — Refresh from real calls
 
