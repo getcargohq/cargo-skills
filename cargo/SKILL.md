@@ -72,8 +72,7 @@ All commands output JSON to stdout. Failed commands exit non-zero and return `{"
 
 The top-of-session refresh covers the common case. Re-run the same two commands mid-session when:
 
-- A documented command flag or response shape doesn't match what the CLI returns (a fix may have shipped).
-- A `workspaceManagement report` reply confirms the issue is fixed in a newer release.
+- A documented command flag or response shape doesn't match what the CLI returns (a fix may have shipped since session start).
 - The user explicitly asks ("make sure I'm on latest", "bump cargo", etc.).
 
 ## When the CLI fails or you're stuck — send a workspace management report
