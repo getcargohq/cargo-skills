@@ -1,6 +1,6 @@
 # Recipe — Re-engage stale contacts when a fresh signal fires
 
-Use this skill when the user wants to systematically wake up cold contacts — old prospects, unresponsive leads, dormant opportunities — but only when a meaningful signal makes outreach worthwhile. The skill polls cold contacts against the three highest-intent signal sources and re-engages only on a hit.
+Use this recipe when the user wants to systematically wake up cold contacts — old prospects, unresponsive leads, dormant opportunities — but only when a meaningful signal makes outreach worthwhile. The recipe polls cold contacts against the three highest-intent signal sources and re-engages only on a hit.
 
 **Trigger phrases:**
 
@@ -9,9 +9,9 @@ Use this skill when the user wants to systematically wake up cold contacts — o
 - *"Build a recurring scan that wakes up old prospects on real signals."*
 - *"Find old contacts worth reaching out to again."*
 
-## Why this skill exists
+## Why this recipe exists
 
-Most stale contacts will stay stale — outreach to them is wasted credits and damages sender reputation. But ~5–10% of any stale list develops a fresh trigger in any given quarter. Those are the contacts to act on. This skill filters mechanically so the user only sees revive-worthy rows.
+Most stale contacts will stay stale — outreach to them is wasted credits and damages sender reputation. But ~5–10% of any stale list develops a fresh trigger in any given quarter. Those are the contacts to act on. This recipe filters mechanically so the user only sees revive-worthy rows.
 
 Three signals dominate B2B revival timing:
 

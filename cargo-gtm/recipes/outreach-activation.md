@@ -1,6 +1,6 @@
 # Recipe — Activate a signal segment as personalized outreach
 
-Use this skill when the user has a signal-driven segment ready (recent fundraise, job change, tech intent, ICP-fit accounts, etc.) and wants to turn it into **send-ready outreach** — enriched contacts, LLM-personalized variables, handed off to their sequencer or CRM. Bridges the [`../guides/writing-outreach.md`](../guides/writing-outreach.md) guide to actual execution.
+Use this recipe when the user has a signal-driven segment ready (recent fundraise, job change, tech intent, ICP-fit accounts, etc.) and wants to turn it into **send-ready outreach** — enriched contacts, LLM-personalized variables, handed off to their sequencer or CRM. Bridges the [`../guides/writing-outreach.md`](../guides/writing-outreach.md) guide to actual execution.
 
 **Trigger phrases:**
 
@@ -9,7 +9,7 @@ Use this skill when the user has a signal-driven segment ready (recent fundraise
 - *"Build a sequence-ready list from job changes this week."*
 - *"Generate first lines for the tech-intent companies."*
 
-## Why this skill exists
+## Why this recipe exists
 
 Signal recipes (`funding-watch`, `job-change-monitoring`, `tech-intent`, `portfolio-prospecting`) all produce a segment. They stop at *"here's a list with a signal."* The next step — enrich, personalize, hand off — has the same shape regardless of the signal. This recipe captures that shape once.
 

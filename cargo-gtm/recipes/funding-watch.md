@@ -1,6 +1,6 @@
 # Recipe — Track recently-funded companies for outbound timing
 
-Use this skill when the user wants to identify or monitor companies that recently raised funding. Funding events are one of the strongest outbound-timing signals — a fresh round means budget, hiring, and a willingness to evaluate new tools.
+Use this recipe when the user wants to identify or monitor companies that recently raised funding. Funding events are one of the strongest outbound-timing signals — a fresh round means budget, hiring, and a willingness to evaluate new tools.
 
 **Trigger phrases:**
 - *"Find every fintech that raised in the last 90 days."*
@@ -80,7 +80,7 @@ For long-running monitoring, prefer `fetchBusinessEvents` with `timestamp_from` 
 
 ## Surfacing the signal
 
-The output of this skill is a list of company records with funding events. Useful next steps:
+The output of this recipe is a list of company records with funding events. Useful next steps:
 
 - **Outbound timing**: hand the list to a sequencer (lemlist / lgm / instantly) for a fresh-funding-triggered campaign — discover the launch action via `cargo-ai connection integration get lemlist` and run via `orchestration action execute-batch`.
 - **CRM enrichment**: write a `last_funding_round_at` column on the Companies model, push to HubSpot via `hubspot.upsertRecords` (compose ad hoc — see [`build-tam.md`](build-tam.md) for the CRM-push pattern).

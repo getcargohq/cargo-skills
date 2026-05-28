@@ -1,6 +1,6 @@
 # Recipe — Find expansion contacts inside customer accounts
 
-Use this skill when the user wants to multi-thread existing customers — find additional buyers, champions, or budget-holders within accounts they already sell to. The output is a per-customer list of net-new contacts (not already in the workspace's Contacts model) at target personas, ready for hand-off to outreach.
+Use this recipe when the user wants to multi-thread existing customers — find additional buyers, champions, or budget-holders within accounts they already sell to. The output is a per-customer list of net-new contacts (not already in the workspace's Contacts model) at target personas, ready for hand-off to outreach.
 
 **Trigger phrases:**
 
@@ -9,9 +9,9 @@ Use this skill when the user wants to multi-thread existing customers — find a
 - *"Multi-thread the champion accounts — who else matters?"*
 - *"Find net-new contacts at customer X."*
 
-## Why this skill exists
+## Why this recipe exists
 
-Expansion revenue typically beats new-logo revenue on CAC by 3–5×. The blocker is rarely *which accounts* (the CRM already knows the customer list) — it's *which net-new contacts* at those accounts to engage. This skill mechanizes the discovery: pull customer accounts, search for additional personas, deduplicate against contacts already in the CRM, enrich, ready for outreach.
+Expansion revenue typically beats new-logo revenue on CAC by 3–5×. The blocker is rarely *which accounts* (the CRM already knows the customer list) — it's *which net-new contacts* at those accounts to engage. This recipe mechanizes the discovery: pull customer accounts, search for additional personas, deduplicate against contacts already in the CRM, enrich, ready for outreach.
 
 The cargo-unique piece is the dedup against the workspace's Contacts model — sourcing tools (salesNavigator, peopleDataLabs) don't know who you already have in HubSpot/Salesforce.
 

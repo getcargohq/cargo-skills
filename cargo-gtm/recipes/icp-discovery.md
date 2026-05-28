@@ -1,6 +1,6 @@
 # Recipe — Surface ICP signals from Closed-Won vs Closed-Lost
 
-Use this skill when the user wants to **discover their real ICP from conversion data**, not from gut feel. The skill pulls Closed-Won and Closed-Lost segments via `storage query execute`, enriches both with the same firmographic and tech signals, and surfaces the features that differ most between them. Output: a ranked list of "high-fit signals" the user can use to filter prospecting.
+Use this recipe when the user wants to **discover their real ICP from conversion data**, not from gut feel. The recipe pulls Closed-Won and Closed-Lost segments via `storage query execute`, enriches both with the same firmographic and tech signals, and surfaces the features that differ most between them. Output: a ranked list of "high-fit signals" the user can use to filter prospecting.
 
 **Trigger phrases:**
 - *"What does our ideal customer look like?"*
@@ -148,7 +148,7 @@ Hand the encoded filters to `cargo-tam-build` to build the next prospecting list
 | anthropic.instruct (Sonnet, one call) | ~2 | 1 | 2 |
 | **Total** | | | **~602 credits for full Won/Lost analysis on 200 deals** |
 
-The skill is one-shot — run it once when the user wants to refine ICP, then use the output to drive prospecting going forward. Re-run quarterly to capture pipeline drift.
+The recipe is one-shot — run it once when the user wants to refine ICP, then use the output to drive prospecting going forward. Re-run quarterly to capture pipeline drift.
 
 ## Required inputs
 
@@ -169,7 +169,7 @@ For batch enrichments, use `cargo-ai orchestration run download-outputs --workfl
 
 ## Output deliverable
 
-The skill's final output is a markdown table the agent presents to the user:
+The recipe's final output is a markdown table the agent presents to the user:
 
 ```
 Top differentiating ICP signals (Won vs Lost):

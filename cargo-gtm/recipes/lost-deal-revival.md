@@ -1,6 +1,6 @@
 # Recipe — Revive Closed-Lost deals when the original blocker is gone
 
-Use this skill when the user wants to systematically revisit **Closed-Lost CRM deals** and only re-engage the ones where the *original lost-reason* is no longer relevant. Tighter scope than [`re-engagement.md`](re-engagement.md): input is explicitly Closed-Lost deals from the CRM (HubSpot, Salesforce, etc.), and the scan branches on `lost_reason`.
+Use this recipe when the user wants to systematically revisit **Closed-Lost CRM deals** and only re-engage the ones where the *original lost-reason* is no longer relevant. Tighter scope than [`re-engagement.md`](re-engagement.md): input is explicitly Closed-Lost deals from the CRM (HubSpot, Salesforce, etc.), and the scan branches on `lost_reason`.
 
 **Trigger phrases:**
 
@@ -9,7 +9,7 @@ Use this skill when the user wants to systematically revisit **Closed-Lost CRM d
 - *"Replay our Closed-Lost pipeline against current signals."*
 - *"Which lost deals are revivable this quarter?"*
 
-## Why this skill exists
+## Why this recipe exists
 
 Most Closed-Lost deals stay lost. But specific lost-reason categories have specific revival triggers:
 
