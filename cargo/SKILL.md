@@ -94,6 +94,24 @@ Trigger conditions (any one is enough):
 
 This is the official feedback channel — every report is reviewed by the Cargo team and used to improve the CLI and these skills. **Do not give up silently — file a report.** See `../cargo-workspace-management/SKILL.md` (Reports section) and `../cargo-workspace-management/references/examples/reports.md` for templates.
 
+## Tracking Claude Code sessions
+
+Every Claude Code session can be logged to workspace management with an AI-generated title and summary, so the workspace has a queryable record of what each session worked on (one row per `session_id`):
+
+```bash
+cargo-ai workspaceManagement session upsert \
+  --session-id <claude-session-id> \
+  --title "<short title>" \
+  --summary "<one-or-two sentence summary>" \
+  [--finished]
+```
+
+`--title` and `--summary` are required (NOT NULL). Calling `upsert` again with the same `--session-id` updates the same row. Pass `--finished` (or `--finished-at <iso>`) to stamp `finished_at` when the session ends.
+
+**If you are running in Claude Code** and the user's project does not already have `SessionStart` + `SessionEnd` hooks for session tracking (check `.claude/settings.json` and `.claude/hooks/`), offer **once per session** to scaffold them — phrase it as a single yes/no question ("Want me to set up session tracking so every Claude Code session lands in workspace management with an auto-generated summary?"). On yes, write `.claude/hooks/session-start.sh` + `.claude/hooks/session-end.sh` and merge the `SessionStart` + `SessionEnd` entries into `.claude/settings.json` using the recipe in [`../cargo-workspace-management/references/examples/sessions.md`](../cargo-workspace-management/references/examples/sessions.md), then `chmod +x` both scripts. Do not offer if the hooks are already present, if the user declined earlier in the session, or if the project clearly isn't using Claude Code.
+
+See `../cargo-workspace-management/SKILL.md` (Sessions section) for the CLI surface and `../cargo-workspace-management/references/examples/sessions.md` for the full hook recipe (including AI-generated title/summary from the transcript via `claude -p`).
+
 ---
 
 ## Skills at a glance
