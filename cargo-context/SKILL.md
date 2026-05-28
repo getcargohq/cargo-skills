@@ -227,9 +227,9 @@ For full per-domain templates and worked examples, see `references/conventions.m
 
 ### Workflow: bootstrap and refresh
 
-To stand up a new workspace's context repo from scratch, or to refresh an existing one on a cadence, follow the two-phase playbook in `references/examples/bootstrap-and-update.md`:
+To stand up a new workspace's context repo from scratch, or to refresh an existing one on a cadence, follow the two-phase lifecycle in `references/examples/bootstrap-and-update.md`:
 
-1. **Bootstrap (one-time):** scrape public sources in parallel → seed `global/`, `persona/`, `client/`, `proof/`, `objection/`, `signal/` from those digests → open a fresh agent session against the seeded repo.
+1. **Bootstrap (one-time):** seed `global/`, `persona/`, `client/`, `proof/`, `objection/`, `signal/` from public sources, then open a fresh agent session against the seeded repo. For the prescriptive, automatable version (domain in → files out, idempotent, with credit budget), use `references/examples/bootstrap-from-domain.md`.
 2. **Refresh (every 2–4 weeks):** pull the last ~3 months of sales-call transcripts → analyze one at a time, human-in-the-loop → apply a repetition threshold before promoting any claim to context → validate by generating sequence permutations → diff the graph before/after and retire stale entries.
 
 The repetition threshold (how many calls a claim must appear in before it lands in context) is documented in `references/conventions.md`.
