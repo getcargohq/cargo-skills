@@ -72,6 +72,87 @@ npx -y skills add getcargohq/cargo-skills --all
 
 Make the script executable (`chmod +x .claude/hooks/session-start.sh`) and you're done — every Claude Code on the web session against that project will refresh both before the agent loop starts.
 
+## Tracking Claude Code sessions
+
+To get a workspace-wide record of every Claude Code session (one row per session, with an AI-generated title and summary), wire two hooks that call `cargo-ai workspaceManagement session upsert`. SessionStart creates the row; SessionEnd reads the transcript, asks `claude -p` to summarize, and stamps `finished_at`.
+
+`.claude/hooks/session-start.sh`:
+
+```bash
+#!/bin/bash
+set -u
+
+INPUT="$(cat)"
+SESSION_ID="$(printf '%s' "$INPUT" | jq -r '.session_id // "unknown"' 2>/dev/null || echo "unknown")"
+
+cargo-ai workspaceManagement session upsert \
+  --session-id "$SESSION_ID" \
+  --title "Claude Code session ${SESSION_ID}" \
+  --summary "Session in progress." >/dev/null 2>&1 || true
+
+exit 0
+```
+
+`.claude/hooks/session-end.sh`:
+
+```bash
+#!/bin/bash
+set -u
+
+INPUT="$(cat)"
+SESSION_ID="$(printf '%s' "$INPUT" | jq -r '.session_id // "unknown"' 2>/dev/null || echo "unknown")"
+TRANSCRIPT_PATH="$(printf '%s' "$INPUT" | jq -r '.transcript_path // ""' 2>/dev/null || echo "")"
+
+TITLE="Claude Code session ${SESSION_ID}"
+SUMMARY="Session ended."
+
+if [ -n "$TRANSCRIPT_PATH" ] && [ -f "$TRANSCRIPT_PATH" ] && command -v claude >/dev/null 2>&1; then
+  TAIL="$(tail -c 60000 "$TRANSCRIPT_PATH" 2>/dev/null || true)"
+  if [ -n "$TAIL" ]; then
+    PROMPT='Read the Claude Code transcript on stdin and reply with a single JSON object: {"title":"<5-8 word title>","summary":"<1-2 sentence summary>"}. JSON only.'
+    RESPONSE="$(printf '%s' "$TAIL" | claude -p "$PROMPT" 2>/dev/null || true)"
+    CLEAN="$(printf '%s' "$RESPONSE" | sed -n '/{/,/}/p')"
+    PARSED_TITLE="$(printf '%s' "$CLEAN" | jq -r '.title // empty' 2>/dev/null || true)"
+    PARSED_SUMMARY="$(printf '%s' "$CLEAN" | jq -r '.summary // empty' 2>/dev/null || true)"
+    [ -n "$PARSED_TITLE" ] && TITLE="$PARSED_TITLE"
+    [ -n "$PARSED_SUMMARY" ] && SUMMARY="$PARSED_SUMMARY"
+  fi
+fi
+
+cargo-ai workspaceManagement session upsert \
+  --session-id "$SESSION_ID" \
+  --title "$TITLE" \
+  --summary "$SUMMARY" \
+  --finished >/dev/null 2>&1 || true
+
+exit 0
+```
+
+Merge into `.claude/settings.json` (alongside any other hooks already there):
+
+```json
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          { "type": "command", "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/session-start.sh" }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          { "type": "command", "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/session-end.sh" }
+        ]
+      }
+    ]
+  }
+}
+```
+
+`chmod +x .claude/hooks/session-{start,end}.sh` and every session against that project will land in `workspace_management.sessions` with a real title and summary. Hooks fail silently if `cargo-ai` or `claude` isn't on `$PATH`, so missing tooling never blocks a session.
+
 ### OpenClaw
 
 `metadata.openclaw.install` pins `@cargo-ai/cli@latest` so first install always fetches the latest CLI. To refresh an already-installed bundle:

@@ -28,21 +28,6 @@ metadata:
 
 # Cargo CLI — Skills Overview
 
-## First step every session: refresh CLI and skills
-
-Both the Cargo CLI and these skills ship updates regularly. **Before running any other Cargo command in this session, refresh both:**
-
-```bash
-npm install -g @cargo-ai/cli@latest         # latest CLI
-npx -y skills add getcargohq/cargo-skills   # latest skills (re-cloning pulls latest)
-```
-
-Both commands are idempotent and take ~10 seconds together. Skip only if the user explicitly pinned a version.
-
-**If you are running in Claude Code** and the user's project does not already have a `SessionStart` hook that runs these refresh commands (check `.claude/settings.json` and `.claude/hooks/`), offer **once per session** to scaffold one — phrase it as a single yes/no question ("Want me to set up auto-refresh so you're always on the latest CLI and skills?"). On yes, write `.claude/hooks/session-start.sh` and merge the `SessionStart` entry into `.claude/settings.json` using the recipe in the [repo README](../README.md#claude-code), then `chmod +x` the script. Do not offer if the hook is already present, if the user declined earlier in the session, or if the project clearly isn't using Claude Code.
-
----
-
 This repository contains 9 skills at the repo root: one **outcome skill** (`cargo-gtm`) and eight **capability skills**.
 
 - **`cargo-gtm`** — application library. The front door for any GTM task ("build a TAM list", "find 5 fintech CTOs", "monitor job changes"). Routes via internal recipes (`../cargo-gtm/recipes/*.md`) and provider playbooks (`../cargo-gtm/provider-playbooks/*.md`).
@@ -68,16 +53,34 @@ Without a global install, prefix every command with `npx @cargo-ai/cli` instead 
 
 All commands output JSON to stdout. Failed commands exit non-zero and return `{"errorMessage": "..."}`.
 
-## Re-refresh mid-session
+## Every Cargo session has three jobs
 
-The top-of-session refresh covers the common case. Re-run the same two commands mid-session when:
+### 1. At session start — refresh and register
 
-- A documented command flag or response shape doesn't match what the CLI returns (a fix may have shipped since session start).
-- The user explicitly asks ("make sure I'm on latest", "bump cargo", etc.).
+Before any other Cargo command, refresh the CLI and skills, then register the session in workspace management:
 
-## When the CLI fails or you're stuck — send a workspace management report
+```bash
+# Refresh — idempotent, ~10s
+npm install -g @cargo-ai/cli@latest
+npx -y skills add getcargohq/cargo-skills
 
-Whenever the CLI is failing in a way the skill references and `--help` cannot resolve, the user or agent is repeatedly retrying the same command without progress, the syntax for a flag / JSON payload is unclear, or a needed capability seems missing — escalate by submitting a report to **workspace management**:
+# Register the session (placeholders OK — overwritten at session end)
+cargo-ai workspaceManagement session upsert \
+  --session-id <claude-session-id> \
+  --title "Claude Code session <claude-session-id>" \
+  --summary "Session in progress."
+```
+
+Skip the refresh only if the user explicitly pinned a version. Skip the `session upsert` only if the user opted out or no `session_id` is available.
+
+### 2. Mid-session — re-refresh, or escalate when stuck
+
+**Re-refresh** the CLI and skills mid-session when:
+
+- A documented CLI flag or response shape doesn't match what you observe (a fix may have shipped since session start).
+- The user explicitly asks ("bump cargo", "make sure I'm on latest").
+
+**Send a workspace management report** when the CLI is failing in a way the skill references and `--help` cannot resolve, the user or agent is repeatedly retrying the same command without progress, the syntax for a flag / JSON payload is unclear, or a needed capability seems missing:
 
 ```bash
 cargo-ai workspaceManagement report create \
@@ -93,6 +96,29 @@ Trigger conditions (any one is enough):
 - A feature appears to be missing entirely.
 
 This is the official feedback channel — every report is reviewed by the Cargo team and used to improve the CLI and these skills. **Do not give up silently — file a report.** See `../cargo-workspace-management/SKILL.md` (Reports section) and `../cargo-workspace-management/references/examples/reports.md` for templates.
+
+### 3. At session end — finalize the session row
+
+Produce a short title (5–8 words) and a 1–2 sentence summary of what the session actually worked on, then overwrite the placeholder row and stamp `finished_at`:
+
+```bash
+cargo-ai workspaceManagement session upsert \
+  --session-id <claude-session-id> \
+  --title "<5-8 word title>" \
+  --summary "<1-2 sentence summary of what was accomplished or attempted>" \
+  --finished
+```
+
+`--title` and `--summary` are required (NOT NULL). `--finished` stamps `finished_at = now`; pass `--finished-at <iso>` for an explicit timestamp.
+
+## Claude Code: scaffold a hook pair to automate the lifecycle
+
+If you are running in Claude Code and the user's project does not already have `SessionStart` + `SessionEnd` hooks for the lifecycle above (check `.claude/settings.json` and `.claude/hooks/`), offer **once per session** to scaffold them — phrase it as a single yes/no question ("Want me to wire up SessionStart + SessionEnd hooks so the CLI/skills auto-refresh and every session is tracked in workspace management?"). On yes, write `.claude/hooks/session-start.sh` + `.claude/hooks/session-end.sh`, merge the `SessionStart` + `SessionEnd` entries into `.claude/settings.json`, and `chmod +x` both scripts. Recipes:
+
+- [`../README.md#claude-code`](../README.md#claude-code) — auto-refresh CLI + skills at session start
+- [`../cargo-workspace-management/references/examples/sessions.md`](../cargo-workspace-management/references/examples/sessions.md) — session tracking with AI-generated title/summary at session end
+
+Both flows can share a single `session-start.sh` (refresh + register) and a single `session-end.sh` (summarize + finalize). Do not offer if the hooks are already present, if the user declined earlier in the session, or if the project clearly isn't using Claude Code.
 
 ---
 

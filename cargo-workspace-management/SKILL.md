@@ -28,6 +28,7 @@ Workspace administration: managing users, API tokens, folders, roles, workspace-
 > See `references/examples/tokens.md` for API token creation and rotation examples.
 > See `references/examples/folders.md` for organizing resources into folders.
 > See `references/examples/reports.md` for examples of submitting workspace management reports.
+> See `references/examples/sessions.md` for the Claude Code SessionStart + SessionEnd hook recipe.
 
 ## Prerequisites
 
@@ -67,6 +68,7 @@ cargo-ai workspaceManagement token remove <token-uuid>
 cargo-ai workspaceManagement folder list
 cargo-ai workspaceManagement folder create --name <name> --emoji-slug <slug> --kind <kind>
 cargo-ai workspaceManagement report create --title <title> --description <description>
+cargo-ai workspaceManagement session upsert --session-id <id> --title <title> --summary <summary> [--finished]
 ```
 
 ## Current user and workspace
@@ -180,6 +182,31 @@ cargo-ai workspaceManagement report create \
 ```
 
 > Do not silently give up on a failing CLI task. **Send a report.** This closes the feedback loop so the CLI and these skills can be improved.
+
+## Sessions
+
+Record a Claude Code session in `workspace_management.sessions`. One row per `(workspaceUuid, sessionId)`. Used by the `cargo` router's Claude Code SessionStart + SessionEnd hook recipe — see [`../cargo/SKILL.md`](../cargo/SKILL.md) for when to wire them up.
+
+```bash
+# Upsert a session. Idempotent on --session-id within the workspace.
+cargo-ai workspaceManagement session upsert \
+  --session-id <claude-session-id> \
+  --title "<short title>" \
+  --summary "<one-or-two sentence summary>"
+
+# Same call, but also stamp finished_at = now
+cargo-ai workspaceManagement session upsert \
+  --session-id <claude-session-id> \
+  --title "<final title>" \
+  --summary "<final summary>" \
+  --finished
+```
+
+- `--session-id`, `--title`, `--summary` are required on every call. `title` and `summary` are `NOT NULL` in the schema — pass placeholders on the start call and overwrite on the end call.
+- `--finished` stamps `finished_at = now`. Use `--finished-at <iso>` for an explicit timestamp instead.
+- Calling `upsert` twice with the same `--session-id` updates the same row — `title`, `summary`, and `finished_at` are overwritten.
+
+Returns the upserted session as JSON. See [`references/examples/sessions.md`](references/examples/sessions.md) for the full hook recipe with transcript-driven AI summarization.
 
 ## Workspace files
 
