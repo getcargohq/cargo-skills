@@ -1,6 +1,6 @@
 # Recipe — Find companies by tech-stack or hiring intent
 
-Use this skill when the user wants to find or prioritize companies based on **what they use** (tech stack) or **what they're hiring for** (role intent). These are two of the strongest leading indicators in B2B GTM.
+Use this recipe when the user wants to find or prioritize companies based on **what they use** (tech stack) or **what they're hiring for** (role intent). These are two of the strongest leading indicators in B2B GTM.
 
 **Trigger phrases:**
 - *"Find every company using Snowflake AND dbt."*

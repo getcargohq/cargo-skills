@@ -1,6 +1,6 @@
 # Recipe — Investor portfolio → contacts → outbound
 
-Use this skill when the user wants to **prospect into the portfolio of a specific investor or accelerator**. Common pattern: a partner / accelerator program is a known proxy for ICP fit, so all their portfolio companies are pre-qualified.
+Use this recipe when the user wants to **prospect into the portfolio of a specific investor or accelerator**. Common pattern: a partner / accelerator program is a known proxy for ICP fit, so all their portfolio companies are pre-qualified.
 
 **Trigger phrases:**
 - *"Find every company backed by Sequoia and reach out to their CTOs."*

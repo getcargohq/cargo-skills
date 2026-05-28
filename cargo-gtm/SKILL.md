@@ -70,6 +70,10 @@ Scan this list and read the recipe matching your task. **When a recipe matches: 
 | [`recipes/funding-watch.md`](recipes/funding-watch.md) | Tracking companies that recently raised funding |
 | [`recipes/tech-intent.md`](recipes/tech-intent.md) | Finding companies by tech-stack or hiring-intent signals |
 | [`recipes/icp-discovery.md`](recipes/icp-discovery.md) | Diffing Closed-Won vs Closed-Lost segments to surface ICP signals |
+| [`recipes/outreach-activation.md`](recipes/outreach-activation.md) | Turning a signal segment into send-ready outreach (enrich → verify → personalize → sequencer handoff) |
+| [`recipes/re-engagement.md`](recipes/re-engagement.md) | Waking up stale contacts only when a fresh signal fires (job change, funding, tech intent) |
+| [`recipes/lost-deal-revival.md`](recipes/lost-deal-revival.md) | Reviving Closed-Lost CRM deals by branching on `lost_reason` (champion left, budget, timing) |
+| [`recipes/account-expansion.md`](recipes/account-expansion.md) | Multi-threading existing customer accounts — net-new buyers, deduped against the workspace's Contacts model |
 
 If none match, scan the phase docs above for the closest pattern and adapt — or invoke [`agents/execution-plan-creator.md`](agents/execution-plan-creator.md) to compose a custom chain with provider/action slugs and cost estimates.
 

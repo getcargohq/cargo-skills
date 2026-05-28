@@ -1,6 +1,6 @@
 # Recipe — Detect job changes in a contact segment
 
-Use this skill when the user wants to detect job changes among a list of contacts. **The only provider in cargo's 120-integration catalog with a credits-based job-change action is `waterfall.detectJobChange`** — this skill exists to make that capability discoverable and reusable.
+Use this recipe when the user wants to detect job changes among a list of contacts. **The only provider in cargo's 120-integration catalog with a credits-based job-change action is `waterfall.detectJobChange`** — this recipe exists to make that capability discoverable and reusable.
 
 **Trigger phrases:**
 - *"Has anyone in our customer list changed jobs?"*
@@ -8,7 +8,7 @@ Use this skill when the user wants to detect job changes among a list of contact
 - *"Track job changes for our top accounts."*
 - *"Find all our champions who left their company."*
 
-## Why this skill exists
+## Why this recipe exists
 
 Job change is one of the highest-intent signals in B2B GTM:
 - **MOVED contacts at target accounts** → re-engage at the new company; the relationship is warm.
@@ -112,4 +112,4 @@ For batch runs, use `cargo-ai orchestration run download-outputs --workflow-uuid
 
 ## Cargo-unique strength
 
-No other provider in the cargo catalog has a credits-based job-change action. `waterfall.detectJobChange` is unique. This skill is one of the differentiators when comparing cargo's outcome catalog to peer GTM platforms.
+No other provider in the cargo catalog has a credits-based job-change action. `waterfall.detectJobChange` is unique. This recipe is one of the differentiators when comparing cargo's outcome catalog to peer GTM platforms.
