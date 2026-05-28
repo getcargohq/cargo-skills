@@ -104,7 +104,7 @@ For cross-workflow analytics or shapes that `run count` doesn't expose (per-node
 
 ## Ad-hoc execution analytics (`orchestration query`)
 
-Run SQL against orchestration runtime tables — `runs`, `batches`, `spans`, `records` — for analytics that the canned metrics commands don't cover. Tables are referenced without a schema prefix; workspace scoping is automatic. See `cargo-orchestration/references/queries.md` for schemas and limits.
+Run SQL against orchestration runtime tables — `runs`, `batches`, `spans`, `records` — for analytics that the canned metrics commands don't cover. Tables are referenced without a schema prefix; workspace scoping is automatic. See `cargo-orchestration/references/examples/queries.md` for schemas and limits.
 
 ```bash
 # Error rate across the workspace in the last day

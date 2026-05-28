@@ -112,7 +112,7 @@ For ad-hoc `action execute` / `action execute-batch` runs (no saved tool), use `
 
 ## Action shape rules
 
-`kind: "connector"` action: `{"kind":"connector","integrationSlug":"<slug>","actionSlug":"<slug>","config":{}}`. **`connectorUuid` is NOT in `config`.** The platform resolves the workspace's authenticated connector from `integrationSlug`. See [`../../cargo-orchestration/references/actions.md`](../../cargo-orchestration/references/actions.md).
+`kind: "connector"` action: `{"kind":"connector","integrationSlug":"<slug>","actionSlug":"<slug>","config":{}}`. **`connectorUuid` is NOT in `config`.** The platform resolves the workspace's authenticated connector from `integrationSlug`. See [`../../cargo-orchestration/references/examples/actions.md`](../../cargo-orchestration/references/examples/actions.md).
 
 ## Polling guidance
 

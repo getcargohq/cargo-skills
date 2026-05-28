@@ -299,7 +299,7 @@ When the priority stack misses the user's criteria, see [`../references/alternat
 
 ## Action shape rules
 
-`{"kind":"connector","integrationSlug":"<slug>","actionSlug":"<slug>","config":{}}`. **No `connectorUuid` in `config`** — see [`../../cargo-orchestration/references/actions.md`](../../cargo-orchestration/references/actions.md). Cross-node interpolation: `{{nodes.<slug>.<field>}}`.
+`{"kind":"connector","integrationSlug":"<slug>","actionSlug":"<slug>","config":{}}`. **No `connectorUuid` in `config`** — see [`../../cargo-orchestration/references/examples/actions.md`](../../cargo-orchestration/references/examples/actions.md). Cross-node interpolation: `{{nodes.<slug>.<field>}}`.
 
 ## When stuck — file a workspace report
 

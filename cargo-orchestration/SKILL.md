@@ -40,17 +40,17 @@ Need to run something?
 
 **References:**
 
-> `references/actions.md` — action execute and execute-batch examples
-> `references/tools.md` — tool (on-demand workflow) examples
-> `references/plays.md` — play (segment-driven automation) examples
-> `references/agents.md` — AI agent chat examples
+> `references/examples/actions.md` — action execute and execute-batch examples
+> `references/examples/tools.md` — tool (on-demand workflow) examples
+> `references/examples/plays.md` — play (segment-driven automation) examples
+> `references/examples/agents.md` — AI agent chat examples
+> `references/examples/templates.md` — pre-built workflow templates
+> `references/examples/queries.md` — `orchestration query execute` (ClickHouse: runs/batches/spans/records) SQL examples. For `storage query` (workspace storage), see the `cargo-storage` skill.
+> `references/examples/segments.md` — segment fetch and filter examples
 > `references/nodes.md` — full node creation guide (kinds, native actions, expressions, validation, routing)
-> `references/templates.md` — pre-built workflow templates
-> `references/queries.md` — `orchestration query execute` (ClickHouse: runs/batches/spans/records) SQL examples. For `storage query` (workspace storage), see the `cargo-storage` skill.
-> `references/segments.md` — segment fetch and filter examples
-> `references/response-shapes.md` — full JSON response structures
 > `references/filter-syntax.md` — complete filter condition reference
 > `references/polling.md` — async polling patterns, error handling, retry strategies
+> `references/response-shapes.md` — full JSON response structures
 > `references/troubleshooting.md` — common errors, plus a "Debugging a workflow run" section for runs that succeed but produce wrong output (wrong-branch routing, empty downstream values)
 
 ## Prerequisites
@@ -88,7 +88,7 @@ cargo-ai connection connector list         # all connectors
 
 **Retrieve in the UI:** plays live at `app.getcargo.io/workspaces/<WORKSPACE_UUID>/plays/<PLAY_UUID>` and tools at `app.getcargo.io/workspaces/<WORKSPACE_UUID>/tools/<TOOL_UUID>`. Get `<WORKSPACE_UUID>` from `cargo-ai whoami` under `workspace.uuid`.
 
-**Designing a new tool or play?** Check templates first — they are pre-built node graphs for common automation patterns (enrichment pipelines, CRM syncs, lead scoring) and are an excellent starting point. List templates with `cargo-ai orchestration template list` and inspect a specific one with `cargo-ai orchestration template get <slug>`. Templates are tagged by `kind` so you can find ones suited for tools (`"kind":"tool"`) or plays (`"kind":"play"`) right away. See `references/templates.md` for the full guide.
+**Designing a new tool or play?** Check templates first — they are pre-built node graphs for common automation patterns (enrichment pipelines, CRM syncs, lead scoring) and are an excellent starting point. List templates with `cargo-ai orchestration template list` and inspect a specific one with `cargo-ai orchestration template get <slug>`. Templates are tagged by `kind` so you can find ones suited for tools (`"kind":"tool"`) or plays (`"kind":"play"`) right away. See `references/examples/templates.md` for the full guide.
 
 **Compatibility rules:**
 
@@ -150,7 +150,7 @@ cargo-ai orchestration action execute-batch \
   --wait-until-finished
 ```
 
-Action kinds: `tool`, `connector`, `agent`, `native`. See `references/actions.md` for all action kinds, parameters, retry config, response shapes, and end-to-end examples.
+Action kinds: `tool`, `connector`, `agent`, `native`. See `references/examples/actions.md` for all action kinds, parameters, retry config, response shapes, and end-to-end examples.
 
 ## Create a run
 
@@ -179,7 +179,7 @@ Also supports `--release-uuid` to pin a specific release.
 cargo-ai orchestration run cancel --workflow-uuid <uuid> --uuids run-uuid-1,run-uuid-2
 ```
 
-See `references/tools.md` for file uploads, monitoring, and cancellation. See `references/nodes.md` for custom node graphs.
+See `references/examples/tools.md` for file uploads, monitoring, and cancellation. See `references/nodes.md` for custom node graphs.
 
 ## Create a batch
 
@@ -215,7 +215,7 @@ cargo-ai orchestration batch create \
 cargo-ai orchestration batch cancel <batch-uuid>
 ```
 
-See `references/plays.md` and `references/tools.md` for filtering, record IDs, file uploads, monitoring, and cancellation.
+See `references/examples/plays.md` and `references/examples/tools.md` for filtering, record IDs, file uploads, monitoring, and cancellation.
 
 ## Send a message to an AI agent
 
@@ -231,7 +231,7 @@ cargo-ai ai message create \                              # 3. Send a message
 #   Done when .message.status is "success" (read .parts) or "error" (read .errorMessage)
 ```
 
-Also supports `--actions`, `--resources`, `--language-model-slug`, `--temperature`, `--max-steps`, and `--wait-until-finished` (blocks until the assistant message reaches a terminal status). See `references/agents.md` for multi-turn conversations, action/resource injection, and model selection.
+Also supports `--actions`, `--resources`, `--language-model-slug`, `--temperature`, `--max-steps`, and `--wait-until-finished` (blocks until the assistant message reaches a terminal status). See `references/examples/agents.md` for multi-turn conversations, action/resource injection, and model selection.
 
 ## Inspect records
 
@@ -267,7 +267,7 @@ cargo-ai orchestration query execute "SELECT status, count() FROM batches GROUP 
 cargo-ai orchestration query execute "SELECT * FROM spans ORDER BY execution_started_at DESC LIMIT 10"
 ```
 
-Tables are referenced without a schema prefix — just `spans`, `runs`, `batches`, or `records`. Workspace scoping is applied automatically. The query is read-only; DDL, table functions, dictionary accessors, and introspection are denied. See `references/queries.md` for the schemas, example queries, and limits.
+Tables are referenced without a schema prefix — just `spans`, `runs`, `batches`, or `records`. Workspace scoping is applied automatically. The query is read-only; DDL, table functions, dictionary accessors, and introspection are denied. See `references/examples/queries.md` for the schemas, example queries, and limits.
 
 ## Fetch segment data
 
@@ -280,7 +280,7 @@ cargo-ai segmentation segment fetch \
   --fetching-limit 100 --fetching-offset 0
 ```
 
-Supports `--sort`, `--enrich`, and `--sync`. See `references/filter-syntax.md` for the full filter syntax and `references/segments.md` for filtering, pagination, sorting, enrollment filters, and enrichment.
+Supports `--sort`, `--enrich`, and `--sync`. See `references/filter-syntax.md` for the full filter syntax and `references/examples/segments.md` for filtering, pagination, sorting, enrollment filters, and enrichment.
 
 **Managing segments:**
 
@@ -302,7 +302,7 @@ cargo-ai orchestration template list              # list available templates
 cargo-ai orchestration template get <slug>        # get template nodes + config
 ```
 
-See `references/templates.md` for the full guide including placeholder conventions and end-to-end examples.
+See `references/examples/templates.md` for the full guide including placeholder conventions and end-to-end examples.
 
 ## Validate and test nodes
 

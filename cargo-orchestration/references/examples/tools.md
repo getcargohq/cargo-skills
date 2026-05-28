@@ -253,7 +253,7 @@ cargo-ai orchestration batch cancel <batch-uuid>
 
 The `--nodes` flag lets you run a custom node graph at runtime without modifying the tool's published definition. When using `--nodes`, you do not need to pass `--workflow-uuid` — the nodes define the entire workflow inline. Every graph needs a `start` node and an `end` node, linked via `childrenUuids`.
 
-> See `nodes.md` for the full node creation guide — node kinds, native actions, config expressions, routing, and more examples.
+> See `../nodes.md` for the full node creation guide — node kinds, native actions, config expressions, routing, and more examples.
 
 Minimal example — start, enrich via connector, output:
 
