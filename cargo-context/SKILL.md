@@ -32,7 +32,7 @@ The **context** is a git-backed repository of typed markdown/MDX files that capt
 > See `references/conventions.md` for the full context repo structure and per-domain templates.
 > See `references/troubleshooting.md` for common errors and how to fix them.
 > See `references/examples/authoring.md` for end-to-end add / edit / delete recipes.
-> See `references/examples/bootstrap-and-update.md` for the bootstrap-from-public-sources + refresh-from-calls playbook.
+> See `references/examples/lifecycle.md` for the bootstrap + refresh-from-calls playbook.
 > See `references/examples/graph-queries.md` for inspecting the knowledge graph.
 
 ## Prerequisites
@@ -89,7 +89,7 @@ cargo-ai whoami   # → workspace.uuid, workspace.name
 
 Read the workspace name back to the user. If the session is for a specific client, make sure `workspace.name` matches before authoring anything — there is no dry-run mode. If `workspace.name` is generic or ambiguous (e.g. "Main", "Test", a person's name, an internal codename), don't guess — ask the user for the company name and canonical domain (`example.com`) and confirm both before the first write. If you logged in without pinning a workspace, re-run `cargo-ai login --oauth --workspace-uuid <uuid>` (or `--token <workspace-scoped-token>` for non-interactive use).
 
-Edits derived from sales-call analysis should be applied **one at a time with human review**, not batched. Looping an agent over many calls tends to overweight the loudest signal and miss nuance — see `references/examples/bootstrap-and-update.md` for the call-refresh playbook.
+Edits derived from sales-call analysis should be applied **one at a time with human review**, not batched. Looping an agent over many calls tends to overweight the loudest signal and miss nuance — see `references/examples/lifecycle.md` for the call-refresh playbook.
 
 ### Browse and read
 
@@ -237,9 +237,9 @@ For full per-domain templates and worked examples, see `references/conventions.m
 
 ### Workflow: bootstrap and refresh
 
-To stand up a new workspace's context repo from scratch, or to refresh an existing one on a cadence, follow the two-phase playbook in `references/examples/bootstrap-and-update.md`:
+To stand up a new workspace's context repo from scratch, or to refresh an existing one on a cadence, follow the two-phase lifecycle in `references/examples/lifecycle.md`:
 
-1. **Bootstrap (one-time):** scrape public sources in parallel → seed `global/`, `persona/`, `client/`, `proof/`, `objection/`, `signal/` from those digests → open a fresh agent session against the seeded repo.
+1. **Bootstrap (one-time):** seed `global/`, `persona/`, `client/`, `proof/`, `objection/`, `signal/` from public sources, then open a fresh agent session against the seeded repo. For the prescriptive, automatable version (domain in → files out, idempotent, with credit budget), use `references/examples/bootstrap-from-domain.md`.
 2. **Refresh (every 2–4 weeks):** pull the last ~3 months of sales-call transcripts → analyze one at a time, human-in-the-loop → apply a repetition threshold before promoting any claim to context → validate by generating sequence permutations → diff the graph before/after and retire stale entries.
 
 The repetition threshold (how many calls a claim must appear in before it lands in context) is documented in `references/conventions.md`.

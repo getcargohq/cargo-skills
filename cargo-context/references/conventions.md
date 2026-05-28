@@ -241,4 +241,4 @@ _Cross-ref `persona/...` — who raises this most._
   - Call-rich workspaces (≥ 50 transcripts / quarter): **3 occurrences**.
   - Medium volume: **2 occurrences**.
   - New / call-poor workspaces (< 10 transcripts): **1 occurrence**, and cite the source in the file body.
-  The threshold applies to claims, not to facts a call directly confirms (a named customer, a verbatim quote, a competitor explicitly mentioned). See `examples/bootstrap-and-update.md` for the full refresh loop.
+  The threshold applies to claims, not to facts a call directly confirms (a named customer, a verbatim quote, a competitor explicitly mentioned). See `examples/lifecycle.md` for the full refresh loop.
