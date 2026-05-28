@@ -1,8 +1,8 @@
-# Bootstrap and update a context repo
+# Context repo lifecycle
 
-The repeatable playbook for keeping a workspace's context repo healthy over time. Two phases: a one-time **bootstrap** from public sources (now packaged as a cargo-gtm recipe), then a **refresh loop** driven by sales-call analysis (this doc's focus). Use this when standing up a new workspace, or as a periodic rehydration (recommended cadence: every 2–4 weeks).
+The repeatable playbook for keeping a workspace's context repo healthy over time. Two phases: a one-time **bootstrap** from public sources (delegated to the [`bootstrap-from-domain.md`](bootstrap-from-domain.md) recipe), then a **refresh loop** driven by sales-call analysis (this doc's focus). Use this when standing up a new workspace, or as a periodic rehydration. Recommended cadence: every 2–4 weeks.
 
-The phases are deliberately separated. Bootstrapping from public data gets you to a baseline fast; call-driven refinement is where the quality lives. Step 5 (turning a single call into context edits) cannot be safely automated end-to-end — keep a human in the loop on every edit.
+The phases are deliberately separated. Bootstrapping from public data gets you to a baseline fast; call-driven refinement is where the quality lives. Step 2 (turning a single call into context edits) cannot be safely automated end-to-end — keep a human in the loop on every edit.
 
 ## Before you start — confirm the target workspace
 
@@ -21,11 +21,7 @@ cargo-ai login --oauth --workspace-uuid <uuid>
 cargo-ai login --token <workspace-scoped-token>
 ```
 
-Capture three things before the first scrape kicks off — every sub-agent and every threshold decision downstream depends on them:
-
-- **Company name + canonical domain** — what the public-source scrapers will target.
-- **Workspace UUID** — so every CLI call lands in the right repo. If you're working across multiple clients in one session, prefix the workspace name in your notes for every claim you record.
-- **Call volume estimate** — drives the repetition threshold in step 5b (call-rich → 3, medium → 2, call-poor → 1). Get this from the user, or by sampling the call source (Gong / Chorus / etc.).
+If you're working across multiple clients in one session, prefix the workspace name in your notes for every claim you record — it's easy to attribute a Phase 2 insight to the wrong company otherwise.
 
 ## Phase 1 — Bootstrap from public sources
 
@@ -37,11 +33,13 @@ Once the bootstrap commit lands, open a new agent session so the seeded files lo
 
 Goal: replace assumptions with evidence. Public sources tell you what the company *says*; calls tell you what prospects *do*.
 
-### 4. Pull the last ~3 months of sales calls
+### 1. Pull the last ~3 months of sales calls
 
 Export transcripts from Gong / Chorus / Fathom / etc. Three months is a good default — long enough to see patterns, short enough that the language is current. For low-volume workspaces, take what you have.
 
-### 5. Analyze one call at a time, human in the loop
+While you're there, capture a **call volume estimate** (transcripts / quarter). It drives the repetition threshold in step 2b.
+
+### 2. Analyze one call at a time, human in the loop
 
 For each call:
 
@@ -51,7 +49,7 @@ For each call:
 
 Do **not** batch this. An agent processing 30 calls in a loop overweights the loudest objection and underweights nuance.
 
-### 5b. Apply a repetition threshold
+### 2b. Apply a repetition threshold
 
 A single call's claim is anecdote. Before promoting a claim into context, require it to surface across multiple calls:
 
@@ -63,7 +61,7 @@ A single call's claim is anecdote. Before promoting a claim into context, requir
 
 Track candidates in a scratch doc (or draft `insight/` entries) until they cross the threshold. The threshold applies to *claims* — objections, pains, missed proof points. It does not apply to direct facts a call confirms (a customer name, a quote attributable to one named person, a competitor explicitly mentioned).
 
-### 6. Validate by generating sequences
+### 3. Validate by generating sequences
 
 Before treating the context as production-ready, run permutations through the workspace's sequence-generating play or agent and read the outputs. Useful permutations:
 
@@ -73,11 +71,11 @@ Before treating the context as production-ready, run permutations through the wo
 
 If the generated sequences read like a different company between permutations, the context has internal contradictions. Find them by walking the knowledge graph for orphans and conflicting cross-refs — see `graph-queries.md` for queries that catch the common cases.
 
-### 7. Push to production
+### 4. Push to production
 
 `runtime write` and `runtime edit` already push to the default branch — there is no separate deploy step. "Push to production" here means flipping downstream agents and plays to read from the refreshed context. If your workspace pins a specific branch or commit, update the pin now.
 
-### 8. Repeat every 2–4 weeks
+### 5. Repeat every 2–4 weeks
 
 Re-run Phase 2 on a cadence. Re-run Phase 1 only when something changes materially in public sources (rebrand, new pricing, new persona launch). On each refresh:
 
@@ -86,4 +84,4 @@ Re-run Phase 2 on a cadence. Re-run Phase 1 only when something changes material
 
 ## What not to automate
 
-Full automation of steps 5 / 5b does not reach acceptable quality in practice. The nuance lives in three decisions: which claim is worth committing, which file it belongs in, and whether an existing file should be edited or a new one created. Keep a human on each of those.
+Full automation of steps 2 / 2b does not reach acceptable quality in practice. The nuance lives in three decisions: which claim is worth committing, which file it belongs in, and whether an existing file should be edited or a new one created. Keep a human on each of those.

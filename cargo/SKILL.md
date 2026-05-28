@@ -305,7 +305,7 @@ See `../cargo-ai/SKILL.md` for model and temperature guidance by use case.
 **Lifecycle:**
 
 - For bootstrapping a fresh workspace's context from a domain (ICP, personas, proof, signals — idempotent, skips already-seeded domains), see [`../cargo-context/references/examples/bootstrap-from-domain.md`](../cargo-context/references/examples/bootstrap-from-domain.md).
-- For the full bootstrap + ongoing call-driven refresh playbook (Phase 1 + Phase 2 + cadence), see [`../cargo-context/references/examples/bootstrap-and-update.md`](../cargo-context/references/examples/bootstrap-and-update.md).
+- For the full bootstrap + ongoing call-driven refresh playbook (Phase 1 + Phase 2 + cadence), see [`../cargo-context/references/examples/lifecycle.md`](../cargo-context/references/examples/lifecycle.md).
 
 **References:** `../cargo-context/SKILL.md`
 

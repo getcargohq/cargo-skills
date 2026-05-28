@@ -1,6 +1,6 @@
 # Bootstrap workspace context from a domain
 
-The prescriptive, automatable version of Phase 1 of [`bootstrap-and-update.md`](bootstrap-and-update.md). Use this when the user wants to **seed an empty (or thin) context repo from public data**, starting from nothing more than their company's domain. The recipe enriches the company via cargo native + waterfall + theirStack, scrapes public sources in parallel sub-agents, and writes one file per atomic concept through `cargo-ai context runtime write` — skipping any domain that already has content.
+The prescriptive, automatable version of Phase 1 of [`lifecycle.md`](lifecycle.md). Use this when the user wants to **seed an empty (or thin) context repo from public data**, starting from nothing more than their company's domain. The recipe enriches the company via cargo native + waterfall + theirStack, scrapes public sources in parallel sub-agents, and writes one file per atomic concept through `cargo-ai context runtime write` — skipping any domain that already has content.
 
 Output: a populated `global/`, `icp/`, `persona/`, `client/`, `proof/`, `signal/` (and where evidence supports it, `alternative/`, `objection/`, `insight/`) — enough that a fresh agent session can hold a coherent conversation about the company. Phase 2 (call-driven refinement) is deliberately out of scope here — see the "What this recipe does NOT do" section.
 
@@ -57,7 +57,7 @@ jq -r '.files[] | select(.path | test("^[^/]+/[^_].*\\.md$")) | (.path | split("
 
 Build a skip-list: any domain (`global/`, `icp/`, etc.) with ≥ 2 non-template entries is considered "already seeded" — leave it alone. **Print the skip-list to the user** before any writes so they see what wasn't touched and can override.
 
-For domains that exist but are thin (1 entry), still write *new* files into them, but never `runtime edit` an existing file in bootstrap mode. Edits are for the refresh phase (see [Phase 2](bootstrap-and-update.md#phase-2--refresh-from-real-calls)), not bootstrap.
+For domains that exist but are thin (1 entry), still write *new* files into them, but never `runtime edit` an existing file in bootstrap mode. Edits are for the refresh phase (see [Phase 2](lifecycle.md#phase-2--refresh-from-real-calls)), not bootstrap.
 
 ### Step 3 — Enrich the seed with cargo native (factual spine)
 
@@ -210,12 +210,12 @@ Orphan refs: none.
 
 Next steps:
   - Open a fresh agent session so the seeded files load clean.
-  - Refine from real sales calls — see Phase 2 of bootstrap-and-update.md.
+  - Refine from real sales calls — see Phase 2 of lifecycle.md.
 ```
 
 ## What this recipe does NOT do
 
-- **No refinement from sales calls.** That's [Phase 2 of `bootstrap-and-update.md`](bootstrap-and-update.md#phase-2--refresh-from-real-calls) — deliberately human-in-the-loop. Auto-promoting call-derived claims into context produces plausible-sounding but shallow ICPs.
+- **No refinement from sales calls.** That's [Phase 2 of `lifecycle.md`](lifecycle.md#phase-2--refresh-from-real-calls) — deliberately human-in-the-loop. Auto-promoting call-derived claims into context produces plausible-sounding but shallow ICPs.
 - **No `runtime edit` on existing files.** Bootstrap is additive only. Edits belong to the refresh phase.
 - **No invention.** If a claim has no `source_url`, drop it. Thin context is recoverable; fabricated context erodes trust in everything downstream.
 - **No promotion past the repetition threshold.** See [authoring rules of thumb](../conventions.md#authoring-rules-of-thumb). Bootstrap claims come from public sources, which count as one source — note the URL in the file body, don't promote to a confident assertion.
