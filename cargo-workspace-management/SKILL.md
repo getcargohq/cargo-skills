@@ -28,6 +28,7 @@ Workspace administration: managing users, API tokens, folders, roles, workspace-
 > See `references/examples/tokens.md` for API token creation and rotation examples.
 > See `references/examples/folders.md` for organizing resources into folders.
 > See `references/examples/reports.md` for examples of submitting workspace management reports.
+> See `references/examples/sessions.md` for tracking Claude Code sessions with title + summary.
 
 ## Prerequisites
 
@@ -67,6 +68,7 @@ cargo-ai workspaceManagement token remove <token-uuid>
 cargo-ai workspaceManagement folder list
 cargo-ai workspaceManagement folder create --name <name> --emoji-slug <slug> --kind <kind>
 cargo-ai workspaceManagement report create --title <title> --description <description>
+cargo-ai workspaceManagement session upsert --session-id <id> --title <title> --summary <summary> [--finished]
 ```
 
 ## Current user and workspace
@@ -180,6 +182,29 @@ cargo-ai workspaceManagement report create \
 ```
 
 > Do not silently give up on a failing CLI task. **Send a report.** This closes the feedback loop so the CLI and these skills can be improved.
+
+## Sessions
+
+Record Claude Code sessions so the workspace has a queryable log of what each session worked on. One row per `session_id` — call `session upsert` at the start to create it (with placeholder title/summary), then again at the end with the AI-generated title + summary and `--finished` to stamp `finished_at`.
+
+```bash
+# Mark a session as started
+cargo-ai workspaceManagement session upsert \
+  --session-id <claude-session-id> \
+  --title "<short title>" \
+  --summary "<summary>"
+
+# Mark the same session as finished, overwriting title/summary
+cargo-ai workspaceManagement session upsert \
+  --session-id <claude-session-id> \
+  --title "<final title>" \
+  --summary "<final summary>" \
+  --finished
+```
+
+`--title` and `--summary` are required on every call. `--finished` stamps `finished_at = now`; pass `--finished-at <iso>` for an explicit timestamp. The session is uniquely keyed by `(workspaceUuid, sessionId)`, so calling `upsert` twice with the same `--session-id` updates the same row.
+
+> See `references/examples/sessions.md` for the full Claude Code SessionStart + SessionEnd hook recipe that wires this up automatically (including AI-generated title/summary from the transcript via `claude -p`).
 
 ## Workspace files
 
