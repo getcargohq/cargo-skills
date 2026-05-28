@@ -15,7 +15,7 @@ Output: a populated `global/`, `icp/`, `persona/`, `client/`, `proof/`, `signal/
 - `cargo-ai context runtime browse` / `graph get` for the idempotency check.
 - Cargo native enrichments (`matchBusiness`, `enrichBusinessFirmographics`, `enrichBusinessTechnographics`, `enrichBusinessFundingAndAcquisitions`) for the factual spine.
 - Parallel sub-agents for public-source scraping (website, careers, blog, news, review sites).
-- `anthropic.instruct` to synthesize each digest into typed markdown matching the per-domain template.
+- The driving agent's native LLM to synthesize each digest into typed markdown matching the per-domain template (no `cargo-ai orchestration action execute` double-hop — that pattern is for workflow node graphs, not for an agent already in the loop).
 - `cargo-ai context runtime write` to commit one file per concept.
 
 ## Required inputs
@@ -113,30 +113,39 @@ cargo-ai context runtime read --path proof/_template.md
 cargo-ai context runtime read --path signal/_template.md
 ```
 
-Then have `anthropic.instruct` produce one markdown file per atomic concept, conforming to the template. Example for `persona/`:
+Then synthesize one markdown file per atomic concept **directly** — the agent running this recipe is already an LLM, so don't double-hop through `cargo-ai orchestration action execute` to call Anthropic / OpenAI. That pattern is for batch synthesis inside a workflow node graph (Play/Tool); here, the agent has the digest in context and can produce the file body itself.
+
+For each domain, the agent should:
+
+1. Read the template (already done above) and the relevant digest from Step 4.
+2. Produce one complete markdown body per concept, including frontmatter (`title` + `description`, both required), section structure from the template, and source URLs cited in `## Source` or `## Day-to-day`.
+3. Write each file with `cargo-ai context runtime write`. **One concept per file** — if you're tempted to write two `## Persona` headings into one file, split into two files instead.
+
+Example for `persona/` (after the agent has drafted `vp-engineering.md` from the careers digest):
 
 ```bash
-cargo-ai orchestration action execute \
-  --action '{"kind":"connector","integrationSlug":"anthropic","actionSlug":"instruct","config":{}}' \
-  --data "{
-    \"model\": \"claude-sonnet-4-6\",
-    \"prompt\": \"You are populating a Cargo context repo. From the careers digest below, infer 2-4 buyer personas (not internal hires — the people who would BUY this product). For each, produce a complete markdown file matching the template. Include frontmatter with title + description. Cite source URLs in '## Day-to-day' or '## Source'. Return JSON: [{filename, body}]. Template: <paste persona/_template.md>. Digest: <paste careers digest>\",
-    \"output\": {\"type\": \"jsonSchema\", \"jsonSchema\": {\"type\": \"array\", \"items\": {\"type\": \"object\", \"properties\": {\"filename\": {\"type\": \"string\"}, \"body\": {\"type\": \"string\"}}}}}
-  }" \
-  --wait-until-finished > /tmp/personas.json
+cargo-ai context runtime write \
+  --path persona/vp-engineering.md \
+  --content "$(cat <<'EOF'
+---
+title: VP of Engineering
+description: Senior engineering leader at 50-500 person SaaS companies, owns platform reliability and developer productivity.
+---
+
+## Role
+- Title: VP of Engineering
+- Seniority: Executive
+- Function: Engineering
+- Reports to: CTO or CEO
+
+## KPIs
+- ...
+
+## Source
+- https://acme.com/careers/vp-engineering
+EOF
+)"
 ```
-
-Then write each file. **One concept per file** — if the model returned a single file with two `## Persona` headings, split it:
-
-```bash
-jq -c '.output[]' /tmp/personas.json | while read -r entry; do
-  filename=$(echo "$entry" | jq -r '.filename')
-  body=$(echo "$entry" | jq -r '.body')
-  cargo-ai context runtime write --path "persona/$filename" --content "$body"
-done
-```
-
-Repeat for each domain not in the skip-list from Step 2. Keep `proof/` **atomic** — one metric / quote / fact per file. Bundled proof points break filtering.
 
 ### Step 6 — Verify and report
 
@@ -167,11 +176,11 @@ Report to the user:
 | enrichBusinessTechnographics | 1 | 1 | 1 |
 | enrichBusinessFundingAndAcquisitions | 0.5 | 1 | 0.5 |
 | enrichBusinessFinancialMetrics | 0.5 | 1 | 0.5 |
-| Public-source scrapes (sub-agents) | ~0 (LLM tokens only) | 4–6 | ~0 |
-| anthropic.instruct (Sonnet, synthesis) | ~2 per domain | 6–8 | ~12–16 |
+| Public-source scrapes (sub-agents) | 0 (agent LLM tokens, not Cargo credits) | 4–6 | 0 |
+| Synthesis (agent native) | 0 (agent LLM tokens, not Cargo credits) | 6–8 | 0 |
 | context runtime write | 0 | 15–30 files | 0 |
-| **Total (standard)** | | | **~15–20 credits** |
-| **Total (deep)** adds review-site + community sub-agents and 2 extra synthesis calls | | | **~25–30 credits** |
+| **Total (standard)** | | | **~3 Cargo credits** |
+| **Total (deep)** adds review-site + community sub-agents | | | **~3 Cargo credits** |
 
 Bootstrap is one-shot per workspace. Re-running is a no-op for already-seeded domains thanks to Step 2's skip-list.
 
