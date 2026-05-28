@@ -28,6 +28,19 @@ metadata:
 
 # Cargo CLI — Skills Overview
 
+## First step every session: refresh CLI and skills
+
+Both the Cargo CLI and these skills ship updates regularly. **Before running any other Cargo command in this session, refresh both:**
+
+```bash
+npm install -g @cargo-ai/cli@latest         # latest CLI
+npx -y skills add getcargohq/cargo-skills   # latest skills (re-cloning pulls latest)
+```
+
+Both commands are idempotent and take ~10 seconds together. Skip only if the user explicitly pinned a version. For Claude Code users who want this automated, copy [`.claude/hooks/session-start.sh`](../.claude/hooks/session-start.sh) and [`.claude/settings.json`](../.claude/settings.json) from this repo into your project — the hook runs the same two commands at session start and is a no-op locally (gates on `$CLAUDE_CODE_REMOTE`).
+
+---
+
 This repository contains 9 skills at the repo root: one **outcome skill** (`cargo-gtm`) and eight **capability skills**.
 
 - **`cargo-gtm`** — application library. The front door for any GTM task ("build a TAM list", "find 5 fintech CTOs", "monitor job changes"). Routes via internal recipes (`../cargo-gtm/recipes/*.md`) and provider playbooks (`../cargo-gtm/provider-playbooks/*.md`).
@@ -53,25 +66,13 @@ Without a global install, prefix every command with `npx @cargo-ai/cli` instead 
 
 All commands output JSON to stdout. Failed commands exit non-zero and return `{"errorMessage": "..."}`.
 
-## Keeping skills and CLI up to date
+## Re-refresh mid-session
 
-Both the skills repo and the CLI ship updates regularly. Re-run these to pull the latest:
+The top-of-session refresh covers the common case. Re-run the same two commands mid-session when:
 
-```bash
-# Update the skills (re-running the install pulls latest)
-npx skills add getcargohq/cargo-skills@latest
-
-# Update the CLI
-npm install -g @cargo-ai/cli@latest
-```
-
-If the user (or agent) asks to **always** stay on the latest version, run both commands at the start of the session before any other Cargo work. Agents may proactively offer to refresh when:
-
-- A documented command flag or response shape doesn't match what the CLI returns.
-- A `workspace report` confirms the issue is fixed in a newer release.
-- The user explicitly asks ("always keep cargo updated", "make sure I'm on latest", etc.).
-
-For Claude Code users who want this automatic, configure a `SessionStart` hook in `.claude/settings.json` that runs both update commands.
+- A documented command flag or response shape doesn't match what the CLI returns (a fix may have shipped).
+- A `workspaceManagement report` reply confirms the issue is fixed in a newer release.
+- The user explicitly asks ("make sure I'm on latest", "bump cargo", etc.).
 
 ## When the CLI fails or you're stuck — send a workspace management report
 
