@@ -28,6 +28,15 @@ clawhub install getcargohq/cargo-skills --global  # ~/.openclaw/skills (shared)
 
 Each skill ships a `metadata.openclaw.install` block that pulls `@cargo-ai/cli` from npm and exposes the `cargo-ai` bin on first run, so no separate prerequisite step is needed.
 
+### Publishing new versions to ClawHub
+
+`.github/workflows/clawhub-publish.yml` publishes every skill whose `version:` was bumped, on each GitHub release. One-time setup:
+
+1. Generate an API token at [clawhub.openclaw.ai/settings/tokens](https://clawhub.openclaw.ai/settings/tokens).
+2. Add it as a repo secret named `CLAWHUB_TOKEN`.
+
+Then bump the `version:` field in each changed `SKILL.md` and cut a release. The workflow skips skills whose published version is unchanged and fails loudly on any other error. Trigger a manual run with `workflow_dispatch` (optional `dry_run: true`) to preview.
+
 ## What this skill teaches
 
 **Cargo** connects your data models (companies, contacts, deals) to external integrations (CRMs, enrichment providers, AI agents) and runs them as automated workflows. The repo ships ten skills at the root — one **router skill** (`cargo`, the overview / front door for any Cargo CLI task), one **outcome skill** (`cargo-gtm`, the front door for any GTM task), and eight **capability skills** (one per CLI domain).

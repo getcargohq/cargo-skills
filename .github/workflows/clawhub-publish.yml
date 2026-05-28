@@ -1,0 +1,86 @@
+name: Publish to ClawHub
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      changelog:
+        description: Changelog to attach to every published skill
+        required: false
+        default: Manual publish
+      dry_run:
+        description: Resolve and print, but do not publish
+        type: boolean
+        required: false
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - run: npm install -g clawhub
+
+      - name: Publish each skill
+        env:
+          CLAWHUB_AUTH: ${{ secrets.CLAWHUB_TOKEN }}
+          CHANGELOG: ${{ github.event.release.body || inputs.changelog || 'Automated publish' }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          set -u
+          if [ -z "${CLAWHUB_AUTH:-}" ]; then
+            echo "::error::CLAWHUB_TOKEN secret is not set. Generate one at clawhub.openclaw.ai/settings/tokens and add it as a repo secret."
+            exit 1
+          fi
+
+          published=0
+          skipped=0
+          failed=0
+
+          for dir in cargo cargo-gtm cargo-orchestration cargo-storage cargo-connection \
+                     cargo-ai cargo-context cargo-analytics cargo-billing cargo-workspace-management; do
+            version=$(awk -F'"' '/^version:/ {print $2; exit}' "$dir/SKILL.md")
+            if [ -z "$version" ]; then
+              echo "::error::No version: in $dir/SKILL.md"
+              failed=$((failed + 1))
+              continue
+            fi
+
+            echo "::group::$dir@$version"
+
+            if [ "$DRY_RUN" = "true" ]; then
+              echo "[dry-run] clawhub skill publish ./$dir --slug $dir --version $version"
+              echo "::endgroup::"
+              continue
+            fi
+
+            if output=$(clawhub skill publish "./$dir" \
+                  --slug "$dir" \
+                  --name "$dir" \
+                  --version "$version" \
+                  --changelog "$CHANGELOG" 2>&1); then
+              echo "$output"
+              published=$((published + 1))
+            elif echo "$output" | grep -qiE "already (exists|published)|version .* (exists|taken)"; then
+              echo "Skipped — $dir@$version already published"
+              skipped=$((skipped + 1))
+            else
+              echo "::error::Publish failed for $dir@$version"
+              echo "$output"
+              failed=$((failed + 1))
+            fi
+
+            echo "::endgroup::"
+          done
+
+          echo "Published: $published, Skipped: $skipped, Failed: $failed"
+          [ "$failed" -eq 0 ]
