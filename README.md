@@ -19,6 +19,15 @@ npx skills add getcargohq/cargo-skills
 
 Works with Claude Code, Cursor, Windsurf, GitHub Copilot, and any agent that supports the [skills.sh](https://skills.sh) standard.
 
+For [OpenClaw](https://openclaw.ai), install the bundle from ClawHub:
+
+```bash
+clawhub install getcargohq/cargo-skills           # current workspace's skills/
+clawhub install getcargohq/cargo-skills --global  # ~/.openclaw/skills (shared)
+```
+
+Each skill ships a `metadata.openclaw.install` block that pulls `@cargo-ai/cli` from npm and exposes the `cargo-ai` bin on first run, so no separate prerequisite step is needed.
+
 ## What this skill teaches
 
 **Cargo** connects your data models (companies, contacts, deals) to external integrations (CRMs, enrichment providers, AI agents) and runs them as automated workflows. The repo ships ten skills at the root — one **router skill** (`cargo`, the overview / front door for any Cargo CLI task), one **outcome skill** (`cargo-gtm`, the front door for any GTM task), and eight **capability skills** (one per CLI domain).

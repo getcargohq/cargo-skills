@@ -1,11 +1,22 @@
 ---
 name: cargo
 description: Router and overview for the Cargo CLI agent skills. Explains the nine skills (one outcome skill cargo-gtm + eight capability skills), the UUID flow between them, async polling, end-to-end use cases (enrich one record, enrich and sync to CRM, AI lead scoring, custom workflow, error monitoring, fresh-workspace bootstrap, segment export, GTM context authoring), and common gotchas (`conjonction` spelling, run vs batch, model-uuid vs segment-uuid). Load first whenever working with the Cargo CLI, when unsure which sub-skill applies, when stitching multiple sub-skills together, when bootstrapping a workspace, or when the user asks about Cargo skills in general.
+version: "1.0"
 license: MIT
 compatibility: Requires @cargo-ai/cli (npm) and a Cargo account (browser sign-in via --oauth, or an API token)
+homepage: https://github.com/getcargohq/cargo-skills
 metadata:
   author: getcargo
-  version: "1.0"
+  openclaw:
+    requires:
+      bins:
+        - cargo-ai
+    install:
+      - kind: node
+        package: "@cargo-ai/cli"
+        bins:
+          - cargo-ai
+    homepage: https://github.com/getcargohq/cargo-skills
 ---
 ```
 ██████    ████    █████    ██████   ██████
