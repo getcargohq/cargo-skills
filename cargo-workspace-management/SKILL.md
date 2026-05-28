@@ -1,7 +1,7 @@
 ---
 name: cargo-workspace-management
 description: Manage workspace users, API tokens, folders, roles, and submit reports to workspace management using the Cargo CLI. Use when the user wants to invite or manage workspace members, create or rotate API tokens, organize resources into folders, inspect workspace roles and permissions, or submit a report to workspace management when the CLI fails or is misused.
-version: "1.0.0"
+version: "1.0.1"
 compatibility: Requires @cargo-ai/cli (npm) and a Cargo account (browser sign-in via --oauth, or an API token)
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -32,19 +32,9 @@ Workspace administration: managing users, API tokens, folders, roles, workspace-
 
 ## Prerequisites
 
-```bash
-npm install -g @cargo-ai/cli
-cargo-ai login --oauth                                  # browser sign-in (recommended)
-# or: cargo-ai login --token <your-api-token>           # workspace-scoped API token (non-interactive)
-# Pin a default workspace at login (with --oauth)
-cargo-ai login --oauth --workspace-uuid <uuid>
-```
+See [`../cargo/references/prerequisites.md`](../cargo/references/prerequisites.md) for install, login (`--oauth` / `--token`), JSON output conventions, and error shapes. Verify the session with `cargo-ai whoami` before running any of the commands below.
 
-Verify with `cargo-ai whoami`. All commands output JSON to stdout. Without a global install, prefix every command with `npx @cargo-ai/cli` instead of `cargo-ai`.
-
-Failed commands exit non-zero and return `{"errorMessage": "..."}`.
-
-**Note:** Most workspace management commands require a token with admin access.
+**Admin-only:** user, role, and token writes require a token with admin access on the workspace. Folder writes and `report create` work with non-admin tokens.
 
 ## Discover resources first
 

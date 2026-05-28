@@ -1,7 +1,7 @@
 ---
 name: cargo-billing
 description: Pull usage metrics, check subscription status, view invoices, and manage credits using the Cargo CLI. Use when the user wants billing analytics, usage reports, credit usage, cost analysis, subscription details, or invoice history for their Cargo workspace.
-version: "1.0.0"
+version: "1.0.1"
 compatibility: Requires @cargo-ai/cli (npm) and a Cargo account (browser sign-in via --oauth, or an API token)
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -28,19 +28,9 @@ Billing and credit management: pulling usage metrics, checking subscription stat
 
 ## Prerequisites
 
-```bash
-npm install -g @cargo-ai/cli
-cargo-ai login --oauth                                  # browser sign-in (recommended)
-# or: cargo-ai login --token <your-api-token>           # workspace-scoped API token (non-interactive)
-# Pin a default workspace at login (with --oauth)
-cargo-ai login --oauth --workspace-uuid <uuid>
-```
+See [`../cargo/references/prerequisites.md`](../cargo/references/prerequisites.md) for install, login (`--oauth` / `--token`), JSON output conventions, and error shapes. Verify the session with `cargo-ai whoami` before running any of the commands below.
 
-Verify with `cargo-ai whoami`. All commands output JSON to stdout. Without a global install, prefix every command with `npx @cargo-ai/cli` instead of `cargo-ai`.
-
-Failed commands exit non-zero and return `{"errorMessage": "..."}`.
-
-**Note:** Billing commands require a token with admin access to the workspace.
+**Admin-only:** every command in this skill requires a token with admin access on the workspace. Non-admin tokens return `{"errorMessage":"forbidden"}`.
 
 ## Discover resources first
 

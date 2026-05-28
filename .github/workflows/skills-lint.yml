@@ -1,0 +1,24 @@
+name: skills-lint
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Validate SKILL.md frontmatter, JSON snippets, internal links
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Run skill-bundle linter
+        run: node .github/scripts/skills-lint.mjs .
