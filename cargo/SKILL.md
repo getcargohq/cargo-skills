@@ -12,7 +12,7 @@ metadata:
         - cargo-ai
     install:
       - kind: node
-        package: "@cargo-ai/cli"
+        package: "@cargo-ai/cli@latest"
         bins:
           - cargo-ai
     homepage: https://github.com/getcargohq/cargo-skills
