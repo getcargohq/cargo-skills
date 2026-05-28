@@ -1,7 +1,7 @@
 ---
 name: cargo-storage
 description: Manage models, datasets, columns, and relationships and query workspace storage with SQL using the Cargo CLI. Use when the user wants to inspect or modify data models, create or update columns, list datasets, set model relationships, understand the schema, or run SQL against storage.
-version: "1.1.0"
+version: "1.1.1"
 compatibility: Requires @cargo-ai/cli (npm) and a Cargo account (browser sign-in via --oauth, or an API token)
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -31,17 +31,7 @@ Data layer management: inspecting and modifying models, datasets, columns, relat
 
 ## Prerequisites
 
-```bash
-npm install -g @cargo-ai/cli
-cargo-ai login --oauth                                  # browser sign-in (recommended)
-# or: cargo-ai login --token <your-api-token>           # workspace-scoped API token (non-interactive)
-# Pin a default workspace at login (with --oauth)
-cargo-ai login --oauth --workspace-uuid <uuid>
-```
-
-Verify with `cargo-ai whoami`. All commands output JSON to stdout. Without a global install, prefix every command with `npx @cargo-ai/cli` instead of `cargo-ai`.
-
-Failed commands exit non-zero and return `{"errorMessage": "..."}`.
+See [`../cargo/references/prerequisites.md`](../cargo/references/prerequisites.md) for install, login (`--oauth` / `--token`), JSON output conventions, and error shapes. Verify the session with `cargo-ai whoami` before running any of the commands below.
 
 ## Discover resources first
 

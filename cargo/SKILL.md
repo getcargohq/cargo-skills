@@ -1,7 +1,7 @@
 ---
 name: cargo
 description: Router and overview for the Cargo CLI agent skills. Explains the nine skills (one outcome skill cargo-gtm + eight capability skills), the UUID flow between them, async polling, end-to-end use cases (enrich one record, enrich and sync to CRM, AI lead scoring, custom workflow, error monitoring, fresh-workspace bootstrap, segment export, GTM context authoring), and common gotchas (`conjonction` spelling, run vs batch, model-uuid vs segment-uuid). Load first whenever working with the Cargo CLI, when unsure which sub-skill applies, when stitching multiple sub-skills together, when bootstrapping a workspace, or when the user asks about Cargo skills in general.
-version: "1.0.0"
+version: "1.1.0"
 compatibility: Requires @cargo-ai/cli (npm) and a Cargo account (browser sign-in via --oauth, or an API token)
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -66,7 +66,7 @@ cargo-ai whoami
 
 Without a global install, prefix every command with `npx @cargo-ai/cli` instead of `cargo-ai`.
 
-All commands output JSON to stdout. Failed commands exit non-zero and return `{"errorMessage": "..."}`.
+All commands output JSON to stdout. Failed commands exit non-zero and return `{"errorMessage": "..."}`. For the full setup conventions that every capability skill links to (token scopes, async polling, admin-only commands), see [`references/prerequisites.md`](references/prerequisites.md).
 
 ## Re-refresh mid-session
 
@@ -102,24 +102,24 @@ This is the official feedback channel — every report is reviewed by the Cargo 
 
 Load when the user states a real-world goal.
 
-| Skill                                     | Load when you need to…                                                                             |
-| ----------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| [`cargo-gtm`](#cargo-gtm)                 | Any GTM task — sourcing, enrichment, verification, scoring, sequencing, CRM sync, signal monitoring (job changes, funding, tech-stack/hiring intent). Routes via recipes (`recipes/`), guides (`guides/`), and provider playbooks (`provider-playbooks/`). |
+| Skill                                                       | Load when you need to…                                                                             |
+| ----------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| [`cargo-gtm`](../cargo-gtm/SKILL.md) ([recap](#cargo-gtm))  | Any GTM task — sourcing, enrichment, verification, scoring, sequencing, CRM sync, signal monitoring (job changes, funding, tech-stack/hiring intent). Routes via recipes (`recipes/`), guides (`guides/`), and provider playbooks (`provider-playbooks/`). |
 
 ### Capability skills
 
-Load for a specific CLI domain.
+Load for a specific CLI domain. The first link in each row jumps to the actual SKILL.md; the parenthetical jumps to the recap on this page.
 
-| Skill                                                                 | Load when you need to…                                                                             |
-| --------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| [`cargo-orchestration`](#cargo-orchestration)                         | Execute actions, run workflows, trigger batches, chat with agents, query orchestration with SQL (ClickHouse) |
-| [`cargo-analytics`](#cargo-analytics)                                 | Download run results, export segment data, monitor error rates and metrics                         |
-| [`cargo-billing`](#cargo-billing)                                     | Check credit usage, view subscription details, track costs per workflow or connector               |
-| [`cargo-storage`](#cargo-storage)                                     | Inspect or modify data models, columns, datasets, and relationships; query workspace storage with SQL |
-| [`cargo-connection`](#cargo-connection)                               | Manage connector authentication, discover available integrations and their actions                 |
-| [`cargo-ai`](#cargo-ai)                                               | Create and configure agents, upload files for RAG, manage MCP servers                              |
-| [`cargo-context`](#cargo-context)                                     | Browse/read/write/edit the workspace's git-backed GTM context repo, run commands in its runtime sandbox, inspect the knowledge graph |
-| [`cargo-workspace-management`](#cargo-workspace-management)           | Invite users, create API tokens, organize folders, manage roles, report CLI issues to management   |
+| Skill                                                                                                       | Load when you need to…                                                                             |
+| ----------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| [`cargo-orchestration`](../cargo-orchestration/SKILL.md) ([recap](#cargo-orchestration))                    | Execute actions, run workflows, trigger batches, chat with agents, query orchestration with SQL (ClickHouse) |
+| [`cargo-analytics`](../cargo-analytics/SKILL.md) ([recap](#cargo-analytics))                                | Download run results, export segment data, monitor error rates and metrics                         |
+| [`cargo-billing`](../cargo-billing/SKILL.md) ([recap](#cargo-billing))                                      | Check credit usage, view subscription details, track costs per workflow or connector               |
+| [`cargo-storage`](../cargo-storage/SKILL.md) ([recap](#cargo-storage))                                      | Inspect or modify data models, columns, datasets, and relationships; query workspace storage with SQL |
+| [`cargo-connection`](../cargo-connection/SKILL.md) ([recap](#cargo-connection))                             | Manage connector authentication, discover available integrations and their actions                 |
+| [`cargo-ai`](../cargo-ai/SKILL.md) ([recap](#cargo-ai))                                                     | Create and configure agents, upload files for RAG, manage MCP servers                              |
+| [`cargo-context`](../cargo-context/SKILL.md) ([recap](#cargo-context))                                      | Browse/read/write/edit the workspace's git-backed GTM context repo, run commands in its runtime sandbox, inspect the knowledge graph |
+| [`cargo-workspace-management`](../cargo-workspace-management/SKILL.md) ([recap](#cargo-workspace-management)) | Invite users, create API tokens, organize folders, manage roles, report CLI issues to management   |
 
 ---
 

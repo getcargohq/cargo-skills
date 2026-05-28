@@ -1,7 +1,7 @@
 ---
 name: cargo-connection
 description: Manage connectors and integrations using the Cargo CLI. Use when the user wants to list, create, update, or remove connectors, discover available integrations, or understand what connector actions are available for use in workflows.
-version: "1.0.0"
+version: "1.1.0"
 compatibility: Requires @cargo-ai/cli (npm) and a Cargo account (browser sign-in via --oauth, or an API token)
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -28,25 +28,15 @@ Connector and integration management: listing connectors, discovering available 
 > See `references/examples/integrations.md` for listing available integrations and OAuth flows.
 > For third-party connector rate limit handling and retry config in workflows, see `cargo-orchestration/references/polling.md` and `cargo-orchestration/references/troubleshooting.md`. Native integrations do not have rate limits.
 
-## Prerequisites
-
-```bash
-npm install -g @cargo-ai/cli
-cargo-ai login --oauth                                  # browser sign-in (recommended)
-# or: cargo-ai login --token <your-api-token>           # workspace-scoped API token (non-interactive)
-# Pin a default workspace at login (with --oauth)
-cargo-ai login --oauth --workspace-uuid <uuid>
-```
-
-Verify with `cargo-ai whoami`. All commands output JSON to stdout. Without a global install, prefix every command with `npx @cargo-ai/cli` instead of `cargo-ai`.
-
-Failed commands exit non-zero and return `{"errorMessage": "..."}`.
-
 ## Key concepts
 
 **Integration:** The external service type (e.g. HubSpot, Clearbit, Salesforce). Integrations define what actions are available.
 
 **Connector:** An authenticated instance of an integration. One integration can have multiple connectors (e.g. two different HubSpot accounts). Connectors are what you reference in workflow node graphs.
+
+## Prerequisites
+
+See [`../cargo/references/prerequisites.md`](../cargo/references/prerequisites.md) for install, login (`--oauth` / `--token`), JSON output conventions, and error shapes. Verify the session with `cargo-ai whoami` before running any of the commands below.
 
 ## Discover resources first
 
@@ -62,12 +52,12 @@ cargo-ai connection native-integration get                # built-in Cargo actio
 
 These two commands return **different sets of actions** and are not interchangeable:
 
-| Command | What it returns | When to use |
-|---|---|---|
-| `integration get <slug>` | Actions specific to a third-party service (e.g. HubSpot contact CRUD, deal management, Salesforce queries) | When you need service-specific actions to use in a connector node — **use this for HubSpot, Salesforce, Clearbit, etc.** |
-| `native-integration get` | Generic built-in Cargo actions (e.g. HTTP requests, data transforms, internal utilities) | When you need Cargo-native capabilities that don't belong to any specific third-party connector |
+| Command | Third-party service actions (HubSpot, Salesforce, Clearbit, …) | Built-in Cargo actions (HTTP, transforms, utilities) | When to use |
+|---|---|---|---|
+| `integration get <slug>` | ✓ | ✗ | You need actions for a specific third-party service — **use this for HubSpot, Salesforce, Clearbit, etc.** |
+| `native-integration get` | ✗ | ✓ | You need Cargo-native capabilities that don't belong to any specific third-party connector |
 
-**Example:** To find HubSpot-specific actions, use `integration get hubspot` — not `native-integration get`. The latter will only return generic actions unrelated to HubSpot.
+**Example:** To find HubSpot-specific actions, use `integration get hubspot` — `native-integration get` will not return them.
 
 ## Quick reference
 

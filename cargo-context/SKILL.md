@@ -1,7 +1,7 @@
 ---
 name: cargo-context
 description: Inspect and edit the workspace's git-backed context repository (the GTM knowledge base of markdown/MDX files) and its runtime sandbox using the Cargo CLI. Use when the user wants to browse/read/write/edit context files, run a command in the sandbox, or inspect the context knowledge graph.
-version: "1.0.0"
+version: "1.0.1"
 compatibility: Requires @cargo-ai/cli (npm) and a Cargo account (browser sign-in via --oauth, or an API token)
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -38,17 +38,7 @@ The **context** is a git-backed repository of typed markdown/MDX files that capt
 
 ## Prerequisites
 
-```bash
-npm install -g @cargo-ai/cli
-cargo-ai login --oauth                                  # browser sign-in (recommended)
-# or: cargo-ai login --token <your-api-token>           # workspace-scoped API token (non-interactive)
-# Pin a default workspace at login (with --oauth)
-cargo-ai login --oauth --workspace-uuid <uuid>
-```
-
-Verify with `cargo-ai whoami`. All commands output JSON to stdout. Without a global install, prefix every command with `npx @cargo-ai/cli` instead of `cargo-ai`.
-
-Failed commands exit non-zero and return `{"errorMessage": "..."}`.
+See [`../cargo/references/prerequisites.md`](../cargo/references/prerequisites.md) for install, login (`--oauth` / `--token`), JSON output conventions, and error shapes. Verify the session with `cargo-ai whoami` before running any of the commands below — `runtime write` and `runtime edit` push commits to the workspace's context repo, so confirming `workspace.name` first is non-negotiable.
 
 ## Discover the context first
 
