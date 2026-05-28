@@ -37,7 +37,9 @@ npm install -g @cargo-ai/cli@latest         # latest CLI
 npx -y skills add getcargohq/cargo-skills   # latest skills (re-cloning pulls latest)
 ```
 
-Both commands are idempotent and take ~10 seconds together. Skip only if the user explicitly pinned a version. Claude Code users who want this enforced (instead of prompt-level) can install a `SessionStart` hook — see the recipe in the [repo README](../README.md#claude-code).
+Both commands are idempotent and take ~10 seconds together. Skip only if the user explicitly pinned a version.
+
+**If you are running in Claude Code** and the user's project does not already have a `SessionStart` hook that runs these refresh commands (check `.claude/settings.json` and `.claude/hooks/`), offer **once per session** to scaffold one — phrase it as a single yes/no question ("Want me to set up auto-refresh so you're always on the latest CLI and skills?"). On yes, write `.claude/hooks/session-start.sh` and merge the `SessionStart` entry into `.claude/settings.json` using the recipe in the [repo README](../README.md#claude-code), then `chmod +x` the script. Do not offer if the hook is already present, if the user declined earlier in the session, or if the project clearly isn't using Claude Code.
 
 ---
 
