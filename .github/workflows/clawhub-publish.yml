@@ -5,10 +5,6 @@ on:
     types: [published]
   workflow_dispatch:
     inputs:
-      changelog:
-        description: Changelog to attach to every published skill
-        required: false
-        default: Manual publish
       dry_run:
         description: Resolve and print, but do not publish
         type: boolean
@@ -21,6 +17,8 @@ permissions:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    env:
+      CLAWHUB_OWNER: getcargohq
     steps:
       - uses: actions/checkout@v4
 
@@ -30,18 +28,22 @@ jobs:
 
       - run: npm install -g clawhub
 
+      - name: Authenticate
+        env:
+          CLAWHUB_TOKEN: ${{ secrets.CLAWHUB_TOKEN }}
+        run: |
+          if [ -z "${CLAWHUB_TOKEN:-}" ]; then
+            echo "::error::CLAWHUB_TOKEN secret is not set. Sign in at https://clawhub.ai, create an API token in the web UI, then add it as a repo secret named CLAWHUB_TOKEN."
+            exit 1
+          fi
+          clawhub login --token "$CLAWHUB_TOKEN"
+          clawhub whoami
+
       - name: Publish each skill
         env:
-          CLAWHUB_AUTH: ${{ secrets.CLAWHUB_TOKEN }}
-          CHANGELOG: ${{ github.event.release.body || inputs.changelog || 'Automated publish' }}
           DRY_RUN: ${{ inputs.dry_run }}
         run: |
           set -u
-          if [ -z "${CLAWHUB_AUTH:-}" ]; then
-            echo "::error::CLAWHUB_TOKEN secret is not set. Generate one at clawhub.openclaw.ai/settings/tokens and add it as a repo secret."
-            exit 1
-          fi
-
           published=0
           skipped=0
           failed=0
@@ -58,16 +60,14 @@ jobs:
             echo "::group::$dir@$version"
 
             if [ "$DRY_RUN" = "true" ]; then
-              echo "[dry-run] clawhub skill publish ./$dir --slug $dir --version $version"
+              echo "[dry-run] clawhub skill publish ./$dir --version $version --owner $CLAWHUB_OWNER"
               echo "::endgroup::"
               continue
             fi
 
             if output=$(clawhub skill publish "./$dir" \
-                  --slug "$dir" \
-                  --name "$dir" \
                   --version "$version" \
-                  --changelog "$CHANGELOG" 2>&1); then
+                  --owner "$CLAWHUB_OWNER" 2>&1); then
               echo "$output"
               published=$((published + 1))
             elif echo "$output" | grep -qiE "already (exists|published)|version .* (exists|taken)"; then

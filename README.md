@@ -32,10 +32,10 @@ Each skill ships a `metadata.openclaw.install` block that pulls `@cargo-ai/cli` 
 
 `.github/workflows/clawhub-publish.yml` publishes every skill whose `version:` was bumped, on each GitHub release. One-time setup:
 
-1. Generate an API token at [clawhub.openclaw.ai/settings/tokens](https://clawhub.openclaw.ai/settings/tokens).
+1. Sign in at [clawhub.ai](https://clawhub.ai) with the GitHub account that owns the `getcargohq` org publisher (run `clawhub publisher create getcargohq` first if it doesn't exist), then generate an API token from the web UI.
 2. Add it as a repo secret named `CLAWHUB_TOKEN`.
 
-Then bump the `version:` field in each changed `SKILL.md` and cut a release. The workflow skips skills whose published version is unchanged and fails loudly on any other error. Trigger a manual run with `workflow_dispatch` (optional `dry_run: true`) to preview.
+Then bump the `version:` field in each changed `SKILL.md` (semver, e.g. `1.0.0` → `1.1.0`) and cut a release. The workflow authenticates with `clawhub login --token`, calls `clawhub skill publish ./<dir> --version <semver> --owner getcargohq` for each skill, skips ones whose published version is unchanged, and fails on any other error. Trigger a manual run with `workflow_dispatch` (optional `dry_run: true`) to preview.
 
 ## What this skill teaches
 
