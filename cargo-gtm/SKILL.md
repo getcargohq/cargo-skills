@@ -63,8 +63,6 @@ Scan this list and read the recipe matching your task. **When a recipe matches: 
 
 If none match, scan the phase docs above for the closest pattern and adapt — or invoke [`agents/execution-plan-creator.md`](agents/execution-plan-creator.md) to compose a custom chain with provider/action slugs and cost estimates.
 
-> **Workspace-context bootstrap?** That's a cargo-context lifecycle event, not a GTM execution recipe. See [`../cargo-context/references/examples/bootstrap-from-domain.md`](../cargo-context/references/examples/bootstrap-from-domain.md).
-
 ## 3) Priority provider stack (recipes lead with these 6)
 
 These six credits-based providers cover the full prospecting → enrichment → verification → signal pipeline at the lowest credit cost in the catalog. Every recipe in this skill's `recipes/` leads with this stack:
