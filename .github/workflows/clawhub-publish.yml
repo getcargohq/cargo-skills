@@ -1,6 +1,8 @@
 name: Publish to ClawHub
 
 on:
+  push:
+    branches: [main]
   release:
     types: [published]
   workflow_dispatch:
@@ -18,7 +20,7 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     env:
-      CLAWHUB_OWNER: getcargohq
+      CLAWHUB_OWNER: cargo-ai
     steps:
       - uses: actions/checkout@v4
 
