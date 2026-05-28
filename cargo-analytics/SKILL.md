@@ -1,11 +1,21 @@
 ---
 name: cargo-analytics
 description: Download workflow run results, export segment data, and monitor run metrics using the Cargo CLI. Use when the user wants run metrics, error rates, data export, or download results for their Cargo workspace. For billing and credit usage, use the cargo-billing skill instead.
-license: MIT
+version: "1.4.0"
 compatibility: Requires @cargo-ai/cli (npm) and a Cargo account (browser sign-in via --oauth, or an API token)
+homepage: https://github.com/getcargohq/cargo-skills
 metadata:
   author: getcargo
-  version: "1.4"
+  openclaw:
+    requires:
+      bins:
+        - cargo-ai
+    install:
+      - kind: node
+        package: "@cargo-ai/cli"
+        bins:
+          - cargo-ai
+    homepage: https://github.com/getcargohq/cargo-skills
 ---
 
 # Cargo CLI — Analytics

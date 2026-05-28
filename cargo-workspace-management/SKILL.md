@@ -1,11 +1,21 @@
 ---
 name: cargo-workspace-management
 description: Manage workspace users, API tokens, folders, roles, and submit reports to workspace management using the Cargo CLI. Use when the user wants to invite or manage workspace members, create or rotate API tokens, organize resources into folders, inspect workspace roles and permissions, or submit a report to workspace management when the CLI fails or is misused.
-license: MIT
+version: "1.0.0"
 compatibility: Requires @cargo-ai/cli (npm) and a Cargo account (browser sign-in via --oauth, or an API token)
+homepage: https://github.com/getcargohq/cargo-skills
 metadata:
   author: getcargo
-  version: "1.0"
+  openclaw:
+    requires:
+      bins:
+        - cargo-ai
+    install:
+      - kind: node
+        package: "@cargo-ai/cli"
+        bins:
+          - cargo-ai
+    homepage: https://github.com/getcargohq/cargo-skills
 ---
 
 # Cargo CLI — Workspace

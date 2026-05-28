@@ -1,11 +1,21 @@
 ---
 name: cargo-orchestration
 description: Interact with the Cargo platform via CLI. Use when the user wants to execute an action, run a workflow, trigger a batch, message an AI agent, query orchestration runtime tables (runs/batches/spans/records) with SQL, fetch segment records, or inspect a model schema.
-license: MIT
+version: "1.4.0"
 compatibility: Requires @cargo-ai/cli (npm) and a Cargo account (browser sign-in via --oauth, or an API token)
+homepage: https://github.com/getcargohq/cargo-skills
 metadata:
   author: getcargo
-  version: "1.4"
+  openclaw:
+    requires:
+      bins:
+        - cargo-ai
+    install:
+      - kind: node
+        package: "@cargo-ai/cli"
+        bins:
+          - cargo-ai
+    homepage: https://github.com/getcargohq/cargo-skills
 ---
 
 # Cargo CLI — Orchestration

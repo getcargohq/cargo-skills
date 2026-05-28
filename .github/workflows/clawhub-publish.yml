@@ -1,0 +1,86 @@
+name: Publish to ClawHub
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Resolve and print, but do not publish
+        type: boolean
+        required: false
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    env:
+      CLAWHUB_OWNER: getcargohq
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - run: npm install -g clawhub
+
+      - name: Authenticate
+        env:
+          CLAWHUB_TOKEN: ${{ secrets.CLAWHUB_TOKEN }}
+        run: |
+          if [ -z "${CLAWHUB_TOKEN:-}" ]; then
+            echo "::error::CLAWHUB_TOKEN secret is not set. Sign in at https://clawhub.ai, create an API token in the web UI, then add it as a repo secret named CLAWHUB_TOKEN."
+            exit 1
+          fi
+          clawhub login --token "$CLAWHUB_TOKEN"
+          clawhub whoami
+
+      - name: Publish each skill
+        env:
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          set -u
+          published=0
+          skipped=0
+          failed=0
+
+          for dir in cargo cargo-gtm cargo-orchestration cargo-storage cargo-connection \
+                     cargo-ai cargo-context cargo-analytics cargo-billing cargo-workspace-management; do
+            version=$(awk -F'"' '/^version:/ {print $2; exit}' "$dir/SKILL.md")
+            if [ -z "$version" ]; then
+              echo "::error::No version: in $dir/SKILL.md"
+              failed=$((failed + 1))
+              continue
+            fi
+
+            echo "::group::$dir@$version"
+
+            if [ "$DRY_RUN" = "true" ]; then
+              echo "[dry-run] clawhub skill publish ./$dir --version $version --owner $CLAWHUB_OWNER"
+              echo "::endgroup::"
+              continue
+            fi
+
+            if output=$(clawhub skill publish "./$dir" \
+                  --version "$version" \
+                  --owner "$CLAWHUB_OWNER" 2>&1); then
+              echo "$output"
+              published=$((published + 1))
+            elif echo "$output" | grep -qiE "already (exists|published)|version .* (exists|taken)"; then
+              echo "Skipped — $dir@$version already published"
+              skipped=$((skipped + 1))
+            else
+              echo "::error::Publish failed for $dir@$version"
+              echo "$output"
+              failed=$((failed + 1))
+            fi
+
+            echo "::endgroup::"
+          done
+
+          echo "Published: $published, Skipped: $skipped, Failed: $failed"
+          [ "$failed" -eq 0 ]

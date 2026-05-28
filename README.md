@@ -19,6 +19,24 @@ npx skills add getcargohq/cargo-skills
 
 Works with Claude Code, Cursor, Windsurf, GitHub Copilot, and any agent that supports the [skills.sh](https://skills.sh) standard.
 
+For [OpenClaw](https://openclaw.ai), install the bundle from ClawHub:
+
+```bash
+clawhub install getcargohq/cargo-skills           # current workspace's skills/
+clawhub install getcargohq/cargo-skills --global  # ~/.openclaw/skills (shared)
+```
+
+Each skill ships a `metadata.openclaw.install` block that pulls `@cargo-ai/cli` from npm and exposes the `cargo-ai` bin on first run, so no separate prerequisite step is needed.
+
+### Publishing new versions to ClawHub
+
+`.github/workflows/clawhub-publish.yml` publishes every skill whose `version:` was bumped, on each GitHub release. One-time setup:
+
+1. Sign in at [clawhub.ai](https://clawhub.ai) with the GitHub account that owns the `getcargohq` org publisher (run `clawhub publisher create getcargohq` first if it doesn't exist), then generate an API token from the web UI.
+2. Add it as a repo secret named `CLAWHUB_TOKEN`.
+
+Then bump the `version:` field in each changed `SKILL.md` (semver, e.g. `1.0.0` → `1.1.0`) and cut a release. The workflow authenticates with `clawhub login --token`, calls `clawhub skill publish ./<dir> --version <semver> --owner getcargohq` for each skill, skips ones whose published version is unchanged, and fails on any other error. Trigger a manual run with `workflow_dispatch` (optional `dry_run: true`) to preview.
+
 ## What this skill teaches
 
 **Cargo** connects your data models (companies, contacts, deals) to external integrations (CRMs, enrichment providers, AI agents) and runs them as automated workflows. The repo ships ten skills at the root — one **router skill** (`cargo`, the overview / front door for any Cargo CLI task), one **outcome skill** (`cargo-gtm`, the front door for any GTM task), and eight **capability skills** (one per CLI domain).
