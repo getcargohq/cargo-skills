@@ -60,6 +60,7 @@ Scan this list and read the recipe matching your task. **When a recipe matches: 
 | [`recipes/funding-watch.md`](recipes/funding-watch.md) | Tracking companies that recently raised funding |
 | [`recipes/tech-intent.md`](recipes/tech-intent.md) | Finding companies by tech-stack or hiring-intent signals |
 | [`recipes/icp-discovery.md`](recipes/icp-discovery.md) | Diffing Closed-Won vs Closed-Lost segments to surface ICP signals |
+| [`recipes/bootstrap-context-from-domain.md`](recipes/bootstrap-context-from-domain.md) | Seeding an empty workspace context repo from just a domain (ICP, personas, proof, signals) — automatable Phase 1 |
 
 If none match, scan the phase docs above for the closest pattern and adapt — or invoke [`agents/execution-plan-creator.md`](agents/execution-plan-creator.md) to compose a custom chain with provider/action slugs and cost estimates.
 
