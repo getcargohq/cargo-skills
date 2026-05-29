@@ -159,10 +159,64 @@ saves the trial-and-error the UI would otherwise teach you:
   cleanly — return strings/numbers/lists/dicts. **This matters across `delay`
   boundaries** (next section).
 
-The JS `script` node uses a Node `vm` sandbox with a 30s timeout and a fixed
-module allowlist: `axios`, `cheerio`, `crypto-js`, `date-fns`, `jsonschema`,
-`knex`, `lodash`, `uuid`, `zod`, `url` (plus `Buffer` and a UTC-pinned `Date`).
-Any other `require(...)` throws.
+The JS `script` node has its own sandbox — see the next section.
+
+## The JS `script` node sandbox — if you must use `script`
+
+The same "native node first" rule applies to `script` as to `python`: reach for it
+only for genuine multi-step computation, not for reshaping fields (`variables`),
+routing (`branch`/`filter`/`switch`), LLM calls (`agent`), or HTTP (connector). The
+`script` node is the better of the two code nodes for transforms — it's lighter
+than Pyodide and ships `lodash` — but it is **not** a normal Node.js environment.
+It runs in a locked-down Node `vm` context:
+
+- **Fixed module allowlist.** Only these `require(...)` targets work; anything else
+  throws `Module <name> is not allowed`:
+  `axios`, `cheerio`, `crypto-js`, `date-fns`, `jsonschema`, `knex`, `lodash`,
+  `uuid`, `zod`, `url`. There is **no `import`** — use CommonJS `require`.
+  - `lodash` covers nearly every transform people write loops for
+    (`_.groupBy`, `_.uniqBy`, `_.keyBy`, `_.chunk`, `_.orderBy`); `date-fns` covers
+    date math; `cheerio` parses HTML; `zod`/`jsonschema` validate shapes.
+- **No `console`.** The sandbox does not expose `console` — `console.log(...)`
+  throws `ReferenceError`. You cannot "add print statements"; debug by returning
+  intermediate values and reading them in `runContext.<slug>.result` via `run get`.
+- **`Date` is pinned to UTC.** `new Date()` is overridden so the local-time getters
+  return UTC — `getHours()`, `getDate()`, `getTimezoneOffset()` (always `0`), etc.
+  all behave as if the machine is in UTC. Don't write timezone-offset math expecting
+  local time.
+- **Available globals:** `require` (allowlisted), `Buffer`, the UTC `Date`, and your
+  `nodes` / `parentNodes` context. **Not** available: `process`, `fetch`, `global`,
+  `setTimeout`/`setInterval`, `__dirname`, the filesystem, etc.
+- **HTTP is possible via `axios`, but prefer the connector node.** A `script` node
+  *can* `await axios(...)`, but that call is invisible in `runContext` (only the
+  returned `result` is captured), isn't covered by per-node `retry`, and bypasses
+  connector rate-limit handling. Use an HTTP `connector` node for API calls; reserve
+  `axios` in `script` for the rare case a connector can't express the request.
+- **~30s execution timeout**, and **output must be JSON-serializable.** `return` your
+  value (it becomes `{{nodes.<slug>.result}}`); return plain
+  strings/numbers/booleans/arrays/objects. Functions, class instances, circular
+  structures, etc. won't round-trip — and that **matters across `delay` boundaries**
+  (next section).
+
+```javascript
+// JS script node — collapse a group node's array into one object
+const _ = require("lodash");
+const items = nodes.fetch_loop;                 // group output is an array
+return {
+  combined_markdown: items.map(i => i.markdown).join("\n\n"),
+  by_domain: _.keyBy(items, "domain"),
+};
+```
+
+Quick comparison of the two code nodes:
+
+| | `python` (Pyodide/WASM) | `script` (Node `vm`) |
+| --- | --- | --- |
+| Network | None at all | `axios` works (prefer connector) |
+| Logging | none reachable | no `console` either |
+| Libraries | pure-Python / Pyodide packages, auto-loaded | fixed allowlist (incl. `lodash`) |
+| Best for | last resort | preferred for transforms |
+| Output | assign `result`, JSON-serializable | `return` value, JSON-serializable |
 
 ## What survives a `delay` boundary
 
