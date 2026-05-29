@@ -32,32 +32,47 @@ and the machine self-scales sourcing, spend, channels, and strategy to hit it.
 
 ---
 
-## 1. Architecture
+## 1. Architecture — three layers, build almost nothing
+
+The runtime is **[Paperclip](https://github.com/paperclipai/paperclip)** (Node.js + React, Postgres),
+an open-source orchestrator that runs a team of AI agents as a business. It already provides the
+heartbeat loop, budget control, routines, task system, and governance that earlier drafts of this
+plan hand-rolled. We do not build a runtime — we configure one.
 
 ```
-        OpenClaw  (control plane / brain)
-        - tick loop + EMPC allocator (the optimizer)
-        - reply classification + calendar booking
-        - budget + throttle + autonomy policy
-        - strategy search (exploration vs exploitation)
-                    │
-                    │  invokes via cargo-ai CLI / MCP — JSON in/out, async
-                    ▼
-        Cargo     (execution plane / hands)
-        - source · enrich · verify · detect signals · sequence · CRM sync
-        - storage = system of record (game state)
-        - billing = the credit/wire gauge
-                    │
-                    └── inbox + calendar ── (BUILD THIS — Cargo does not cover it)
+Paperclip (runtime host)
+  heartbeat · budget policy · routines/cron · task system · governance · Postgres
+        │ wakes each heartbeat
+OpenClaw  (brain / agent adapter)   "if it can receive a heartbeat, it's hired"
+  runs the EMPC allocator policy; loads skills from .agents/skills; calls cargo-ai
+        │ JSON in/out, async
+Cargo     (execution plane / hands)
+  source · enrich · verify · detect signals · sequence · CRM sync
+  storage = GTM system of record · billing = the credit/wire gauge
+        │
+        └── inbox + calendar ── the ONLY net-new code (Paperclip adapter-plugin / routine)
 ```
+
+**What Paperclip replaces (we configure, not code):**
+
+| Earlier bespoke plan | Paperclip primitive |
+|---|---|
+| tick loop / scheduler (§6) | **Heartbeat** — DB-backed wakeup queue with coalescing |
+| budget gate / autonomy dial (§10) | **Budget policy** — cost tracking, warning thresholds, hard stops |
+| fast / main / growth ticks (§6–7) | **Routines / Schedules** — cron with structured logs + cost events |
+| stage machine + resumability (§5) | **Work / Task system** — atomic checkout, persistent context across heartbeats |
+| human escape hatch (§10) | **Governance & Approvals** — approval gates, revisioned config, rollback |
+| tool binding (§3) | **Skills** loaded from `.agents/skills` / `.claude/skills` |
 
 **Rules:**
-- OpenClaw holds only *ephemeral per-tick state*. Everything durable lives in Cargo storage,
-  so the brain is crash-safe and resumable.
+- The brain (OpenClaw agent) holds only *ephemeral per-heartbeat state*. Durable GTM state lives
+  in **Cargo storage**; runtime/task/cost state lives in **Paperclip's Postgres**. Two stores,
+  clean split.
 - Cargo never decides anything. It is a stateless, JSON-in/JSON-out toolbox.
-- The Cargo skills are already OpenClaw-ready — every `SKILL.md` ships an `openclaw:` metadata
-  block declaring `bins: [cargo-ai]` and a node install method, so OpenClaw discovers, installs,
-  and binds the CLI as a tool natively.
+- `cargo-skills` is a **skills bundle**, so it drops straight into Paperclip's `.agents/skills` with
+  zero glue — every `SKILL.md` ships an `openclaw:` metadata block (`bins: [cargo-ai]` + node install).
+- The meeting-machine *program* is itself a **skill** (`cargo-meeting-machine`) the agent loads — not
+  a bespoke app. OpenClaw is the runtime for that skill; Paperclip is the runtime for OpenClaw.
 
 ---
 
@@ -294,6 +309,7 @@ Sourcing decision tree (by primary filter): industry/size/geo → `salesNavigato
 
 | Milestone | Deliverable | Proves |
 |---|---|---|
+| **M-1 Runtime** | `npx paperclipai onboard`; install `cargo-skills` + `cargo-meeting-machine` into `.agents/skills`; register a GTM company with one OpenClaw agent; set a budget policy (credit floor = hard stop) | the host + brain + skills exist |
 | **M0 State** | create `Contacts` + `prospect_events` + `experiments` models & columns | game board exists |
 | **M0.3 TAM** | `icp-discovery → build-tam` + tier/drip; rows land at `sourced` | self-feeding wire supply |
 | **M1 Hands** | bind the tool surface; run enrich→verify→personalize→send on 20 contacts manually | pipeline works end-to-end |
@@ -301,10 +317,23 @@ Sourcing decision tree (by primary filter): industry/size/geo → `salesNavigato
 | **M3 Eyes** | wire `poll_signals` (detectJobChange first) → auto-enroll to `sourced` | self-feeding by signal |
 | **M4 Close** | inbox webhook + reply classifier + calendar booking → `meeting_booked` | **books a real meeting** |
 | **M5 Compound** | growth loop + bandit + closed-loop ICP + expected-value weighting | meeting rate trends up on its own |
-| **M6 Govern** | autonomy dial, throttle, human queue, CRM sync, tick dashboard | safe to leave running |
+| **M6 Govern** | wire Paperclip budget thresholds, approval gates, routines (fast/main/growth ticks), cost dashboard | safe to leave running |
 
-**Build order rationale:** stand up the **state ledger** and the **EMPC allocator** first (the
-seed crystal), run the smallest Phase-2 loop, then layer signals, closing, and the growth loop.
+**Build order rationale:** deploy the **Paperclip runtime** and load the skills first (M-1), then
+stand up the **state ledger** and the **EMPC allocator policy** (the seed crystal), run the smallest
+Phase-2 loop, then layer signals, closing, and the growth loop. The autonomy/throttle/budget
+machinery is *configuration of Paperclip*, not new code.
+
+### Build layout — where each piece lives
+
+| Piece | Home | Why |
+|---|---|---|
+| Runtime host | **Paperclip deployment** (its own repo/instance, `npx paperclipai onboard`) | heartbeat, budgets, routines, governance — don't fork unless customizing |
+| Cargo capability skills | `.agents/skills/` ← `cargo-skills` bundle | execution plane, installed as-is |
+| **Meeting-machine program** | `cargo-meeting-machine/SKILL.md` (a skill) | the EMPC allocator policy + stage machine + routing — the skill *is* the app |
+| GTM domain state | **Cargo storage** (Contacts / prospect_events / experiments) | system of record, CRM-sync-ready |
+| Runtime/task/cost state | **Paperclip Postgres** | provided by the host |
+| inbox + calendar | **Paperclip adapter-plugin / routine** (the only net-new code) | Cargo doesn't book meetings |
 
 ---
 
