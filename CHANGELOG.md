@@ -20,7 +20,15 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 - Add `references/prerequisites.md` — the canonical setup block linked from every capability skill.
 - Skill graph table now deep-links each row to the target `SKILL.md` (in addition to the existing in-page recap anchor). Cuts one navigation hop for agents jumping from the router into a capability skill.
+- Add four node-building gotchas to `references/gotchas.md` (don't default to `python` nodes; template expressions fail silently; group results are an array; context survives a `delay`) and a "don't default to `python`" bullet to the `cargo-orchestration` recap. Cross-links the new `node-selection.md`.
 - No command, flag, or response-shape changes.
+
+### `cargo-orchestration` → 1.5.0
+
+- **New reference: `references/node-selection.md`** — guidance for choosing the right node and avoiding unnecessary `python` nodes when building graphs via the CLI. Covers the transform/LLM/HTTP/routing → native-node decision table, the native `agent` LLM node (structured `output.type:"jsonSchema"`, read `.answer`), template-expression capabilities and the silent-`undefined` footgun, inspecting node-to-node data via `run get` → `runContext.<slug>`, the Pyodide sandbox limits (no network, no `time.sleep`, no `asyncio`, JSON-serializable output) and the JS `script` module allowlist, what actually survives a `delay` boundary, and group-result array access.
+- `SKILL.md` — add a "don't default to `python` nodes" composition callout near the top decision section and link the new reference.
+- `references/nodes.md` — steer the `python`/`script` section toward native nodes, document that the group node's output is an array (`{{nodes.<groupSlug>[0].<field>}}`, no `.results` wrapper), and clarify that run context survives a `delay`.
+- No command, flag, or response-shape changes — clarifications and a new reference only.
 
 ### `cargo-ai` → 1.1.1
 
