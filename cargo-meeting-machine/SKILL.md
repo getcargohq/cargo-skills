@@ -1,8 +1,8 @@
 ---
 name: cargo-meeting-machine
-description: Run an autonomous, self-improving GTM optimizer whose only goal is booked meetings. Use when an agent (OpenClaw under a Paperclip heartbeat, or any scheduled runtime) should source, enrich, signal-time, personalize, send, and book meetings on its own — allocating a credit budget to the highest expected meetings-per-credit each cycle. The program is this skill; Cargo is the execution plane; the host runtime supplies the heartbeat, budget, and governance.
+description: Run an autonomous, self-improving GTM optimizer whose only goal is booked meetings. Use when an OpenClaw brain, driven by a scheduler/heartbeat, should source, enrich, signal-time, personalize, send, and book meetings on its own — allocating a credit budget to the highest expected meetings-per-credit each cycle. The program is this skill; Cargo is the execution plane; a thin runtime supplies the heartbeat, budget governor, and approval queue.
 version: "0.1.0"
-compatibility: Requires @cargo-ai/cli (npm) and a Cargo account. Designed to run as a skill inside a Paperclip company on an OpenClaw agent, but works under any scheduler that can invoke it on a cron/heartbeat.
+compatibility: Requires @cargo-ai/cli (npm) and a Cargo account. Runs as a skill on an OpenClaw brain, driven by a thin runtime (scheduler + budget governor) — or any scheduler that can invoke it on a cron/heartbeat.
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
   author: getcargo
@@ -24,17 +24,19 @@ metadata:
 > credit on the highest expected meetings-per-credit. Learn what books, unlock new capability as
 > you grow, and earn autonomy as you prove it — *Universal Paperclips*, where the clip is a meeting.
 
-This skill is the **program**. It does not provide a runtime — it assumes a host that wakes it on a
-schedule and enforces a budget:
+This skill is the **program**. It does not provide a runtime — it assumes a thin runtime app that
+wakes it on a schedule and enforces a budget. The *shape* is an autonomous-business app (think a
+NanoCorp-style "company in a box" dashboard: activity feed, credit gauge, daily throttle, meetings
+counter, inbox), but it is ours to build — no external orchestration dependency.
 
-- **Runtime host:** [Paperclip](https://github.com/paperclipai/paperclip) supplies the **heartbeat**
-  (wakeup queue), **budget policy** (warning thresholds + hard stops), **routines/cron**, **task
-  system** (atomic checkout, persistent context), and **governance/approvals**. Run this skill from
-  three Paperclip routines (below). Any scheduler that can invoke an agent on a cron works too.
+- **Runtime (ours):** a thin app supplies the **heartbeat** (scheduler + inbound-reply webhook), the
+  **budget governor** (credit floor + daily throttle + hard stop), an **activity feed/dashboard**,
+  and an **approval queue**. Run this skill from three routines (below). Any scheduler that can invoke
+  the brain on a cron works.
 - **Execution plane:** Cargo — every external action goes through the `cargo-ai` CLI. Load the
   capability skills as needed (they are peers in this repo).
-- **System of record:** Cargo storage (`Contacts`, `prospect_events`, `experiments`). Runtime/task/
-  cost state lives in the host (Paperclip Postgres). Two stores, clean split.
+- **System of record:** Cargo storage (`Contacts`, `prospect_events`, `experiments`). The runtime
+  keeps only scheduling/cost bookkeeping. Two stores, clean split.
 
 See the full design in [`../plans/autonomous-gtm-meeting-machine.md`](../plans/autonomous-gtm-meeting-machine.md).
 
@@ -49,21 +51,21 @@ EMPC(action) = book_rate(action) × expected_value(action) ÷ credit_cost(action
 `book_rate` and `expected_value` are SQL aggregates over the `prospect_events` ledger. Raw meeting
 count is the day-0 proxy; switch to expected pipeline $ as won-deal sizes accumulate.
 
-## How it runs — three routines on the host's heartbeat
+## How it runs — three routines on the runtime's heartbeat
 
-| Routine (Paperclip schedule) | Cadence | What it does |
+| Routine (runtime schedule) | Cadence | What it does |
 |---|---|---|
 | **fast tick** | on inbound-reply webhook (sub-minute) | classify the reply, jump to `replied`/`booking`, interrupt cadence — speed-to-lead is the biggest conversion lever |
 | **main tick** | every 10–15 min | run the EMPC allocator over everything due; source/enrich/send/follow-up within budget + throttle |
 | **growth tick** | nightly | strategy search: re-measure EMPC per segment/opener/signal, promote winning bandit arms, refresh ICP from bookers |
 
-The host's budget policy is the governor: when remaining credits hit the floor, the hard stop fires
-and sends pause. Do **not** re-implement budget logic here — read it and respect it.
+The runtime's budget governor is the circuit-breaker: when remaining credits hit the floor, the hard
+stop fires and sends pause. Read remaining credits each cycle and respect the floor.
 
 ## The decision each main tick — EMPC allocator
 
 ```
-1. budget ← cargo-ai billing subscription get        # available - used; host also enforces a hard stop
+1. budget ← cargo-ai billing subscription get        # available - used; runtime governor also hard-stops at the floor
    if budget < FLOOR: skip sends this cycle
 2. if signal_cadence_due: poll_signals(monitored segments) → write signals + events
 3. work ← read_working_set()                          # everything due, by next_action_at
@@ -72,7 +74,7 @@ and sends pause. Do **not** re-implement budget logic here — read it and respe
    while budget > FLOOR and throttle_remaining and candidates:
         c ← argmax(empc) respecting deliverability + approval gates
         execute(c) via cargo-ai; append prospect_events(credits_spent); update stage; recompute empc
-5. emit a tick summary (per-stage counts, credits spent, EMPC) to the host's structured log
+5. emit a tick summary (per-stage counts, credits spent, EMPC) to the runtime's activity feed
 ```
 
 Reserve a fixed slice of budget (start ~15%) for **exploration** (untested signals/segments/openers);
@@ -132,21 +134,21 @@ Create once (M0). See the plan's Appendix A for exact `storage model/column crea
 
 ## The one net-new piece — inbox + calendar
 
-Cargo gets you to *qualified + sent* and back to *replied*; it does **not** book the meeting. Build
-this as a Paperclip adapter-plugin / routine:
+Cargo gets you to *qualified + sent* and back to *replied*; it does **not** book the meeting. This is
+the only net-new capability, and it lives in the runtime app:
 
 - **Inbound:** email webhook → fast tick → LLM classify → drives `replied`.
 - **Booking:** Cal.com / Google Calendar API / Nylas → propose times → invite → `meeting_booked`.
 
-## Guardrails (mostly the host's job)
+## Guardrails (mostly the runtime's job)
 
-- **Budget** — host enforces warning thresholds + hard stops; this skill reads remaining credits and
-  gates spend on the floor. Never bypass.
-- **Approvals** — high-value or ambiguous replies route to the host's approval gate, never auto-booked.
-- **Autonomy ramp** — healthy book-rate + low bounce → host raises throttle/cap; deliverability dips →
-  lower + alert. Configure as a budget/governance policy, not code here.
+- **Budget** — the runtime governor enforces the floor + daily throttle + hard stop; this skill reads
+  remaining credits and gates spend on the floor. Never bypass.
+- **Approvals** — high-value or ambiguous replies route to the runtime's approval queue, never auto-booked.
+- **Autonomy ramp** — healthy book-rate + low bounce → runtime raises throttle/cap; deliverability dips →
+  lower + alert. A governor policy, not code in this skill.
 - **Verify before send**, suppress negative signals (`detectJobChange LEFT`, bounces, dead domains).
-- **Idempotency** — `next_action_at` + `stage` make every tick safe to re-run (host tasks are atomic).
+- **Idempotency** — `next_action_at` + `stage` make every tick safe to re-run after a crash.
 
 ## When stuck — file a report
 
@@ -157,7 +159,6 @@ silently.
 
 ## References
 
-- [`../plans/autonomous-gtm-meeting-machine.md`](../plans/autonomous-gtm-meeting-machine.md) — full build plan, milestones, M0 commands.
+- [`../plans/autonomous-gtm-meeting-machine.md`](../plans/autonomous-gtm-meeting-machine.md) — full build plan, milestones, M0 commands, the runtime app spec.
 - [`../cargo-gtm/SKILL.md`](../cargo-gtm/SKILL.md) — recipes for every sourcing/enrichment/signal step.
 - [`../cargo/SKILL.md`](../cargo/SKILL.md) — skills overview and session lifecycle.
-- [Paperclip](https://github.com/paperclipai/paperclip) — the runtime host (heartbeat, budgets, routines, governance).
