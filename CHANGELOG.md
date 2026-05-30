@@ -20,7 +20,7 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 - Add `references/prerequisites.md` — the canonical setup block linked from every capability skill.
 - Skill graph table now deep-links each row to the target `SKILL.md` (in addition to the existing in-page recap anchor). Cuts one navigation hop for agents jumping from the router into a capability skill.
-- Add node-building gotchas to `references/gotchas.md` (prefer built-in actions + expressions over `python`/`script`/HTTP nodes; template expressions fail silently; group results are an array; context survives a `delay`) and a matching bullet to the `cargo-orchestration` recap. Cross-links the new `node-selection.md`.
+- Add a "prefer built-in actions + expressions" bullet to the `cargo-orchestration` recap, cross-linking the new `node-selection.md`.
 - No command, flag, or response-shape changes.
 
 ### `cargo-orchestration` → 1.5.0
