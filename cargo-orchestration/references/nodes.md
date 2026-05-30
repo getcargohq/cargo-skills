@@ -274,7 +274,7 @@ The `agent` action requires `advancedSettings.connectorUuid` (an AI provider con
 
 The `python` and `script` nodes receive `nodes` and `parentNodes` as context variables. The return value of the script becomes the node's output under `{{nodes.<slug>.result}}` (assign to a variable named `result` in Python; `return` a value in JS).
 
-> **Before adding a `python` (or `script`) node, read [`node-selection.md`](node-selection.md).** Most transforms belong in a `variables` node, most LLM calls in the native `agent` node (with `output.type:"jsonSchema"`), most API calls in an HTTP `connector` node, and routing in `branch`/`filter`/`switch`. The `python` node is **Pyodide (WebAssembly), not CPython**: it has **no network access** (`requests`/`urllib` can't connect — do HTTP in a connector node), `time.sleep()` won't pause the flow (use a `delay` node), `asyncio`/threads are unsupported, and the output must be JSON-serializable. For genuine code, prefer the JS `script` node — it ships `lodash`, `axios`, `date-fns`, `zod`, and others (allowlist in `node-selection.md`).
+> **Prefer built-in actions + expressions over code nodes.** Before adding a `python` or `script` node, read [`node-selection.md`](node-selection.md): most transforms belong in a `variables` node, LLM calls in the native `agent` node, API calls in the integration's connector action, and routing in `branch`/`filter`/`switch`. Reach for code only for genuine multi-step computation (prefer the JS `script` node — it ships `lodash`).
 
 ## Examples
 

@@ -251,7 +251,7 @@ Load for a specific CLI domain. The first link in each row jumps to the actual S
 **Critical rules:**
 
 - See the decision flowchart at the top of `../cargo-orchestration/SKILL.md` for when to use `action execute` vs `run create` vs `batch create`.
-- **Don't default to `python` nodes when building a node graph.** Use `variables` for transforms, the native `agent` node for LLM calls (parsed JSON via `output.type:"jsonSchema"`, read `.answer`), an HTTP connector for API calls, and `branch`/`filter`/`switch` for routing. The `python` node is a Pyodide sandbox with no network and silent JSON-only output. Inspect node-to-node data from the CLI via `run get` → `runContext.<slug>`. See `../cargo-orchestration/references/node-selection.md`.
+- **Prefer built-in actions + expressions when building a node graph.** Avoid `python`, `script` (JS), and raw HTTP nodes unless necessary: use `variables` for transforms, the native `agent` node for LLM calls, the integration's dedicated connector action for APIs, and `branch`/`filter`/`switch` for routing. See `../cargo-orchestration/references/node-selection.md`.
 - Filter JSON uses `conjonction` (not `conjunction`) — breaks silently if misspelled.
 - Query orchestration runtime tables (ClickHouse) with `cargo-ai orchestration query execute "<sql>"` against `runs`, `batches`, `spans`, `records` (no schema prefix; workspace scoping is automatic).
 - For SQL against workspace storage (Companies, Contacts, …), use `cargo-ai storage query execute "<sql>"` — documented in `cargo-storage`.

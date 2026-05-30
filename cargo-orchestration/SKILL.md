@@ -38,14 +38,12 @@ Need to run something?
 
 > **Terminology:** An orchestration **tool** is a saved on-demand workflow (listed via `tool list`). An **action** is a single operation you execute without building a workflow — it can embed a saved orchestration tool (`kind: "tool"`), call a third-party connector (`kind: "connector"`), invoke an AI agent (`kind: "agent"`), or run a built-in platform operation (`kind: "native"`).
 
-> **Composing a node graph? Don't default to `python` nodes.** A `python` node is a
-> heavyweight WebAssembly sandbox with no network access and silent JSON-only output —
-> not normal CPython. Most things agents write Python for have a one-line native node:
-> reshape data → `variables`; call an LLM and get parsed JSON → native `agent` node
-> (`output.type:"jsonSchema"`, read `.answer`); call an API → HTTP `connector`; route →
-> `branch`/`filter`/`switch`; loop → `group`; wait → `delay`. And you **can** inspect the
-> data flowing between nodes from the CLI — `run get` returns it under `runContext.<slug>`.
-> Read **`references/node-selection.md`** before adding any `python`/`script` node.
+> **Composing a node graph? Prefer built-in actions + expressions.** Use the
+> actions Cargo already provides plus template expressions; avoid `python`,
+> `script` (JS), and raw HTTP nodes unless you truly have no alternative. Reshape
+> data → `variables`; call an LLM and get parsed JSON → native `agent` node; call an
+> API → the integration's dedicated **connector action**; route → `branch`/`filter`/`switch`.
+> See **`references/node-selection.md`**.
 
 **References:**
 

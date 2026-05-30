@@ -1,275 +1,48 @@
-# Choosing the right node (and when *not* to reach for Python)
+# Prefer built-in actions + expressions over code/HTTP nodes
 
-When you build a workflow programmatically via the CLI, it is tempting to drop a
-`python` node anywhere data needs to change shape. Resist that. A Python node is
-a heavyweight, hard-to-debug WebAssembly sandbox; most of what agents use it for
-is already a one-line native node. Over-using Python makes graphs slower, more
-expensive to reason about, and harder to debug — exactly the opposite of what you
-want when you can't click a node in the UI.
+When building a workflow, **use the actions Cargo already provides plus template
+expressions. Avoid `python`, `script` (JavaScript), and raw HTTP nodes unless you
+genuinely have no other option.**
 
-This page is the decision guide. Read it before adding any `python` or `script`
-node.
+Code and raw-HTTP nodes feel flexible, but they are the hardest part of a workflow
+to build and debug from the CLI: they fail in ways the native nodes don't, and you
+can't see inside them as easily. Most of what they get used for is already a
+one-line native node or a template expression.
 
-> **The short version:** transform → `variables`; call an LLM and parse its JSON →
-> `agent`; route → `branch`/`filter`/`switch`; loop → `group`; call an API → an HTTP
-> `connector`. Reach for `script`/`python` only for genuine multi-step computation
-> that none of those express.
+## Use this instead
 
-## Decision table — what to use instead of Python
-
-| If you're tempted to write Python to… | Use this native node instead | Why |
-| --- | --- | --- |
-| Extract / rename / reshape fields, build a payload | `variables` | Each variable's `value` is a template (or JS) expression — `{{nodes.start.email.split('@')[1]}}`, `{{nodes.enrich.metrics.employeesRange}}`. Output is read as `{{nodes.<slug>.<name>}}`. |
-| Call an LLM, then parse JSON out of the response | `agent` (native) | Built-in. Set `output.type:"jsonSchema"` and the model returns structured JSON — **no HTTP node, no parse node, no branch-to-extract**. Read it as `{{nodes.<slug>.answer.<field>}}`. See "Native LLM" below. |
-| Call a REST API | HTTP `connector` node | Observable (request/response captured in `runContext`), retryable (`retry` config), and rate-limit aware. Python **cannot** make network calls at all (see sandbox section). |
-| Decide yes/no, A/B, or multi-way | `filter` / `branch` / `switch` | Condition is a boolean template expression. `filter` stops the record; `branch` is 2-way; `switch` is N-way. |
-| Run a sub-workflow once per item in an array | `group` | Iterates the inner `_nodes` graph per item; results come back as an array (see "Group results"). |
-| Wait between steps | `delay` | `time.sleep()` in a Python node does **not** reliably pause the workflow. The `delay` node is the only correct way to wait. |
-| Pull from another saved workflow | `tool` node | Embeds a deployed tool as a step. |
-
-## When `script` / `python` is actually the right call
-
-Use a code node only when the logic is real computation that the nodes above
-can't express cleanly:
-
-- Multi-step parsing/normalization with branching logic (e.g. messy address
-  parsing, dedup keys, fuzzy matching).
-- Aggregating or reshaping a `group` node's array result into a single object.
-- Math/date logic too involved for a single expression.
-
-**Prefer the JS `script` node over `python` for transforms.** It is lighter than
-the Pyodide sandbox and ships useful libraries: `lodash` covers nearly every
-array/object transform people write Python loops for (`_.groupBy`, `_.uniqBy`,
-`_.keyBy`, `_.chunk`), and `date-fns` covers date math.
-
-Whichever you choose: assign the output to `result`. It becomes
-`{{nodes.<slug>.result}}` downstream.
-
-## Native LLM — stop building the 4-node LLM quartet
-
-The pattern "build prompt (`variables`) → HTTP call to the model → `python` to
-parse JSON → `branch`" is unnecessary. There is a **native `agent` node**
-(`kind:"native"`, `actionSlug:"agent"`) that does all of it:
-
-```json
-{
-  "slug": "classify", "kind": "native", "actionSlug": "agent",
-  "config": {
-    "prompt": {"kind":"templateExpression","expression":"Classify {{nodes.start.company}} …","instructTo":"none","fromRecipe":false},
-    "output": {
-      "type": "jsonSchema",
-      "jsonSchema": {
-        "type":"object",
-        "properties": {"category":{"type":"string"}, "confidence":{"type":"number"}},
-        "required":["category","confidence"], "additionalProperties": false
-      }
-    },
-    "advancedSettings": {"connectorUuid":"<llm-connector>","languageModelSlug":"gpt-4.1-mini","temperature":0.3}
-  },
-  "childrenUuids": ["<next>"], "fallbackOnFailure": false, "position": {"x":0,"y":0}
-}
-```
-
-- With `output.type:"jsonSchema"`, the model is forced to return JSON matching the
-  schema — you do not parse anything.
-- **Read the result under `.answer`:** `{{nodes.classify.answer.category}}`, **not**
-  `{{nodes.classify.category}}` (which silently resolves to undefined). Same for
-  `output.type:"text"` → `{{nodes.classify.answer}}`.
-- It also supports `tools`, `resources`, `capabilities` (e.g. web search),
-  `maxSteps`, and `systemPrompt`. See `nodes.md` → "AI and code".
-
-This single node typically replaces 3–4 nodes per LLM step.
-
-## Template expressions — what they can and can't do
-
-Config values, conditions, and variable values are **template expressions**:
-`{"kind":"templateExpression","expression":"{{ … }}","instructTo":"none","fromRecipe":false}`.
-
-**Supported inside `{{ }}`:**
-
-- Property and index access: `{{nodes.enrich.metrics.employeesRange}}`, `{{nodes.list[0].name}}`
-- String/number operators and methods: `{{nodes.start.email.split('@')[1]}}`,
-  `{{nodes.start.count > 100}}`, `{{nodes.a.x + nodes.b.y}}`
-- Boolean logic for conditions: `{{nodes.start.email !== undefined && nodes.start.email !== null}}`
-
-**Not reliable inside `{{ }}`:**
-
-- Array methods with arrow-function callbacks — `{{nodes.x.map(i => i.name)}}`,
-  `.filter(...)`, `.find(...)`. If you need these, do it in a `script`/`python`
-  node (or restructure with a `group` node).
-
-### The #1 footgun: expressions fail *silently*
-
-A reference to a path that doesn't exist does **not** throw. The engine applies
-optional chaining, so `{{nodes.foo.bar}}` for a missing `bar` resolves to
-`undefined` (or the literal string `"undefined"` when embedded in a larger
-string). The run still reports `status: "success"`. Consequences:
-
-- A `branch`/`filter` condition on a bad path is always falsy → wrong path taken,
-  silently.
-- An `end`/`variables` value on a bad path comes out empty, silently.
-
-**This is the root cause of most "it ran green but the data is blank" bugs** — and
-it's why agents reach for Python (a traceback feels safer). The fix isn't Python;
-it's **verifying the path against real node output** (next section).
-
-## Inspecting data between nodes via the CLI — `runContext`
-
-> You *can* see what flowed between nodes from the CLI. `run get` returns it.
-
-`cargo-ai orchestration run get <run-uuid>` returns three top-level fields:
-
-| Field | What it gives you |
+| Instead of writing… | Use |
 | --- | --- |
-| `run.executions[]` | Node-by-node trace: `nodeSlug`, `status`, `nextNodeUuid`, `nodeChildIndex` (which branch was taken). `title` is a **truncated summary** — don't trust it as data. |
-| `runContext` | **The actual output of every node**, keyed by slug. This is the data behind `{{nodes.<slug>...}}`. |
-| `runComputedConfigs` | The resolved config each node was actually called with. |
+| `python` / `script` to reshape, rename, or extract fields | a `variables` node — each value is a template expression, e.g. `{{nodes.start.email.split('@')[1]}}` |
+| `python` / `script` to call an LLM and parse its JSON | the native `agent` node with `output.type:"jsonSchema"` — it returns structured JSON, no parsing (read it as `{{nodes.<slug>.answer.<field>}}`) |
+| a raw **HTTP** request | the integration's **dedicated connector action** (e.g. `clearbit.enrichCompanyFromDomain`) — discover them with `connection integration get-documentation <slug>` |
+| `python` / `script` to decide a path | `filter` / `branch` / `switch` with a boolean expression |
+| `python` / `script` to loop over a list | a `group` node |
+| `time.sleep()` to wait | a `delay` node |
 
-So to debug "my expression resolved to empty," read `runContext.<upstreamSlug>`
-and compare its real shape to the path you wrote. This is the CLI equivalent of
-clicking a node in the UI. Common discovery: agent output is nested under
-`.answer`; some connectors nest fields (e.g. `find_email.contact.email` rather
-than `find_email.email`).
+## Template expressions cover most "transforms"
 
-Before running the full graph you can also dry-run expression resolution with
-`node compute` (no side effects, no credits) — but note it does **not** reliably
-resolve boolean conditions against `--context`; for branch logic, run one record
-and read `runContext`. See `troubleshooting.md` → "Debugging a workflow run".
-
-## The Pyodide sandbox — if you must use `python`
-
-The `python` node is **not** CPython. It is Pyodide — Python compiled to
-WebAssembly — with a deliberately small surface. Knowing the limits up front
-saves the trial-and-error the UI would otherwise teach you:
-
-- **No network.** There is no socket access, and the bridge to JS is blocked, so
-  `requests`, `urllib`, `httpx`, etc. cannot connect. **Do all HTTP in an HTTP
-  `connector` node**, not in Python.
-- **No `time.sleep` for pausing the flow.** Use a `delay` node.
-- **Avoid `asyncio`/threads.** The sandbox runs your script in a wrapped async
-  context; spawning your own event loop / threads is unsupported and surfaces as
-  opaque WebAssembly errors.
-- **Blocked for safety:** `os.system`, direct JS access (the `js` module),
-  arbitrary-code escapes.
-- **Pure-Python stdlib and most pure-Python / Pyodide-supported packages work**
-  (imports are auto-loaded). CPython C-extensions that aren't packaged for
-  Pyodide won't.
-- **Output must be JSON-serializable.** Assign `result`; it's converted to
-  JS/JSON. A `datetime`, `set`, `bytes`, or custom object will not round-trip
-  cleanly — return strings/numbers/lists/dicts. **This matters across `delay`
-  boundaries** (next section).
-
-The JS `script` node has its own sandbox — see the next section.
-
-## The JS `script` node sandbox — if you must use `script`
-
-The same "native node first" rule applies to `script` as to `python`: reach for it
-only for genuine multi-step computation, not for reshaping fields (`variables`),
-routing (`branch`/`filter`/`switch`), LLM calls (`agent`), or HTTP (connector). The
-`script` node is the better of the two code nodes for transforms — it's lighter
-than Pyodide and ships `lodash` — but it is **not** a normal Node.js environment.
-It runs in a locked-down Node `vm` context:
-
-- **Fixed module allowlist.** Only these `require(...)` targets work; anything else
-  throws `Module <name> is not allowed`:
-  `axios`, `cheerio`, `crypto-js`, `date-fns`, `jsonschema`, `knex`, `lodash`,
-  `uuid`, `zod`, `url`. There is **no `import`** — use CommonJS `require`.
-  - `lodash` covers nearly every transform people write loops for
-    (`_.groupBy`, `_.uniqBy`, `_.keyBy`, `_.chunk`, `_.orderBy`); `date-fns` covers
-    date math; `cheerio` parses HTML; `zod`/`jsonschema` validate shapes.
-- **No `console`.** The sandbox does not expose `console` — `console.log(...)`
-  throws `ReferenceError`. You cannot "add print statements"; debug by returning
-  intermediate values and reading them in `runContext.<slug>.result` via `run get`.
-- **`Date` is pinned to UTC.** `new Date()` is overridden so the local-time getters
-  return UTC — `getHours()`, `getDate()`, `getTimezoneOffset()` (always `0`), etc.
-  all behave as if the machine is in UTC. Don't write timezone-offset math expecting
-  local time.
-- **Available globals:** `require` (allowlisted), `Buffer`, the UTC `Date`, and your
-  `nodes` / `parentNodes` context. **Not** available: `process`, `fetch`, `global`,
-  `setTimeout`/`setInterval`, `__dirname`, the filesystem, etc.
-- **HTTP is possible via `axios`, but prefer the connector node.** A `script` node
-  *can* `await axios(...)`, but that call is invisible in `runContext` (only the
-  returned `result` is captured), isn't covered by per-node `retry`, and bypasses
-  connector rate-limit handling. Use an HTTP `connector` node for API calls; reserve
-  `axios` in `script` for the rare case a connector can't express the request.
-- **~30s execution timeout**, and **output must be JSON-serializable.** `return` your
-  value (it becomes `{{nodes.<slug>.result}}`); return plain
-  strings/numbers/booleans/arrays/objects. Functions, class instances, circular
-  structures, etc. won't round-trip — and that **matters across `delay` boundaries**
-  (next section).
-
-```javascript
-// JS script node — collapse a group node's array into one object
-const _ = require("lodash");
-const items = nodes.fetch_loop;                 // group output is an array
-return {
-  combined_markdown: items.map(i => i.markdown).join("\n\n"),
-  by_domain: _.keyBy(items, "domain"),
-};
-```
-
-Quick comparison of the two code nodes:
-
-| | `python` (Pyodide/WASM) | `script` (Node `vm`) |
-| --- | --- | --- |
-| Network | None at all | `axios` works (prefer connector) |
-| Logging | none reachable | no `console` either |
-| Libraries | pure-Python / Pyodide packages, auto-loaded | fixed allowlist (incl. `lodash`) |
-| Best for | last resort | preferred for transforms |
-| Output | assign `result`, JSON-serializable | `return` value, JSON-serializable |
-
-## What survives a `delay` boundary
-
-Contrary to a common assumption, **the full run context survives a delay** — it is
-checkpointed to storage as JSON after each node and rehydrated when the workflow
-resumes. After a `delay` node, *all* prior node outputs are still readable as
-`{{nodes.<slug>...}}`, regardless of whether they came from `variables`, `agent`,
-a connector, or a `python` node.
-
-The real catch is **serialization, not node type**: the checkpoint is JSON, so a
-value only survives the delay if it's JSON-serializable. Plain values produced by
-`variables` nodes and template expressions always survive. A `python`/`script`
-`result` survives **only to the extent it's JSON-serializable** — a non-primitive
-Python object that didn't convert cleanly can come back empty.
-
-**Robust pattern:** anything you need to read *after* a `delay`, materialize into a
-`variables` node as plain JSON (strings/numbers/booleans/arrays/objects) *before*
-the delay. Then reference that variable downstream. This is also why "rearchitect
-from Python to Variables nodes" fixes delay-related breakage — not because Python
-state is wiped, but because Variables values are guaranteed-serializable.
-
-## Group node results — access pattern
-
-A `group` node runs its inner `_nodes` graph once per item. Downstream, its output
-is an **array**, one entry per iteration, where each entry is that iteration's
-final (`end`) node output.
+Inside `{{ }}` you can do property/index access, string and number operations, and
+boolean logic — so field extraction and conditions belong in a `variables` node or
+a condition, not in code:
 
 ```
-{{nodes.fetch_loop[0].markdown}}        ✅  first iteration's `markdown` output
-{{nodes.fetch_loop[2].company_name}}    ✅  third iteration
-{{nodes.fetch_loop.results[0].markdown}} ❌  there is no `.results` wrapper
-{{nodes.fetch_loop.map(x => x.markdown)}} ❌  arrow callbacks aren't supported in expressions
+{{nodes.start.email.split('@')[1]}}
+{{nodes.enrich.metrics.employeesRange}}
+{{nodes.start.employee_count > 100}}
 ```
 
-To collapse the array into one object (e.g. concatenate all `markdown`), use a
-`script` node with `lodash`, or a `python` node — this is one of the legitimate
-uses of a code node. Inside the loop, reference the current item with
-`{{nodes.start.value}}` (scalars) or `{{nodes.start.<field>}}` (objects), and the
-parent run with `{{parentNodes.<slug>.<field>}}`.
+One caveat: a reference to a missing path resolves to empty **silently** (the run
+still says `success`). When a value comes out blank, check the real shape with
+`cargo-ai orchestration run get <run-uuid>` → `runContext.<slug>` (node outputs
+*are* returned by the CLI) and fix the path.
 
-## Refactor recipe — replacing an existing Python node
+## When a code or HTTP node is genuinely warranted
 
-1. **`run get <run-uuid>`** and read `runContext.<pythonSlug>.result` to see exactly
-   what the node produces.
-2. Classify what it does:
-   - Field reshape / extraction → move each output field into a `variables` node as
-     a template expression.
-   - JSON parse of an LLM response → delete it; switch the upstream `agent` node to
-     `output.type:"jsonSchema"` and read `.answer`.
-   - HTTP call → replace with an HTTP `connector` node.
-   - Routing / boolean → `filter` / `branch` / `switch`.
-   - Genuine multi-step computation → keep it, but prefer a JS `script` node with
-     `lodash`.
-3. `node validate` the new graph, `node compute` to preview expression resolution,
-   then run one record and confirm via `runContext`.
-4. Stage with `draft-release update`, deploy with `draft-release deploy`.
+- Multi-step computation that no expression or native node expresses (messy
+  parsing, dedup, aggregating a `group` node's array into one object).
+- An API with no dedicated connector action.
+
+If you do need code, prefer the JS `script` node for transforms (it ships `lodash`
+for array/object work). Either way, both code nodes are sandboxed and have no
+normal logging — return your output and inspect it via `runContext`.
