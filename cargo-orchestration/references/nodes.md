@@ -248,6 +248,10 @@ Same shape as `end` variables, but the output is available to downstream nodes v
 
 The `group` node iterates over `items`, running the child subgraph once per item. Each iteration can access the current item via `{{nodes.start.value}}` (for simple values) or `{{nodes.start.<field>}}` (for object items). Use `{{parentNodes.<slug>.<field>}}` to reference the parent run's data.
 
+> **Reading group results downstream:** the group node's output is an **array**, one entry per iteration, where each entry is that iteration's final (`end`) node output. Access it by index: `{{nodes.<groupSlug>[0].<field>}}`. There is **no `.results` wrapper** — `{{nodes.<groupSlug>.results[0]...}}` does not work — and arrow-function array methods like `{{nodes.<groupSlug>.map(x => x.field)}}` are not supported in template expressions. To collapse the array into one value, use a `script` node with `lodash` (or a `python` node). See [`node-selection.md`](node-selection.md) → "Group node results".
+
+> **`delay` and context:** prior node outputs are **not** lost across a `delay` — the full run context is checkpointed and restored, so `{{nodes.<slug>...}}` still resolves after the delay regardless of node kind. The checkpoint is JSON, though, so values you read after a delay must be JSON-serializable. Materialize anything you need post-delay into a `variables` node (plain strings/numbers/objects) before the delay rather than relying on a `python` node's `result`. See [`node-selection.md`](node-selection.md) → "What survives a `delay` boundary".
+
 **Group sub-graph (`_nodes`):** The `_nodes` array inside the group's config defines the internal workflow executed for each item. It follows the **exact same rules** as a top-level node graph:
 
 - Must have a `start` node and an `end` node
@@ -268,7 +272,9 @@ The `group` node iterates over `items`, running the child subgraph once per item
 
 The `agent` action requires `advancedSettings.connectorUuid` (an AI provider connector — get it from `connector list`). Optional fields: `actions`, `resources`, `capabilities`, `output` (structured output with `{"type": "jsonSchema", "jsonSchema": {...}}`), `advancedSettings.temperature`, `advancedSettings.maxSteps`, `advancedSettings.systemPrompt`.
 
-The `python` and `script` nodes receive `nodes` and `parentNodes` as context variables. The return value of the script becomes the node's output under `{{nodes.<slug>.result}}`.
+The `python` and `script` nodes receive `nodes` and `parentNodes` as context variables. The return value of the script becomes the node's output under `{{nodes.<slug>.result}}` (assign to a variable named `result` in Python; `return` a value in JS).
+
+> **Prefer built-in actions + expressions over code nodes.** Before adding a `python` or `script` node, read [`node-selection.md`](node-selection.md): most transforms belong in a `variables` node, LLM calls in the native `agent` node, API calls in the integration's connector action, and routing in `branch`/`filter`/`switch`. Reach for code only for genuine multi-step computation (prefer the JS `script` node — it ships `lodash`).
 
 ## Examples
 

@@ -20,7 +20,15 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 - Add `references/prerequisites.md` — the canonical setup block linked from every capability skill.
 - Skill graph table now deep-links each row to the target `SKILL.md` (in addition to the existing in-page recap anchor). Cuts one navigation hop for agents jumping from the router into a capability skill.
+- Add a "prefer built-in actions + expressions" bullet to the `cargo-orchestration` recap, cross-linking the new `node-selection.md`.
 - No command, flag, or response-shape changes.
+
+### `cargo-orchestration` → 1.5.0
+
+- **New reference: `references/node-selection.md`** — short guide on the core principle: prefer the built-in (native + connector) actions plus template expressions, and avoid `python`, `script` (JS), and raw HTTP nodes unless necessary. Includes the "use this instead" table, what template expressions cover, the silent-empty footgun (verify via `run get` → `runContext.<slug>`), and when a code/HTTP node is genuinely warranted.
+- `SKILL.md` — add a "prefer built-in actions + expressions" composition callout near the top decision section and link the new reference.
+- `references/nodes.md` — steer the `python`/`script` section toward native nodes, document that the group node's output is an array (`{{nodes.<groupSlug>[0].<field>}}`, no `.results` wrapper), and clarify that run context survives a `delay`.
+- No command, flag, or response-shape changes — clarifications and a new reference only.
 
 ### `cargo-ai` → 1.1.1
 

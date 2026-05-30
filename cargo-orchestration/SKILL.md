@@ -1,7 +1,7 @@
 ---
 name: cargo-orchestration
 description: Interact with the Cargo platform via CLI. Use when the user wants to execute an action, run a workflow, trigger a batch, message an AI agent, query orchestration runtime tables (runs/batches/spans/records) with SQL, fetch segment records, or inspect a model schema.
-version: "1.4.1"
+version: "1.5.0"
 compatibility: Requires @cargo-ai/cli (npm) and a Cargo account (browser sign-in via --oauth, or an API token)
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -38,6 +38,13 @@ Need to run something?
 
 > **Terminology:** An orchestration **tool** is a saved on-demand workflow (listed via `tool list`). An **action** is a single operation you execute without building a workflow — it can embed a saved orchestration tool (`kind: "tool"`), call a third-party connector (`kind: "connector"`), invoke an AI agent (`kind: "agent"`), or run a built-in platform operation (`kind: "native"`).
 
+> **Composing a node graph? Prefer built-in actions + expressions.** Use the
+> actions Cargo already provides plus template expressions; avoid `python`,
+> `script` (JS), and raw HTTP nodes unless you truly have no alternative. Reshape
+> data → `variables`; call an LLM and get parsed JSON → native `agent` node; call an
+> API → the integration's dedicated **connector action**; route → `branch`/`filter`/`switch`.
+> See **`references/node-selection.md`**.
+
 **References:**
 
 > `references/examples/actions.md` — action execute and execute-batch examples
@@ -48,6 +55,7 @@ Need to run something?
 > `references/examples/queries.md` — `orchestration query execute` (ClickHouse: runs/batches/spans/records) SQL examples. For `storage query` (workspace storage), see the `cargo-storage` skill.
 > `references/examples/segments.md` — segment fetch and filter examples
 > `references/nodes.md` — full node creation guide (kinds, native actions, expressions, validation, routing)
+> `references/node-selection.md` — **how to pick the right node and avoid unnecessary `python` nodes** (decision table, native LLM `agent` node, template-expression limits, the silent-undefined footgun, inspecting node data via `runContext`, Pyodide sandbox limits, what survives a `delay`, group result access)
 > `references/filter-syntax.md` — complete filter condition reference
 > `references/polling.md` — async polling patterns, error handling, retry strategies
 > `references/response-shapes.md` — full JSON response structures
