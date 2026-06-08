@@ -220,6 +220,8 @@ cargo-ai content file update --uuid <file-uuid> --folder-uuid <folder-uuid>
 cargo-ai content file remove <file-uuid>
 ```
 
+> **Reading content files from the context sandbox.** Uploaded content files are also available **read-only** under `.files/` in the context runtime sandbox, so a command run there can consume them — e.g. `cargo-ai context runtime execute --command ls --args '["-1",".files"]'`. It sits outside the committed context tree (never pushed, not writable); to add or change files use `content file` here. See [`cargo-context`](../cargo-context/SKILL.md).
+
 ### Libraries (`content library`)
 
 Libraries group files into a single resource an agent can reference. A `connector`-backed library syncs documents from an external source (e.g. a knowledge base) through an unstructured-data extractor.

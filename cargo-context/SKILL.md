@@ -72,6 +72,8 @@ Two important behaviors to remember:
 - **`write` and `edit` push to the default branch** of the context repo. They are not local-only.
 - **`execute` does *not* push.** Changes made to files by a shell command run via `execute` stay in the sandbox and are discarded — use `execute` for builds, tests, or inspection, not for committing edits.
 
+**Uploaded content files are available read-only under `.files/`.** The workspace's `content file` uploads (PDFs, CSVs, text — see [`cargo-ai`](../cargo-ai/SKILL.md)) appear in the sandbox under a `.files/` directory, so a command run via `execute` (or `read`/`browse`) can consume them — e.g. `cargo-ai context runtime execute --command ls --args '["-1",".files"]'`. It sits **outside the committed context tree**: the sandbox's auto-commit skips it, so nothing under `.files/` is ever pushed to the context repo, and you can't add or change content files from here (use `cargo-ai content file …` instead).
+
 Because writes push immediately, **confirm the target workspace before the first `write`/`edit`**:
 
 ```bash
