@@ -16,13 +16,14 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 - **CHANGELOG.** This file. Per-skill version bumps are now recorded here so consumers can see what changed between two pinned versions.
 - **CI skill-lint.** Added [`.github/workflows/skills-lint.yml`](.github/workflows/skills-lint.yml) and [`.github/scripts/skills-lint.mjs`](.github/scripts/skills-lint.mjs). Runs on every push and PR; validates SKILL.md frontmatter shape, JSON snippets inside fenced code blocks, internal markdown links, and that bash examples reference real `cargo-ai` domains. Catches drift before it reaches users.
 - **Skill-lint domain list refreshed.** Added the CLI domains that shipped since the lint was written — `content`, `expression`, `hosting`, `revenue-organization`, `system-of-record`, `user-management`, plus `init`/`version` — so valid examples no longer warn.
+- **New capability skill: `cargo-content`.** The `content` CLI domain (files + libraries) is now its own skill rather than living inside `cargo-ai`, matching the repo's one-skill-per-CLI-domain convention. File/library command docs, the `examples/files.md` walkthrough, response shapes, and troubleshooting moved into `cargo-content/`; `cargo-ai` keeps inline **documents** (`ai document`) and the attach-to-agent wiring and cross-links to `cargo-content`.
 
-### `cargo` → 1.2.0
+### `cargo` → 1.3.0
 
 - Add `references/prerequisites.md` — the canonical setup block linked from every capability skill.
 - Skill graph table now deep-links each row to the target `SKILL.md` (in addition to the existing in-page recap anchor). Cuts one navigation hop for agents jumping from the router into a capability skill.
 - Add a "prefer built-in actions + expressions" bullet to the `cargo-orchestration` recap, cross-linking the new `node-selection.md`.
-- **Register the `content` domain.** Updated the `cargo-ai` recap and capability-table row to point at `content file` / `content library` for RAG knowledge, with the `ai file` → `content` breaking-change note. Added `content domain` and `library` glossary entries and refreshed the RAG entry.
+- **Register the `cargo-content` skill.** Bumped the skill count to 10 (one outcome + nine capability), added the `cargo-content` capability-table row and a full recap, placed it in the dependency diagram (content feeds files/libraries to `cargo-ai`; files also surface under `.files/` in `cargo-context`), and added the dependency-rule bullet. Reframed the `cargo-ai` row/recap around documents + attach. Updated the `content domain` glossary entry to point at `cargo-content`.
 - **New "CLI domains without a dedicated skill yet" table** — surfaces `segmentation`, `expression`, `system-of-record`, `revenue-organization`, `hosting`, and `user-management` so agents know they exist and to use `--help`.
 
 ### `cargo-orchestration` → 1.5.0
@@ -33,12 +34,17 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 - `references/examples/agents.md` — fixed the knowledge-file upload example to use `cargo-ai content file upload` (was the removed `ai file upload`).
 - No command, flag, or response-shape changes — clarifications and a new reference only.
 
-### `cargo-ai` → 2.0.0
+### `cargo-content` → 1.0.0 (new)
 
-- **BREAKING — files & libraries moved to the new `content` domain (CLI ≥ 1.0.19).** The old `cargo-ai ai file …` commands no longer exist; use `cargo-ai content file …` (list/get/upload/update/remove) and `cargo-ai content library …` (list/get/create/update/remove). Every `ai file` reference in `SKILL.md`, `references/examples/files.md`, `references/examples/templates.md`, `references/troubleshooting.md`, and `references/response-shapes.md` was migrated.
-- **New: knowledge libraries.** Documented `content library` — `native` vs `connector`-backed collections that group files for RAG, created with `--extractor-slug` / `--connector-uuid`.
-- **New: inline documents.** Documented `ai document` (list/get/create/reset) for hand-authored knowledge text attached to agents without a file upload.
-- Renamed the "Files" section to "Knowledge files, libraries & documents"; added a command-surface-change callout near the top so agents on muscle memory don't reach for the removed `ai file`.
+- **New capability skill for the `content` CLI domain.** Covers **files** (`content file` — list/get/upload/update/remove) and **libraries** (`content library` — list/get/create/update/remove; `native` vs `connector`-backed with `--extractor-slug` / `--connector-uuid`).
+- Carries the moved `references/examples/files.md` walkthrough (upload → attach → deploy), a `references/response-shapes.md` (the `content file list` shape; library shape left to live capture rather than guessed), and a `references/troubleshooting.md` (`fileNotFound`, `folderNotFound`, upload failures, the `unknown command` error on the old `ai file …` path).
+- Documents that uploaded content files surface **read-only** under `.files/` in the `cargo-context` runtime sandbox, and that attaching a file/library to an agent lives in `cargo-ai`.
+
+### `cargo-ai` → 2.1.0
+
+- **BREAKING — files & libraries moved out (CLI ≥ 1.0.19), now in `cargo-content`.** The old `cargo-ai ai file …` commands no longer exist. File/library command docs, the `examples/files.md` walkthrough, and the file response-shape/troubleshooting blocks moved to the new `cargo-content` skill; `cargo-ai` cross-links to it.
+- **Retained: inline documents.** `ai document` (list/get/create/reset) — hand-authored knowledge text attached to agents without a file upload — stays here, since it's in the `ai` domain.
+- Reframed the knowledge section as "Knowledge for RAG (files, libraries, documents)": the three kinds, where each lives, and the shared attach-via-`release resources` → `deploy-draft` wiring.
 - Prerequisites section trimmed to a one-line pointer at `cargo/references/prerequisites.md`.
 
 ### `cargo-analytics` → 1.4.1
@@ -55,10 +61,11 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 - Tightened the `integration get <slug>` vs `native-integration get` comparison table to use ✓/✗ markers for third-party vs built-in action scope, making it harder to mis-route a HubSpot/Salesforce lookup to `native-integration get`.
 - Prerequisites section trimmed to a one-line pointer.
 
-### `cargo-context` → 1.0.2
+### `cargo-context` → 1.1.0
 
+- **New: content files under `.files/`.** Documented in the Runtime sandbox section that the workspace's `content file` uploads are mounted **read-only** under `.files/`, readable by `runtime execute`/`read`/`browse` but outside the committed context tree (never pushed, not writable). Cross-links `cargo-content`.
 - Prerequisites section trimmed to a one-line pointer. Kept the inline reminder that `runtime write` and `runtime edit` push commits, so confirming `workspace.name` first is non-negotiable.
-- Fixed the RAG cross-reference to `cargo-ai` to use `cargo-ai content file upload` (was the removed `ai file upload`).
+- Fixed the RAG cross-reference to point at `cargo-content` for `content file` uploads (was the removed `ai file upload`).
 
 ### `cargo-orchestration` → 1.4.1
 

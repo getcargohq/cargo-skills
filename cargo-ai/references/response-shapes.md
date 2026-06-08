@@ -222,29 +222,7 @@ Supports `--agent-uuid`, `--limit`, `--offset`.
 }
 ```
 
-## cargo-ai content file list
-
-```json
-{
-  "files": [
-    {
-      "uuid": "file-uuid",
-      "workspaceUuid": "...",
-      "name": "knowledge-base.pdf",
-      "s3Filename": "...",
-      "openAiFileId": "...",
-      "contentType": "application/pdf",
-      "size": 1048576,
-      "isTemporary": false,
-      "folderUuid": null,
-      "createdAt": "2025-01-01T00:00:00Z",
-      "updatedAt": "2025-01-15T00:00:00Z"
-    }
-  ]
-}
-```
-
-**Key fields:** `uuid` (used to reference in release resources), `name`, `contentType`, `size` (in bytes).
+> **Content files & libraries** (`cargo-ai content file …` / `content library …`) live in the [`cargo-content`](../../cargo-content/SKILL.md) skill — see `cargo-content/references/response-shapes.md` for their shapes.
 
 ## cargo-ai ai mcp-server list
 
