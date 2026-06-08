@@ -49,7 +49,7 @@ The template slug does not exist. Run `cargo-ai ai template list` to see availab
 ## Files
 
 **`fileNotFound`**
-The file UUID does not exist or has been deleted. Run `cargo-ai ai file list` to get the current list.
+The file UUID does not exist or has been deleted. Run `cargo-ai content file list` to get the current list. (File commands moved from `ai file …` to the `content` domain in CLI ≥ 1.0.19 — an `unknown command` error means you're on the old path.)
 
 **`folderNotFound`**
 The folder UUID passed to `--folder-uuid` on file update does not exist. Folders are managed by the [`cargo-workspace-management`](../../cargo-workspace-management/SKILL.md) skill — run `cargo-ai workspaceManagement folder list` to find valid folder UUIDs, or `cargo-ai workspaceManagement folder create --kind file ...` to create one.

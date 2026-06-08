@@ -1,7 +1,7 @@
 ---
 name: cargo-ai
-description: Create and configure AI agents, upload files for RAG, manage MCP servers, and handle agent memories using the Cargo CLI. Use when the user wants to create or update agents, upload knowledge base files, connect MCP tool servers, or manage agent memories. For sending messages to agents, use the cargo-orchestration skill instead.
-version: "1.1.1"
+description: Create and configure AI agents, upload knowledge files and libraries for RAG (via the content domain), manage MCP servers, and handle agent memories using the Cargo CLI. Use when the user wants to create or update agents, upload knowledge base files, manage knowledge libraries, connect MCP tool servers, or manage agent memories. For sending messages to agents, use the cargo-orchestration skill instead.
+version: "2.0.0"
 compatibility: Requires @cargo-ai/cli (npm) and a Cargo account (browser sign-in via --oauth, or an API token)
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -28,8 +28,10 @@ Agent resource management: creating and configuring agents, uploading files for 
 > See `references/response-shapes.md` for full JSON response structures.
 > See `references/troubleshooting.md` for common errors and how to fix them.
 > See `references/examples/agents.md` for agent CRUD and configuration examples.
-> See `references/examples/files.md` for file upload and management examples.
+> See `references/examples/files.md` for file/library upload and management examples.
 > See `references/examples/mcp-servers.md` for MCP server creation and management examples.
+
+> **Command-surface change (CLI ≥ 1.0.19):** file and library operations moved out of the `ai` domain into the new top-level **`content`** domain — `cargo-ai content file …` and `cargo-ai content library …`. The old `cargo-ai ai file …` commands no longer exist. Agent-facing **documents** (inline knowledge text) live under `cargo-ai ai document …`. See [Knowledge files, libraries & documents](#knowledge-files-libraries--documents).
 
 ## Prerequisites
 
@@ -40,7 +42,9 @@ See [`../cargo/references/prerequisites.md`](../cargo/references/prerequisites.m
 ```bash
 cargo-ai ai agent list                     # all agents (uuid, name, description)
 cargo-ai ai template list                  # all AI agent templates (slug, name)
-cargo-ai ai file list                      # all uploaded files (uuid, name, contentType)
+cargo-ai content file list                 # all uploaded files (uuid, name, contentType)
+cargo-ai content library list              # knowledge libraries (native or connector-backed)
+cargo-ai ai document list                  # agent documents (inline knowledge text)
 cargo-ai ai mcp-server list                # all MCP servers (uuid, name)
 cargo-ai ai memory list --scope agent --agent-uuid <uuid>  # agent memories
 ```
@@ -62,10 +66,14 @@ cargo-ai ai release update-draft --agent-uuid <uuid> --language-model-slug gpt-4
 cargo-ai ai release deploy-draft --agent-uuid <uuid>
 cargo-ai ai template list
 cargo-ai ai template get <slug>
-cargo-ai ai file list
-cargo-ai ai file upload --file-path ./knowledge-base.pdf
-cargo-ai ai file update --uuid <file-uuid> --name "Updated Name"
-cargo-ai ai file remove <file-uuid>
+cargo-ai content file list
+cargo-ai content file upload --file-path ./knowledge-base.pdf
+cargo-ai content file update --uuid <file-uuid> --name "Updated Name"
+cargo-ai content file remove <file-uuid>
+cargo-ai content library list
+cargo-ai content library create --name "Docs" --connector-uuid <uuid> --extractor-slug <slug>
+cargo-ai ai document list
+cargo-ai ai document create --kind <kind> --title "Pricing FAQ" --content "..."
 cargo-ai ai mcp-server list
 cargo-ai ai mcp-server create --name "Internal Tools"
 cargo-ai ai mcp-server update --uuid <mcp-server-uuid> --name "Updated Name"
@@ -181,26 +189,80 @@ Templates include a system prompt, actions, resources, and recommended model set
 
 Low temperature (`0.0`–`0.2`) = deterministic, consistent outputs. High temperature (`0.7`+) = creative, varied outputs. For production workflows processing thousands of records, prefer low temperature.
 
-## Files
+## Knowledge files, libraries & documents
 
-Upload files (PDFs, CSVs, text) for retrieval-augmented generation (RAG). Agents reference uploaded files to ground their responses in specific knowledge.
+Knowledge that grounds agent responses (retrieval-augmented generation, RAG) lives in three places, all attached to agents via the release's `resources` configuration (`release update-draft`):
+
+- **Files** — uploaded binaries (PDFs, CSVs, text) in the `content file` domain.
+- **Libraries** — collections that group files, either `native` (workspace-managed) or `connector`-backed (synced from an external source via an unstructured-data extractor), in the `content library` domain.
+- **Documents** — inline knowledge text authored directly (no upload), in the `ai document` domain.
+
+> **CLI ≥ 1.0.19:** files and libraries moved from `cargo-ai ai file …` to the new top-level **`content`** domain. The old `ai file …` commands are gone.
+
+### Files (`content file`)
 
 ```bash
 # List all files
-cargo-ai ai file list
+cargo-ai content file list
 
-# Upload a file
-cargo-ai ai file upload --file-path ./knowledge-base.pdf
+# Get a single file
+cargo-ai content file get <file-uuid>
+
+# Upload a file (optionally into a folder)
+cargo-ai content file upload --file-path ./knowledge-base.pdf
+cargo-ai content file upload --file-path ./knowledge-base.pdf --folder-uuid <folder-uuid>
 
 # Update a file's name or folder
-cargo-ai ai file update --uuid <file-uuid> --name "Q1 Research Notes"
-cargo-ai ai file update --uuid <file-uuid> --folder-uuid <folder-uuid>
+cargo-ai content file update --uuid <file-uuid> --name "Q1 Research Notes"
+cargo-ai content file update --uuid <file-uuid> --folder-uuid <folder-uuid>
 
 # Remove a file
-cargo-ai ai file remove <file-uuid>
+cargo-ai content file remove <file-uuid>
 ```
 
-Uploaded files are attached to agents via the release's `resources` configuration. Use `release update-draft` to add file resources to an agent.
+### Libraries (`content library`)
+
+Libraries group files into a single resource an agent can reference. A `connector`-backed library syncs documents from an external source (e.g. a knowledge base) through an unstructured-data extractor.
+
+```bash
+# List libraries (filter by kind or connector)
+cargo-ai content library list
+cargo-ai content library list --kind native
+cargo-ai content library list --kind connector --connector-uuid <connector-uuid>
+
+# Get a single library
+cargo-ai content library get <library-uuid>
+
+# Create a connector-backed library
+cargo-ai content library create \
+  --name "Help Center" \
+  --connector-uuid <connector-uuid> \
+  --extractor-slug <extractor-slug> \
+  --folder-uuid <folder-uuid> \
+  --config '{}'
+
+# Update / remove
+cargo-ai content library update --uuid <library-uuid> --name "Updated Name"
+cargo-ai content library remove <library-uuid>
+```
+
+### Documents (`ai document`)
+
+Documents are inline knowledge text authored directly on the agent — no file upload. Use them for short, hand-written context (pricing FAQs, objection handling, tone guidelines).
+
+```bash
+# List / get
+cargo-ai ai document list
+cargo-ai ai document get <document-uuid>
+
+# Create
+cargo-ai ai document create --kind <kind> --title "Pricing FAQ" --content "..."
+
+# Reset (clear/regenerate document content)
+cargo-ai ai document reset --uuid <document-uuid>
+```
+
+Attach any of these to an agent via the release's `resources` array — see `references/examples/files.md`.
 
 ## MCP servers
 
@@ -255,7 +317,9 @@ Every command supports `--help`:
 ```bash
 cargo-ai ai agent create --help
 cargo-ai ai release update-draft --help
-cargo-ai ai file upload --help
+cargo-ai content file upload --help
+cargo-ai content library create --help
+cargo-ai ai document create --help
 cargo-ai ai mcp-server create --help
 cargo-ai ai memory list --help
 ```

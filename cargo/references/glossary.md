@@ -87,6 +87,9 @@ The UUID of a specific authenticated connector. Required for `kind: "connector"`
 **context**
 The workspace's git-backed knowledge base of typed markdown/MDX files capturing GTM truth: company narrative, ICPs, personas, JTBDs, plays, proof, objections, signals, mediums, alternatives, clients, insights. Read and written by both humans and agents. Managed via `cargo-context` (`cargo-ai context runtime ...` and `cargo-ai context graph ...`). Distinct from the **system of record** (Cargo storage queried with SQL) and from agent **memories** (per-agent mem0 entries).
 
+**content domain**
+The CLI domain (`cargo-ai content …`) for workspace **files** and **libraries** — the binary/grouped knowledge attached to agents for RAG. Files and libraries moved here from the `ai` domain in CLI ≥ 1.0.19 (the old `cargo-ai ai file …` commands no longer exist). Documented inside `cargo-ai`, since they're agent resources. Distinct from **context** (git-backed markdown) and inline **documents** (`cargo-ai ai document …`).
+
 **context repository**
 The GitHub repository that backs the workspace's context. Files in this repo follow strict conventions: `kebab-case.md` filenames, YAML frontmatter with required `title` and `description`, and `domain/slug` cross-refs without `.md`. The canonical example is [`getcargohq/cargo-workspaces`](https://github.com/getcargohq/cargo-workspaces). See `cargo-context/references/conventions.md` for the full domain list and per-domain templates.
 
@@ -163,6 +166,9 @@ The typed graph of nodes and cross-references derived from every markdown/MDX fi
 **languageModelSlug**
 The identifier for an LLM used by an agent or inline agent node. Examples: `gpt-4o`, `gpt-4o-mini`, `claude-3-5-sonnet-20241022`, `claude-3-5-haiku-20241022`. Set on `agent create` or `agent update`.
 
+**library**
+A collection in the **content domain** (`cargo-ai content library …`) that groups files into one resource an agent can reference for RAG. `native` libraries are workspace-managed; `connector`-backed libraries sync documents from an external source through an unstructured-data extractor (`--extractor-slug`).
+
 ---
 
 ## M
@@ -232,7 +238,7 @@ The activity of finding prospects matching an ICP, enriching them with contact d
 ## R
 
 **RAG (Retrieval-Augmented Generation)**
-A pattern where an agent references uploaded files (PDFs, CSVs, text) to ground its responses in specific knowledge. Files are uploaded via `ai file upload` and attached to agents.
+A pattern where an agent references uploaded files (PDFs, CSVs, text), libraries, or inline documents to ground its responses in specific knowledge. Files are uploaded via `cargo-ai content file upload` (libraries via `content library`, inline documents via `ai document`) and attached to agents through the release's `resources`.
 
 **record**
 A single row in a Cargo model (e.g. one company, one contact). Identified by a `recordId`. Processed individually by runs or in bulk by batches.

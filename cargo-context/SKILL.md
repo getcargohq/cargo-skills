@@ -1,7 +1,7 @@
 ---
 name: cargo-context
 description: Inspect and edit the workspace's git-backed context repository (the GTM knowledge base of markdown/MDX files) and its runtime sandbox using the Cargo CLI. Use when the user wants to browse/read/write/edit context files, run a command in the sandbox, or inspect the context knowledge graph.
-version: "1.0.1"
+version: "1.0.2"
 compatibility: Requires @cargo-ai/cli (npm) and a Cargo account (browser sign-in via --oauth, or an API token)
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -27,7 +27,7 @@ The **context** is a git-backed repository of typed markdown/MDX files that capt
 
 > The canonical example of a context repository is [`getcargohq/cargo-workspaces`](https://github.com/getcargohq/cargo-workspaces). Read its `README.md` to understand the domain layout and file conventions before writing new entries.
 > For uploading runtime-independent files (CSVs, PDFs) used in batch runs, use [`cargo-workspace-management`](../cargo-workspace-management/SKILL.md) (`cargo-ai workspaceManagement file upload`) instead.
-> For RAG file attachments to agents, use [`cargo-ai`](../cargo-ai/SKILL.md) (`cargo-ai ai file upload`).
+> For RAG file attachments to agents, use [`cargo-ai`](../cargo-ai/SKILL.md) (`cargo-ai content file upload`).
 
 > See `references/conventions.md` for the full context repo structure and per-domain templates.
 > See `references/response-shapes.md` for the JSON shapes returned by each `cargo-ai context` command.

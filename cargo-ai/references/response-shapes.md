@@ -222,7 +222,7 @@ Supports `--agent-uuid`, `--limit`, `--offset`.
 }
 ```
 
-## cargo-ai ai file list
+## cargo-ai content file list
 
 ```json
 {
