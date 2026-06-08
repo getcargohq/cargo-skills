@@ -1,7 +1,7 @@
 ---
 name: cargo-context
 description: Inspect and edit the workspace's git-backed context repository (the GTM knowledge base of markdown/MDX files) and its runtime sandbox using the Cargo CLI. Use when the user wants to browse/read/write/edit context files, run a command in the sandbox, or inspect the context knowledge graph.
-version: "1.0.1"
+version: "1.1.0"
 compatibility: Requires @cargo-ai/cli (npm) and a Cargo account (browser sign-in via --oauth, or an API token)
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -27,7 +27,7 @@ The **context** is a git-backed repository of typed markdown/MDX files that capt
 
 > The canonical example of a context repository is [`getcargohq/cargo-workspaces`](https://github.com/getcargohq/cargo-workspaces). Read its `README.md` to understand the domain layout and file conventions before writing new entries.
 > For uploading runtime-independent files (CSVs, PDFs) used in batch runs, use [`cargo-workspace-management`](../cargo-workspace-management/SKILL.md) (`cargo-ai workspaceManagement file upload`) instead.
-> For RAG file attachments to agents, use [`cargo-ai`](../cargo-ai/SKILL.md) (`cargo-ai ai file upload`).
+> For RAG file attachments to agents, use [`cargo-ai`](../cargo-ai/SKILL.md) (`cargo-ai content file upload`).
 
 > See `references/conventions.md` for the full context repo structure and per-domain templates.
 > See `references/response-shapes.md` for the JSON shapes returned by each `cargo-ai context` command.
@@ -71,6 +71,8 @@ Two important behaviors to remember:
 
 - **`write` and `edit` push to the default branch** of the context repo. They are not local-only.
 - **`execute` does *not* push.** Changes made to files by a shell command run via `execute` stay in the sandbox and are discarded — use `execute` for builds, tests, or inspection, not for committing edits.
+
+**Uploaded content files are available read-only under `.files/`.** The workspace's `content file` uploads (PDFs, CSVs, text — see [`cargo-content`](../cargo-content/SKILL.md)) appear in the sandbox under a `.files/` directory, so a command run via `execute` (or `read`/`browse`) can consume them — e.g. `cargo-ai context runtime execute --command ls --args '["-1",".files"]'`. It sits **outside the committed context tree**: the sandbox's auto-commit skips it, so nothing under `.files/` is ever pushed to the context repo, and you can't add or change content files from here (use `cargo-ai content file …` instead).
 
 Because writes push immediately, **confirm the target workspace before the first `write`/`edit`**:
 

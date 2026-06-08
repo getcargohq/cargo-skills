@@ -1,7 +1,7 @@
 ---
 name: cargo
 description: Router and overview for the Cargo CLI agent skills. Explains the nine skills (one outcome skill cargo-gtm + eight capability skills), the UUID flow between them, async polling, end-to-end use cases (enrich one record, enrich and sync to CRM, AI lead scoring, custom workflow, error monitoring, fresh-workspace bootstrap, segment export, GTM context authoring), and common gotchas (`conjonction` spelling, run vs batch, model-uuid vs segment-uuid). Load first whenever working with the Cargo CLI, when unsure which sub-skill applies, when stitching multiple sub-skills together, when bootstrapping a workspace, or when the user asks about Cargo skills in general.
-version: "1.1.0"
+version: "1.3.0"
 compatibility: Requires @cargo-ai/cli (npm) and a Cargo account (browser sign-in via --oauth, or an API token)
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -28,10 +28,10 @@ metadata:
 
 # Cargo CLI — Skills Overview
 
-This repository contains 9 skills at the repo root: one **outcome skill** (`cargo-gtm`) and eight **capability skills**.
+This repository contains 10 skills at the repo root: one **outcome skill** (`cargo-gtm`) and nine **capability skills**.
 
 - **`cargo-gtm`** — application library. The front door for any GTM task ("build a TAM list", "find 5 fintech CTOs", "monitor job changes"). Routes via internal recipes (`../cargo-gtm/recipes/*.md`) and provider playbooks (`../cargo-gtm/provider-playbooks/*.md`).
-- **Capability skills** — standard library. One per CLI domain (orchestration, storage, connection, AI, context, analytics, billing, workspace management). Loaded by `cargo-gtm`, or directly when you need a specific CLI domain.
+- **Capability skills** — standard library. One per CLI domain (orchestration, storage, connection, AI, content, context, analytics, billing, workspace management). Loaded by `cargo-gtm`, or directly when you need a specific CLI domain.
 
 `cargo-gtm` delegates to capability skills; capability skills never reference `cargo-gtm` (one-way dependency).
 
@@ -143,9 +143,25 @@ Load for a specific CLI domain. The first link in each row jumps to the actual S
 | [`cargo-billing`](../cargo-billing/SKILL.md) ([recap](#cargo-billing))                                      | Check credit usage, view subscription details, track costs per workflow or connector               |
 | [`cargo-storage`](../cargo-storage/SKILL.md) ([recap](#cargo-storage))                                      | Inspect or modify data models, columns, datasets, and relationships; query workspace storage with SQL |
 | [`cargo-connection`](../cargo-connection/SKILL.md) ([recap](#cargo-connection))                             | Manage connector authentication, discover available integrations and their actions                 |
-| [`cargo-ai`](../cargo-ai/SKILL.md) ([recap](#cargo-ai))                                                     | Create and configure agents, upload files for RAG, manage MCP servers                              |
+| [`cargo-ai`](../cargo-ai/SKILL.md) ([recap](#cargo-ai))                                                     | Create and configure agents, configure releases, attach knowledge for RAG, manage MCP servers and memories |
+| [`cargo-content`](../cargo-content/SKILL.md) ([recap](#cargo-content))                                      | Upload and organize knowledge files, build native/connector-backed knowledge libraries for RAG (the `content` domain) |
 | [`cargo-context`](../cargo-context/SKILL.md) ([recap](#cargo-context))                                      | Browse/read/write/edit the workspace's git-backed GTM context repo, run commands in its runtime sandbox, inspect the knowledge graph |
 | [`cargo-workspace-management`](../cargo-workspace-management/SKILL.md) ([recap](#cargo-workspace-management)) | Invite users, create API tokens, organize folders, manage roles, report CLI issues to management   |
+
+> **Agent knowledge for RAG:** **files** + **libraries** live in the `content` domain → [`cargo-content`](../cargo-content/SKILL.md); how they attach to an agent → [`cargo-ai`](../cargo-ai/SKILL.md). (Files/libraries moved out of the old `ai file …` path in CLI ≥ 1.0.19.)
+
+### CLI domains without a dedicated skill yet
+
+The CLI exposes several domains that no capability skill wraps yet. Reach for them directly (`cargo-ai <domain> --help`) when a task needs them, and file a `workspaceManagement report` if the surface is unclear:
+
+| CLI domain | Covers |
+| --- | --- |
+| `segmentation` | Segments and changes (`segment list/get/create/fetch/download`, `change`). Some of this is already used from `cargo-orchestration`/`cargo-analytics`. |
+| `expression` | Recipes and expression evaluation (`eval`, `recipe`) — generate/evaluate the template expressions used in node graphs. |
+| `system-of-record` | System-of-record, client, and log operations. |
+| `revenue-organization` | Allocations, capacities, members, territories (revenue/territory planning). |
+| `hosting` | Cargo Hosting — `app` (Vite SPAs on `*.cargo.app`), `worker` (edge HTTP handlers), `deployment`. |
+| `user-management` | Current-user operations with no workspace context. |
 
 ---
 
@@ -167,9 +183,11 @@ Load for a specific CLI domain. The first link in each row jumps to the actual S
 
   ┌─────────────────┐   ┌────────────────────┐   ┌─────────────────┐
   │  cargo-storage  │   │  cargo-connection  │   │    cargo-ai     │
-  │ Models, columns,│   │ Connectors,        │   │ Agents, files,  │
-  │ datasets        │   │ integration actions│   │ MCP servers     │
+  │ Models, columns,│   │ Connectors,        │   │ Agents, docs,   │
+  │ datasets        │   │ integration actions│   │ MCP, memory     │
   └────────┬────────┘   └─────────┬──────────┘   └────────┬────────┘
+                                              (cargo-content feeds
+                                               files/libraries to agents)
            │                      │  (UUIDs flow down)    │
            └──────────────────────┼───────────────────────┘
                                   ▼
@@ -199,6 +217,7 @@ Load for a specific CLI domain. The first link in each row jumps to the actual S
 - `cargo-gtm` delegates to capability skills via relative paths (`../cargo-orchestration/...`). Capability skills never reference `cargo-gtm`.
 - `cargo-workspace-management` provides auth context for every skill — set it up first.
 - `cargo-storage`, `cargo-connection`, and `cargo-ai` are peer skills that supply UUIDs to `cargo-orchestration`. They don't depend on each other.
+- `cargo-content` owns workspace **files** and **libraries** (the `content` domain). It produces file/library UUIDs that `cargo-ai` consumes as agent release `resources` (RAG). Uploaded content files also surface read-only under `.files/` in the `cargo-context` runtime sandbox.
 - `cargo-context` is **orthogonal** to the workflow-execution flow. It touches the git-backed GTM knowledge base (markdown/MDX), not storage or workflow runs. Use it for capturing/editing the workspace's prose context — personas, plays, proof, objections, signals — and for inspecting the typed knowledge graph.
 - For SQL queries against storage, use `cargo-ai storage query execute "<sql>"` (tables as `<datasetSlug>.<modelSlug>`). Load `cargo-storage` to discover dataset and model slugs, and to fetch the DDL when you need column types or the SQL dialect.
 - For SQL queries against orchestration runtime tables (`runs`, `batches`, `spans`, `records`) — error rates, per-node failures, time-series — use `cargo-ai orchestration query execute "<sql>"`. Workspace scoping is automatic; tables are referenced without a schema prefix.
@@ -318,13 +337,33 @@ Load for a specific CLI domain. The first link in each row jumps to the actual S
 
 ### cargo-ai
 
-**Agent resource management.** Create and configure agents, upload documents for retrieval-augmented generation (RAG), connect MCP servers.
+**Agent resource management.** Create and configure agents, configure releases, attach knowledge for retrieval-augmented generation (RAG), connect MCP servers, manage memories.
+
+**Critical rules:**
+
+- Knowledge for RAG attaches to an agent via the release's `resources`: **files** + **libraries** come from [`cargo-content`](#cargo-content). Wire them in with `release update-draft --resources …` then `release deploy-draft`.
+- **CLI ≥ 1.0.19:** files and libraries moved out of the `ai` domain into the top-level **`content`** domain (now the `cargo-content` skill). The old `cargo-ai ai file …` commands no longer exist.
 
 > For _using_ agents (sending messages, multi-turn chat, polling), use `cargo-orchestration`.
 
 See `../cargo-ai/SKILL.md` for model and temperature guidance by use case.
 
 **References:** `../cargo-ai/SKILL.md`
+
+---
+
+### cargo-content
+
+**Workspace knowledge files & libraries.** Upload, list, rename, move, and remove **files** (PDFs, CSVs, text); create and sync **libraries** — `native` (workspace-managed) or `connector`-backed (synced from an external source via an unstructured-data extractor). These are the RAG knowledge resources agents reference.
+
+**Critical rules:**
+
+- New top-level **`content`** domain in CLI ≥ 1.0.19 — `cargo-ai content file …` / `cargo-ai content library …`. The old `cargo-ai ai file …` path is gone (`unknown command` → you're on the old path; bump the CLI).
+- A file or library is inert until attached to an agent's deployed release `resources` — that wiring lives in [`cargo-ai`](#cargo-ai).
+- Uploaded content files are also readable (read-only) under `.files/` in the `cargo-context` runtime sandbox.
+- For batch-run **input** files (CSVs that drive a batch), use `cargo-ai workspaceManagement file upload` (a different surface) — see `cargo-workspace-management`.
+
+**References:** `../cargo-content/SKILL.md`
 
 ---
 

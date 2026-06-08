@@ -46,16 +46,9 @@ The actions configuration in the release is invalid — a referenced tool, agent
 **`templateNotFound`**
 The template slug does not exist. Run `cargo-ai ai template list` to see available templates.
 
-## Files
+## Files & libraries
 
-**`fileNotFound`**
-The file UUID does not exist or has been deleted. Run `cargo-ai ai file list` to get the current list.
-
-**`folderNotFound`**
-The folder UUID passed to `--folder-uuid` on file update does not exist. Folders are managed by the [`cargo-workspace-management`](../../cargo-workspace-management/SKILL.md) skill — run `cargo-ai workspaceManagement folder list` to find valid folder UUIDs, or `cargo-ai workspaceManagement folder create --kind file ...` to create one.
-
-**Upload fails or times out**
-Large files may take longer to upload. Ensure the file path is correct and the file is not locked by another process.
+Knowledge files and libraries moved to the `content` domain (CLI ≥ 1.0.19). For `fileNotFound`, `folderNotFound`, upload failures, and the `unknown command` error on the old `ai file …` path, see [`cargo-content`](../../cargo-content/SKILL.md) → `references/troubleshooting.md`.
 
 ## MCP Servers
 

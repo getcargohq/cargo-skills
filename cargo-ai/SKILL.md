@@ -1,7 +1,7 @@
 ---
 name: cargo-ai
-description: Create and configure AI agents, upload files for RAG, manage MCP servers, and handle agent memories using the Cargo CLI. Use when the user wants to create or update agents, upload knowledge base files, connect MCP tool servers, or manage agent memories. For sending messages to agents, use the cargo-orchestration skill instead.
-version: "1.1.1"
+description: Create and configure AI agents, attach knowledge for RAG, manage MCP servers, and handle agent memories using the Cargo CLI. Use when the user wants to create or update agents, configure agent releases, connect MCP tool servers, or manage agent memories. To upload knowledge files or build knowledge libraries, use the cargo-content skill. For sending messages to agents, use the cargo-orchestration skill instead.
+version: "2.1.0"
 compatibility: Requires @cargo-ai/cli (npm) and a Cargo account (browser sign-in via --oauth, or an API token)
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -20,15 +20,15 @@ metadata:
 
 # Cargo CLI — AI
 
-Agent resource management: creating and configuring agents, uploading files for retrieval-augmented generation (RAG), connecting MCP servers, and managing agent memories.
+Agent resource management: creating and configuring agents, attaching knowledge for retrieval-augmented generation (RAG), connecting MCP servers, and managing agent memories.
 
 > For *using* agents (sending messages, multi-turn chat, polling), use `cargo-orchestration`.
+> For uploading knowledge **files** and building knowledge **libraries** (the `content` domain), use [`cargo-content`](../cargo-content/SKILL.md). This skill covers how that knowledge attaches to an agent.
 > For workspace administration — folders (used to organize agents and files), users, API tokens, roles, and submitting reports when the CLI fails — use [`cargo-workspace-management`](../cargo-workspace-management/SKILL.md).
 
 > See `references/response-shapes.md` for full JSON response structures.
 > See `references/troubleshooting.md` for common errors and how to fix them.
 > See `references/examples/agents.md` for agent CRUD and configuration examples.
-> See `references/examples/files.md` for file upload and management examples.
 > See `references/examples/mcp-servers.md` for MCP server creation and management examples.
 
 ## Prerequisites
@@ -40,9 +40,10 @@ See [`../cargo/references/prerequisites.md`](../cargo/references/prerequisites.m
 ```bash
 cargo-ai ai agent list                     # all agents (uuid, name, description)
 cargo-ai ai template list                  # all AI agent templates (slug, name)
-cargo-ai ai file list                      # all uploaded files (uuid, name, contentType)
 cargo-ai ai mcp-server list                # all MCP servers (uuid, name)
 cargo-ai ai memory list --scope agent --agent-uuid <uuid>  # agent memories
+# Knowledge files & libraries live in the content domain — see cargo-content:
+#   cargo-ai content file list   /   cargo-ai content library list
 ```
 
 **Retrieve in the UI:** agents live at `app.getcargo.io/workspaces/<WORKSPACE_UUID>/agents/<AGENT_UUID>`. Get `<WORKSPACE_UUID>` from `cargo-ai whoami` under `workspace.uuid`.
@@ -62,10 +63,6 @@ cargo-ai ai release update-draft --agent-uuid <uuid> --language-model-slug gpt-4
 cargo-ai ai release deploy-draft --agent-uuid <uuid>
 cargo-ai ai template list
 cargo-ai ai template get <slug>
-cargo-ai ai file list
-cargo-ai ai file upload --file-path ./knowledge-base.pdf
-cargo-ai ai file update --uuid <file-uuid> --name "Updated Name"
-cargo-ai ai file remove <file-uuid>
 cargo-ai ai mcp-server list
 cargo-ai ai mcp-server create --name "Internal Tools"
 cargo-ai ai mcp-server update --uuid <mcp-server-uuid> --name "Updated Name"
@@ -181,26 +178,18 @@ Templates include a system prompt, actions, resources, and recommended model set
 
 Low temperature (`0.0`–`0.2`) = deterministic, consistent outputs. High temperature (`0.7`+) = creative, varied outputs. For production workflows processing thousands of records, prefer low temperature.
 
-## Files
+## Knowledge for RAG (files & libraries)
 
-Upload files (PDFs, CSVs, text) for retrieval-augmented generation (RAG). Agents reference uploaded files to ground their responses in specific knowledge.
+Knowledge that grounds agent responses (retrieval-augmented generation, RAG) comes from the **`content`** domain — see [`cargo-content`](../cargo-content/SKILL.md):
 
-```bash
-# List all files
-cargo-ai ai file list
+- **Files** — uploaded binaries (PDFs, CSVs, text).
+- **Libraries** — collections that group files, either `native` (workspace-managed) or `connector`-backed (synced from an external source via an unstructured-data extractor).
 
-# Upload a file
-cargo-ai ai file upload --file-path ./knowledge-base.pdf
+> Files and libraries moved out of `ai` into the top-level **`content`** domain in CLI ≥ 1.0.19 (`cargo-ai content file …` / `cargo-ai content library …`). The old `ai file …` commands are gone. Everything content-related now lives in [`cargo-content`](../cargo-content/SKILL.md).
 
-# Update a file's name or folder
-cargo-ai ai file update --uuid <file-uuid> --name "Q1 Research Notes"
-cargo-ai ai file update --uuid <file-uuid> --folder-uuid <folder-uuid>
+### Attaching knowledge to an agent
 
-# Remove a file
-cargo-ai ai file remove <file-uuid>
-```
-
-Uploaded files are attached to agents via the release's `resources` configuration. Use `release update-draft` to add file resources to an agent.
+A file or library is inert until attached to an agent via the draft release's `resources` array and deployed. Upload files / build libraries in [`cargo-content`](../cargo-content/SKILL.md), then wire them in here with `release update-draft --resources …` followed by `release deploy-draft`. See [`../cargo-content/references/examples/files.md`](../cargo-content/references/examples/files.md) for the full upload → attach → deploy sequence.
 
 ## MCP servers
 
@@ -255,7 +244,6 @@ Every command supports `--help`:
 ```bash
 cargo-ai ai agent create --help
 cargo-ai ai release update-draft --help
-cargo-ai ai file upload --help
 cargo-ai ai mcp-server create --help
 cargo-ai ai memory list --help
 ```
