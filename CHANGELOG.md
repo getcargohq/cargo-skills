@@ -16,7 +16,7 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 - **CHANGELOG.** This file. Per-skill version bumps are now recorded here so consumers can see what changed between two pinned versions.
 - **CI skill-lint.** Added [`.github/workflows/skills-lint.yml`](.github/workflows/skills-lint.yml) and [`.github/scripts/skills-lint.mjs`](.github/scripts/skills-lint.mjs). Runs on every push and PR; validates SKILL.md frontmatter shape, JSON snippets inside fenced code blocks, internal markdown links, and that bash examples reference real `cargo-ai` domains. Catches drift before it reaches users.
 - **Skill-lint domain list refreshed.** Added the CLI domains that shipped since the lint was written — `content`, `expression`, `hosting`, `revenue-organization`, `system-of-record`, `user-management`, plus `init`/`version` — so valid examples no longer warn.
-- **New capability skill: `cargo-content`.** The `content` CLI domain (files + libraries) is now its own skill rather than living inside `cargo-ai`, matching the repo's one-skill-per-CLI-domain convention. File/library command docs, the `examples/files.md` walkthrough, response shapes, and troubleshooting moved into `cargo-content/`; `cargo-ai` keeps inline **documents** (`ai document`) and the attach-to-agent wiring and cross-links to `cargo-content`.
+- **New capability skill: `cargo-content`.** The `content` CLI domain (files + libraries) is now its own skill rather than living inside `cargo-ai`, matching the repo's one-skill-per-CLI-domain convention. File/library command docs, the `examples/files.md` walkthrough, response shapes, and troubleshooting moved into `cargo-content/`; `cargo-ai` keeps the attach-to-agent wiring and cross-links to `cargo-content`.
 
 ### `cargo` → 1.3.0
 
@@ -37,14 +37,14 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 ### `cargo-content` → 1.0.0 (new)
 
 - **New capability skill for the `content` CLI domain.** Covers **files** (`content file` — list/get/upload/update/remove) and **libraries** (`content library` — list/get/create/update/remove; `native` vs `connector`-backed with `--extractor-slug` / `--connector-uuid`).
-- Carries the moved `references/examples/files.md` walkthrough (upload → attach → deploy), a `references/response-shapes.md` (the `content file list` shape; library shape left to live capture rather than guessed), and a `references/troubleshooting.md` (`fileNotFound`, `folderNotFound`, upload failures, the `unknown command` error on the old `ai file …` path).
+- Carries the moved `references/examples/files.md` walkthrough (upload → attach → deploy), a `references/response-shapes.md` (the `content file list` shape, matching the workspace `File` type — `libraryUuid`, `isIndexedInOpenAiVectorStore`, `kind` native/connector union, etc.; library shape left to live capture rather than guessed), and a `references/troubleshooting.md` (`fileNotFound`, `folderNotFound`, upload failures, the `unknown command` error on the old `ai file …` path).
 - Documents that uploaded content files surface **read-only** under `.files/` in the `cargo-context` runtime sandbox, and that attaching a file/library to an agent lives in `cargo-ai`.
 
 ### `cargo-ai` → 2.1.0
 
 - **BREAKING — files & libraries moved out (CLI ≥ 1.0.19), now in `cargo-content`.** The old `cargo-ai ai file …` commands no longer exist. File/library command docs, the `examples/files.md` walkthrough, and the file response-shape/troubleshooting blocks moved to the new `cargo-content` skill; `cargo-ai` cross-links to it.
-- **Retained: inline documents.** `ai document` (list/get/create/reset) — hand-authored knowledge text attached to agents without a file upload — stays here, since it's in the `ai` domain.
-- Reframed the knowledge section as "Knowledge for RAG (files, libraries, documents)": the three kinds, where each lives, and the shared attach-via-`release resources` → `deploy-draft` wiring.
+- Reframed the knowledge section as "Knowledge for RAG (files & libraries)": where each lives (`cargo-content`) and the attach-via-`release resources` → `deploy-draft` wiring.
+- Dropped the `ai document` (inline document) commands from the skill — low-value surface, not worth the agent's attention.
 - Prerequisites section trimmed to a one-line pointer at `cargo/references/prerequisites.md`.
 
 ### `cargo-analytics` → 1.4.1

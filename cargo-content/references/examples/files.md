@@ -1,6 +1,6 @@
-# File, library & document examples
+# File & library examples
 
-> **CLI ≥ 1.0.19:** files and libraries live in the top-level **`content`** domain (`cargo-ai content file …`, `cargo-ai content library …`). The old `cargo-ai ai file …` commands no longer exist. Inline **documents** live under `cargo-ai ai document …`.
+> **CLI ≥ 1.0.19:** files and libraries live in the top-level **`content`** domain (`cargo-ai content file …`, `cargo-ai content library …`). The old `cargo-ai ai file …` commands no longer exist.
 
 ## Files
 
@@ -94,15 +94,4 @@ cargo-ai content library create \
 # Update / remove
 cargo-ai content library update --uuid <library-uuid> --name "Updated Name"
 cargo-ai content library remove <library-uuid>
-```
-
-## Documents
-
-Documents are inline knowledge text authored directly on the agent — no file upload. Good for short, hand-written context (pricing FAQs, objection handling, tone guidelines).
-
-```bash
-cargo-ai ai document list
-cargo-ai ai document get <document-uuid>
-cargo-ai ai document create --kind <kind> --title "Pricing FAQ" --content "Our plans are…"
-cargo-ai ai document reset --uuid <document-uuid>
 ```

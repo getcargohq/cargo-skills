@@ -214,7 +214,7 @@ Load when you need the syntax for a specific CLI domain.
 | **Orchestration** | Execute single actions, chain actions into workflows, trigger batches across segments, poll async operations, query orchestration runtime tables (`runs`/`batches`/`spans`/`records`) with SQL, fetch segment data |
 | **Storage**       | Inspect models and their DDL, create columns, navigate datasets, set relationships between models, query workspace storage with SQL                              |
 | **Connection**    | Authenticate connectors, discover integration actions and their slugs across 120+ integrations                                                                     |
-| **AI**            | Create and configure agents, author inline knowledge documents, attach knowledge for RAG, connect MCP servers, inspect agent memories                              |
+| **AI**            | Create and configure agents, configure releases, attach knowledge for RAG, connect MCP servers, inspect agent memories                                             |
 | **Content**       | Upload and organize knowledge files; build `native` and `connector`-backed knowledge libraries for RAG (the `content` domain)                                       |
 | **Context**       | Browse, read, write, and edit the workspace's git-backed context repo (markdown/MDX GTM knowledge base); run shell commands in its runtime sandbox; inspect the knowledge graph |
 | **Analytics**     | Download run results and outputs, export segment data, monitor error rates and success metrics                                                                     |

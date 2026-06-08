@@ -1,6 +1,6 @@
 ---
 name: cargo-content
-description: Manage workspace knowledge files and libraries in the Cargo content domain — upload, list, rename, move, and remove files (PDFs, CSVs, text), and create or sync native and connector-backed libraries for retrieval-augmented generation (RAG). Use when the user wants to upload or organize knowledge files, build a knowledge library, or sync an external knowledge source. To attach these to an agent, or to author inline documents, use the cargo-ai skill.
+description: Manage workspace knowledge files and libraries in the Cargo content domain — upload, list, rename, move, and remove files (PDFs, CSVs, text), and create or sync native and connector-backed libraries for retrieval-augmented generation (RAG). Use when the user wants to upload or organize knowledge files, build a knowledge library, or sync an external knowledge source. To attach these to an agent, use the cargo-ai skill.
 version: "1.0.0"
 compatibility: Requires @cargo-ai/cli (npm) and a Cargo account (browser sign-in via --oauth, or an API token)
 homepage: https://github.com/getcargohq/cargo-skills
@@ -24,7 +24,7 @@ Workspace **knowledge** management: upload and organize **files** (PDFs, CSVs, t
 
 > **New top-level domain (CLI ≥ 1.0.19).** Files and libraries moved out of the `ai` domain into the `content` domain — `cargo-ai content file …` and `cargo-ai content library …`. The old `cargo-ai ai file …` commands no longer exist; an `unknown command` error means you're on the old path.
 
-> For **attaching** a file or library to an agent (via the release `resources` array), and for inline **documents** (hand-written knowledge text, `cargo-ai ai document …`), use [`cargo-ai`](../cargo-ai/SKILL.md).
+> For **attaching** a file or library to an agent (via the release `resources` array), use [`cargo-ai`](../cargo-ai/SKILL.md).
 > For **folders** that organize files, use [`cargo-workspace-management`](../cargo-workspace-management/SKILL.md) (`cargo-ai workspaceManagement folder …`).
 > For batch-run **input** files (CSVs uploaded to drive a batch), that's a different surface — `cargo-ai workspaceManagement file upload` — documented in [`cargo-workspace-management`](../cargo-workspace-management/SKILL.md).
 
