@@ -41,6 +41,9 @@ A connector UUID referenced in the release actions or configuration does not exi
 **`failedToReconciliateAgentAiTools`**
 The actions configuration in the release is invalid — a referenced tool, agent, or connector UUID may not exist. Verify all UUIDs in the actions array.
 
+**Can't set structured (JSON Schema) output or a heartbeat from the CLI**
+`release update-draft` / `release deploy-draft` have no `--output` / `--output-schema` or `--heartbeat` flag, even though the release API payload accepts `output` and `heartbeat`. The generic `--options` flag won't carry them. See the "Structured output & heartbeat" section in [`../SKILL.md`](../SKILL.md) for the shapes and the direct-API workaround, and file a `workspaceManagement report` to request the flags.
+
 ## Templates
 
 **`templateNotFound`**

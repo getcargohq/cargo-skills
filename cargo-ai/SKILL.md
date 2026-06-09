@@ -1,7 +1,7 @@
 ---
 name: cargo-ai
 description: Create and configure AI agents, attach knowledge for RAG, manage MCP servers, and handle agent memories using the Cargo CLI. Use when the user wants to create or update agents, configure agent releases, connect MCP tool servers, or manage agent memories. To upload knowledge files or build knowledge libraries, use the cargo-content skill. For sending messages to agents, use the cargo-orchestration skill instead.
-version: "2.1.0"
+version: "2.2.0"
 compatibility: Requires @cargo-ai/cli (npm) and a Cargo account (browser sign-in via --oauth, or an API token)
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -144,6 +144,27 @@ cargo-ai ai release deploy-draft --agent-uuid <uuid> \
   --suggested-actions '[]' \
   --description "Added research actions"
 ```
+
+### Structured output & heartbeat — not yet exposed as CLI flags
+
+The release API payload (both `draft/update` and `draft/deploy`) accepts two fields that **`release update-draft` / `release deploy-draft` do not surface as flags** (verified against the CLI source — there is no `--output` / `--output-schema` or `--heartbeat`):
+
+| Field | Shape | Purpose |
+|---|---|---|
+| `output` | `{"type":"text"}` **or** `{"type":"jsonSchema","jsonSchema": <standard JSON Schema object>}` | Force the agent to return structured output matching a JSON Schema. |
+| `heartbeat` | `{"intervalMinutes": number, "maxMessages": number, "prompt": string \| null}` | Periodically re-wake the chat (`intervalMinutes`) until it reaches `maxMessages`; `prompt` is the wake message (null = generic "continue"). |
+
+The generic `--options` flag does **not** carry these — the API's `options` only holds `{connectorUuidsByIntegrationSlug, modelUuidsByIntegrationSlug}`. Until the flags ship, set these with a direct API call against the same endpoints the CLI uses:
+
+```bash
+# Structured (JSON Schema) output on the draft release
+curl -sS -X PUT "$CARGO_API_BASE/v1/ai/releases/draft/update" \
+  -H "Authorization: Bearer $CARGO_TOKEN" -H "Content-Type: application/json" \
+  -d '{"agentUuid":"<uuid>","output":{"type":"jsonSchema","jsonSchema":{"type":"object","properties":{"score":{"type":"number"}},"required":["score"]}}}'
+# Deploy carries the same fields — POST .../v1/ai/releases/draft/deploy
+```
+
+Send these payloads alongside the other fields you're updating (the endpoint replaces the draft config). **File a `workspaceManagement report`** (see [`../cargo-workspace-management/SKILL.md`](../cargo-workspace-management/SKILL.md)) to request first-class `--output` / `--heartbeat` flags — this is the documented feedback channel for CLI/UI parity gaps.
 
 **Agent configuration workflow:**
 
