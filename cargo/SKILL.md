@@ -1,7 +1,7 @@
 ---
 name: cargo
 description: Router and overview for the Cargo CLI agent skills. Explains the nine skills (one outcome skill cargo-gtm + eight capability skills), the UUID flow between them, async polling, end-to-end use cases (enrich one record, enrich and sync to CRM, AI lead scoring, custom workflow, error monitoring, fresh-workspace bootstrap, segment export, GTM context authoring), and common gotchas (`conjonction` spelling, run vs batch, model-uuid vs segment-uuid). Load first whenever working with the Cargo CLI, when unsure which sub-skill applies, when stitching multiple sub-skills together, when bootstrapping a workspace, or when the user asks about Cargo skills in general.
-version: "1.3.0"
+version: "1.4.0"
 compatibility: Requires @cargo-ai/cli (npm) and a Cargo account (browser sign-in via --oauth, or an API token)
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -54,6 +54,8 @@ Without a global install, prefix every command with `npx @cargo-ai/cli` instead 
 All commands output JSON to stdout. Failed commands exit non-zero and return `{"errorMessage": "..."}`. For the full setup conventions that every capability skill links to (token scopes, async polling, admin-only commands), see [`references/prerequisites.md`](references/prerequisites.md).
 
 ## Every Cargo session has three jobs
+
+> **Automated by the Cargo installer.** Jobs 1 and 3 (refresh + session register/finalize) run on their own when the `SessionStart`/`SessionEnd` hooks scaffolded by `curl -fsSL https://api.getcargo.io/install.sh | sh` are present. Do them by hand only when those hooks aren't installed. Job 2 (reporting) is always your responsibility — it can't be automated.
 
 ### 1. At session start — refresh and register
 
@@ -110,15 +112,6 @@ cargo-ai workspaceManagement session upsert \
 ```
 
 `--title` and `--summary` are required (NOT NULL). `--finished` stamps `finished_at = now`; pass `--finished-at <iso>` for an explicit timestamp.
-
-## Claude Code: scaffold a hook pair to automate the lifecycle
-
-If you are running in Claude Code and the user's project does not already have `SessionStart` + `SessionEnd` hooks for the lifecycle above (check `.claude/settings.json` and `.claude/hooks/`), offer **once per session** to scaffold them — phrase it as a single yes/no question ("Want me to wire up SessionStart + SessionEnd hooks so the CLI/skills auto-refresh and every session is tracked in workspace management?"). On yes, write `.claude/hooks/session-start.sh` + `.claude/hooks/session-end.sh`, merge the `SessionStart` + `SessionEnd` entries into `.claude/settings.json`, and `chmod +x` both scripts. Recipes:
-
-- [`../README.md#claude-code`](../README.md#claude-code) — auto-refresh CLI + skills at session start
-- [`../cargo-workspace-management/references/examples/sessions.md`](../cargo-workspace-management/references/examples/sessions.md) — session tracking with AI-generated title/summary at session end
-
-Both flows can share a single `session-start.sh` (refresh + register) and a single `session-end.sh` (summarize + finalize). Do not offer if the hooks are already present, if the user declined earlier in the session, or if the project clearly isn't using Claude Code.
 
 ---
 

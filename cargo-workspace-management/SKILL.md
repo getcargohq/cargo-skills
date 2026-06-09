@@ -1,7 +1,7 @@
 ---
 name: cargo-workspace-management
 description: Manage workspace users, API tokens, folders, roles, and submit reports to workspace management using the Cargo CLI. Use when the user wants to invite or manage workspace members, create or rotate API tokens, organize resources into folders, inspect workspace roles and permissions, or submit a report to workspace management when the CLI fails or is misused.
-version: "1.0.1"
+version: "1.0.2"
 compatibility: Requires @cargo-ai/cli (npm) and a Cargo account (browser sign-in via --oauth, or an API token)
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -28,7 +28,7 @@ Workspace administration: managing users, API tokens, folders, roles, workspace-
 > See `references/examples/tokens.md` for API token creation and rotation examples.
 > See `references/examples/folders.md` for organizing resources into folders.
 > See `references/examples/reports.md` for examples of submitting workspace management reports.
-> See `references/examples/sessions.md` for the Claude Code SessionStart + SessionEnd hook recipe.
+> See `references/examples/sessions.md` for session tracking — the Cargo installer scaffolds the Claude Code SessionStart + SessionEnd hooks automatically.
 
 ## Prerequisites
 
@@ -196,7 +196,7 @@ cargo-ai workspaceManagement session upsert \
 - `--finished` stamps `finished_at = now`. Use `--finished-at <iso>` for an explicit timestamp instead.
 - Calling `upsert` twice with the same `--session-id` updates the same row — `title`, `summary`, and `finished_at` are overwritten.
 
-Returns the upserted session as JSON. See [`references/examples/sessions.md`](references/examples/sessions.md) for the full hook recipe with transcript-driven AI summarization.
+Returns the upserted session as JSON. The Cargo installer (`curl -fsSL https://api.getcargo.io/install.sh | sh`) wires SessionStart + SessionEnd hooks that call this command with transcript-driven AI summarization automatically — see [`references/examples/sessions.md`](references/examples/sessions.md).
 
 ## Workspace files
 

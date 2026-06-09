@@ -12,11 +12,17 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ### Repository-wide
 
+- **Session lifecycle moved to the installer.** The Claude Code `SessionStart`/`SessionEnd` hooks that keep `@cargo-ai/cli` + the skills bundle current and log each session to `workspace_management.sessions` are now scaffolded by the Cargo bootstrap installer (`curl -fsSL https://api.getcargo.io/install.sh | sh`, interactive prompt, opt out with `CARGO_INSTALL_NO_HOOKS=1`). Removed the hand-rolled hook-scaffolding recipes from `cargo/SKILL.md`, `README.md`, and `cargo-workspace-management/references/examples/sessions.md`; those docs now point at the installer. The agent's three-session-jobs guidance stays as the manual fallback, and reporting (job 2) is unchanged — it can't be automated.
 - **Shared prerequisites reference.** Extracted the duplicated install / login / output-conventions block from every capability skill into [`cargo/references/prerequisites.md`](cargo/references/prerequisites.md). Each capability skill now links to it instead of redefining ~16 lines of boilerplate. No behavior change for agents — the canonical setup is the same — but a single place to keep it correct.
 - **CHANGELOG.** This file. Per-skill version bumps are now recorded here so consumers can see what changed between two pinned versions.
 - **CI skill-lint.** Added [`.github/workflows/skills-lint.yml`](.github/workflows/skills-lint.yml) and [`.github/scripts/skills-lint.mjs`](.github/scripts/skills-lint.mjs). Runs on every push and PR; validates SKILL.md frontmatter shape, JSON snippets inside fenced code blocks, internal markdown links, and that bash examples reference real `cargo-ai` domains. Catches drift before it reaches users.
 - **Skill-lint domain list refreshed.** Added the CLI domains that shipped since the lint was written — `content`, `expression`, `hosting`, `revenue-organization`, `system-of-record`, `user-management`, plus `init`/`version` — so valid examples no longer warn.
 - **New capability skill: `cargo-content`.** The `content` CLI domain (files + libraries) is now its own skill rather than living inside `cargo-ai`, matching the repo's one-skill-per-CLI-domain convention. File/library command docs, the `examples/files.md` walkthrough, response shapes, and troubleshooting moved into `cargo-content/`; `cargo-ai` keeps the attach-to-agent wiring and cross-links to `cargo-content`.
+
+### `cargo` → 1.4.0
+
+- Removed the "Claude Code: scaffold a hook pair to automate the lifecycle" section. The installer now owns hook scaffolding, so the router no longer instructs the agent to offer it.
+- The "Every Cargo session has three jobs" section gains a callout: jobs 1 (refresh + register) and 3 (finalize) run automatically when the installer's `SessionStart`/`SessionEnd` hooks are present; do them by hand only when the hooks aren't installed. Job 2 (reporting) is unchanged and stays the agent's responsibility.
 
 ### `cargo` → 1.3.0
 
@@ -74,6 +80,11 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 ### `cargo-storage` → 1.1.1
 
 - Prerequisites section trimmed to a one-line pointer at `cargo/references/prerequisites.md`. No command surface change.
+
+### `cargo-workspace-management` → 1.0.2
+
+- `references/examples/sessions.md` no longer hand-rolls the SessionStart/SessionEnd hook scripts — it points at the Cargo installer, which scaffolds them. The `session upsert` command docs (CLI surface, schema, manual upsert) are unchanged.
+- Both in-SKILL pointers to `sessions.md` reworded to say the installer wires the hooks automatically.
 
 ### `cargo-workspace-management` → 1.0.1
 
