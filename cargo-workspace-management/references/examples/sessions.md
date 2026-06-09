@@ -51,81 +51,12 @@ cargo-ai workspaceManagement session upsert \
 
 ## Automate with Claude Code hooks (recommended)
 
-Two hooks let Claude Code track every session automatically: SessionStart creates the row with placeholders, SessionEnd reads the transcript, asks `claude -p` to summarize, and writes the real title + summary along with `--finished`.
-
-`.claude/hooks/session-start.sh`:
+Don't hand-roll the hooks — the Cargo installer scaffolds them for you. Run it once and answer **y** at the session-hooks prompt:
 
 ```bash
-#!/bin/bash
-set -u
-
-INPUT="$(cat)"
-SESSION_ID="$(printf '%s' "$INPUT" | jq -r '.session_id // "unknown"' 2>/dev/null || echo "unknown")"
-
-cargo-ai workspaceManagement session upsert \
-  --session-id "$SESSION_ID" \
-  --title "Claude Code session ${SESSION_ID}" \
-  --summary "Session in progress." >/dev/null 2>&1 || true
-
-exit 0
+curl -fsSL https://api.getcargo.io/install.sh | sh
 ```
 
-`.claude/hooks/session-end.sh`:
+It writes a `SessionStart` + `SessionEnd` hook pair under `~/.claude/` and merges the matching entries into `~/.claude/settings.json`. SessionStart refreshes `@cargo-ai/cli` + the skills bundle and creates the session row with placeholders; SessionEnd reads the transcript, asks `claude -p` to summarize, and writes the real title + summary with `--finished`. Both hooks swallow errors (`|| true`), so a missing `cargo-ai`/`claude`/`jq` binary never blocks a session — at worst, the row just doesn't get written. Set `CARGO_INSTALL_NO_HOOKS=1` to skip the prompt.
 
-```bash
-#!/bin/bash
-set -u
-
-INPUT="$(cat)"
-SESSION_ID="$(printf '%s' "$INPUT" | jq -r '.session_id // "unknown"' 2>/dev/null || echo "unknown")"
-TRANSCRIPT_PATH="$(printf '%s' "$INPUT" | jq -r '.transcript_path // ""' 2>/dev/null || echo "")"
-
-TITLE="Claude Code session ${SESSION_ID}"
-SUMMARY="Session ended."
-
-if [ -n "$TRANSCRIPT_PATH" ] && [ -f "$TRANSCRIPT_PATH" ] && command -v claude >/dev/null 2>&1; then
-  TAIL="$(tail -c 60000 "$TRANSCRIPT_PATH" 2>/dev/null || true)"
-  if [ -n "$TAIL" ]; then
-    PROMPT='Read the Claude Code transcript on stdin and reply with a single JSON object: {"title":"<5-8 word title>","summary":"<1-2 sentence summary>"}. JSON only.'
-    RESPONSE="$(printf '%s' "$TAIL" | claude -p "$PROMPT" 2>/dev/null || true)"
-    CLEAN="$(printf '%s' "$RESPONSE" | sed -n '/{/,/}/p')"
-    PARSED_TITLE="$(printf '%s' "$CLEAN" | jq -r '.title // empty' 2>/dev/null || true)"
-    PARSED_SUMMARY="$(printf '%s' "$CLEAN" | jq -r '.summary // empty' 2>/dev/null || true)"
-    [ -n "$PARSED_TITLE" ] && TITLE="$PARSED_TITLE"
-    [ -n "$PARSED_SUMMARY" ] && SUMMARY="$PARSED_SUMMARY"
-  fi
-fi
-
-cargo-ai workspaceManagement session upsert \
-  --session-id "$SESSION_ID" \
-  --title "$TITLE" \
-  --summary "$SUMMARY" \
-  --finished >/dev/null 2>&1 || true
-
-exit 0
-```
-
-Merge into `.claude/settings.json`:
-
-```json
-{
-  "hooks": {
-    "SessionStart": [
-      {
-        "hooks": [
-          { "type": "command", "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/session-start.sh" }
-        ]
-      }
-    ],
-    "SessionEnd": [
-      {
-        "hooks": [
-          { "type": "command", "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/session-end.sh" }
-        ]
-      }
-    ]
-  }
-}
-```
-
-`chmod +x .claude/hooks/session-{start,end}.sh` to finish. Both hooks swallow errors (`|| true`) so a missing `cargo-ai` or `claude` binary never blocks a session — at worst, the row just doesn't get written.
+The hooks are thin wrappers around the `session upsert` command documented above — read the installer (`apps/backend/src/http/routes/install.sh` in `getcargohq/cargo`) if you want to see or customize the exact scripts.
