@@ -1,6 +1,6 @@
 ---
 name: cargo-orchestration
-description: Interact with the Cargo platform via CLI. Use when the user wants to execute an action, run a workflow, trigger a batch, message an AI agent, query orchestration runtime tables (runs/batches/spans/records) with SQL, fetch segment records, or inspect a model schema.
+description: Interact with the Cargo platform via CLI. Use when the user wants to execute an action, run a workflow, trigger a batch, message an AI agent, query orchestration runtime tables (runs/batches/spans/records) with SQL, fetch segment records, resolve an action's output schema, or inspect a model schema.
 version: "1.5.0"
 compatibility: Requires @cargo-ai/cli (npm) and a Cargo account (browser sign-in via --oauth, or an API token)
 homepage: https://github.com/getcargohq/cargo-skills
@@ -101,6 +101,7 @@ cargo-ai connection connector list         # all connectors
 # Single actions
 cargo-ai orchestration action execute --action '{"kind":"tool","toolUuid":"<uuid>","config":{}}' --data '{"domain":"acme.com"}'
 cargo-ai orchestration action execute-batch --action '{"kind":"connector","integrationSlug":"clearbit","actionSlug":"company_enrich","config":{}}' --records '[{...},{...}]'
+cargo-ai orchestration action get-output-schema --action '{"kind":"connector","integrationSlug":"clearbit","actionSlug":"company_enrich","config":{}}' # resolve output JSON Schema without executing
 
 # Workflows (chain multiple actions)
 cargo-ai orchestration run create --workflow-uuid <uuid> --data '{"company":"Acme","domain":"acme.com"}'
@@ -149,6 +150,24 @@ cargo-ai orchestration action execute-batch \
 ```
 
 Action kinds: `tool`, `connector`, `agent`, `native`. See `references/examples/actions.md` for all action kinds, parameters, retry config, response shapes, and end-to-end examples.
+
+### Resolve an action's output schema (without executing)
+
+`integration get <slug>` tells you an action's **input** shape (`config.jsonSchema`). To learn what an action **produces** — the fields and types in its `data` output — resolve its output schema **without spending credits or running anything**:
+
+```bash
+cargo-ai orchestration action get-output-schema \
+  --action '{"kind":"connector","integrationSlug":"clearbit","actionSlug":"company_enrich","config":{}}'
+# → JSON Schema describing the action's data output
+```
+
+Takes the same `--action` shape as `action execute` (`tool` / `connector` / `agent` / `native`). Use it to:
+
+- Know which fields a downstream node can read (`{{nodes.<slug>.<field>}}`) **before** wiring the graph.
+- Build a structured `agent` node `output.jsonSchema` from an upstream action's real output shape.
+- Map an action's output onto storage columns without a throwaway run.
+
+See `references/examples/actions.md` ("Resolve an action's output schema") for response shape and end-to-end usage.
 
 ## Create a run
 

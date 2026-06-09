@@ -189,6 +189,50 @@ cargo-ai connection connector list
 
 ---
 
+## Resolve an action's output schema
+
+`integration get <slug>` describes an action's **input** (`config.jsonSchema`). To discover what an action **produces** — the shape of its `data` output — resolve its output schema **without executing it** (no run, no credits):
+
+```bash
+cargo-ai orchestration action get-output-schema \
+  --action '{"kind":"connector","integrationSlug":"clearbit","actionSlug":"company_enrich","config":{}}'
+```
+
+It accepts the same `--action` object as `action execute`, so it works for every kind:
+
+```bash
+# Tool action
+cargo-ai orchestration action get-output-schema \
+  --action '{"kind":"tool","toolUuid":"<tool-uuid>","config":{}}'
+
+# Native action
+cargo-ai orchestration action get-output-schema \
+  --action '{"kind":"native","actionSlug":"<slug>","config":{}}'
+```
+
+### Response
+
+A JSON Schema object describing the fields and types the action emits in its `data` output — e.g.:
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "name": { "type": "string" },
+    "domain": { "type": "string" },
+    "employeesCount": { "type": "number" }
+  }
+}
+```
+
+### Why it's useful
+
+- **Wire a node graph correctly the first time.** Know which fields exist before referencing them downstream as `{{nodes.<slug>.<field>}}` — avoids the silent-`undefined` footgun (see `../node-selection.md`).
+- **Drive a structured `agent` node.** Shape the agent's `output.jsonSchema` from an upstream action's real output instead of guessing.
+- **Map onto storage columns** ahead of a batch, without a throwaway run to inspect the output.
+
+---
+
 ## End-to-end: enrich a company with a connector action
 
 ```bash
