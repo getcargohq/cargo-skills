@@ -1,7 +1,7 @@
 ---
 name: cargo-storage
 description: Manage models, datasets, columns, and relationships and query workspace storage with SQL using the Cargo CLI. Use when the user wants to inspect or modify data models, create or update columns, list datasets, set model relationships, understand the schema, or run SQL against storage.
-version: "1.1.1"
+version: "1.2.0"
 compatibility: Requires @cargo-ai/cli (npm) and a Cargo account (browser sign-in via --oauth, or an API token)
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -93,6 +93,23 @@ cargo-ai storage model remove <model-uuid>
 ```
 
 **Querying:** Use `cargo-ai storage query execute "<sql>"` (or `storage query download --query "<sql>"` for full exports) to run SQL against storage. Tables are referenced as `<datasetSlug>.<modelSlug>` (e.g. `default.companies`) and rewritten to the underlying storage table under the hood. See [Query with SQL](#query-with-sql) below.
+
+### Ingest webhook URL (HTTP push into a model)
+
+Models whose extractor runs in **`ingest` mode** expose a stable HTTP webhook you can POST records to — no CLI command is needed to mint it, you derive it directly from the model UUID:
+
+```
+https://api.getcargo.io/v1/models/<MODEL_UUID>/ingest
+```
+
+Get `<MODEL_UUID>` from `cargo-ai storage model get <model-uuid>` (or `model list`) — the URL is the same pattern for every workspace. Hand this URL to whoever (or whatever agent/system) needs to push data into the model.
+
+**When it applies:** the model's extractor is in `ingest` mode **and** `autoingest !== true`. (With `autoingest` enabled, Cargo manages ingestion itself and the manual webhook isn't the integration point.) Confirm the mode on the live `model get` JSON before handing out the URL.
+
+```bash
+# Derive the ingest webhook URL for a model
+cargo-ai storage model get <model-uuid> | jq -r '"https://api.getcargo.io/v1/models/\(.model.uuid)/ingest"'
+```
 
 ## Datasets
 

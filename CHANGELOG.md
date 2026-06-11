@@ -77,6 +77,10 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 - Prerequisites section trimmed to a one-line pointer at `cargo/references/prerequisites.md`. No command surface change.
 
+### `cargo-storage` → 1.2.0
+
+- **New "Ingest webhook URL" section** in the Models docs. Models whose extractor runs in `ingest` mode (and `autoingest !== true`) expose a stable HTTP push endpoint at `https://api.getcargo.io/v1/models/<MODEL_UUID>/ingest` — derived directly from the model UUID, no CLI command needed. Documents when it applies and a `jq` one-liner to build the URL from `model get`, so the link can be handed to whoever/whatever pushes data into the model instead of copying it from the UI.
+
 ### `cargo-storage` → 1.1.1
 
 - Prerequisites section trimmed to a one-line pointer at `cargo/references/prerequisites.md`. No command surface change.
