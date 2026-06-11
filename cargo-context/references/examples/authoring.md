@@ -2,7 +2,7 @@
 
 End-to-end recipes for adding, editing, and removing entries in the context repo. All examples assume you're authenticated (`cargo-ai whoami` works) and that the workspace already has a context repository configured.
 
-> **Frontmatter is mandatory.** Every `.md`/`.mdx` write below leads with a YAML block carrying non-empty `title` and `description`. This is enforced server-side: `write` (and `edit`) rejects content that's missing either field or has malformed frontmatter YAML with HTTP 422 / `reason: "invalidContent"`, and nothing is committed. To cite a source file so it shows up as a **graph edge**, list it in frontmatter `references:` (or use a markdown link / wikilink) — a bare path in prose creates no edge. See `../conventions.md` for the full linking rules.
+> **Lead with frontmatter.** Every `.md`/`.mdx` write below starts with a YAML block carrying `title` and `description`. This is a strong convention, **not enforced** — a file with missing or malformed frontmatter is still committed, it just indexes poorly (the graph falls back to the filename for `title` and the first paragraph for the summary). To cite a source file so it shows up as a **graph edge**, list it in frontmatter `references:` (or use a markdown link / wikilink) — a bare path in prose creates no edge. See `../conventions.md` for the full linking rules.
 
 ## Discover before writing
 

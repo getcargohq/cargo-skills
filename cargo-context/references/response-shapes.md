@@ -47,7 +47,7 @@ cargo-ai context runtime write \
   --commit-message "Add VP of Sales mid-market persona"
 ```
 
-**Error reasons:** in addition to the generic `errorMessage` shape, `.md`/`.mdx` content that is missing `title`/`description` or has malformed frontmatter YAML is rejected **before** committing with HTTP 422 and `reason: "invalidContent"` (the response also carries an `errorMessage` string describing the missing fields). See `references/troubleshooting.md`.
+**Error reasons (`outcome: "notWritten"`):** `repositoryNotFound`, `syncConflict`, `syncFailed`, `failedToWrite`, or `deniedPath` (writing under `.files/`). `syncFailed` / `failedToWrite` / `deniedPath` also carry an `errorMessage` string. Frontmatter is **not** validated — a file missing `title`/`description` or with malformed frontmatter is written, not rejected. See `references/troubleshooting.md`.
 
 ## cargo-ai context runtime edit
 
@@ -61,7 +61,7 @@ cargo-ai context runtime edit \
   --commit-message "Refresh positioning one-liner"
 ```
 
-**Error reasons:** fails with the generic `errorMessage` shape when `--old-string` matches zero or multiple times. Additionally, if the **resulting** `.md`/`.mdx` file would be missing `title`/`description` or have malformed frontmatter YAML, the edit is rejected with HTTP 422 and `reason: "invalidContent"` (with an `errorMessage` string) and nothing is written. See `references/troubleshooting.md`.
+**Error reasons (`outcome: "notEdited"`):** `stringNotFound` / `stringNotUnique` (the `--old-string` match), `fileNotFound`, `noOp` (new string equals old), `repositoryNotFound`, `syncConflict`, `syncFailed`, `failedToEdit`, or `deniedPath`. Frontmatter is not validated, so an edit that strips `title`/`description` still applies. See `references/troubleshooting.md`.
 
 ## cargo-ai context runtime execute
 

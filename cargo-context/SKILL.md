@@ -104,7 +104,7 @@ cargo-ai context runtime read --path play/inbound-trial-to-paid.md --start-line 
 
 `write` creates (or overwrites) a file and pushes a commit to the default branch.
 
-Every `.md`/`.mdx` file must begin with a frontmatter block carrying non-empty `title` and `description`. If either is missing, or the frontmatter YAML is malformed (e.g. an unquoted value containing `": "`), `write` returns HTTP 422 with `reason: "invalidContent"` and an `errorMessage` naming the missing fields and showing the expected block — and **nothing is committed**. To recover, add the frontmatter block and retry. (Validation covers `.md`/`.mdx` only; YAML data files and `.files/` mirrors are exempt.)
+Begin every `.md`/`.mdx` file with a YAML frontmatter block setting `title` and `description`. Frontmatter is **not validated** — a file with missing, empty, or malformed frontmatter is still written and committed; it just indexes poorly in the graph (a missing `title` falls back to the filename, the node summary to the first paragraph). `write` can still fail for other reasons — `repositoryNotFound`, `syncConflict`, `syncFailed`, `failedToWrite`, or `deniedPath` (e.g. writing under `.files/`); see `references/response-shapes.md`.
 
 ```bash
 cargo-ai context runtime write \
@@ -151,7 +151,7 @@ EOF
 
 `edit` replaces a single exact substring. `--old-string` must occur **exactly once** in the file; pass an empty `--new-string` to delete the match.
 
-`edit` validates the **resulting** file the same way `write` does: an edit that strips or empties `title`/`description` (or breaks the frontmatter YAML) is rejected with HTTP 422 / `reason: "invalidContent"` and nothing is written. When editing an older file that predates this rule and has no frontmatter, add the `title`/`description` block first (via a full-content `write`, or include it in the edit) — the file still loads in the graph, but any edit is blocked until the frontmatter is present.
+`edit` does not validate frontmatter — an edit that strips or empties `title`/`description` still applies, so keep the block intact to keep the node discoverable. `edit` can fail for other reasons, though: `stringNotFound` / `stringNotUnique` (the `--old-string` match), `fileNotFound`, `noOp` (new string equals old), `syncConflict` / `syncFailed`, `failedToEdit`, or `deniedPath`.
 
 ```bash
 # Replace one specific sentence
@@ -213,7 +213,7 @@ The Cargo context repo is a typed knowledge base. The canonical example — and 
 ### File conventions
 
 - **Filename:** `kebab-case.md` (e.g. `vp-sales-mid-market.md`).
-- **Frontmatter:** YAML with non-empty `title` and `description` — **enforced server-side**. `write` rejects any `.md`/`.mdx` content missing either field (or with malformed frontmatter YAML) with HTTP 422 / `reason: "invalidContent"` **before** anything is committed; `edit` applies the same check to the resulting file. (YAML data files and mirrored `.files/` are exempt.) See [Source references and graph edges](#source-references-and-graph-edges) — `description` is also the graph's node-summary fallback.
+- **Frontmatter:** start every `.md`/`.mdx` file with YAML frontmatter setting `title` and `description`. This is a **strong convention, not enforced** — a write with missing, empty, or malformed frontmatter is still created and committed; it just indexes poorly. The graph reads `title` (fallback: filename) and `summary` (fallback: the file's first paragraph); it does **not** read `description`, so add a `summary:` if you want to control the node summary. See [Source references and graph edges](#source-references-and-graph-edges).
 - **Cross-references:** use the `domain/slug` form, **no `.md` extension** (e.g. `persona/vp-sales-mid-market`). To register as a graph **edge** a reference must use one of the three link forms below — a bare `domain/slug` (or file path) in plain prose creates no edge.
 - **Templates:** each domain ships an `_template.md`. Read it (`cargo-ai context runtime read --path persona/_template.md`) before authoring a new entry. `_template.*` files are excluded from the graph — never reference them.
 

@@ -22,7 +22,7 @@ The conventions below are inherited from the canonical context repository [`getc
 ## File conventions
 
 - **Filename:** `kebab-case.md` (e.g. `vp-sales-mid-market.md`). Use ASCII letters, digits, and hyphens only.
-- **Frontmatter:** YAML with non-empty `title` and `description` — both **enforced server-side** on `.md`/`.mdx` files. `write` rejects content missing either field (or with malformed frontmatter YAML) with HTTP 422 / `reason: "invalidContent"` before committing; `edit` rejects any change that strips or empties them. An empty `description:` is treated as missing. See [Source references and the knowledge graph](#source-references-and-the-knowledge-graph).
+- **Frontmatter:** YAML with `title` and `description` on every `.md`/`.mdx` file. This is a **strong convention, not enforced** — a write with missing, empty, or malformed frontmatter is still committed; it just indexes poorly. The graph reads `title` (fallback: filename) and `summary` (fallback: first paragraph), **not** `description`. See [Source references and the knowledge graph](#source-references-and-the-knowledge-graph).
 - **Cross-references:** `domain/slug` form, **no `.md` extension** (e.g. `persona/vp-sales-mid-market`). To register as a graph **edge**, a reference must appear as a wikilink, a markdown link, or a frontmatter `references:` entry (see below) — a bare `domain/slug` or file path in plain prose is not parsed.
 - **Templates:** each domain ships an `_template.md`. Read it (`cargo-ai context runtime read --path <domain>/_template.md`) before authoring a new entry. `_template.*` files are excluded from the graph — never reference them.
 - **Bidirectional links:** keep cross-refs symmetric when it makes sense — a `play` that targets a `persona` should appear in the persona's `Preferred channels` or `How we land` sections when relevant.
@@ -62,7 +62,7 @@ The graph is built from **every `.md`, `.mdx`, `.yaml`, and `.yml` file** in the
 - **The target must exist.** A reference only resolves if the target file is actually in the repo — nonexistent targets become **broken** edges (dead links in the graph UI). Verify the path before citing it (`cargo-ai context runtime browse --path <dir>`).
 - **`_template.*` files are excluded** from the graph — don't reference `_template.md` / `.mdx` / `.yaml` / `.yml`.
 - **YAML data files:** `title`, `summary`, and `references` are read from top-level keys; YAML bodies produce no link edges.
-- **Node title/summary:** titles come from frontmatter `title:` (fallback: filename); summaries from frontmatter `summary:` (fallback: first paragraph, truncated to 280 chars). For `.md`/`.mdx`, `description` is used as the summary fallback when `summary` is absent — so the enforced `description` is what shows in graph nodes. Always set `title` and `description` (and `summary` if you want a distinct one) so the node is discoverable.
+- **Node title/summary:** titles come from frontmatter `title:` (fallback: filename); summaries from frontmatter `summary:` (fallback: the body's first paragraph, truncated to 280 chars). The graph does **not** read `description` — set a `summary:` if you want the node summary to differ from the first paragraph. Always set `title` so the node is discoverable.
 
 ### Citing sources in insight / learning documents
 
