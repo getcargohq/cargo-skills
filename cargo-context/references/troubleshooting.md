@@ -26,8 +26,14 @@ The path does not exist in the runtime sandbox. Use `cargo-ai context runtime br
 **No `_template.md` for the domain**
 Some workspaces customize their context repo. If a domain doesn't ship a template, browse the domain (`cargo-ai context runtime browse --path <domain>`) and model the new file after an existing entry.
 
+**`reason: "invalidContent"` (HTTP 422) on write**
+`write` validates `.md`/`.mdx` frontmatter **before** committing — nothing is pushed when it fails. The `errorMessage` names the problem and shows the expected block. Causes and fixes:
+- **Missing/empty `title` or `description`** — add a frontmatter block with both fields non-empty, then retry.
+- **Malformed frontmatter YAML** — e.g. an unquoted value containing `": "`. Quote the value (`description: "Owns pipeline: quota, ramp"`) and retry. (Validation is strict here even though the graph builder itself fails soft on such files.)
+Only `.md`/`.mdx` files are checked; YAML data files and mirrored `.files/` are exempt.
+
 **Frontmatter rejected by `context graph get`**
-Both `title` and `description` are required on every file. Empty or missing values cause the graph builder to skip the node and any cross-refs to it will dangle. Always set both before pushing.
+Both `title` and `description` are required on every file (and now enforced at `write`/`edit` time — see above). Empty or missing values cause the graph builder to skip the node and any cross-refs to it will dangle. Always set both before pushing.
 
 ## Runtime — edit
 
@@ -36,6 +42,11 @@ Both `title` and `description` are required on every file. Empty or missing valu
 
 **`--old-string` matches more than once**
 `edit` requires the match to be unique. Add enough surrounding context to make the match unique (extend with the line before or after), or do multiple targeted edits in sequence.
+
+**`reason: "invalidContent"` (HTTP 422) on edit**
+`edit` validates the **resulting** file: a change that strips or empties `title`/`description`, or breaks the frontmatter YAML, is rejected and nothing is written. Two common cases:
+- **Edit removes the frontmatter** — don't delete or blank `title`/`description`; keep both fields populated in the new content.
+- **Editing an older file that has no frontmatter** — the file still loads in the graph, but any edit is blocked until frontmatter exists. Add the `title`/`description` block first (a full-content `write`, or include the block in the edit), then proceed.
 
 **Edits not appearing in GitHub**
 `edit` commits and pushes; `execute` does **not** push. If you ran a shell command that modified files (e.g. `sed -i`, redirecting into a file), the change stays in the ephemeral sandbox and is discarded. Use `write` or `edit` for any change that should land in git.

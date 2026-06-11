@@ -47,6 +47,8 @@ cargo-ai context runtime write \
   --commit-message "Add VP of Sales mid-market persona"
 ```
 
+**Error reasons:** in addition to the generic `errorMessage` shape, `.md`/`.mdx` content that is missing `title`/`description` or has malformed frontmatter YAML is rejected **before** committing with HTTP 422 and `reason: "invalidContent"` (the response also carries an `errorMessage` string describing the missing fields). See `references/troubleshooting.md`.
+
 ## cargo-ai context runtime edit
 
 Replaces a single exact substring in the file at `--path` and pushes a commit. `--old-string` must match **exactly once** — read the file with `runtime read` first and copy the substring verbatim, whitespace included. Pass an empty `--new-string` to delete the match. Returns the commit metadata on success.
@@ -58,6 +60,8 @@ cargo-ai context runtime edit \
   --new-string "We help RevOps run AI-native GTM motions." \
   --commit-message "Refresh positioning one-liner"
 ```
+
+**Error reasons:** fails with the generic `errorMessage` shape when `--old-string` matches zero or multiple times. Additionally, if the **resulting** `.md`/`.mdx` file would be missing `title`/`description` or have malformed frontmatter YAML, the edit is rejected with HTTP 422 and `reason: "invalidContent"` (with an `errorMessage` string) and nothing is written. See `references/troubleshooting.md`.
 
 ## cargo-ai context runtime execute
 

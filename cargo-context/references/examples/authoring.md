@@ -2,6 +2,8 @@
 
 End-to-end recipes for adding, editing, and removing entries in the context repo. All examples assume you're authenticated (`cargo-ai whoami` works) and that the workspace already has a context repository configured.
 
+> **Frontmatter is mandatory.** Every `.md`/`.mdx` write below leads with a YAML block carrying non-empty `title` and `description`. This is enforced server-side: `write` (and `edit`) rejects content that's missing either field or has malformed frontmatter YAML with HTTP 422 / `reason: "invalidContent"`, and nothing is committed. To cite a source file so it shows up as a **graph edge**, list it in frontmatter `references:` (or use a markdown link / wikilink) — a bare path in prose creates no edge. See `../conventions.md` for the full linking rules.
+
 ## Discover before writing
 
 ```bash
@@ -183,6 +185,35 @@ EOF
 )" \
   --commit-message "Add 14-day time-to-first-workflow proof point"
 ```
+
+## Cite a source in an insight / learning doc
+
+When an entry is derived from a specific source file in the repo (a sales-note, a call summary, a research output), cite it in frontmatter `references:` so the citation registers as a **graph edge** with a `frontmatter` origin. Prefer root-relative paths, and confirm the target exists first (`cargo-ai context runtime browse --path outputs/sales-notes`).
+
+```bash
+cargo-ai context runtime write \
+  --path insight/agorapulse-expansion-readiness.md \
+  --content "$(cat <<'EOF'
+---
+title: AgoraPulse expansion readiness
+description: Why the AgoraPulse account is ready for a multi-thread expansion play.
+references:
+  - outputs/sales-notes/2026-06-05-agorapulse-build-session-1-outcomes.md
+---
+
+## Summary
+
+AgoraPulse surfaced three net-new buying centers in the last build session — strong signal for a multi-thread expansion.
+
+## Evidence
+
+Drawn from the [June 5 build-session outcomes](outputs/sales-notes/2026-06-05-agorapulse-build-session-1-outcomes.md): the champion named two adjacent teams already evaluating workflow tooling.
+EOF
+)" \
+  --commit-message "Add AgoraPulse expansion readiness insight"
+```
+
+Both the frontmatter `references:` entry and the inline markdown link resolve to the same node — a bare `Source: outputs/sales-notes/...` line in prose would not.
 
 ## Edit a single line
 
