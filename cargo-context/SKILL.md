@@ -230,7 +230,7 @@ The knowledge graph is built from every `.md`, `.mdx`, `.yaml`, and `.yml` file 
      - outputs/sales-notes/2026-06-05-agorapulse-build-session-1-outcomes.md
    ---
    ```
-2. **Markdown links** in the body: `[session outcomes](outputs/sales-notes/2026-06-05-agorapulse-build-session-1-outcomes.md)`.
+2. **A Markdown link** in the body — standard `[label]` followed immediately by `(path)` syntax, where the target is the file path, e.g. an anchor linking to `outputs/sales-notes/2026-06-05-agorapulse-build-session-1-outcomes.md`.
 3. **Wikilinks** in the body (extension optional): `[[outputs/sales-notes/2026-06-05-agorapulse-build-session-1-outcomes]]`.
 
 Key constraints:

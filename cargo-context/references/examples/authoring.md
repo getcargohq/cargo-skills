@@ -207,13 +207,13 @@ AgoraPulse surfaced three net-new buying centers in the last build session — s
 
 ## Evidence
 
-Drawn from the [June 5 build-session outcomes](outputs/sales-notes/2026-06-05-agorapulse-build-session-1-outcomes.md): the champion named two adjacent teams already evaluating workflow tooling.
+Drawn from the [[outputs/sales-notes/2026-06-05-agorapulse-build-session-1-outcomes|June 5 build-session outcomes]]: the champion named two adjacent teams already evaluating workflow tooling.
 EOF
 )" \
   --commit-message "Add AgoraPulse expansion readiness insight"
 ```
 
-Both the frontmatter `references:` entry and the inline markdown link resolve to the same node — a bare `Source: outputs/sales-notes/...` line in prose would not.
+Both the frontmatter `references:` entry and the body wikilink (the `|` sets the display text) resolve to the same node — a bare `Source: outputs/sales-notes/...` line in prose would not. A standard Markdown link to the same file works too.
 
 ## Edit a single line
 
