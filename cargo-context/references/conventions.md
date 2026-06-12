@@ -22,10 +22,47 @@ The conventions below are inherited from the canonical context repository [`getc
 ## File conventions
 
 - **Filename:** `kebab-case.md` (e.g. `vp-sales-mid-market.md`). Use ASCII letters, digits, and hyphens only.
-- **Frontmatter:** YAML with `title` and `description` — both required on every file. Empty `description:` will be treated as missing.
-- **Cross-references:** `domain/slug` form, **no `.md` extension** (e.g. `persona/vp-sales-mid-market`).
-- **Templates:** each domain ships an `_template.md`. Read it (`cargo-ai context runtime read --path <domain>/_template.md`) before authoring a new entry.
+- **Frontmatter:** YAML with `title` and `description` on every `.md`/`.mdx` file. This is a **strong convention, not enforced** — a write with missing, empty, or malformed frontmatter is still committed; it just indexes poorly. The graph reads `title` (fallback: filename) and `summary` (fallback: first paragraph), **not** `description`. See [Source references and the knowledge graph](#source-references-and-the-knowledge-graph).
+- **Cross-references:** `domain/slug` form, **no `.md` extension** (e.g. `persona/vp-sales-mid-market`). To register as a graph **edge**, a reference must appear as a wikilink, a markdown link, or a frontmatter `references:` entry (see below) — a bare `domain/slug` or file path in plain prose is not parsed.
+- **Templates:** each domain ships an `_template.md`. Read it (`cargo-ai context runtime read --path <domain>/_template.md`) before authoring a new entry. `_template.*` files are excluded from the graph — never reference them.
 - **Bidirectional links:** keep cross-refs symmetric when it makes sense — a `play` that targets a `persona` should appear in the persona's `Preferred channels` or `How we land` sections when relevant.
+
+## Source references and the knowledge graph
+
+The graph is built from **every `.md`, `.mdx`, `.yaml`, and `.yml` file** in the repo (any folder; only `.git/` is excluded). Each file becomes a node. **Edges are created only from these three forms** — everything else is invisible to the graph:
+
+1. **Frontmatter `references:` list** (preferred for source citations — keeps prose clean, and the edge carries a `frontmatter` origin):
+
+   ```yaml
+   ---
+   title: AgoraPulse expansion thesis
+   description: Why the AgoraPulse account is ready for a multi-thread expansion play.
+   references:
+     - outputs/sales-notes/2026-06-05-agorapulse-build-session-1-outcomes.md
+   ---
+   ```
+
+2. **A Markdown link in the body** — use when the citation needs surrounding prose. Write standard `[label]` immediately followed by `(path)` link syntax pointing at the source file, e.g. an "AgoraPulse session outcomes" anchor linking to `outputs/sales-notes/2026-06-05-agorapulse-build-session-1-outcomes.md`.
+
+3. **Wikilinks in the body** (extension optional):
+
+   ```markdown
+   [[outputs/sales-notes/2026-06-05-agorapulse-build-session-1-outcomes]]
+   ```
+
+### Linking rules
+
+- **Never cite a source as a bare path in prose.** A `Source:` line that just mentions `outputs/sales-notes/foo.md` as plain text is **not** parsed and creates **no** edge. Always use one of the three forms above.
+- **Prefer root-relative paths.** Paths resolve root-relative first (from the repo root), then relative to the citing file's directory. Root-relative paths work regardless of where the citing document lives.
+- **Extensions are optional.** The resolver auto-tries `.md`, `.mdx`, `.yaml`, `.yml` (in that preference order). Including the extension is fine too.
+- **The target must exist.** A reference only resolves if the target file is actually in the repo — nonexistent targets become **broken** edges (dead links in the graph UI). Verify the path before citing it (`cargo-ai context runtime browse --path <dir>`).
+- **`_template.*` files are excluded** from the graph — don't reference `_template.md` / `.mdx` / `.yaml` / `.yml`.
+- **YAML data files:** `title`, `summary`, and `references` are read from top-level keys; YAML bodies produce no link edges.
+- **Node title/summary:** titles come from frontmatter `title:` (fallback: filename); summaries from frontmatter `summary:` (fallback: the body's first paragraph, truncated to 280 chars). The graph does **not** read `description` — set a `summary:` if you want the node summary to differ from the first paragraph. Always set `title` so the node is discoverable.
+
+### Citing sources in insight / learning documents
+
+When a document has a **Source** or **Evidence** section, cite the source files in **frontmatter `references:`** — this keeps the prose clean and gives the edges a `frontmatter` origin. Use inline markdown links when the citation needs surrounding prose.
 
 ## How to read the context
 
@@ -240,5 +277,5 @@ _Cross-ref `persona/...` — who raises this most._
 - **Repetition threshold for call-derived claims.** A single sales call is anecdote, not evidence. Before promoting an objection / pain / missed-proof claim from call analysis into the context repo, require it to surface across multiple calls. Suggested defaults:
   - Call-rich workspaces (≥ 50 transcripts / quarter): **3 occurrences**.
   - Medium volume: **2 occurrences**.
-  - New / call-poor workspaces (< 10 transcripts): **1 occurrence**, and cite the source in the file body.
+  - New / call-poor workspaces (< 10 transcripts): **1 occurrence**, and cite the source via frontmatter `references:` (or a markdown link) so the citation registers as a graph edge — see [Source references and the knowledge graph](#source-references-and-the-knowledge-graph).
   The threshold applies to claims, not to facts a call directly confirms (a named customer, a verbatim quote, a competitor explicitly mentioned). See `examples/lifecycle.md` for the full refresh loop.

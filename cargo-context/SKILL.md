@@ -1,7 +1,7 @@
 ---
 name: cargo-context
 description: Inspect and edit the workspace's git-backed context repository (the GTM knowledge base of markdown/MDX files) and its runtime sandbox using the Cargo CLI. Use when the user wants to browse/read/write/edit context files, run a command in the sandbox, or inspect the context knowledge graph.
-version: "1.1.0"
+version: "1.2.0"
 compatibility: Requires @cargo-ai/cli (npm) and a Cargo account (browser sign-in via --oauth, or an API token)
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -104,6 +104,8 @@ cargo-ai context runtime read --path play/inbound-trial-to-paid.md --start-line 
 
 `write` creates (or overwrites) a file and pushes a commit to the default branch.
 
+Begin every `.md`/`.mdx` file with a YAML frontmatter block setting `title` and `description`. Frontmatter is **not validated** — a file with missing, empty, or malformed frontmatter is still written and committed; it just indexes poorly in the graph (a missing `title` falls back to the filename, the node summary to the first paragraph). `write` can still fail for other reasons — `repositoryNotFound`, `syncConflict`, `syncFailed`, `failedToWrite`, or `deniedPath` (e.g. writing under `.files/`); see `references/response-shapes.md`.
+
 ```bash
 cargo-ai context runtime write \
   --path persona/vp-sales-mid-market.md \
@@ -148,6 +150,8 @@ EOF
 ### Edit an existing file
 
 `edit` replaces a single exact substring. `--old-string` must occur **exactly once** in the file; pass an empty `--new-string` to delete the match.
+
+`edit` does not validate frontmatter — an edit that strips or empties `title`/`description` still applies, so keep the block intact to keep the node discoverable. `edit` can fail for other reasons, though: `stringNotFound` / `stringNotUnique` (the `--old-string` match), `fileNotFound`, `noOp` (new string equals old), `syncConflict` / `syncFailed`, `failedToEdit`, or `deniedPath`.
 
 ```bash
 # Replace one specific sentence
@@ -209,9 +213,33 @@ The Cargo context repo is a typed knowledge base. The canonical example — and 
 ### File conventions
 
 - **Filename:** `kebab-case.md` (e.g. `vp-sales-mid-market.md`).
-- **Frontmatter:** YAML with `title` and `description`, both required on every file.
-- **Cross-references:** use the `domain/slug` form, **no `.md` extension** (e.g. `persona/vp-sales-mid-market`).
-- **Templates:** each domain ships an `_template.md`. Read it (`cargo-ai context runtime read --path persona/_template.md`) before authoring a new entry.
+- **Frontmatter:** start every `.md`/`.mdx` file with YAML frontmatter setting `title` and `description`. This is a **strong convention, not enforced** — a write with missing, empty, or malformed frontmatter is still created and committed; it just indexes poorly. The graph reads `title` (fallback: filename) and `summary` (fallback: the file's first paragraph); it does **not** read `description`, so add a `summary:` if you want to control the node summary. See [Source references and graph edges](#source-references-and-graph-edges).
+- **Cross-references:** use the `domain/slug` form, **no `.md` extension** (e.g. `persona/vp-sales-mid-market`). To register as a graph **edge** a reference must use one of the three link forms below — a bare `domain/slug` (or file path) in plain prose creates no edge.
+- **Templates:** each domain ships an `_template.md`. Read it (`cargo-ai context runtime read --path persona/_template.md`) before authoring a new entry. `_template.*` files are excluded from the graph — never reference them.
+
+### Source references and graph edges
+
+The knowledge graph is built from every `.md`, `.mdx`, `.yaml`, and `.yml` file in the repo (any folder; only `.git/` is excluded). Each file is a node, but **edges are created only from three forms** — anything else is invisible to the graph:
+
+1. **Frontmatter `references:` list** (preferred for source citations — keeps prose clean):
+   ```yaml
+   ---
+   title: AgoraPulse expansion thesis
+   description: Why AgoraPulse is ready for a multi-thread expansion play.
+   references:
+     - outputs/sales-notes/2026-06-05-agorapulse-build-session-1-outcomes.md
+   ---
+   ```
+2. **A Markdown link** in the body — standard `[label]` followed immediately by `(path)` syntax, where the target is the file path, e.g. an anchor linking to `outputs/sales-notes/2026-06-05-agorapulse-build-session-1-outcomes.md`.
+3. **Wikilinks** in the body (extension optional): `[[outputs/sales-notes/2026-06-05-agorapulse-build-session-1-outcomes]]`.
+
+Key constraints:
+
+- **Never cite a source as a bare path in prose** (e.g. a `Source:` line that just mentions `outputs/sales-notes/foo.md` as text) — it is not parsed and creates **no** edge.
+- **Prefer root-relative paths** (resolved from the repo root first, then relative to the citing file) so links work regardless of where the document lives.
+- **Extensions are optional** — the resolver auto-tries `.md`, `.mdx`, `.yaml`, `.yml` in that order. Including the extension is fine.
+- **The target must exist** or the edge is **broken** (a dead link in the graph UI). Verify with `runtime browse` before citing.
+- For docs with a **Source**/**Evidence** section, cite the files in frontmatter `references:`; use inline markdown links when the citation needs surrounding prose. Full rules: `references/conventions.md`.
 
 ### Workflow: add a new entry
 

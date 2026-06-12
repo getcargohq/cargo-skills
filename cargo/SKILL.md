@@ -374,7 +374,8 @@ See `../cargo-ai/SKILL.md` for model and temperature guidance by use case.
 
 - `runtime write` / `runtime edit` commit and push. `runtime execute` is ephemeral — use it for `grep`/`ls`/inspection, never for persistent changes.
 - `runtime edit --old-string` must match the file content **exactly once**. Read first, copy whitespace verbatim.
-- Every file requires both `title` and `description` in frontmatter — missing values break the knowledge graph.
+- Set `title` + `description` frontmatter on every `.md`/`.mdx` file — a **strong convention, not enforced**: missing/malformed frontmatter is still committed, it just indexes poorly (graph falls back to filename + first paragraph, and reads `summary`, not `description`).
+- Graph **edges** form only from frontmatter `references:`, markdown links, or wikilinks — a bare path in prose creates no edge. Cite source files in `references:`.
 - For domains, conventions, and per-domain templates, see `../cargo-context/references/conventions.md`.
 
 **Lifecycle:**

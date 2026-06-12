@@ -47,6 +47,8 @@ cargo-ai context runtime write \
   --commit-message "Add VP of Sales mid-market persona"
 ```
 
+On failure it returns the generic error shape (see [Error shape](#error-shape-every-command)); the context-specific case to know is a denied write under `.files/` (update those via Content instead). Frontmatter is **not** validated — a file missing `title`/`description` or with malformed frontmatter is written, not rejected. Failure reasons are enumerated in `references/troubleshooting.md`.
+
 ## cargo-ai context runtime edit
 
 Replaces a single exact substring in the file at `--path` and pushes a commit. `--old-string` must match **exactly once** — read the file with `runtime read` first and copy the substring verbatim, whitespace included. Pass an empty `--new-string` to delete the match. Returns the commit metadata on success.
@@ -58,6 +60,8 @@ cargo-ai context runtime edit \
   --new-string "We help RevOps run AI-native GTM motions." \
   --commit-message "Refresh positioning one-liner"
 ```
+
+On failure it returns the generic error shape — most often because `--old-string` matched zero or multiple times. Frontmatter is not validated, so an edit that strips `title`/`description` still applies. Failure reasons are enumerated in `references/troubleshooting.md`.
 
 ## cargo-ai context runtime execute
 
