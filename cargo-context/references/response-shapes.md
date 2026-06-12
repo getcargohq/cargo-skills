@@ -47,7 +47,7 @@ cargo-ai context runtime write \
   --commit-message "Add VP of Sales mid-market persona"
 ```
 
-**Error reasons (`outcome: "notWritten"`):** `repositoryNotFound`, `syncConflict`, `syncFailed`, `failedToWrite`, or `deniedPath` (writing under `.files/`). `syncFailed` / `failedToWrite` / `deniedPath` also carry an `errorMessage` string. Frontmatter is **not** validated — a file missing `title`/`description` or with malformed frontmatter is written, not rejected. See `references/troubleshooting.md`.
+On failure it returns the generic error shape (see [Error shape](#error-shape-every-command)); the context-specific case to know is a denied write under `.files/` (update those via Content instead). Frontmatter is **not** validated — a file missing `title`/`description` or with malformed frontmatter is written, not rejected. Failure reasons are enumerated in `references/troubleshooting.md`.
 
 ## cargo-ai context runtime edit
 
@@ -61,7 +61,7 @@ cargo-ai context runtime edit \
   --commit-message "Refresh positioning one-liner"
 ```
 
-**Error reasons (`outcome: "notEdited"`):** `stringNotFound` / `stringNotUnique` (the `--old-string` match), `fileNotFound`, `noOp` (new string equals old), `repositoryNotFound`, `syncConflict`, `syncFailed`, `failedToEdit`, or `deniedPath`. Frontmatter is not validated, so an edit that strips `title`/`description` still applies. See `references/troubleshooting.md`.
+On failure it returns the generic error shape — most often because `--old-string` matched zero or multiple times. Frontmatter is not validated, so an edit that strips `title`/`description` still applies. Failure reasons are enumerated in `references/troubleshooting.md`.
 
 ## cargo-ai context runtime execute
 
