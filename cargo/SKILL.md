@@ -1,7 +1,7 @@
 ---
 name: cargo
-description: Router and overview for the Cargo CLI agent skills. Explains the nine skills (one outcome skill cargo-gtm + eight capability skills), the UUID flow between them, async polling, end-to-end use cases (enrich one record, enrich and sync to CRM, AI lead scoring, custom workflow, error monitoring, fresh-workspace bootstrap, segment export, GTM context authoring), and common gotchas (`conjonction` spelling, run vs batch, model-uuid vs segment-uuid). Load first whenever working with the Cargo CLI, when unsure which sub-skill applies, when stitching multiple sub-skills together, when bootstrapping a workspace, or when the user asks about Cargo skills in general.
-version: "1.4.0"
+description: Router and overview for the Cargo CLI agent skills. Explains the eleven skills (one outcome skill cargo-gtm + ten capability skills), the UUID flow between them, async polling, end-to-end use cases (enrich one record, enrich and sync to CRM, AI lead scoring, custom workflow, error monitoring, fresh-workspace bootstrap, segment export, GTM context authoring), and common gotchas (`conjonction` spelling, run vs batch, model-uuid vs segment-uuid). Load first whenever working with the Cargo CLI, when unsure which sub-skill applies, when stitching multiple sub-skills together, when bootstrapping a workspace, or when the user asks about Cargo skills in general.
+version: "1.5.0"
 compatibility: Requires @cargo-ai/cli (npm) and a Cargo account (browser sign-in via --oauth, or an API token)
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -28,10 +28,10 @@ metadata:
 
 # Cargo CLI — Skills Overview
 
-This repository contains 10 skills at the repo root: one **outcome skill** (`cargo-gtm`) and nine **capability skills**.
+This repository contains 11 skills at the repo root: one **outcome skill** (`cargo-gtm`) and ten **capability skills**.
 
 - **`cargo-gtm`** — application library. The front door for any GTM task ("build a TAM list", "find 5 fintech CTOs", "monitor job changes"). Routes via internal recipes (`../cargo-gtm/recipes/*.md`) and provider playbooks (`../cargo-gtm/provider-playbooks/*.md`).
-- **Capability skills** — standard library. One per CLI domain (orchestration, storage, connection, AI, content, context, analytics, billing, workspace management). Loaded by `cargo-gtm`, or directly when you need a specific CLI domain.
+- **Capability skills** — standard library. One per CLI domain (orchestration, storage, connection, AI, content, context, analytics, billing, hosting, workspace management). Loaded by `cargo-gtm`, or directly when you need a specific CLI domain.
 
 `cargo-gtm` delegates to capability skills; capability skills never reference `cargo-gtm` (one-way dependency).
 
@@ -139,6 +139,7 @@ Load for a specific CLI domain. The first link in each row jumps to the actual S
 | [`cargo-ai`](../cargo-ai/SKILL.md) ([recap](#cargo-ai))                                                     | Create and configure agents, configure releases, attach knowledge for RAG, manage MCP servers and memories |
 | [`cargo-content`](../cargo-content/SKILL.md) ([recap](#cargo-content))                                      | Upload and organize knowledge files, build native/connector-backed knowledge libraries for RAG (the `content` domain) |
 | [`cargo-context`](../cargo-context/SKILL.md) ([recap](#cargo-context))                                      | Browse/read/write/edit the workspace's git-backed GTM context repo, run commands in its runtime sandbox, inspect the knowledge graph |
+| [`cargo-hosting`](../cargo-hosting/SKILL.md) ([recap](#cargo-hosting))                                      | Scaffold, deploy, and promote hosted apps (Vite SPAs on `*.cargo.app`) and edge workers (serverless HTTP handlers), and manage their deployments |
 | [`cargo-workspace-management`](../cargo-workspace-management/SKILL.md) ([recap](#cargo-workspace-management)) | Invite users, create API tokens, organize folders, manage roles, report CLI issues to management   |
 
 > **Agent knowledge for RAG:** **files** + **libraries** live in the `content` domain → [`cargo-content`](../cargo-content/SKILL.md); how they attach to an agent → [`cargo-ai`](../cargo-ai/SKILL.md). (Files/libraries moved out of the old `ai file …` path in CLI ≥ 1.0.19.)
@@ -153,7 +154,6 @@ The CLI exposes several domains that no capability skill wraps yet. Reach for th
 | `expression` | Recipes and expression evaluation (`eval`, `recipe`) — generate/evaluate the template expressions used in node graphs. |
 | `system-of-record` | System-of-record, client, and log operations. |
 | `revenue-organization` | Allocations, capacities, members, territories (revenue/territory planning). |
-| `hosting` | Cargo Hosting — `app` (Vite SPAs on `*.cargo.app`), `worker` (edge HTTP handlers), `deployment`. |
 | `user-management` | Current-user operations with no workspace context. |
 
 ---
@@ -384,6 +384,25 @@ See `../cargo-ai/SKILL.md` for model and temperature guidance by use case.
 - For the full bootstrap + ongoing call-driven refresh playbook (Phase 1 + Phase 2 + cadence), see [`../cargo-context/references/examples/lifecycle.md`](../cargo-context/references/examples/lifecycle.md).
 
 **References:** `../cargo-context/SKILL.md`
+
+---
+
+### cargo-hosting
+
+**Cargo Hosting.** Scaffold, deploy, and manage hosted **apps** (Vite SPAs on `https://<slug>.cargo.app`, built on `@cargo-ai/app-sdk`) and **workers** (serverless edge `fetch(request, env)` handlers on `@cargo-ai/worker-sdk`), plus the **deployments** that ship and promote them.
+
+**Lifecycle:** `init` (local scaffold) → `create` (slot + globally-unique slug) → `deployment create` (build+upload) → `deployment promote` (go live).
+
+**Critical rules:**
+
+- `--slug` is the live subdomain — **globally unique within the hosting domain**.
+- **Deploying ≠ going live.** `deployment create` builds; the URL only moves on `deployment promote`. `deployment get-promoted` shows what's live.
+- `--source` is the **package root**, not `dist/` — the build (`npm ci && vite build` for apps, bundling for workers) runs server-side.
+- Builds are async — poll `deployment get` until terminal before promoting.
+- `--app-uuid` / `--worker-uuid` are mutually exclusive on deployment commands; `remove` cascades to deployments.
+- Folders come from [`cargo-workspace-management`](#cargo-workspace-management); `--folder-uuid null` moves to root.
+
+**References:** `../cargo-hosting/SKILL.md`
 
 ---
 

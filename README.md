@@ -73,7 +73,7 @@ Then bump the `version:` field in each changed `SKILL.md` (semver, e.g. `1.0.0` 
 
 ## What this skill teaches
 
-**Cargo** connects your data models (companies, contacts, deals) to external integrations (CRMs, enrichment providers, AI agents) and runs them as automated workflows. The repo ships eleven skills at the root — one **router skill** (`cargo`, the overview / front door for any Cargo CLI task), one **outcome skill** (`cargo-gtm`, the front door for any GTM task), and nine **capability skills** (one per CLI domain).
+**Cargo** connects your data models (companies, contacts, deals) to external integrations (CRMs, enrichment providers, AI agents) and runs them as automated workflows. The repo ships twelve skills at the root — one **router skill** (`cargo`, the overview / front door for any Cargo CLI task), one **outcome skill** (`cargo-gtm`, the front door for any GTM task), and ten **capability skills** (one per CLI domain).
 
 ### Router — `cargo`
 
@@ -110,6 +110,7 @@ Load when you need the syntax for a specific CLI domain.
 | **Context**       | Browse, read, write, and edit the workspace's git-backed context repo (markdown/MDX GTM knowledge base); run shell commands in its runtime sandbox; inspect the knowledge graph |
 | **Analytics**     | Download run results and outputs, export segment data, monitor error rates and success metrics                                                                     |
 | **Billing**       | Track credit consumption per workflow or connector, check subscription status, view invoices                                                                       |
+| **Hosting**       | Scaffold, deploy, and promote hosted apps (Vite SPAs on `*.cargo.app`) and edge workers (serverless HTTP handlers), and manage their deployments                   |
 | **Workspace**     | Invite users, create and rotate API tokens, organize resources into folders, manage roles                                                                          |
 
 ## What can I ask for?
