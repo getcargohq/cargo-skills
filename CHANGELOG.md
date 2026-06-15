@@ -18,6 +18,17 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 - **CI skill-lint.** Added [`.github/workflows/skills-lint.yml`](.github/workflows/skills-lint.yml) and [`.github/scripts/skills-lint.mjs`](.github/scripts/skills-lint.mjs). Runs on every push and PR; validates SKILL.md frontmatter shape, JSON snippets inside fenced code blocks, internal markdown links, and that bash examples reference real `cargo-ai` domains. Catches drift before it reaches users.
 - **Skill-lint domain list refreshed.** Added the CLI domains that shipped since the lint was written — `content`, `expression`, `hosting`, `revenue-organization`, `system-of-record`, `user-management`, plus `init`/`version` — so valid examples no longer warn.
 - **New capability skill: `cargo-content`.** The `content` CLI domain (files + libraries) is now its own skill rather than living inside `cargo-ai`, matching the repo's one-skill-per-CLI-domain convention. File/library command docs, the `examples/files.md` walkthrough, response shapes, and troubleshooting moved into `cargo-content/`; `cargo-ai` keeps the attach-to-agent wiring and cross-links to `cargo-content`.
+- **New capability skill: `cargo-hosting`.** The `hosting` CLI domain (apps, workers, deployments) graduates from the router's "CLI domains without a dedicated skill yet" table into its own capability skill. `SKILL.md` documents the `init → create → deploy → promote` lifecycle for Vite SPA apps (served on `*.cargo.app`) and edge workers, with `examples/{apps,workers,deployments}.md`, `response-shapes.md`, and `troubleshooting.md`. The router (`cargo`) and `README.md` register it: skill counts bumped (router 10→11 skills, README 11→12), capability-table row + recap added, and `hosting` removed from the no-skill-yet table.
+
+### `cargo-hosting` → 1.0.0
+
+- Initial release. Covers `hosting app`, `hosting worker`, and `hosting deployment` (CLI 1.0.22): scaffolding from templates, creating app/worker slots, building+uploading deployments, and promoting to the live URL.
+- `references/response-shapes.md` pins the real `App` / `Worker` / `Deployment` shapes (incl. the `kind` app/worker discriminant, `promotedDeployment`, and `chargedUntil`) and the deployment `status` enum (`pending`/`building`/`success`/`error`/`cancelled`, terminal at the last three) from the backend types — no more "capture live" hedging. Polling and build-failure docs now reference the real `status`, `errorMessage`, and `buildLogS3Filename` fields, and a critical rule notes hosting bills credits monthly per resource.
+
+### `cargo` → 1.5.0
+
+- **Register the `cargo-hosting` skill.** Bumped the skill count to 11 (one outcome + ten capability), added the `cargo-hosting` capability-table row and a full recap, and added it to the one-per-CLI-domain list. Removed `hosting` from the "CLI domains without a dedicated skill yet" table now that it has a dedicated skill. Synced the frontmatter description count (was stale at nine/eight).
+- **Glossary entries for hosting.** Added `app (Cargo Hosting)`, `appUuid`, `deployment (Cargo Hosting)`, `deploymentUuid`, `hosting`, `worker (Cargo Hosting)`, and `workerUuid` to `references/glossary.md`, and corrected the `capability skill` entry's domain list (was missing `content` and `hosting`).
 
 ### `cargo` → 1.4.0
 
