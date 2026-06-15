@@ -23,6 +23,7 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 ### `cargo-hosting` → 1.0.0
 
 - Initial release. Covers `hosting app`, `hosting worker`, and `hosting deployment` (CLI 1.0.22): scaffolding from templates, creating app/worker slots, building+uploading deployments, and promoting to the live URL.
+- `references/response-shapes.md` pins the real `App` / `Worker` / `Deployment` shapes (incl. the `kind` app/worker discriminant, `promotedDeployment`, and `chargedUntil`) and the deployment `status` enum (`pending`/`building`/`success`/`error`/`cancelled`, terminal at the last three) from the backend types — no more "capture live" hedging. Polling and build-failure docs now reference the real `status`, `errorMessage`, and `buildLogS3Filename` fields, and a critical rule notes hosting bills credits monthly per resource.
 
 ### `cargo` → 1.5.0
 

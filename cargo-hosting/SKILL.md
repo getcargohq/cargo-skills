@@ -125,16 +125,17 @@ cargo-ai hosting deployment promote --uuid <deployment-uuid>
 - **`--app-uuid` / `--worker-uuid` are mutually exclusive** on `deployment create`, `deployment list`, and `deployment get-promoted`. Pass exactly one.
 - **`remove` cascades** — removing an app or worker also removes all of its deployments.
 - **`update --folder-uuid null`** (literal string `null`) moves a resource back to the workspace root.
+- **Hosting consumes credits monthly per resource.** Each app/worker carries a `chargedUntil` that an hourly sweep advances a month at a time, so a live app or worker bills hosting credits on an ongoing basis — `remove` resources you no longer serve. Track consumption via [`cargo-billing`](../cargo-billing/SKILL.md).
 
 ## Async polling
 
-`deployment create` kicks off a sandboxed build. Poll until it finishes, then promote:
+`deployment create` kicks off a sandboxed build. The deployment's `status` moves `pending → building → success` (or `error` / `cancelled`). Poll until terminal, then promote the `success` one:
 
 ```bash
-cargo-ai hosting deployment get <deployment-uuid>   # check the build status field; poll ~2–5s
+cargo-ai hosting deployment get <deployment-uuid>   # poll ~2–5s until status is terminal
 ```
 
-Treat the deployment as ready once its status field is terminal (built/succeeded vs failed). When in doubt about the exact status values for this CLI version, capture them live from a real `deployment get` — see `references/response-shapes.md`. For the general polling pattern (intervals, retries, error handling), see [`../cargo-orchestration/references/polling.md`](../cargo-orchestration/references/polling.md).
+Terminal statuses are `success`, `error`, and `cancelled` — only promote a `success` deployment. On `error`, read the deployment's `errorMessage` (and `buildLogS3Filename`) to diagnose the build. For the general polling pattern (intervals, retries), see [`../cargo-orchestration/references/polling.md`](../cargo-orchestration/references/polling.md).
 
 ## Help
 

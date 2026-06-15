@@ -28,7 +28,7 @@ The build runs server-side in a sandbox (`npm ci && vite build` for apps, entryp
 - **`npm ci` can't resolve the lockfile.** Ensure `package-lock.json` is present and in sync with `package.json`, and that it isn't in the ignore list.
 - **Something needed got ignored.** The default ignore list is `node_modules,dist,build,.git,.next`. If you override `--ignore`, you replace the whole list — don't accidentally drop `node_modules` from the ignores (it should stay ignored; the sandbox installs deps itself) while keeping source files you need.
 
-Inspect the deployment record (`deployment get <uuid>`) for the error detail, fix the source, and re-run `deployment create`.
+When `status` is `error`, `deployment get <uuid>` exposes the cause: read `errorMessage`, and `buildLogS3Filename` points at the full build log. Fix the source and re-run `deployment create`.
 
 ## `--app-uuid` and `--worker-uuid` both passed (or neither)
 
