@@ -18,6 +18,12 @@ A string identifier for a specific action on a workflow node. Present on both `k
 **agent**
 An AI resource with configured instructions, a language model, and optional actions. Created and configured via `cargo-ai`. Used in workflows as a `kind: "agent"` node, or messaged directly via `cargo-orchestration`.
 
+**app (Cargo Hosting)**
+A hosted Vite single-page app served on `https://<slug>.cargo.app`, built on `@cargo-ai/app-sdk` (Vite + refine, with `getCargoEnv()` / `useCargoApi()` wired to the workspace). Scaffolded with `hosting app init`, registered as a slot with `hosting app create` (which sets the globally-unique `--slug`), shipped via a **deployment**. Managed in the **`cargo-hosting`** skill. Distinct from a **worker** (a UI-less edge HTTP handler).
+
+**appUuid**
+The UUID of a Cargo Hosting app, returned by `hosting app create`. Passed as `--app-uuid` to deployment commands (`deployment create|list|get-promoted`), mutually exclusive with `--worker-uuid`.
+
 **autocomplete**
 A mechanism to fetch the list of allowed values for an action config field at runtime. When an action's `uiSchema` marks a field with `"ui:widget": "IntegrationAutocompleteWidget"`, its valid values must be retrieved via `cargo-ai connection connector autocomplete --connector-uuid <uuid> --slug <slug> --params '<json>'`. The autocomplete slug and params come from the field's `ui:options` in the `uiSchema`. Returns `{ "results": [{ "label": "...", "value": "..." }] }` — use the `value` in node configs.
 
@@ -36,7 +42,7 @@ The UUID returned by `batch create`. Used to poll batch status (`batch get`), do
 ## C
 
 **capability skill**
-A skill that documents one CLI domain (orchestration, storage, connection, AI, context, analytics, billing, workspace management). Capability skills are the "standard library" — the agent loads them when it needs the syntax for a specific CLI command. They sit at the repo root alongside the outcome skill (`cargo-gtm`). Capability skills never reference outcome skills (one-way dependency: outcome → capability).
+A skill that documents one CLI domain (orchestration, storage, connection, AI, content, context, analytics, billing, hosting, workspace management). Capability skills are the "standard library" — the agent loads them when it needs the syntax for a specific CLI command. They sit at the repo root alongside the outcome skill (`cargo-gtm`). Capability skills never reference outcome skills (one-way dependency: outcome → capability).
 
 **chat**
 A conversation session between a user and an agent. Created with `ai chat create --agent-uuid <uuid>`. Messages are sent to a chat via `ai message create --chat-uuid <uuid>`.
@@ -106,6 +112,12 @@ A logical grouping of models in the Cargo workspace. Similar to a schema or fold
 **DDL**
 Data Definition Language. In Cargo context, the result of `storage model get-ddl <uuid>` — contains the SQL table name, column definitions, and SQL dialect (`language`). Run when you need column types or the SQL dialect; `storage query execute` and `storage query download` reference tables by `<datasetSlug>.<modelSlug>` directly.
 
+**deployment (Cargo Hosting)**
+One build+upload of a local source directory to a hosting **app** or **worker**, created with `hosting deployment create --source <pkg-root>` (the backend runs `npm ci && vite build` for apps, or bundles the entrypoint for workers). A deployment is **not live until promoted** — `hosting deployment promote` points the subdomain at it, and `hosting deployment get-promoted` shows what's currently live. Managed in the **`cargo-hosting`** skill.
+
+**deploymentUuid**
+The UUID returned by `hosting deployment create`. Poll it with `hosting deployment get <uuid>` until the build status is terminal, then pass it to `hosting deployment promote --uuid`.
+
 ---
 
 ## E
@@ -132,6 +144,13 @@ An organizational container for plays, tools, and agents in the Cargo app. Manag
 
 **GTM (go-to-market)**
 The set of activities for finding, qualifying, and engaging prospects: sourcing, enrichment, verification, scoring, sequencing, CRM sync, signal monitoring. The `cargo-gtm` outcome skill is cargo's front door for any GTM task.
+
+---
+
+## H
+
+**hosting**
+The CLI domain (`cargo-ai hosting …`) for Cargo Hosting — **apps** (Vite SPAs on `*.cargo.app`), **workers** (serverless edge HTTP handlers), and the **deployments** that ship and promote them. The lifecycle is `init` (local scaffold) → `create` (slot + globally-unique slug) → `deployment create` (build+upload) → `deployment promote` (go live). Documented in the **`cargo-hosting`** skill.
 
 ---
 
@@ -312,6 +331,12 @@ A companion object to `jsonSchema` in action and extractor configs. While `jsonS
 
 **waterfall enrichment**
 A pattern where multiple providers are run sequentially, each filling gaps the prior step missed. Cheap providers do the heavy lifting; premium providers fill the long tail. Implemented as N sequential `action execute-batch` calls with the records pruned between calls. See `cargo-gtm/references/waterfall-strategy.md` for canonical chains by enrichment goal.
+
+**worker (Cargo Hosting)**
+A hosted serverless HTTP handler that runs on the edge — a standard `fetch(request, env)` entrypoint built on `@cargo-ai/worker-sdk` (automatic OpenAPI 3.1 spec at `/openapi.json`, Swagger UI at `/docs`). Scaffolded with `hosting worker init`, registered with `hosting worker create`, shipped via a **deployment**. Has no `env` subcommand (unlike an **app**) — runtime config arrives via the `env` argument to `fetch`. Managed in the **`cargo-hosting`** skill.
+
+**workerUuid**
+The UUID of a Cargo Hosting worker, returned by `hosting worker create`. Passed as `--worker-uuid` to deployment commands, mutually exclusive with `--app-uuid`.
 
 **workflow**
 A DAG of nodes that defines the execution logic for a play or tool. Workflows don't have a `name` field — find them by name via `play list` or `tool list`, then extract `workflowUuid`.

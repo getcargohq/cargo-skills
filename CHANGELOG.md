@@ -27,6 +27,7 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 ### `cargo` → 1.5.0
 
 - **Register the `cargo-hosting` skill.** Bumped the skill count to 11 (one outcome + ten capability), added the `cargo-hosting` capability-table row and a full recap, and added it to the one-per-CLI-domain list. Removed `hosting` from the "CLI domains without a dedicated skill yet" table now that it has a dedicated skill. Synced the frontmatter description count (was stale at nine/eight).
+- **Glossary entries for hosting.** Added `app (Cargo Hosting)`, `appUuid`, `deployment (Cargo Hosting)`, `deploymentUuid`, `hosting`, `worker (Cargo Hosting)`, and `workerUuid` to `references/glossary.md`, and corrected the `capability skill` entry's domain list (was missing `content` and `hosting`).
 
 ### `cargo` → 1.4.0
 
