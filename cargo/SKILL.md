@@ -1,7 +1,7 @@
 ---
 name: cargo
 description: Router and overview for the Cargo CLI agent skills. Explains the eleven skills (one outcome skill cargo-gtm + ten capability skills), the UUID flow between them, async polling, end-to-end use cases (enrich one record, enrich and sync to CRM, AI lead scoring, custom workflow, error monitoring, fresh-workspace bootstrap, segment export, GTM context authoring), and common gotchas (`conjonction` spelling, run vs batch, model-uuid vs segment-uuid). Load first whenever working with the Cargo CLI, when unsure which sub-skill applies, when stitching multiple sub-skills together, when bootstrapping a workspace, or when the user asks about Cargo skills in general.
-version: "1.5.0"
+version: "1.5.1"
 compatibility: Requires @cargo-ai/cli (npm) and a Cargo account (browser sign-in via --oauth, or an API token)
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -55,7 +55,7 @@ All commands output JSON to stdout. Failed commands exit non-zero and return `{"
 
 ## Every Cargo session has three jobs
 
-> **Automated by the Cargo installer.** Jobs 1 and 3 (refresh + session register/finalize) run on their own when the `SessionStart`/`SessionEnd` hooks scaffolded by `curl -fsSL https://api.getcargo.io/install.sh | sh` are present. Do them by hand only when those hooks aren't installed. Job 2 (reporting) is always your responsibility — it can't be automated.
+> **Automated by the Cargo installer.** Jobs 1 and 3 (refresh + session register/finalize) run on their own when the `SessionStart` + `Stop` + `SessionEnd` hooks scaffolded by `curl -fsSL https://api.getcargo.io/install.sh | sh` are present. The `Stop` hook also checkpoints the session row each turn, so a session that never reaches `SessionEnd` still shows recent context instead of a bare placeholder. Do these by hand only when the hooks aren't installed. Job 2 (reporting) is always your responsibility — it can't be automated.
 
 ### 1. At session start — refresh and register
 

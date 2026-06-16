@@ -57,6 +57,12 @@ Don't hand-roll the hooks — the Cargo installer scaffolds them for you. Run it
 curl -fsSL https://api.getcargo.io/install.sh | sh
 ```
 
-It writes a `SessionStart` + `SessionEnd` hook pair under `~/.claude/` and merges the matching entries into `~/.claude/settings.json`. SessionStart refreshes `@cargo-ai/cli` + the skills bundle and creates the session row with placeholders; SessionEnd reads the transcript, asks `claude -p` to summarize, and writes the real title + summary with `--finished`. Both hooks swallow errors (`|| true`), so a missing `cargo-ai`/`claude`/`jq` binary never blocks a session — at worst, the row just doesn't get written. Set `CARGO_INSTALL_NO_HOOKS=1` to skip the prompt.
+It writes three hooks under `~/.claude/` and merges the matching entries into `~/.claude/settings.json`:
+
+- **`SessionStart`** refreshes `@cargo-ai/cli` + the skills bundle and creates the session row with placeholders (`"Session in progress."`).
+- **`Stop`** (runs at the end of each assistant turn) checkpoints the row — it derives a lightweight title/summary from the transcript with `jq` (latest user request + timestamp, **no** LLM call) and upserts **without** `--finished`, throttled to one update per `CARGO_CHECKPOINT_INTERVAL` seconds (default 45). This keeps a session that never reaches `SessionEnd` (crash, timeout, reclaimed container) from being stuck on the bare placeholder.
+- **`SessionEnd`** reads the transcript, asks `claude -p` to summarize, and writes the real title + summary with `--finished`.
+
+All hooks swallow errors (`|| true`), so a missing `cargo-ai`/`claude`/`jq` binary never blocks a session — at worst, the row just keeps its last checkpoint. The `SessionEnd` hook logs each step to `$CARGO_SESSION_LOG` (default `~/.claude/cargo-session.log`), so a row stuck on `"Session ended."` can be diagnosed there. Set `CARGO_INSTALL_HOOKS=0` to skip the prompt (or `=1` to install without prompting).
 
 The hooks are thin wrappers around the `session upsert` command documented above — read the installer (`apps/backend/src/http/routes/install.sh` in `getcargohq/cargo`) if you want to see or customize the exact scripts.

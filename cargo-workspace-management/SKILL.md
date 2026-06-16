@@ -1,7 +1,7 @@
 ---
 name: cargo-workspace-management
 description: Manage workspace users, API tokens, folders, roles, and submit reports to workspace management using the Cargo CLI. Use when the user wants to invite or manage workspace members, create or rotate API tokens, organize resources into folders, inspect workspace roles and permissions, or submit a report to workspace management when the CLI fails or is misused.
-version: "1.0.2"
+version: "1.1.0"
 compatibility: Requires @cargo-ai/cli (npm) and a Cargo account (browser sign-in via --oauth, or an API token)
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -28,7 +28,7 @@ Workspace administration: managing users, API tokens, folders, roles, workspace-
 > See `references/examples/tokens.md` for API token creation and rotation examples.
 > See `references/examples/folders.md` for organizing resources into folders.
 > See `references/examples/reports.md` for examples of submitting workspace management reports.
-> See `references/examples/sessions.md` for session tracking — the Cargo installer scaffolds the Claude Code SessionStart + SessionEnd hooks automatically.
+> See `references/examples/sessions.md` for session tracking — the Cargo installer scaffolds the Claude Code SessionStart + Stop + SessionEnd hooks automatically.
 
 ## Prerequisites
 
@@ -175,7 +175,7 @@ cargo-ai workspaceManagement report create \
 
 ## Sessions
 
-Record a Claude Code session in `workspace_management.sessions`. One row per `(workspaceUuid, sessionId)`. Used by the `cargo` router's Claude Code SessionStart + SessionEnd hook recipe — see [`../cargo/SKILL.md`](../cargo/SKILL.md) for when to wire them up.
+Record a Claude Code session in `workspace_management.sessions`. One row per `(workspaceUuid, sessionId)`. Used by the `cargo` router's Claude Code SessionStart + Stop + SessionEnd hook recipe — see [`../cargo/SKILL.md`](../cargo/SKILL.md) for when to wire them up.
 
 ```bash
 # Upsert a session. Idempotent on --session-id within the workspace.
@@ -196,7 +196,7 @@ cargo-ai workspaceManagement session upsert \
 - `--finished` stamps `finished_at = now`. Use `--finished-at <iso>` for an explicit timestamp instead.
 - Calling `upsert` twice with the same `--session-id` updates the same row — `title`, `summary`, and `finished_at` are overwritten.
 
-Returns the upserted session as JSON. The Cargo installer (`curl -fsSL https://api.getcargo.io/install.sh | sh`) wires SessionStart + SessionEnd hooks that call this command with transcript-driven AI summarization automatically — see [`references/examples/sessions.md`](references/examples/sessions.md).
+Returns the upserted session as JSON. The Cargo installer (`curl -fsSL https://api.getcargo.io/install.sh | sh`) wires SessionStart + Stop + SessionEnd hooks that call this command automatically: SessionStart writes a placeholder, the per-turn Stop hook checkpoints the row (no `--finished`), and SessionEnd writes the transcript-driven AI summary with `--finished` — see [`references/examples/sessions.md`](references/examples/sessions.md).
 
 ## Workspace files
 

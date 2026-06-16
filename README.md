@@ -40,7 +40,7 @@ The Cargo installer wires this up for you. Run it once and answer **y** at the s
 curl -fsSL https://api.getcargo.io/install.sh | sh
 ```
 
-It scaffolds a `SessionStart` + `SessionEnd` hook pair under `~/.claude/` so that every new Claude Code session automatically (1) refreshes `@cargo-ai/cli` and the skills bundle and (2) logs the session to `workspace_management.sessions` with an AI-generated title and summary. The hooks swallow errors, so a missing `cargo-ai`/`claude`/`jq` binary never blocks a session. Set `CARGO_INSTALL_NO_HOOKS=1` to skip the prompt.
+It scaffolds `SessionStart` + `Stop` + `SessionEnd` hooks under `~/.claude/` so that every new Claude Code session automatically (1) refreshes `@cargo-ai/cli` and the skills bundle, (2) checkpoints the session row each turn so progress is captured even if the session never ends cleanly, and (3) logs the session to `workspace_management.sessions` with an AI-generated title and summary at the end. The hooks swallow errors, so a missing `cargo-ai`/`claude`/`jq` binary never blocks a session. Set `CARGO_INSTALL_HOOKS=0` to skip the prompt.
 
 Without the installer, the `cargo` router skill still instructs the agent to refresh CLI + skills at the start of every session ([see `cargo/SKILL.md`](cargo/SKILL.md)) — that works out of the box, just without the hard enforcement and session logging the hooks provide.
 
