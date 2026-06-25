@@ -88,9 +88,10 @@ cargo-ai orchestration draft-release update \
 cargo-ai orchestration node validate --nodes '[...your updated node graph...]'
 # → { "outcome": "valid" }
 
-# Step 5 — Deploy the draft release
+# Step 5 — Deploy the draft release with an explicit version
 cargo-ai orchestration draft-release deploy \
   --workflow-uuid <play.workflowUuid> \
+  --version=1.0.1 \
   --nodes '[...your updated node graph...]' \
   --form-fields 'null' \
   --description "Your release description"
@@ -98,7 +99,7 @@ cargo-ai orchestration draft-release deploy \
 
 > **Do not skip validation.** Deploying an invalid node graph will cause runs to fail. Always run `node validate` before `draft-release deploy`.
 
-> **Do not pass `--version` to `draft-release deploy`.** The deploy-specific `--version` flag is shadowed by the global `--version` flag — passing it causes the command to print the CLI version (e.g. `1.0.11`) and exit 0 **without deploying**. Omit it and let the server auto-assign (first deploy → `1.0.0`, then `1.0.1`, etc.). Always confirm the deploy worked with `release get-deployed --workflow-uuid <uuid>` — the response should show `status: "deployed"`, not `draft`.
+> **Always pass `--version=X.Y.Z` (equals sign).** A space (`--version X.Y.Z`) is swallowed by the root CLI `--version` flag and exits 0 without deploying. Do **not** omit `--version` and let the server auto-assign — it can jump to a major release (X.0.0) for a small fix, and once deployed the API rejects lower versions. Pick the bump per the release versioning rule in [`../../cargo/SKILL.md`](../../cargo/SKILL.md). Confirm the deploy worked with `release get-deployed --workflow-uuid <uuid>` — the response should show `status: "deployed"`, not `draft`.
 
 ---
 

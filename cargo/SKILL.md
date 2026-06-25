@@ -1,7 +1,7 @@
 ---
 name: cargo
 description: Router and overview for the Cargo CLI agent skills. Explains the eleven skills (one outcome skill cargo-gtm + ten capability skills), the UUID flow between them, async polling, end-to-end use cases (enrich one record, enrich and sync to CRM, AI lead scoring, custom workflow, error monitoring, fresh-workspace bootstrap, segment export, GTM context authoring), and common gotchas (`conjonction` spelling, run vs batch, model-uuid vs segment-uuid). Load first whenever working with the Cargo CLI, when unsure which sub-skill applies, when stitching multiple sub-skills together, when bootstrapping a workspace, or when the user asks about Cargo skills in general.
-version: "1.5.1"
+version: "1.6.0"
 compatibility: Requires @cargo-ai/cli (npm) and a Cargo account (browser sign-in via --oauth, or an API token)
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -112,6 +112,38 @@ cargo-ai workspaceManagement session upsert \
 ```
 
 `--title` and `--summary` are required (NOT NULL). `--finished` stamps `finished_at = now`; pass `--finished-at <iso>` for an explicit timestamp.
+
+---
+
+## Release versioning — pick the right bump
+
+Every time you deploy a new release of a **tool**, **play**, or **agent**, pick the smallest bump that matches the change. A small fix shipped as X.0.0 is wrong — match the version to the actual scope.
+
+| Change | Bump | Example |
+|---|---|---|
+| Bug fix, variable rename, refactor with no behavior change, config tweak | Patch `X.Y.Z → X.Y.Z+1` | `1.2.3 → 1.2.4` |
+| Adding enrichment nodes, changing small logic, backward-compatible enhancement | Minor `X.Y.Z → X.Y+1.0` | `1.2.3 → 1.3.0` |
+| Big changes, new features, complete refactor | Major `X.Y.Z → X+1.0.0` | `1.2.3 → 2.0.0` |
+
+**Do not let the server auto-assign the version.** The auto-assigner does not always pick a patch bump — it can jump to a major (X.0.0), and once deployed, the API rejects lower versions (`Invalid release version`). A small fix shipped as `2.0.0` is permanent and misleading.
+
+Applies to:
+
+- **Tools & plays** — `cargo-ai orchestration draft-release deploy`
+- **Agents** — `cargo-ai ai release deploy-draft`
+- **Hosting apps/workers** — exempt (uses `deployment promote`, not SemVer)
+
+**How to set the version:**
+
+- **Tools & plays:** Use equals-sign syntax `--version=X.Y.Z`. A space (`--version X.Y.Z`) is swallowed by the root CLI `--version` flag and exits 0 without deploying. If equals syntax also fails on your CLI version, fall back to a direct API call (`api.orchestration.draftRelease.deploy` with `version` in the payload).
+- **Agents:** Pass `--version X.Y.Z` to `release deploy-draft` if the flag is available (check `--help`). If the flag is not yet exposed, use the API fallback (`api.ai.release.deployDraft` with `version` in the payload).
+
+**Every deploy of an existing resource:**
+
+1. List current versions first (`orchestration release list --workflow-uuid` or `ai release list --agent-uuid`).
+2. Pick the next version from the table above.
+3. Deploy with the version set explicitly.
+4. Verify: re-list releases and confirm the deployed version matches.
 
 ---
 

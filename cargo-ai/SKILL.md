@@ -1,7 +1,7 @@
 ---
 name: cargo-ai
 description: Create and configure AI agents, attach knowledge for RAG, manage MCP servers, and handle agent memories using the Cargo CLI. Use when the user wants to create or update agents, configure agent releases, connect MCP tool servers, or manage agent memories. To upload knowledge files or build knowledge libraries, use the cargo-content skill. For sending messages to agents, use the cargo-orchestration skill instead.
-version: "2.2.0"
+version: "2.3.0"
 compatibility: Requires @cargo-ai/cli (npm) and a Cargo account (browser sign-in via --oauth, or an API token)
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -144,6 +144,8 @@ cargo-ai ai release deploy-draft --agent-uuid <uuid> \
   --suggested-actions '[]' \
   --description "Added research actions"
 ```
+
+> **Pick the right version bump.** See the release versioning rule in [`../cargo/SKILL.md`](../cargo/SKILL.md). Bug fix or prompt tweak → patch, adding actions/resources → minor, complete reconfiguration → major. Always pass the version explicitly (`--version X.Y.Z` if the flag is available — check `--help`; otherwise use the API fallback with `version` in the payload). Do not let the server auto-assign — a small prompt tweak can land as X.0.0, and once deployed the API rejects lower versions.
 
 ### Structured output & heartbeat — not yet exposed as CLI flags
 
