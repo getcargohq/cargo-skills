@@ -94,9 +94,10 @@ If a `branch` node's `title` says "❌ Condition is not matched" but you expecte
 cargo-ai orchestration draft-release update \
   --workflow-uuid <play.workflowUuid> --nodes '[...]'
 
-# After approval, deploy (do NOT pass --version — it collides with the global flag)
+# After approval, deploy with explicit version (equals sign — space collides with root --version)
 cargo-ai orchestration draft-release deploy \
   --workflow-uuid <play.workflowUuid> --nodes '[...]' \
+  --version=1.0.1 \
   --form-fields 'null' --description "Fix branch condition"
 
 # Re-test against the same record IDs that exposed the bug

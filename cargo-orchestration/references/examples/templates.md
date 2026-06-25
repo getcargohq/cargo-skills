@@ -146,9 +146,10 @@ cargo-ai orchestration draft-release update \
   --workflow-uuid <tool.workflowUuid> \
   --nodes '[...validated nodes...]'
 
-# 6. Deploy the draft release
+# 6. Deploy the draft release with an explicit version
 cargo-ai orchestration draft-release deploy \
   --workflow-uuid <tool.workflowUuid> \
+  --version=1.0.1 \
   --nodes '[...validated nodes...]' \
   --form-fields 'null' \
   --description "Based on company-enrichment template"

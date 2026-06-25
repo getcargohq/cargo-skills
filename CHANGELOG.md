@@ -12,6 +12,30 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ### Repository-wide
 
+- **Release versioning rule.** Added a cross-cutting "Release versioning — pick the right bump" section to `cargo/SKILL.md` (the router, loaded first by every session) and a matching gotcha in `cargo/references/gotchas.md`. The rule defines patch (bug fix, var rename, refactor, config tweak), minor (adding enrichment nodes, changing small logic, backward-compatible enhancement), and major (big changes, new features, complete refactor), and instructs agents to always set the version explicitly — never let the server auto-assign, which can jump to X.0.0 for a small fix. Once an accidental major is deployed, the API rejects lower versions (`Invalid release version`).
+
+- **Fixed: orchestration examples told agents to let the server auto-assign versions.** `cargo-orchestration/references/examples/plays.md`, `tools.md`, `templates.md`, and `troubleshooting.md` all said "do not pass `--version`" or showed deploys without a version. This was the root cause of small fixes landing as X.0.0 major releases. All examples now use `--version=X.Y.Z` (equals-sign syntax — space collides with the root CLI `--version` flag).
+
+- **Added versioning guidance to `cargo-ai`.** The `## Releases` section in `cargo-ai/SKILL.md` now includes a callout pointing to the release versioning rule, noting that `deploy-draft` should always set the version explicitly.
+
+### `cargo` → 1.6.0
+
+- **New section: "Release versioning — pick the right bump".** Added after "Every Cargo session has three jobs", before "Skills at a glance". Defines the patch/minor/major table, explains how to set the version for tools/plays (equals-sign `--version=X.Y.Z`) and agents (`--version` on `deploy-draft` or API fallback), and lists the four-step deploy guard (list → pick → deploy → verify).
+
+### `cargo-orchestration` → 1.6.0
+
+- **New section: "Release versioning for tools and plays".** Restored and strengthened the version guard that was removed in 1.5.0. Includes the bump table, a full deploy example with `--version=1.0.1`, and hard rules about equals-sign syntax and never auto-assigning.
+- **Fixed `references/examples/plays.md`**: replaced the "Do not pass `--version`... let the server auto-assign" callout with "Always pass `--version=X.Y.Z` (equals sign)" guidance. Added `--version=1.0.1` to the deploy example.
+- **Fixed `references/examples/tools.md`**: added `--version=1.0.1` to the deploy example and the same versioning callout.
+- **Fixed `references/examples/templates.md`**: added `--version=1.0.1` to the deploy example.
+- **Fixed `references/troubleshooting.md`**: replaced "do NOT pass --version" with explicit `--version=1.0.1` in the re-run-after-fixing example.
+
+### `cargo-ai` → 2.3.0
+
+- **Added versioning guidance under `## Releases`.** New callout after the `deploy-draft` example points to the release versioning rule in `../cargo/SKILL.md`, defines bump-by-change-type for agents (prompt tweak → patch, actions/resources → minor, complete reconfiguration → major), and warns against auto-assign.
+
+### Repository-wide
+
 - **Session lifecycle moved to the installer.** The Claude Code `SessionStart`/`SessionEnd` hooks that keep `@cargo-ai/cli` + the skills bundle current and log each session to `workspace_management.sessions` are now scaffolded by the Cargo bootstrap installer (`curl -fsSL https://api.getcargo.io/install.sh | sh`, interactive prompt, opt out with `CARGO_INSTALL_HOOKS=0`). Removed the hand-rolled hook-scaffolding recipes from `cargo/SKILL.md`, `README.md`, and `cargo-workspace-management/references/examples/sessions.md`; those docs now point at the installer. The agent's three-session-jobs guidance stays as the manual fallback, and reporting (job 2) is unchanged — it can't be automated.
 - **Per-turn session checkpoint hook.** Documented the new `Stop` hook the installer scaffolds alongside `SessionStart`/`SessionEnd`: it checkpoints the session row at the end of each assistant turn (latest user request + timestamp, derived with `jq`, **no** LLM call, no `--finished`, throttled via `CARGO_CHECKPOINT_INTERVAL`, default 45s), so a session that never reaches `SessionEnd` no longer stays stuck on `"Session in progress."`. The `SessionEnd` hook now also resolves the `claude` binary from Node/version-manager bin dirs and logs to `$CARGO_SESSION_LOG` (default `~/.claude/cargo-session.log`) so a placeholder summary is diagnosable. Updated `cargo/SKILL.md`, `README.md`, `cargo-workspace-management/SKILL.md`, and `sessions.md`; also corrected the opt-out env var to `CARGO_INSTALL_HOOKS=0` (was mis-documented as `CARGO_INSTALL_NO_HOOKS=1`).
 - **Shared prerequisites reference.** Extracted the duplicated install / login / output-conventions block from every capability skill into [`cargo/references/prerequisites.md`](cargo/references/prerequisites.md). Each capability skill now links to it instead of redefining ~16 lines of boilerplate. No behavior change for agents — the canonical setup is the same — but a single place to keep it correct.

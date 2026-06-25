@@ -1,7 +1,7 @@
 ---
 name: cargo-orchestration
 description: Interact with the Cargo platform via CLI. Use when the user wants to execute an action, run a workflow, trigger a batch, message an AI agent, query orchestration runtime tables (runs/batches/spans/records) with SQL, fetch segment records, or inspect a model schema.
-version: "1.5.0"
+version: "1.6.0"
 compatibility: Requires @cargo-ai/cli (npm) and a Cargo account (browser sign-in via --oauth, or an API token)
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -312,6 +312,38 @@ cargo-ai orchestration node validate --nodes '[...]'
 ```
 
 For debugging, use `node compute` (dry-run expressions) or `node execute` (live test, costs credits). For runs that complete with `status: success` but produce wrong output (wrong branch taken, empty downstream values), use `run.executions[].title` from `run get` only as a quick summary — it may be truncated — and read `runContext.<nodeSlug>` (returned at the top level of the same `run get <run-uuid>` response) to verify field-level data. See `references/troubleshooting.md` → "Debugging a workflow run" and `references/nodes.md` for the full node creation guide, validation error codes, and examples.
+
+## Release versioning for tools and plays
+
+Every `draft-release deploy` must include an explicit `--version=X.Y.Z`. Pick the smallest bump that matches the change — see the release versioning rule in [`../cargo/SKILL.md`](../cargo/SKILL.md) for the full table.
+
+| Change | Bump |
+|---|---|
+| Bug fix, variable rename, refactor with no behavior change | Patch `X.Y.Z → X.Y.Z+1` |
+| Adding enrichment nodes, changing small logic | Minor `X.Y.Z → X.Y+1.0` |
+| Big changes, new features, complete refactor | Major `X.Y.Z → X+1.0.0` |
+
+```bash
+# 1. Inspect current versions first
+cargo-ai orchestration release list --workflow-uuid <workflow-uuid>
+
+# 2. Deploy with explicit version (equals sign — space collides with root --version)
+cargo-ai orchestration draft-release deploy \
+  --workflow-uuid <workflow-uuid> \
+  --version=1.0.1 \
+  --nodes '[...validated node graph...]' \
+  --form-fields 'null' \
+  --description "Fix release description"
+
+# 3. Verify the deployed release version immediately
+cargo-ai orchestration release list --workflow-uuid <workflow-uuid>
+```
+
+**Hard rules:**
+
+- `--version=X.Y.Z` must use an equals sign. With a space, `--version 1.0.1` is intercepted by the root CLI `--version` flag and exits 0 without deploying.
+- Do **not** omit `--version` and let the server auto-assign — it can jump to a major release (X.0.0) for a small fix, and once deployed the API rejects lower versions (`Invalid release version`).
+- If equals syntax also fails on your CLI version, fall back to a direct API call (`api.orchestration.draftRelease.deploy` with `version` in the payload).
 
 ## Help
 
