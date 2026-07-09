@@ -355,7 +355,28 @@ function main() {
     }
   }
 
-  // 4. The Claude Code plugin manifest must parse and stay in lockstep with the
+  // 4. The CLI pin: cargo/cli-version is the source of truth the SessionStart
+  //    hook and install.sh consume. It must exist and be a bare semver line.
+  //    The openclaw install blocks stay @latest on purpose (they only bootstrap
+  //    the binary; the session hook converges to the pin) — assert nobody
+  //    half-pins them, which would force 14 skill bumps per CLI release.
+  const pinPath = join(repoRoot, "cargo", "cli-version");
+  if (!existsSync(pinPath)) {
+    err(pinPath, 0, "`cargo/cli-version` is missing — it pins the @cargo-ai/cli version the session hooks install.");
+  } else if (!/^\d+\.\d+\.\d+\s*$/.test(readFileSync(pinPath, "utf8"))) {
+    err(pinPath, 1, "`cargo/cli-version` must be a single MAJOR.MINOR.PATCH line, nothing else.");
+  }
+  for (const dir of SKILL_DIRS) {
+    const p = join(repoRoot, dir, "SKILL.md");
+    if (!existsSync(p)) continue;
+    const src = readFileSync(p, "utf8");
+    const pkg = (src.match(/^\s*package:\s*"([^"]+)"/m) || [])[1];
+    if (pkg && pkg !== "@cargo-ai/cli@latest") {
+      err(p, 0, `openclaw install package is \`${pkg}\` — keep it \`@cargo-ai/cli@latest\` (the pin lives in cargo/cli-version, not in frontmatter).`);
+    }
+  }
+
+  // 5. The Claude Code plugin manifest must parse and stay in lockstep with the
   //    router's version — plugin.json's version IS the bundle version.
   const pluginPath = join(repoRoot, ".claude-plugin", "plugin.json");
   if (existsSync(pluginPath)) {

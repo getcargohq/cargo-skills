@@ -5,10 +5,10 @@ The same install, login, and runtime conventions apply to every Cargo skill in t
 ## Install
 
 ```bash
-npm install -g @cargo-ai/cli
+npm install -g "@cargo-ai/cli@$(cat ~/.claude/skills/cargo/cli-version 2>/dev/null || echo latest)"
 ```
 
-Without a global install, prefix every command with `npx @cargo-ai/cli` instead of `cargo-ai`.
+The skills bundle pins the CLI version it was written against in `cargo/cli-version` (shipped inside the `cargo` router skill); installing that version avoids docs/CLI drift. `latest` is the fallback when the pin isn't readable. Without a global install, prefix every command with `npx @cargo-ai/cli` instead of `cargo-ai`.
 
 ## Authenticate
 
