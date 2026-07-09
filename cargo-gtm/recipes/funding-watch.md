@@ -64,7 +64,7 @@ For continuous monitoring (e.g. daily scan of target accounts):
 4. Output: write rows where new events found to a "Recently Funded" signal segment.
 5. Optional: post Slack notification per new funding event.
 
-For setting up a play / scheduled tool, see `../../cargo-orchestration/references/examples/plays.md`.
+To make this recurring, follow [`save-as-play.md`](save-as-play.md) — it walks the tool-vs-play choice, the cadence defaults per signal, and the recurring-cost approval. Play mechanics: [`../../cargo-orchestration/references/examples/plays.md`](../../cargo-orchestration/references/examples/plays.md).
 
 ## Credit budget
 
@@ -80,7 +80,7 @@ For long-running monitoring, prefer `fetchBusinessEvents` with `timestamp_from` 
 
 ## Surfacing the signal
 
-The output of this recipe is a list of company records with funding events. Useful next steps:
+The output of this recipe is a list of company records with funding events. Offer the user 2–3 of the moves below, **grounded in the rows just produced** (counts, balance, per-unit cost, a default pick — the next-step shape in [`../SKILL.md`](../SKILL.md) §4), never as a generic menu:
 
 - **Outbound timing**: hand the list to a sequencer (lemlist / lgm / instantly) for a fresh-funding-triggered campaign — discover the launch action via `cargo-ai connection integration get lemlist` and run via `orchestration action execute-batch`.
 - **CRM enrichment**: write a `last_funding_round_at` column on the Companies model, push to HubSpot via `hubspot.upsertRecords` (compose ad hoc — see [`build-tam.md`](build-tam.md) for the CRM-push pattern).
