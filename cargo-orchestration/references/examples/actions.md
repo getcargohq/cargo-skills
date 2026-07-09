@@ -191,7 +191,23 @@ cargo-ai connection connector list
 
 ## Resolve an action's output schema
 
-**Never guess what an action outputs.** `integration get <slug>` only describes an action's **input** (`config.jsonSchema`) — the integration catalog carries no output information. To discover what an action **produces**, resolve its output schema **without executing it** (no run, no credits):
+**Never guess what an action outputs.** There are two free ways to discover what an action **produces** — no run, no credits.
+
+### 1. Connector actions: read `output.schema` from the integration catalog
+
+`integration get <slug>` (and `integration list`) return each action's output schema inline, next to its input schema:
+
+```bash
+cargo-ai connection integration get waterfall
+# → .integration.actions.verifyEmail.config.schema   — input (what you pass)
+# → .integration.actions.verifyEmail.output.schema   — output (what it emits)
+```
+
+**Not every action declares an output schema** — e.g. `waterfall.verifyEmail`, `clearbit.enrichCompany`, and most `hubspot` record actions do, while `waterfall.detectJobChange`, `waterfall.searchProspects`, and `salesNavigator.searchAccounts` don't (no `output` key). When it's absent, the only way to see the real shape is `runContext` from an actual run.
+
+### 2. Any action kind: `action get-output-schema`
+
+For non-connector kinds (`tool`, `agent`, `native`) — or when you already have the action object in hand — resolve the same schema without touching the catalog:
 
 ```bash
 cargo-ai orchestration action get-output-schema \
@@ -216,7 +232,7 @@ cargo-ai orchestration action get-output-schema \
 
 ### Response
 
-The JSON Schema sits under a top-level **`schema`** key (not returned bare) — e.g. `waterfall` / `verifyEmail` resolves to:
+The JSON Schema sits under a top-level **`schema`** key (not returned bare), and for connector actions it is exactly the catalog's `output.schema` — e.g. `waterfall` / `verifyEmail` resolves to:
 
 ```json
 {
@@ -236,7 +252,10 @@ The JSON Schema sits under a top-level **`schema`** key (not returned bare) — 
 
 An `agent` action without a structured `output.jsonSchema` resolves to `{"schema":{"type":"object","properties":{"answer":{"type":"string"}}}}` — the free-text answer envelope. This is the authoritative confirmation that downstream references must go through `.answer` (`{{nodes.<slug>.answer}}`, or `{{nodes.<slug>.answer.<field>}}` for structured agents).
 
-An unknown `actionSlug` / `toolUuid` / `agentUuid` exits non-zero with `{"error":"Not found: RequestError: Action not found.. Verify the UUID(s) you passed.","status":404,...}` — action slugs are exact and case-sensitive (`enrichCompany`, not `company_enrich`); list them via `integration get <slug>` → `.integration.actions` keys.
+Two distinct failure modes, both non-zero exit with `status: 404`:
+
+- `"Action not found."` — the `actionSlug` / `toolUuid` / `agentUuid` doesn't exist. Slugs are exact and case-sensitive (`enrichCompany`, not `company_enrich`); list them via `integration get <slug>` → `.integration.actions` keys.
+- `"Action has no output schema."` — the action exists but declares no output schema (its catalog entry has no `output` key). Fall back to running it once and reading `runContext.<nodeSlug>` from `run get`.
 
 ### Why it's useful
 

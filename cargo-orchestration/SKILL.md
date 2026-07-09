@@ -153,7 +153,10 @@ Action kinds: `tool`, `connector`, `agent`, `native`. See `references/examples/a
 
 ### Resolve an action's output schema (without executing)
 
-**Never guess what an action outputs.** `integration get <slug>` tells you an action's **input** shape (`config.jsonSchema`); its output shape is resolvable too — **without spending credits or running anything**:
+**Never guess what an action outputs.** Two free sources — no run, no credits:
+
+1. **Connector actions:** the integration catalog carries the output schema inline — `integration get <slug>` (and `integration list`) return `actions.<actionSlug>.output.schema` next to the input `config.jsonSchema`. Not every action declares one.
+2. **Any action kind** (`tool` / `connector` / `agent` / `native`) — resolve it with the same `--action` object as `action execute`:
 
 ```bash
 cargo-ai orchestration action get-output-schema \
@@ -161,7 +164,7 @@ cargo-ai orchestration action get-output-schema \
 # → {"schema": {"type": "object", "properties": {...}}}  — the JSON Schema is under the top-level "schema" key
 ```
 
-Takes the same `--action` object as `action execute` (`tool` / `connector` / `agent` / `native`). Use it to:
+Actions that declare no output schema fail with `"Action has no output schema."` (non-zero exit, status 404) — that's the signal to fall back to inspecting `runContext` from a real run. Use these to:
 
 - Know which fields a downstream node can read (`{{nodes.<slug>.<field>}}`) **before** wiring the graph.
 - See an `agent` action's real output envelope — a default free-text agent resolves to `{"schema":{"type":"object","properties":{"answer":{"type":"string"}}}}`, which is why downstream references need `{{nodes.<slug>.answer...}}`.
