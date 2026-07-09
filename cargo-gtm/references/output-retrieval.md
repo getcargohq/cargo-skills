@@ -43,7 +43,7 @@ cargo-ai orchestration run download-outputs \
   [--record-id <id>] \
   [--record-title <title>] \
   [--record-title-or-id <value>] \
-  [--is-finished] \
+  \
   [--executions-filter <json>] \
   [--created-after <iso8601>] \
   [--created-before <iso8601>]
@@ -54,7 +54,7 @@ cargo-ai orchestration run download-outputs \
 The response is a JSON object: `{"url": "<signed-url>"}`. The signed URL is short-lived — fetch immediately:
 
 ```bash
-URL=$(cargo-ai orchestration run download-outputs --workflow-uuid <uuid> --output-node-slug <slug> --format json --is-finished | jq -r .url)
+URL=$(cargo-ai orchestration run download-outputs --workflow-uuid <uuid> --output-node-slug <slug> --format json | jq -r .url)
 curl -fsSL "$URL" > /tmp/outputs.json
 ```
 
@@ -82,7 +82,6 @@ cargo-ai orchestration run download-outputs \
   --output-node-slug output \
   --batch-uuid def-456-… \
   --format json \
-  --is-finished
 ```
 
 ### Pull only successful records

@@ -79,7 +79,7 @@ For continuous monitoring (e.g. weekly job-change scan), build a play:
 3. Action node: `waterfall.detectJobChange`.
 4. Output: write `MOVED` rows to a "Job Changes — Recent" segment.
 
-For setting up a play / scheduled tool, see `../../cargo-orchestration/references/examples/plays.md`.
+To make this recurring, follow [`save-as-play.md`](save-as-play.md) — it walks the tool-vs-play choice, the cadence defaults per signal, and the recurring-cost approval. Play mechanics: [`../../cargo-orchestration/references/examples/plays.md`](../../cargo-orchestration/references/examples/plays.md).
 
 ## Credit budget
 

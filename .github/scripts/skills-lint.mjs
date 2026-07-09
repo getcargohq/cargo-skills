@@ -21,14 +21,17 @@ const repoRoot = resolve(process.argv[2] || ".");
 
 const SKILL_DIRS = [
   "cargo",
+  "cargo-quickstart",
   "cargo-gtm",
   "cargo-orchestration",
   "cargo-storage",
   "cargo-connection",
   "cargo-ai",
+  "cargo-content",
   "cargo-context",
   "cargo-analytics",
   "cargo-billing",
+  "cargo-hosting",
   "cargo-workspace-management",
 ];
 
@@ -290,6 +293,63 @@ function main() {
   for (const top of ["README.md", "AGENTS.md", "CHANGELOG.md", "CLAUDE.md"]) {
     const p = join(repoRoot, top);
     if (existsSync(p)) lintFile(p);
+  }
+
+  // Catalog consistency — hand-maintained catalogs must not drift from disk.
+  // 1. Every skill directory on disk is listed in SKILL_DIRS (so it gets linted).
+  // 2. Every skill (except the router itself) is routed from cargo/SKILL.md.
+  // 3. Every cargo-gtm recipe on disk appears in the cargo-gtm/SKILL.md and
+  //    README.md recipe tables.
+  const diskSkillDirs = readdirSync(repoRoot).filter((d) => {
+    if (d.startsWith(".") || d === "node_modules") return false;
+    const p = join(repoRoot, d);
+    return statSync(p).isDirectory() && existsSync(join(p, "SKILL.md"));
+  });
+  for (const dir of diskSkillDirs) {
+    if (!SKILL_DIRS.includes(dir)) {
+      err(
+        join(repoRoot, dir, "SKILL.md"),
+        0,
+        `Skill directory \`${dir}/\` exists on disk but is not listed in the linter's SKILL_DIRS — add it so it gets linted.`
+      );
+    }
+  }
+  const routerPath = join(repoRoot, "cargo", "SKILL.md");
+  if (existsSync(routerPath)) {
+    const router = readFileSync(routerPath, "utf8");
+    for (const dir of diskSkillDirs) {
+      if (dir === "cargo") continue;
+      if (!router.includes(`../${dir}/SKILL.md`)) {
+        err(
+          routerPath,
+          0,
+          `Router \`cargo/SKILL.md\` does not link \`../${dir}/SKILL.md\` — every skill must be routed from the router.`
+        );
+      }
+    }
+  }
+  const recipesDir = join(repoRoot, "cargo-gtm", "recipes");
+  if (existsSync(recipesDir)) {
+    const gtmSkillPath = join(repoRoot, "cargo-gtm", "SKILL.md");
+    const gtmSkill = existsSync(gtmSkillPath) ? readFileSync(gtmSkillPath, "utf8") : "";
+    const readmePath = join(repoRoot, "README.md");
+    const readme = existsSync(readmePath) ? readFileSync(readmePath, "utf8") : "";
+    for (const f of readdirSync(recipesDir).filter((n) => n.endsWith(".md"))) {
+      if (!gtmSkill.includes(`recipes/${f}`)) {
+        err(
+          gtmSkillPath,
+          0,
+          `Recipe \`recipes/${f}\` exists on disk but is not referenced in cargo-gtm/SKILL.md — add it to the recipe table.`
+        );
+      }
+      if (!readme.includes(f)) {
+        err(
+          readmePath,
+          0,
+          `Recipe \`cargo-gtm/recipes/${f}\` is not mentioned in README.md — add it to the recipe table.`
+        );
+      }
+    }
   }
 
   const errors = findings.filter((f) => f.severity === "error");

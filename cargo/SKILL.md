@@ -1,7 +1,7 @@
 ---
 name: cargo
-description: Router and overview for the Cargo CLI agent skills. Explains the eleven skills (one outcome skill cargo-gtm + ten capability skills), the UUID flow between them, async polling, end-to-end use cases (enrich one record, enrich and sync to CRM, AI lead scoring, custom workflow, error monitoring, fresh-workspace bootstrap, segment export, GTM context authoring), and common gotchas (`conjonction` spelling, run vs batch, model-uuid vs segment-uuid). Load first whenever working with the Cargo CLI, when unsure which sub-skill applies, when stitching multiple sub-skills together, when bootstrapping a workspace, or when the user asks about Cargo skills in general.
-version: "1.5.1"
+description: Router and overview for the Cargo CLI agent skills. Explains the twelve skills (one onboarding skill cargo-quickstart + one outcome skill cargo-gtm + ten capability skills), the UUID flow between them, async polling, end-to-end use cases (enrich one record, enrich and sync to CRM, AI lead scoring, custom workflow, error monitoring, fresh-workspace bootstrap, segment export, GTM context authoring), and common gotchas (`conjonction` spelling, run vs batch, model-uuid vs segment-uuid). Load first whenever working with the Cargo CLI, when unsure which sub-skill applies, when stitching multiple sub-skills together, when bootstrapping a workspace, or when the user asks about Cargo skills in general.
+version: "1.6.0"
 compatibility: Requires @cargo-ai/cli (npm) and a Cargo account (browser sign-in via --oauth, or an API token)
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -28,8 +28,9 @@ metadata:
 
 # Cargo CLI — Skills Overview
 
-This repository contains 11 skills at the repo root: one **outcome skill** (`cargo-gtm`) and ten **capability skills**.
+This repository contains 12 skills at the repo root: one **onboarding skill** (`cargo-quickstart`), one **outcome skill** (`cargo-gtm`), and ten **capability skills**.
 
+- **`cargo-quickstart`** — guided first-run demo. Fresh workspace → real deliverable (25 leads for the user's persona, with a cost receipt) in under two minutes, ending by saving the demo as a recurring play. Load for new users, demo/tour requests, or empty workspaces.
 - **`cargo-gtm`** — application library. The front door for any GTM task ("build a TAM list", "find 5 fintech CTOs", "monitor job changes"). Routes via internal recipes (`../cargo-gtm/recipes/*.md`) and provider playbooks (`../cargo-gtm/provider-playbooks/*.md`).
 - **Capability skills** — standard library. One per CLI domain (orchestration, storage, connection, AI, content, context, analytics, billing, hosting, workspace management). Loaded by `cargo-gtm`, or directly when you need a specific CLI domain.
 
@@ -97,9 +98,9 @@ Trigger conditions (any one is enough):
 - A documented behavior contradicts what you observe.
 - A feature appears to be missing entirely.
 
-This is the official feedback channel — every report is reviewed by the Cargo team and used to improve the CLI and these skills. **Do not give up silently — file a report.** See `../cargo-workspace-management/SKILL.md` (Reports section) and `../cargo-workspace-management/references/examples/reports.md` for templates.
+This is the official feedback channel — every report is reviewed by the Cargo team and used to improve the CLI and these skills. It carries **wins as well as failures**: a session-share (below) files through the same command. **Do not give up silently — file a report.** See `../cargo-workspace-management/SKILL.md` (Reports section) and `../cargo-workspace-management/references/examples/reports.md` for templates.
 
-### 3. At session end — finalize the session row
+### 3. At session end — finalize the session row, then ask to share
 
 Produce a short title (5–8 words) and a 1–2 sentence summary of what the session actually worked on, then overwrite the placeholder row and stamp `finished_at`:
 
@@ -113,9 +114,31 @@ cargo-ai workspaceManagement session upsert \
 
 `--title` and `--summary` are required (NOT NULL). `--finished` stamps `finished_at = now`; pass `--finished-at <iso>` for an explicit timestamp.
 
+**Then ask once, at the natural end of the session:**
+
+> "Send this session's activity to the Cargo team so they can improve the experience? (Y/N)"
+
+On yes, file a session-share report (consented session traces are the fastest product-learning loop the team has):
+
+```bash
+cargo-ai workspaceManagement report create \
+  --title "Session share: <5-8 word session title>" \
+  --description "<what the user tried to accomplish, the commands/recipes used, what worked, where friction appeared, credits spent — no secrets or record-level data>"
+```
+
+On no, don't ask again this session. Skip the ask entirely for trivial sessions (a single lookup, no paid actions). See `../cargo-workspace-management/references/examples/reports.md` for the session-share template.
+
 ---
 
 ## Skills at a glance
+
+### Onboarding skill
+
+Load for a brand-new user or an empty workspace.
+
+| Skill                                                                    | Load when you need to…                                                                             |
+| ------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------- |
+| [`cargo-quickstart`](../cargo-quickstart/SKILL.md)                       | Run the guided first-run demo: one persona question → 25 leads in under two minutes → cost receipt → save as a recurring play. Routes to `cargo-gtm` afterwards. |
 
 ### Outcome skill
 

@@ -73,11 +73,15 @@ Then bump the `version:` field in each changed `SKILL.md` (semver, e.g. `1.0.0` 
 
 ## What this skill teaches
 
-**Cargo** connects your data models (companies, contacts, deals) to external integrations (CRMs, enrichment providers, AI agents) and runs them as automated workflows. The repo ships twelve skills at the root — one **router skill** (`cargo`, the overview / front door for any Cargo CLI task), one **outcome skill** (`cargo-gtm`, the front door for any GTM task), and ten **capability skills** (one per CLI domain).
+**Cargo** connects your data models (companies, contacts, deals) to external integrations (CRMs, enrichment providers, AI agents) and runs them as automated workflows. The repo ships thirteen skills at the root — one **router skill** (`cargo`, the overview / front door for any Cargo CLI task), one **onboarding skill** (`cargo-quickstart`, the guided first-run demo), one **outcome skill** (`cargo-gtm`, the front door for any GTM task), and ten **capability skills** (one per CLI domain).
 
 ### Router — `cargo`
 
 Always-loadable overview. Explains the skill graph (router → outcome → capabilities), the UUID flow between skills, async polling, end-to-end use cases, and the most common gotchas. Bundles [`cargo/references/glossary.md`](cargo/references/glossary.md) for term-by-term definitions. Load first when starting any Cargo CLI task or when stitching multiple capability skills together.
+
+### Onboarding — `cargo-quickstart`
+
+Guided first-run demo: one question ("who do you sell to?") → 25 leads matching that persona in under two minutes → cost receipt → save the pull as a recurring play. The fastest way to feel what Cargo is on a fresh workspace.
 
 ### Outcome — `cargo-gtm`
 
@@ -95,6 +99,11 @@ Built-in recipes:
 | `funding-watch.md` | Track companies that recently raised funding for outbound timing. |
 | `tech-intent.md` | Find companies by tech-stack or hiring intent (theirStack-driven). |
 | `icp-discovery.md` | Diff Closed-Won vs Closed-Lost segments, surface differentiating ICP signals. |
+| `outreach-activation.md` | Turn a signal segment into send-ready outreach (enrich → verify → personalize → sequencer handoff). |
+| `re-engagement.md` | Wake up stale contacts only when a fresh signal fires (job change, funding, tech intent). |
+| `lost-deal-revival.md` | Revive Closed-Lost CRM deals by branching on `lost_reason` (champion left, budget, timing). |
+| `account-expansion.md` | Multi-thread existing customer accounts — net-new buyers, deduped against the Contacts model. |
+| `save-as-play.md` | Convert a successful ad-hoc run into a durable scheduled play or cron tool. |
 
 ### Capabilities — CLI surface
 

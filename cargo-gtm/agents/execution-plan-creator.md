@@ -15,22 +15,30 @@ For goals matching an existing recipe in `../recipes/`, **use the recipe directl
 A structured plan with:
 
 1. **Goal restatement** — one sentence confirming intent.
-2. **Stage breakdown** — each step labelled with stage (SOURCE / DEDUPE / ENRICH / SIGNAL / CONTACT / VERIFY / BACKFILL / WRITE-BACK / SEQUENCE / SYNC).
-3. **Per-step provider + action slug + cost** — anchored in the priority stack where possible; long-tail providers only when priority can't serve the criteria.
-4. **Total credit budget** — sum across steps, by record-count assumptions.
-5. **Open questions for the user** — anything ambiguous (segment source, contact volume per company, write-back destination).
+2. **Assumptions defined operationally** — every judgment call spelled out as a testable rule (not "best contact" but "highest-ranked current employee matching RevOps/GTM-ops titles, weighted Chief > VP > Head > Director > Lead > Manager"), plus data decisions already made and the cost trade-off chosen.
+3. **Stage breakdown** — each step labelled with stage (SOURCE / DEDUPE / ENRICH / SIGNAL / CONTACT / VERIFY / BACKFILL / WRITE-BACK / SEQUENCE / SYNC), with provider + action slug + cost per step — anchored in the priority stack where possible; long-tail providers only when priority can't serve the criteria.
+4. **Pilot step + budget reconciliation** — the plan's first executed step is always a 1–3 row pilot; the full-run estimate is grounded in the pilot's observed per-row cost and reconciled against the actual balance (`billing subscription get`). If the estimate exceeds the balance, the plan says so up front.
+5. **Approval question with 3 shaped choices** — run-until-cap / top-up-then-run / trim-scope-to-fit (with a proposed trimming heuristic). Never bare yes/no.
+6. **Open questions for the user** — anything ambiguous (segment source, contact volume per company, write-back destination).
 
 ## Plan template
 
 ```
 GOAL: <one sentence>
 
-ASSUMPTIONS (call out anything the user should confirm):
+ASSUMPTIONS (operational definitions — anything the user should confirm):
   - Volume: ~N records
   - ICP: <one-line>
+  - "<judgment call>" = <testable rule>
+  - Dropped/fixed in the input: <rows dropped and why, domains corrected>
+  - Cost trade-off: <e.g. cheap email chain (0.14 cr) over premium play (1.4 cr) — why>
   - Output: <model write-back / CSV / CRM push>
 
 PLAN:
+
+  Step 0 — PILOT (always first)
+    Run steps 1–N on 2 rows of the exact input.
+    Report: credits spent, per-row cost, hit-rate, output preview.
 
   Step 1 — SOURCE
     Provider: salesNavigator.searchAccounts (priority)
@@ -48,7 +56,14 @@ PLAN:
 
   ... (steps continue)
 
-TOTAL BUDGET: ~X credits
+TOTAL BUDGET: ~X credits (catalog estimate — refine from the pilot's observed per-row cost)
+BALANCE CHECK: remaining credits = subscriptionAvailableCreditsCount − subscriptionCreditsUsedCount
+  → covers the run? If short, say by how much BEFORE running.
+
+APPROVE FULL RUN? (pick one)
+  1. Run until the cap — ~K of N rows fit the current balance; resumable, keeps successful rows.
+  2. Top up first, then run all N clean.
+  3. Trim to the best ~M rows so the budget covers everything (heuristic: <e.g. funded + RevOps ≥ 2 first>).
 
 OPEN QUESTIONS:
   - Should we cap contacts per company at K?
@@ -66,7 +81,7 @@ When choosing between providers for a stage, the agent applies these rules in or
 
 ## Cost discipline
 
-Always present a cost estimate **before executing**. The user gets to approve / modify before the agent fans out across N records. Never skip this step for runs > 50 records.
+The plan IS the approval gate: pilot first, estimate reconciled against the balance, 3 shaped choices, and no paid fan-out until the user picks one. Full rules (receipts, 1.4×N over-provision, count-first sizing, the phone guard): [`../references/cost-discipline.md`](../references/cost-discipline.md).
 
 ## Action shape rule (critical)
 

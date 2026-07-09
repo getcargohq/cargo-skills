@@ -81,6 +81,18 @@ cargo-ai orchestration action execute-batch \
 - **`detectJobChange` requires at least one identifier**. Best coverage: LinkedIn URL + company domain. Email-only inputs often return UNKNOWN.
 - **`searchProspects` is 3 credits/record** — comparable to peopleDataLabs but with less rich filtering. Default to salesNavigator.searchLeads (0.02) unless you need waterfall's specific filter combinations.
 
+## Anti-patterns
+
+- **camelCase field names.** waterfall inputs are **snake_case**: `first_name`, `last_name`, `full_name`, `company_domain`, `professional_email`, `contact_linkedin`. Do NOT reuse FullEnrich's `firstName`/`lastName`/`domainName` shape here — the call fails or silently ignores the field.
+- **Trusting a finder's own "verified" flag.** `verifyEmail` exists precisely because providers grade their own homework — run it on every found email regardless of what the finder claimed (see [`../references/waterfall-strategy.md`](../references/waterfall-strategy.md), verification hard rules).
+- **`detectJobChange` on a fresh cadence.** At 3 credits/record, re-running the same segment weekly re-bills rows whose status can't have changed — every 2 weeks is the right default (see [`../recipes/save-as-play.md`](../recipes/save-as-play.md) cadence table).
+
+## Position in the waterfall
+
+- `verifyEmail` — **always the last step** of any email chain; never skipped.
+- `enrichContact` / `enrichCompany` — **second rung**, after cargo native, before peopleDataLabs.
+- `findPhone` — **last rung** of the phone chain (after prospeo, FullEnrich). Demote any rung that misses on the pilot's first ~10 rows for the rest of the batch.
+
 ## Action shape
 
 `{"kind":"connector","integrationSlug":"waterfall","actionSlug":"<slug>","config":{}}`. **No `connectorUuid` in `config`.**

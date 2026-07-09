@@ -102,9 +102,10 @@ cargo-ai orchestration run download-outputs \
   --workflow-uuid <uuid> \
   --output-node-slug <slug> \
   --batch-uuid <uuid> \
-  --format json \
-  --is-finished
+  --format json
 ```
+
+(Don't pass `--is-finished` — the CLI help lists it but the API currently rejects it with `unrecognized_keys`; reported.)
 
 Returns `{"url": "..."}` — a signed URL to a CSV/JSON containing only the output node's data with input/output context per record. See [`../../cargo-analytics/SKILL.md`](../../cargo-analytics/SKILL.md#downloading-run-results) for the full reference.
 
