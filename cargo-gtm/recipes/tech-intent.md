@@ -105,7 +105,7 @@ For continuous monitoring (e.g. weekly scan for "new companies hiring my buyer")
 3. Dedup against last week's results.
 4. Output: write new companies to a "Fresh Hiring Intent" segment.
 
-For setting up a play / scheduled tool, see `../../cargo-orchestration/references/examples/plays.md`.
+To make this recurring, follow [`save-as-play.md`](save-as-play.md) — it walks the tool-vs-play choice, the cadence defaults per signal, and the recurring-cost approval. Play mechanics: [`../../cargo-orchestration/references/examples/plays.md`](../../cargo-orchestration/references/examples/plays.md).
 
 ## Credit budget
 

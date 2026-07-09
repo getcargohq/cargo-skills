@@ -1,7 +1,7 @@
 ---
 name: cargo-gtm
 description: "Front door for any GTM task on Cargo — sourcing, waterfall enrichment, email/phone/LinkedIn lookup, email verification, scoring, qualification, sequencing, CRM sync, and signal monitoring (job changes, funding, tech-stack/hiring intent). Use when the user states a real-world goal involving prospects, leads, accounts, contacts, ICP lists, or campaign activation. Routes to phase guides (Level 2), recipes (Level 2.5), and per-provider playbooks (Level 3) before any action call."
-version: "1.0.0"
+version: "1.1.0"
 compatibility: Requires @cargo-ai/cli (npm) and a Cargo account (browser sign-in via --oauth, or an API token)
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -74,10 +74,33 @@ Scan this list and read the recipe matching your task. **When a recipe matches: 
 | [`recipes/re-engagement.md`](recipes/re-engagement.md) | Waking up stale contacts only when a fresh signal fires (job change, funding, tech intent) |
 | [`recipes/lost-deal-revival.md`](recipes/lost-deal-revival.md) | Reviving Closed-Lost CRM deals by branching on `lost_reason` (champion left, budget, timing) |
 | [`recipes/account-expansion.md`](recipes/account-expansion.md) | Multi-threading existing customer accounts — net-new buyers, deduped against the workspace's Contacts model |
+| [`recipes/save-as-play.md`](recipes/save-as-play.md) | Converting a successful ad-hoc run into a durable scheduled play or cron tool — offer after any repeatable pull |
 
 If none match, scan the phase docs above for the closest pattern and adapt — or invoke [`agents/execution-plan-creator.md`](agents/execution-plan-creator.md) to compose a custom chain with provider/action slugs and cost estimates.
 
-## 3) Priority provider stack (recipes lead with these 6)
+## 3) Cost discipline — MANDATORY gates
+
+Full spec: [`references/cost-discipline.md`](references/cost-discipline.md). The short version every task must honor:
+
+1. **Pilot → approval → full run, in that order.** Run 1–3 rows of the exact input first; present the 4-section approval message (Assumptions · Pilot result verbatim · Credits/Scope/Cap reconciled against the actual balance · 3 shaped choices); stay in AWAIT_APPROVAL until the user picks. Never fan out on an unapproved or cost-unknown action.
+2. **Receipt after every paid action**: credits spent + balance remaining + hit-rate ("found 34 emails of 40") + estimate-vs-actual with the why when they diverge. Prefer `billing usage get-metrics` over your own arithmetic.
+3. **Over-provision 1.4×N, then filter** — coverage is a property of the company; drop incomplete rows instead of chasing them with more providers.
+4. **Count first, pay second** — search is billed on returned rows; keep `limit` strict and size the pool with a 1-row probe before any full pull.
+5. **Phone is the guarded lever** (3–7 credits, ~10× email) — explicit user request only, qualified leads only.
+
+## 4) After every run — receipt, then grounded next steps
+
+End every completed run with the receipt (above), then propose **2–3 next steps maximum, computed from the data just produced — never a generic menu**. Required shape:
+
+1. **Continuity** — builds on this session's artifacts ("67 of these 70 companies have RevOps teams — find the leads?"), not a fresh generic idea.
+2. **Budget-aware** — framed against the remaining balance ("with your ~9 credits left, ~5 verified emails fits").
+3. **Cost-per-unit stated** — "email waterfalls run ~1.4 credits each."
+4. **A default picking heuristic** so answering takes one word ("I'd default to: has funding data + RevOps ≥ 2 + posting is recent").
+5. **An escape hatch** — always end with "or something else entirely."
+
+When a run produced a durable, repeatable result, one of the suggestions should be **making it systematic** — see [`recipes/save-as-play.md`](recipes/save-as-play.md).
+
+## 5) Priority provider stack (recipes lead with these 6)
 
 These six credits-based providers cover the full prospecting → enrichment → verification → signal pipeline at the lowest credit cost in the catalog. Every recipe in this skill's `recipes/` leads with this stack:
 
@@ -92,7 +115,7 @@ These six credits-based providers cover the full prospecting → enrichment → 
 
 See [`provider-playbooks/`](provider-playbooks/) for per-provider deep dives. See [`references/stage-action-map.md`](references/stage-action-map.md) for the complete cheapest-action-per-stage table across the full 120-integration catalog.
 
-## 4) Recipe spine (default chain)
+## 6) Recipe spine (default chain)
 
 ```
 1. SOURCE   → salesNavigator.searchLeads / searchAccounts            (0.02–0.05/record)
@@ -109,7 +132,7 @@ See [`provider-playbooks/`](provider-playbooks/) for per-provider deep dives. Se
 
 Adapt by phase: drop steps that aren't relevant to the user's goal. For pure sourcing, run step 1 only. For "enrich a list I already have," run steps 2–7.
 
-## 5) Output retrieval — use `run download-outputs`, not `run download`
+## 7) Output retrieval — use `run download-outputs`, not `run download`
 
 When the agent needs the actual data produced by an action (enriched fields, found emails, search results), use:
 
@@ -117,24 +140,25 @@ When the agent needs the actual data produced by an action (enriched fields, fou
 cargo-ai orchestration run download-outputs \
   --workflow-uuid <uuid> \
   --output-node-slug <slug> \
-  --format json \
-  --is-finished
+  --format json
 ```
+
+(Don't pass `--is-finished` — the CLI help still lists it but the API currently rejects it with `unrecognized_keys`; reported.)
 
 Returns `{"url": "..."}` — a signed URL to a CSV/JSON containing only the output node's data. Faster and cheaper than `run download` (which pulls full run records). See [`references/output-retrieval.md`](references/output-retrieval.md) and [`../cargo-analytics/SKILL.md`](../cargo-analytics/SKILL.md).
 
-## 6) Action shape rules (every recipe)
+## 8) Action shape rules (every recipe)
 
 Every action JSON in this skill follows the rules in [`../cargo-orchestration/references/examples/actions.md`](../cargo-orchestration/references/examples/actions.md):
 
 - `kind: "connector"` action shape: `{"kind":"connector","integrationSlug":"<slug>","actionSlug":"<slug>","config":{}}`. **`connectorUuid` is NOT in `config`** — the platform resolves the workspace's authenticated connector from `integrationSlug` automatically.
 - For multi-step node graphs: `connectorUuid` lives at the top level of the node, not in `config`. Cross-node interpolation uses `{{nodes.<slug>.<field>}}`. Agent node outputs wrap under `.answer` (read as `{{nodes.<slug>.answer.<field>}}`).
 
-## 7) When stuck — file a workspace report
+## 9) When stuck — file a workspace report
 
 If a recipe fails repeatedly and the cause isn't obvious, escalate via `cargo-ai workspaceManagement report create`. See [`../cargo-workspace-management/SKILL.md`](../cargo-workspace-management/SKILL.md) (Reports section).
 
-## 8) Provider playbooks
+## 10) Provider playbooks
 
 Per-provider deep dives for the priority stack. Long-tail providers don't have dedicated playbooks yet — fall back to [`references/alternatives.md`](references/alternatives.md) and [`references/stage-action-map.md`](references/stage-action-map.md).
 
@@ -146,8 +170,9 @@ Per-provider deep dives for the priority stack. Long-tail providers don't have d
 - [`provider-playbooks/theirStack.md`](provider-playbooks/theirStack.md) — tech-stack + hiring-intent signals.
 - [`provider-playbooks/peopleDataLabs.md`](provider-playbooks/peopleDataLabs.md) — heavyweight backfill at flat 3-credit tier.
 
-## 9) References
+## 11) References
 
+- [`references/cost-discipline.md`](references/cost-discipline.md) — the mandatory spend rules: pilot → approval gate, per-run receipts, 1.4×N over-provision, count-first sizing, provider-billing rules.
 - [`references/stage-action-map.md`](references/stage-action-map.md) — cheapest credits-based action per stage across the full 120-integration catalog.
 - [`references/credits-cost-table.md`](references/credits-cost-table.md) — auto-generated cost table for all 141 credits-based actions.
 - [`references/waterfall-strategy.md`](references/waterfall-strategy.md) — canonical waterfall chains by enrichment goal (every recipe's "fallback" follows these).

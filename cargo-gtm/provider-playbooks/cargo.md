@@ -101,6 +101,15 @@ cargo-ai orchestration action execute \
 - **Don't run all 12 enrich actions per company.** Pick the 2–4 that map to your ICP signals. Running everything is 11 credits per company, mostly wasted.
 - **Cost adds up at scale.** For 500 companies × 4 enrichments × 1 credit average = 2,000 credits. Sample on 10 first to validate the data is what you need before fanning out.
 
+## Anti-patterns
+
+- **Domains/emails where IDs are required.** Every `enrichBusiness*`/`enrichProspect*` action takes `business_id`/`prospect_id` from a prior `match*` call — passing `domain` or `email` directly is the most common cargo-native failure.
+- **The "enrich everything" reflex.** 12 business enrich actions exist; a task needs 2–4. Pick by which ICP signal the task actually scores on, and name that choice in the plan's assumptions ([`../references/cost-discipline.md`](../references/cost-discipline.md) §1).
+
+## Position in the waterfall
+
+**First rung for all enrichment** (match + firmographics at 0.5 each is unbeatable when the company is in-catalog). Unmatched rows fall to `waterfall.enrich*`, then `peopleDataLabs.enrich*`. If `matchBusiness` misses heavily on the pilot (niche/SMB-heavy segments), demote cargo native and lead with waterfall for that batch.
+
 ## Action shape
 
 `{"kind":"connector","integrationSlug":"cargo","actionSlug":"<slug>","config":{}}`. **No `connectorUuid` in `config`** — single workspace connector resolves automatically.

@@ -35,6 +35,16 @@ LinkedIn-anchored search for accounts and leads. **Cheapest sourcing in the carg
 - **`recentUpdates: true`** narrows to leads who posted recently, useful for warm-outreach signal but reduces volume.
 - **Pagination**: results are paginated. `limit` caps a single call; for large pulls, iterate with the cursor returned in the response.
 
+## Anti-patterns
+
+- **String filter values where LinkedIn codes are required.** `industryCodes`, `headquarterLocationIds`, `companyHeadcounts`, and `role.function`/`role.seniority` take LinkedIn's **internal enums/IDs** (`[43]`, `["B","C","D"]`, `[103644278]`), not names like `"fintech"` or `"50-200"`. Passing strings fails or silently mismatches — inspect the autocomplete schema via `connection integration get salesNavigator` first.
+- **Pulling the full volume to "see what's there."** Search is billed per **returned** record. Size the pool with `limit: 1` (the response's total match count is free beyond that one row), decide the filter, then pull exactly the approved scope — see [`../references/cost-discipline.md`](../references/cost-discipline.md).
+- **`searchLeadsLegacy` as a shortcut** — 300× the cost of `searchLeads` for marginal filter gains.
+
+## Position in the waterfall
+
+**First rung for all sourcing** — nothing in the catalog beats 0.02–0.05/record. Demote for a batch only when the pilot shows its LinkedIn-shaped coverage misses your segment (local SMBs → `serper.searchPlaces`; tech-stack-first → `theirStack`; funding/investor filters → `peopleDataLabs.queryCompanies`).
+
 ## Sample payloads
 
 ### Account search — 100 fintech companies in US, 50–500 headcount

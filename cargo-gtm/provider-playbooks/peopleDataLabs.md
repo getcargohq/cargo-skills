@@ -106,6 +106,13 @@ If cargo's filter shape can't express the criteria (e.g., array-membership filte
 - **`pretty: true`** formats JSON for readability. Disable in production calls — adds bytes without value.
 - **Multi-axis matches dilute precision.** Adding a 5th filter can reduce result quality (PDL's matching is forgiving when it has to be). Sample 10 results before fanning out.
 
+## Anti-patterns
+
+- **Flat records on the enrich actions.** `enrichPerson`/`enrichCompany` batch records need the `parameters` wrapper — `{"parameters":{"email":"…"}}`, NOT `{"email":"…"}`. Flat records fail validation or silently enrich nothing.
+- **Elasticsearch queries in `queryX`.** The `query` field is a **PDL SQL string** (`SELECT * FROM company WHERE …`), never an Elasticsearch DSL object. This is the single most common PDL misuse.
+- **`conjunction` spelling in `searchX` filters.** It's `conjonction` (two o's, no u) — the cargo-wide convention; the typo returns empty results with no error.
+- **Search without a strict `limit`.** All PDL searches are billed per returned row at 3 credits each — an uncapped exploratory query is the most expensive mistake in the priority stack. Probe with `limit: 1`, then pull the approved scope ([`../references/cost-discipline.md`](../references/cost-discipline.md)).
+
 ## Action shape
 
 `{"kind":"connector","integrationSlug":"peopleDataLabs","actionSlug":"<slug>","config":{}}`. **No `connectorUuid` in `config`.**

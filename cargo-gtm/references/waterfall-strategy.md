@@ -35,6 +35,11 @@ Then **always**:
 
 Don't skip step 5 — email finders return catch-all addresses that look valid but bounce.
 
+**Verification hard rules:**
+
+- A provider's own `verified` / `valid` flag is the provider grading its own homework. Always validate with an independent step (`waterfall.verifyEmail`) regardless of what the finder claimed.
+- Ship a **catch-all** email only when a second, independent finder returned the exact same address. One source + catch-all = "unverified", flag it as such.
+
 **Example flow (200 contacts):**
 
 ```bash
@@ -105,12 +110,12 @@ Phone lookup is expensive (3–7 credits/record). Run only on qualified leads, n
 
 ## Cost discipline
 
-The point of a waterfall is to **not** run every provider on every record. Always:
+The mandatory spend rules (pilot → approval gate, per-run receipts, 1.4×N over-provision, count-first sizing) live in [`cost-discipline.md`](cost-discipline.md) — they apply to every chain here. Waterfall-specific rules on top:
 
-1. **Sample first**: run step 1 on 10 records, validate the data is what you want.
-2. **Filter aggressively between steps**: don't pass rows that already have the field populated.
-3. **Stop early**: if hit rate after step 2 is > 90%, the marginal cost of step 3 may not be worth it.
-4. **Track credit spend**: after each step, run `cargo-ai billing usage get-metrics` to confirm cost matches expectations.
+1. **Filter aggressively between steps**: don't pass rows that already have the field populated.
+2. **Stop early**: if hit rate after step 2 is > 90%, the marginal cost of step 3 may not be worth it — the remaining misses are mostly rows no provider covers (coverage is a property of the company).
+3. **Demote dynamically**: if a provider misses on the first ~10 rows of a batch, move it later in the chain for the rest of that batch — its coverage doesn't match this segment.
+4. **Track credit spend**: after each step, run `cargo-ai billing usage get-metrics` and fold the numbers into the run receipt.
 
 ## Coalesce — merge results from the chain
 

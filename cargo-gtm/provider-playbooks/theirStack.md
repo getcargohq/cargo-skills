@@ -89,6 +89,16 @@ This is the unique strength of theirStack — combined tech-stack AND hiring-int
 - **Don't over-filter.** Combining 5+ filters can collapse the result set to zero. Start broad (1–2 filters), inspect counts, then narrow.
 - **Posting-window matters.** `posted_at_max_age_days` defaults loose; for "currently hiring" intent, use 30 or 60 days.
 
+## Anti-patterns
+
+- **Free-text technology names.** `techFields.technologies` wants theirStack's canonical slugs — discover them via `searchTechnologies` first, then plug the slugs into `searchCompanies`. Guessing (`"Snowflake"` vs `"snowflake"` vs `"snowflake-db"`) silently narrows results.
+- **theirStack for plain firmographics.** No intent signal in the filter → salesNavigator is 10× cheaper. theirStack earns its cost only when the job-posting or tech-stack signal IS the filter.
+- **Skipping the count check.** Start with 1–2 filters and a small `limit`, read the result count, then narrow — over-filtered queries return zero and the credits for the probe calls add up.
+
+## Position in the waterfall
+
+**Primary intent-signal source** (rung 1 for hiring/tech-stack-driven sourcing); falls to `cargo.enrichBusinessTechnographics` for per-company tech detail on matched companies, and to `peopleDataLabs` when the filter needs fields theirStack lacks (funding, investors).
+
 ## Action shape
 
 `{"kind":"connector","integrationSlug":"theirStack","actionSlug":"<slug>","config":{}}`. **No `connectorUuid` in `config`.**

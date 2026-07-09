@@ -70,6 +70,12 @@ Cost is 7 credits — same as running `findEmail` (1) + `findPhone` (6) separate
 - **Multi-input matters.** Hit rate jumps significantly when you pass `linkedinUrl` AND `domainName` together vs. either alone. If you have both, use both.
 - **Don't use `findEmail` for verification.** It returns a single best-guess email; some are catch-all and will bounce. Always verify with `waterfall.verifyEmail` (0.1 cred) before using in outreach.
 
+## Anti-patterns
+
+- **snake_case field names.** FullEnrich inputs are **camelCase**: `firstName`, `lastName`, `domainName`, `companyName`, `linkedinUrl`. Do NOT reuse waterfall's `first_name`/`domain` shape here — the exact inverse of the waterfall trap.
+- **Shipping a catch-all address on one source.** If `verifyEmail` says catch-all, the address ships only when a second independent finder returned the exact same string; otherwise flag it "unverified".
+- **`findPhone` in a default chain.** Phone is the ~10×-email lever — explicit user request and qualified leads only ([`../references/cost-discipline.md`](../references/cost-discipline.md) §5).
+
 ## Fallback chain
 
 If `FullEnrich.findEmail` returns nothing for a row, escalate via:
@@ -78,7 +84,7 @@ If `FullEnrich.findEmail` returns nothing for a row, escalate via:
 2. Or `hunter.findEmail` (0.5 cred) — different underlying source, sometimes finds what FullEnrich misses.
 3. Last resort: `icypeas.findEmail` (0.1 cred).
 
-Don't run all four blindly — the spine is `FullEnrich` first, escalate only on misses.
+Don't run all four blindly — the spine is `FullEnrich` first, escalate only on misses. **Demote dynamically**: if FullEnrich misses on the pilot's first ~10 rows of a batch (some segments — e.g. non-LinkedIn-native industries — are outside its coverage), move it behind hunter for the rest of that batch.
 
 ## Action shape
 

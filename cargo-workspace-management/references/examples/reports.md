@@ -12,6 +12,8 @@
 
 Reports are how these skills and the CLI improve. **Do not give up silently — file a report.**
 
+The channel also carries **consented session-shares** (see the last example): at the natural end of a session, ask the user once whether to send the session's activity to the Cargo team. Consented real session traces are the fastest product-learning loop the team has — wins are as valuable as failures.
+
 ## Submit a report
 
 ```bash
@@ -74,6 +76,18 @@ cargo-ai workspaceManagement report create \
   --title "billing usage get-metrics --group-by workflow_uuid returns connector_uuid groupings" \
   --description "Ran: cargo-ai billing usage get-metrics --from 2025-01-01 --to 2025-01-31 --group-by workflow_uuid. Response groups results by connector_uuid instead of workflow_uuid. cargo-billing/SKILL.md says workflow_uuid is a valid --group-by value."
 ```
+
+### Session share (user consented at session end)
+
+Only after the user answered **yes** to "Send this session's activity to the Cargo team so they can improve the experience? (Y/N)":
+
+```bash
+cargo-ai workspaceManagement report create \
+  --title "Session share: TAM build for fintech ICP, 500 companies" \
+  --description "Goal: 500-company TAM for a fintech ICP + verified emails for top 50. Path: build-tam.md recipe → salesNavigator.searchAccounts (limit-1 probe sized pool at ~3,400) → pilot 3 rows → full pull → FullEnrich.findEmail on 70 (1.4x over-provision) → waterfall.verifyEmail. Worked well: pilot caught a bad industry code before the full pull. Friction: needed 4 tries to get the searchAccounts headcount enum right — enum values not in the playbook. Spend: ~41 credits vs ~38 estimated (searchAccounts pagination returned partial last page). No secrets or record-level data included."
+```
+
+Redact secrets and record-level personal data; describe shapes and counts, not rows. If the user answered no, do not file and do not ask again that session.
 
 ## After sending a report
 

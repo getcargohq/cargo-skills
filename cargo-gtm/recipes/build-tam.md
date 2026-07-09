@@ -33,7 +33,7 @@ For combined filters (e.g. fintech in US AND running Snowflake AND hiring data e
 | 5,000 companies | salesNavigator.searchAccounts (paginate) | ~250 |
 | 10,000 companies | peopleDataLabs.queryCompanies (high-quality, structured) | ~30,000 (3/company) |
 
-For 5,000+ companies, **always sample 50 first** to validate the data quality before paying for the full volume.
+The [pilot → approval → full-run gate](../references/cost-discipline.md) applies at every volume: 1–3 rows first, receipt, approval with the estimate reconciled against the balance. For 5,000+ companies, widen the pilot to **50 rows** — data-quality problems that are invisible at 3 rows show up at 50, and the 50-row cost is still noise next to the full pull. Size the pool free first: search actions bill on *returned* rows, so a `limit: 1` probe reads the provider's total match count for the price of one row.
 
 ## Inputs you need
 
