@@ -19,6 +19,17 @@ npx skills add getcargohq/cargo-skills
 
 Works with Claude Code, Cursor, Windsurf, GitHub Copilot, and any agent that supports the [skills.sh](https://skills.sh) standard.
 
+### Claude Code plugin (alternative channel)
+
+On Claude Code ≥ v2.1.154 the repo also installs as a plugin — same fifteen skills, plus a `PreToolUse` hook that auto-approves safe `cargo-ai` calls (reads, queries, run/batch operations) while credentials (`login`), token minting, report egress, `cdk deploy`/`destroy`, and any `remove`/`delete` always still prompt ([`hooks/approve-cli.sh`](hooks/approve-cli.sh) — allow-only, it can never override a deny rule):
+
+```
+/plugin marketplace add getcargohq/cargo-skills
+/plugin install cargo@cargo
+```
+
+**Pick one channel.** Plugin install and `skills add` both register the skills; using both duplicates them (plugin copies are namespaced `cargo:<skill>`). Plugin users should uninstall the `skills add` copies (or skip the installer's SessionStart refresh) and update via `/plugin marketplace update cargo` + `/plugin update cargo@cargo` instead.
+
 For [OpenClaw](https://openclaw.ai), install the bundle from ClawHub:
 
 ```bash

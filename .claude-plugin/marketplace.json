@@ -1,0 +1,12 @@
+{
+  "name": "cargo",
+  "owner": { "name": "Cargo", "url": "https://getcargo.io" },
+  "metadata": { "description": "Official Cargo plugin for Claude Code" },
+  "plugins": [
+    {
+      "name": "cargo",
+      "source": "./",
+      "description": "Cargo GTM agent skills — sourcing, enrichment, orchestration, workspace-as-code (CDK), diagnostics, and analytics via the cargo-ai CLI."
+    }
+  ]
+}

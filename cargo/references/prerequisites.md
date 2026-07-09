@@ -37,6 +37,10 @@ Always confirm `workspace.name` before any write — there is no dry-run mode fo
 - Failed commands exit non-zero and return `{"errorMessage": "..."}` — read this field for the cause.
 - Async commands (`run create`, `batch create`, `message create`, `action execute`, `action execute-batch`) return a UUID and a status that starts as `pending` / `running`. Pass `--wait-until-finished` to block, or poll the matching `get` command. See [`cargo-orchestration/references/polling.md`](../../cargo-orchestration/references/polling.md) for intervals and retry guidance.
 
+## Permission prompts (Claude Code)
+
+When the Cargo plugin (or the installer's hook scaffolding) is present, a `PreToolUse` hook auto-approves ordinary `cargo-ai` calls — reads, queries, run/batch operations, and pipelines through read-only helpers (`jq`, `grep`, `head`, …) — so they don't prompt. Four categories always still prompt, deliberately: credentials (`login`/`logout`), token minting (`workspaceManagement token …`), report egress (`workspaceManagement report …` — reports can carry session traces, so consent stays explicit), and destruction/deploys (`cdk deploy`/`destroy`, any `remove`/`delete`). The hook is allow-only: it can skip a prompt but never override a deny rule. Don't restructure commands to dodge a prompt — if one of these prompts appears, it's supposed to.
+
 ## Admin-only commands
 
 Some domains require a token with **admin access** on the workspace:
