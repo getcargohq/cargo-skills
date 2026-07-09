@@ -84,7 +84,7 @@ If a `branch` node's `title` says "❌ Condition is not matched" but you expecte
 |---|---|
 | Path in the expression doesn't exist | Read `runContext.<upstreamSlug>` from `run get <run-uuid>` and check the actual shape — common case: an agent's output is nested under `.answer`, so `{{nodes.qualify.qualified}}` resolves to undefined while `{{nodes.qualify.answer.qualified}}` works |
 | Stringified boolean comparison | `{{nodes.qualify.answer.qualified === true}}` may evaluate the inner expression as a string template — prefer the truthy form `{{nodes.qualify.answer.qualified}}` |
-| Field actually missing from the output | The upstream node didn't produce it — `runContext.<upstreamSlug>` will confirm. For agents, this usually means revisiting the prompt + `jsonSchema` |
+| Field actually missing from the output | The upstream node didn't produce it — `runContext.<upstreamSlug>` will confirm. To see what an action *should* emit without running it, read `output.schema` from `integration get <slug>` (connector actions) or resolve `orchestration action get-output-schema --action '<json>'` (any kind). For agents, this usually means revisiting the prompt + `jsonSchema` |
 | Typo in slug or field | Slugs are case-sensitive; `nodes.Qualify.answer.qualified` won't resolve |
 
 ### 3. Re-run a single record after fixing

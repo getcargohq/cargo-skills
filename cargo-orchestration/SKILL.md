@@ -1,6 +1,6 @@
 ---
 name: cargo-orchestration
-description: Interact with the Cargo platform via CLI. Use when the user wants to execute an action, run a workflow, trigger a batch, message an AI agent, query orchestration runtime tables (runs/batches/spans/records) with SQL, fetch segment records, or inspect a model schema.
+description: Interact with the Cargo platform via CLI. Use when the user wants to execute an action, run a workflow, trigger a batch, message an AI agent, query orchestration runtime tables (runs/batches/spans/records) with SQL, fetch segment records, resolve an action's output schema, or inspect a model schema.
 version: "1.5.0"
 compatibility: Requires @cargo-ai/cli (npm) and a Cargo account (browser sign-in via --oauth, or an API token)
 homepage: https://github.com/getcargohq/cargo-skills
@@ -100,7 +100,8 @@ cargo-ai connection connector list         # all connectors
 ```bash
 # Single actions
 cargo-ai orchestration action execute --action '{"kind":"tool","toolUuid":"<uuid>","config":{}}' --data '{"domain":"acme.com"}'
-cargo-ai orchestration action execute-batch --action '{"kind":"connector","integrationSlug":"clearbit","actionSlug":"company_enrich","config":{}}' --records '[{...},{...}]'
+cargo-ai orchestration action execute-batch --action '{"kind":"connector","integrationSlug":"clearbit","actionSlug":"enrichCompany","config":{}}' --records '[{...},{...}]'
+cargo-ai orchestration action get-output-schema --action '{"kind":"connector","integrationSlug":"clearbit","actionSlug":"enrichCompany","config":{}}' # → {"schema": <JSON Schema>} without executing
 
 # Workflows (chain multiple actions)
 cargo-ai orchestration run create --workflow-uuid <uuid> --data '{"company":"Acme","domain":"acme.com"}'
@@ -137,7 +138,7 @@ Run a single action — no workflow or node graph needed.
 ```bash
 # One action, one record → returns a run
 cargo-ai orchestration action execute \
-  --action '{"kind":"connector","integrationSlug":"clearbit","actionSlug":"company_enrich","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"clearbit","actionSlug":"enrichCompany","config":{}}' \
   --data '{"domain":"acme.com"}' \
   --wait-until-finished
 
@@ -149,6 +150,27 @@ cargo-ai orchestration action execute-batch \
 ```
 
 Action kinds: `tool`, `connector`, `agent`, `native`. See `references/examples/actions.md` for all action kinds, parameters, retry config, response shapes, and end-to-end examples.
+
+### Resolve an action's output schema (without executing)
+
+**Never guess what an action outputs.** Two free sources — no run, no credits:
+
+1. **Connector actions:** the integration catalog carries the output schema inline — `integration get <slug>` (and `integration list`) return `actions.<actionSlug>.output.schema` next to the input `config.jsonSchema`. Not every action declares one.
+2. **Any action kind** (`tool` / `connector` / `agent` / `native`) — resolve it with the same `--action` object as `action execute`:
+
+```bash
+cargo-ai orchestration action get-output-schema \
+  --action '{"kind":"connector","integrationSlug":"clearbit","actionSlug":"enrichCompany","config":{}}'
+# → {"schema": {"type": "object", "properties": {...}}}  — the JSON Schema is under the top-level "schema" key
+```
+
+Actions that declare no output schema fail with `"Action has no output schema."` (non-zero exit, status 404) — that's the signal to fall back to inspecting `runContext` from a real run. Use these to:
+
+- Know which fields a downstream node can read (`{{nodes.<slug>.<field>}}`) **before** wiring the graph.
+- See an `agent` action's real output envelope — a default free-text agent resolves to `{"schema":{"type":"object","properties":{"answer":{"type":"string"}}}}`, which is why downstream references need `{{nodes.<slug>.answer...}}`.
+- Map an action's output onto storage columns without a throwaway run.
+
+See `references/examples/actions.md` ("Resolve an action's output schema") for verified per-kind examples and the response/error shapes.
 
 ## Create a run
 

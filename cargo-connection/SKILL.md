@@ -264,7 +264,9 @@ cargo-ai connection connector list
 
 # 2. Discover available actions for the integration
 cargo-ai connection integration get <integration-slug>
-# → actions are keyed by actionSlug, with config.jsonSchema for each
+# → actions are keyed by actionSlug, with config.jsonSchema (input) for each
+# → many actions also carry output.schema — the JSON Schema of what the action
+#   emits; use it to wire downstream nodes instead of guessing (absent on some actions)
 # → Or use get-documentation for a plain text overview
 # → Or use native-integration get for built-in Cargo actions (not third-party)
 
@@ -280,7 +282,7 @@ Example connector node (Clearbit company enrichment):
   "slug": "enrich",
   "kind": "connector",
   "integrationSlug": "clearbit",
-  "actionSlug": "company_enrich",
+  "actionSlug": "enrichCompany",
   "connectorUuid": "<clearbit-connector-uuid>",
   "config": {
     "domain": {

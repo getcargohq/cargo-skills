@@ -123,6 +123,12 @@ Returns the full integration object, including all actions and extractors with t
         "config": {
           "jsonSchema": { "type": "object", "properties": { "domain": { "type": "string" } } }
         },
+        "output": {
+          "schema": {
+            "type": "object",
+            "properties": { "name": { "type": "string" }, "domain": { "type": "string" } }
+          }
+        },
         "credits": {
           "costs": [{ "type": "fixed", "cost": 1 }]
         },
@@ -174,7 +180,7 @@ Returns the full integration object, including all actions and extractors with t
 }
 ```
 
-**Key fields:** `actions` is keyed by `actionSlug` — use these in workflow connector nodes. `connector.config.jsonSchema` describes the credentials needed when creating a connector (for non-credit integrations). `extractors` is keyed by extractor slug — use these when creating models.
+**Key fields:** `actions` is keyed by `actionSlug` — use these in workflow connector nodes. Each action's `config.jsonSchema` is its **input**; `output.schema`, when present, is the JSON Schema of what the action **emits** — read it instead of guessing the output shape (not every action declares one; `integration list` includes it too). `connector.config.jsonSchema` describes the credentials needed when creating a connector (for non-credit integrations). `extractors` is keyed by extractor slug — use these when creating models.
 
 **`uiSchema` and autocomplete:** Each action's `config` may include a `uiSchema` alongside `jsonSchema`. When a field in `uiSchema` has `"ui:widget": "IntegrationAutocompleteWidget"`, its allowed values must be fetched via `connector autocomplete`. The `ui:options.slug` tells you which autocomplete slug to use, and `ui:options.params` (if present) specifies dependent parameters — replace `$this.$parent...` expressions with actual values. See the main SKILL.md for the full autocomplete workflow.
 
