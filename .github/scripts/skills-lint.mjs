@@ -22,6 +22,7 @@ const repoRoot = resolve(process.argv[2] || ".");
 const SKILL_DIRS = [
   "cargo",
   "cargo-gtm",
+  "cargo-cdk",
   "cargo-orchestration",
   "cargo-storage",
   "cargo-connection",
@@ -43,6 +44,7 @@ const REQUIRED_FRONTMATTER_FIELDS = [
 const KNOWN_CLI_DOMAINS = new Set([
   "ai",
   "billing",
+  "cdk",
   "connection",
   "content",
   "context",

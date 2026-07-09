@@ -1,7 +1,7 @@
 ---
 name: cargo
-description: Router and overview for the Cargo CLI agent skills. Explains the eleven skills (one outcome skill cargo-gtm + ten capability skills), the UUID flow between them, async polling, end-to-end use cases (enrich one record, enrich and sync to CRM, AI lead scoring, custom workflow, error monitoring, fresh-workspace bootstrap, segment export, GTM context authoring), and common gotchas (`conjonction` spelling, run vs batch, model-uuid vs segment-uuid). Load first whenever working with the Cargo CLI, when unsure which sub-skill applies, when stitching multiple sub-skills together, when bootstrapping a workspace, or when the user asks about Cargo skills in general.
-version: "1.5.1"
+description: Router and overview for the Cargo CLI agent skills. Explains the twelve skills (one outcome skill cargo-gtm + eleven capability skills, including cargo-cdk for declarative workspace-as-code), when to use the declarative CDK vs the imperative CLI, the UUID flow between them, async polling, end-to-end use cases (enrich one record, enrich and sync to CRM, AI lead scoring, custom workflow, error monitoring, fresh-workspace bootstrap, segment export, GTM context authoring), and common gotchas (`conjonction` spelling, run vs batch, model-uuid vs segment-uuid). Load first whenever working with the Cargo CLI, when unsure which sub-skill applies, when stitching multiple sub-skills together, when bootstrapping a workspace, or when the user asks about Cargo skills in general.
+version: "1.6.0"
 compatibility: Requires @cargo-ai/cli (npm) and a Cargo account (browser sign-in via --oauth, or an API token)
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -28,10 +28,11 @@ metadata:
 
 # Cargo CLI — Skills Overview
 
-This repository contains 11 skills at the repo root: one **outcome skill** (`cargo-gtm`) and ten **capability skills**.
+This repository contains 12 skills at the repo root: one **outcome skill** (`cargo-gtm`) and eleven **capability skills**.
 
 - **`cargo-gtm`** — application library. The front door for any GTM task ("build a TAM list", "find 5 fintech CTOs", "monitor job changes"). Routes via internal recipes (`../cargo-gtm/recipes/*.md`) and provider playbooks (`../cargo-gtm/provider-playbooks/*.md`).
-- **Capability skills** — standard library. One per CLI domain (orchestration, storage, connection, AI, content, context, analytics, billing, hosting, workspace management). Loaded by `cargo-gtm`, or directly when you need a specific CLI domain.
+- **Capability skills** — standard library. One per CLI domain (orchestration, storage, connection, AI, content, context, analytics, billing, hosting, cdk, workspace management). Loaded by `cargo-gtm`, or directly when you need a specific CLI domain.
+- **`cargo-cdk`** — the declarative one. Where the other capability skills wrap **imperative** one-off `cargo-ai <domain>` calls, `cargo-cdk` defines the whole workspace as code (`define*` builders + `cargo-ai cdk deploy`) and reconciles it. It spans every resource type — see "Declarative vs imperative" below to route between it and the imperative skills.
 
 `cargo-gtm` delegates to capability skills; capability skills never reference `cargo-gtm` (one-way dependency).
 
@@ -117,6 +118,25 @@ cargo-ai workspaceManagement session upsert \
 
 ## Skills at a glance
 
+### Declarative (CDK) vs imperative (CLI) — pick the mode first
+
+Two ways to create/manage the same Cargo resources. Decide which the task wants
+before picking a domain:
+
+- **Declarative → [`cargo-cdk`](../cargo-cdk/SKILL.md).** The user is managing
+  resources **as an artifact**: "set up / bootstrap a whole workspace as code",
+  "make this reproducible / version-controlled / in git", "deploy these
+  connectors + models + agents together", or anything that should be re-runnable
+  and diffable across environments. Define it in `define*` files and
+  `cargo-ai cdk deploy`.
+- **Imperative → the matching capability skill below.** The user is doing a
+  **one-off operation** or **exploring**: "create one connector", "add a column",
+  "list connectors", "run this workflow", "query storage", "read a memory". A read,
+  ad-hoc query, or single mutation that needn't live in code.
+
+When unsure: should the result be committed and re-deployable? Yes → CDK. A quick
+action or a read → the capability skill.
+
 ### Outcome skill
 
 Load when the user states a real-world goal.
@@ -140,6 +160,7 @@ Load for a specific CLI domain. The first link in each row jumps to the actual S
 | [`cargo-content`](../cargo-content/SKILL.md) ([recap](#cargo-content))                                      | Upload and organize knowledge files, build native/connector-backed knowledge libraries for RAG (the `content` domain) |
 | [`cargo-context`](../cargo-context/SKILL.md) ([recap](#cargo-context))                                      | Browse/read/write/edit the workspace's git-backed GTM context repo, run commands in its runtime sandbox, inspect the knowledge graph |
 | [`cargo-hosting`](../cargo-hosting/SKILL.md) ([recap](#cargo-hosting))                                      | Scaffold, deploy, and promote hosted apps (Vite SPAs on `*.cargo.app`) and edge workers (serverless HTTP handlers), and manage their deployments |
+| [`cargo-cdk`](../cargo-cdk/SKILL.md) ([recap](#cargo-cdk))                                                   | **Declarative — spans every resource type.** Define a whole workspace in code (`define*` builders) and deploy it with `cargo-ai cdk` (init → types → plan → deploy). Use for workspace-as-code / reproducible / version-controlled setups; see "Declarative vs imperative" above. |
 | [`cargo-workspace-management`](../cargo-workspace-management/SKILL.md) ([recap](#cargo-workspace-management)) | Invite users, create API tokens, organize folders, manage roles, report CLI issues to management   |
 
 > **Agent knowledge for RAG:** **files** + **libraries** live in the `content` domain → [`cargo-content`](../cargo-content/SKILL.md); how they attach to an agent → [`cargo-ai`](../cargo-ai/SKILL.md). (Files/libraries moved out of the old `ai file …` path in CLI ≥ 1.0.19.)
@@ -203,6 +224,15 @@ The CLI exposes several domains that no capability skill wraps yet. Reach for th
              │  personas, plays, proof, signals…     │
              └───────────────────────────────────────┘
            (orthogonal: not part of the workflow flow)
+
+             ┌───────────────────────────────────────┐
+             │               cargo-cdk               │
+             │  Declarative authoring layer: define  │
+             │  connectors/models/plays/agents/… as  │
+             │  code, deploy with `cargo-ai cdk`.    │
+             └───────────────────────────────────────┘
+    (cross-cutting: PRODUCES the same resources the imperative
+     skills manage — an alternative mode, not a workflow stage)
 ```
 
 **Dependency rules in practice:**
@@ -211,6 +241,7 @@ The CLI exposes several domains that no capability skill wraps yet. Reach for th
 - `cargo-workspace-management` provides auth context for every skill — set it up first.
 - `cargo-storage`, `cargo-connection`, and `cargo-ai` are peer skills that supply UUIDs to `cargo-orchestration`. They don't depend on each other.
 - `cargo-content` owns workspace **files** and **libraries** (the `content` domain). It produces file/library UUIDs that `cargo-ai` consumes as agent release `resources` (RAG). Uploaded content files also surface read-only under `.files/` in the `cargo-context` runtime sandbox.
+- `cargo-cdk` is **cross-cutting**: it's a declarative *authoring mode* that produces the very connectors/models/plays/agents/etc. the imperative capability skills manage one at a time. Route to it when the task is "manage the workspace as code" (reproducible, in git, multi-resource); route to the imperative domain skills for one-off ops, reads, and ad-hoc queries. See "Declarative vs imperative" under Skills at a glance.
 - `cargo-context` is **orthogonal** to the workflow-execution flow. It touches the git-backed GTM knowledge base (markdown/MDX), not storage or workflow runs. Use it for capturing/editing the workspace's prose context — personas, plays, proof, objections, signals — and for inspecting the typed knowledge graph.
 - For SQL queries against storage, use `cargo-ai storage query execute "<sql>"` (tables as `<datasetSlug>.<modelSlug>`). Load `cargo-storage` to discover dataset and model slugs, and to fetch the DDL when you need column types or the SQL dialect.
 - For SQL queries against orchestration runtime tables (`runs`, `batches`, `spans`, `records`) — error rates, per-node failures, time-series — use `cargo-ai orchestration query execute "<sql>"`. Workspace scoping is automatic; tables are referenced without a schema prefix.
@@ -403,6 +434,38 @@ See `../cargo-ai/SKILL.md` for model and temperature guidance by use case.
 - Folders come from [`cargo-workspace-management`](#cargo-workspace-management); `--folder-uuid null` moves to root.
 
 **References:** `../cargo-hosting/SKILL.md`
+
+---
+
+### cargo-cdk
+
+**Declarative workspace-as-code — the imperative skills' counterpart.** Define an
+entire Cargo workspace in TypeScript (`defineConnector`/`defineModel`/`defineAgent`/
+`definePlay`/`defineTool`/`defineMcpServer`/`defineContext`/`defineSegment`/
+`defineFolder`/`defineFile`/`defineWorker`/`defineApp`) and reconcile it to live
+infra with `cargo-ai cdk`. Spans **every** resource type, so it overlaps every
+imperative capability skill — route with "Declarative vs imperative" above.
+
+**Lifecycle:** `cdk init` (scaffold from a template) → `cdk types` (type config
+against the workspace) → author `define*` files → `cdk plan` (offline diff) →
+`cdk deploy` (create/update, write state) → `cdk destroy`. Plus `refresh` (drift),
+`import` (adopt existing), `rollback`.
+
+**Critical rules:**
+
+- **Commit `cargo.state.json`** — it links code to created resources and is the
+  *only* handle on deployed plays/agents (no slug); losing it orphans them.
+- **Wire by handle, not `.uuid`** — pass a `define*` handle or `xxRef("uuid")`.
+- **Secrets** go through `secret("ENV_VAR")` — resolved at deploy, never written to
+  state or the content hash. Export the env var first.
+- **`--yes`** is required for non-interactive `deploy`/`destroy` (CI).
+- **Run `cargo-ai cdk types`** after workspace integrations change so config
+  type-checks; typing is a bonus, deploy works without it.
+
+**Recipes shipped:** `recipes/scaffold-a-workspace.md`, `add-connector-and-model.md`,
+`build-an-agent.md`, `migrate-existing-workspace.md`, `deploy-from-ci.md`.
+
+**References:** `../cargo-cdk/SKILL.md`
 
 ---
 
