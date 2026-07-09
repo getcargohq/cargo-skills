@@ -73,7 +73,7 @@ Then bump the `version:` field in each changed `SKILL.md` (semver, e.g. `1.0.0` 
 
 ## What this skill teaches
 
-**Cargo** connects your data models (companies, contacts, deals) to external integrations (CRMs, enrichment providers, AI agents) and runs them as automated workflows. The repo ships twelve skills at the root — one **router skill** (`cargo`, the overview / front door for any Cargo CLI task), one **outcome skill** (`cargo-gtm`, the front door for any GTM task), and ten **capability skills** (one per CLI domain).
+**Cargo** connects your data models (companies, contacts, deals) to external integrations (CRMs, enrichment providers, AI agents) and runs them as automated workflows. The repo ships thirteen skills at the root — one **router skill** (`cargo`, the overview / front door for any Cargo CLI task), one **outcome skill** (`cargo-gtm`, the front door for any GTM task), and eleven **capability skills** (one per CLI domain). Ten of the capability skills wrap the **imperative** CLI (one-off `cargo-ai <domain>` operations); `cargo-cdk` is the **declarative** one — define a whole workspace in code and deploy it.
 
 ### Router — `cargo`
 
@@ -111,6 +111,7 @@ Load when you need the syntax for a specific CLI domain.
 | **Analytics**     | Download run results and outputs, export segment data, monitor error rates and success metrics                                                                     |
 | **Billing**       | Track credit consumption per workflow or connector, check subscription status, view invoices                                                                       |
 | **Hosting**       | Scaffold, deploy, and promote hosted apps (Vite SPAs on `*.cargo.app`) and edge workers (serverless HTTP handlers), and manage their deployments                   |
+| **CDK** *(declarative)* | Define an entire workspace in code (`define*` builders) and deploy it with `cargo-ai cdk` (init → types → plan → deploy → destroy). Spans every resource type; use for workspace-as-code / reproducible / version-controlled setups |
 | **Workspace**     | Invite users, create and rotate API tokens, organize resources into folders, manage roles                                                                          |
 
 ## What can I ask for?
