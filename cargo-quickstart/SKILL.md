@@ -71,7 +71,7 @@ Show the table (name · title · company · recently-hired), not the raw JSON. `
 
 1. `salesNavigator.searchLeads` (0.02/record) — primary.
 2. `theirStack.searchJobs` (0.5) — reframe as "companies hiring your persona right now" (job postings for the persona's title). Same wow, different angle.
-3. `waterfall.searchProspects` (3) — cap `limit` at 5 so the demo stays ~15 credits worst-case, and say why the cap.
+3. `waterfall.searchProspects` (3/record) — **exceeds the ~1-credit demo cap, so this rung asks first**: "The two cheap sources aren't connected; I can pull 5 matches via waterfall for ~15 credits instead — run it, or connect Sales Navigator first (free)?" Run only on an explicit yes, with `limit` capped at 5.
 4. Nothing connected at all → run the free path: `cargo-ai connection integration list | head`, show what *could* be wired, and offer to connect one (browser auth) — the demo resumes after.
 
 ## The receipt (mandatory, verbatim discipline)
