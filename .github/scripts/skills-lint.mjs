@@ -355,6 +355,28 @@ function main() {
     }
   }
 
+  // 4. The Claude Code plugin manifest must parse and stay in lockstep with the
+  //    router's version — plugin.json's version IS the bundle version.
+  const pluginPath = join(repoRoot, ".claude-plugin", "plugin.json");
+  if (existsSync(pluginPath)) {
+    let plugin = null;
+    try {
+      plugin = JSON.parse(readFileSync(pluginPath, "utf8"));
+    } catch (e) {
+      err(pluginPath, 0, `.claude-plugin/plugin.json does not parse as JSON: ${e.message}`);
+    }
+    if (plugin && existsSync(routerPath)) {
+      const routerVersion = (readFileSync(routerPath, "utf8").match(/^version:\s*"([^"]+)"/m) || [])[1];
+      if (routerVersion && plugin.version !== routerVersion) {
+        err(
+          pluginPath,
+          0,
+          `plugin.json version \`${plugin.version}\` does not match cargo/SKILL.md version \`${routerVersion}\` — the plugin version mirrors the router's.`
+        );
+      }
+    }
+  }
+
   const errors = findings.filter((f) => f.severity === "error");
   const warnings = findings.filter((f) => f.severity === "warn");
 

@@ -1,0 +1,21 @@
+{
+  "name": "cargo",
+  "description": "Build with Cargo in Claude Code — 15 skills over the cargo-ai CLI (GTM recipes, orchestration, storage, CDK, diagnostics) plus prompt-free approval for safe cargo-ai calls.",
+  "version": "1.9.0",
+  "author": { "name": "getcargo" },
+  "homepage": "https://github.com/getcargohq/cargo-skills",
+  "skills": ["./"],
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}\"/hooks/approve-cli.sh claude"
+          }
+        ]
+      }
+    ]
+  }
+}
