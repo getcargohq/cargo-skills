@@ -12,6 +12,37 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ### Repository-wide
 
+- **ClawHub publish loop caught up.** `clawhub-publish.yml` was missing three shipped skills — `cargo-quickstart`, `cargo-content`, and `cargo-hosting` were lint-covered but never published. All fifteen skills (including the new `cargo-diagnostics`) are now in the publish loop.
+- **Stale counts fixed.** `AGENTS.md` still described "ten skills (one outcome + nine capability)"; the router frontmatter said thirteen and its body said 13 while `README.md` said fourteen. All three now use the same framing: fifteen skills = router + onboarding + outcome + twelve capability. `README.md`'s ClawHub prose also said `--owner getcargohq`; the workflow publishes under `cargo-ai`.
+- **Interaction conventions.** New shared reference [`cargo/references/interaction.md`](cargo/references/interaction.md): the plan gate (design approval before building a node graph or deploying, complementing the cost gate's spend approval), real choices presented with a recommended default (never pick silently between providers/actions), and presenting defaults (narrate, summarize instead of dumping raw JSON, conclusion first, always surface the `app.getcargo.io` URL). Linked from the router, `cargo-gtm`, `cargo-orchestration`, and the new diagnostics runbooks.
+- Note: `cargo` 1.7.0 shipped without a changelog entry (terminal-experience quick wins — quickstart routing, cost discipline, save-as-play, anti-drift); recorded here for the version trail.
+
+### `cargo` → 1.8.0
+
+- **Register the `cargo-diagnostics` skill.** Counts bumped to 15 skills / twelve capability, capability-table row, full recap, and a dependency-rule bullet (when a run fails or "succeeds but looks wrong", load diagnostics). Frontmatter description updated to the fifteen-skill framing, now counting the router itself.
+- **Interaction conventions registered.** New `references/interaction.md` + a pointer next to the glossary line.
+
+### `cargo-diagnostics` → 1.0.0 (new)
+
+- **New capability skill: after-the-fact forensics** over runs, batches, and credit spend — the interpretation layer on top of `run get`, `orchestration query execute`, and `billing usage get-metrics`. `SKILL.md` routes by symptom (one run vs many runs vs cost) across three runbooks:
+  - `references/run-trace.md` — explain one run end-to-end: `executions[]` path, `runContext` as source of truth, branch routing via `nodeChildIndex`, per-node credits/timing, symptom table, and a conclusion-first presentation format.
+  - `references/batch-error-sweep.md` — size the problem, find where failures concentrate (per-node spans SQL), distinguish concentrated defects from rate-limit spread and provider coverage, pick exemplar runs for the trace, and decide fix vs re-run vs report.
+  - `references/play-optimize-credits.md` — attribute spend workflow → node → provider (SQL + billing metrics, billing wins on disagreement), quantify credits wasted on errored runs, then apply levers cheapest-first (filter earlier, provider swap, model/`maxSteps`, stop-early, waterfall reshape, phone off by default), proving savings through the pilot gate.
+- Runbooks link the existing surfaces (`cargo-orchestration` queries/troubleshooting, `cargo-billing` cost levers, `cargo-gtm` cost discipline/credits table/alternatives/waterfall strategy) instead of duplicating them.
+- CI wired: added to `skills-lint.mjs` `SKILL_DIRS` and the `clawhub-publish.yml` publish loop; routed from the `cargo` router (linter-enforced).
+
+### `cargo-gtm` → 1.1.1
+
+- Hand-off pointer to `cargo-diagnostics` when a run/batch misbehaves (sweep before re-running anything paid), and a pointer to the new shared interaction conventions.
+
+### `cargo-orchestration` → 1.5.1
+
+- References callout pointing at `cargo-diagnostics` for the ordered forensic runbooks built on `run get` / orchestration SQL.
+
+### `cargo-billing` → 1.0.2
+
+- Cost-levers table now points at the diagnostics attribution runbook (`play-optimize-credits.md`) for finding which node/provider dominates spend before picking a lever.
+
 - **Session lifecycle moved to the installer.** The Claude Code `SessionStart`/`SessionEnd` hooks that keep `@cargo-ai/cli` + the skills bundle current and log each session to `workspace_management.sessions` are now scaffolded by the Cargo bootstrap installer (`curl -fsSL https://api.getcargo.io/install.sh | sh`, interactive prompt, opt out with `CARGO_INSTALL_HOOKS=0`). Removed the hand-rolled hook-scaffolding recipes from `cargo/SKILL.md`, `README.md`, and `cargo-workspace-management/references/examples/sessions.md`; those docs now point at the installer. The agent's three-session-jobs guidance stays as the manual fallback, and reporting (job 2) is unchanged — it can't be automated.
 - **Per-turn session checkpoint hook.** Documented the new `Stop` hook the installer scaffolds alongside `SessionStart`/`SessionEnd`: it checkpoints the session row at the end of each assistant turn (latest user request + timestamp, derived with `jq`, **no** LLM call, no `--finished`, throttled via `CARGO_CHECKPOINT_INTERVAL`, default 45s), so a session that never reaches `SessionEnd` no longer stays stuck on `"Session in progress."`. The `SessionEnd` hook now also resolves the `claude` binary from Node/version-manager bin dirs and logs to `$CARGO_SESSION_LOG` (default `~/.claude/cargo-session.log`) so a placeholder summary is diagnosable. Updated `cargo/SKILL.md`, `README.md`, `cargo-workspace-management/SKILL.md`, and `sessions.md`; also corrected the opt-out env var to `CARGO_INSTALL_HOOKS=0` (was mis-documented as `CARGO_INSTALL_NO_HOOKS=1`).
 - **Shared prerequisites reference.** Extracted the duplicated install / login / output-conventions block from every capability skill into [`cargo/references/prerequisites.md`](cargo/references/prerequisites.md). Each capability skill now links to it instead of redefining ~16 lines of boilerplate. No behavior change for agents — the canonical setup is the same — but a single place to keep it correct.

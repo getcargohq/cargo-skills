@@ -1,7 +1,7 @@
 ---
 name: cargo
-description: Router and overview for the Cargo CLI agent skills. Explains the thirteen skills (one onboarding skill cargo-quickstart + one outcome skill cargo-gtm + eleven capability skills, including cargo-cdk for declarative workspace-as-code), when to use the declarative CDK vs the imperative CLI, the UUID flow between them, async polling, end-to-end use cases (enrich one record, enrich and sync to CRM, AI lead scoring, custom workflow, error monitoring, fresh-workspace bootstrap, segment export, GTM context authoring), and common gotchas (`conjonction` spelling, run vs batch, model-uuid vs segment-uuid). Load first whenever working with the Cargo CLI, when unsure which sub-skill applies, when stitching multiple sub-skills together, when bootstrapping a workspace, or when the user asks about Cargo skills in general.
-version: "1.7.0"
+description: Router and overview for the Cargo CLI agent skills. Explains the fifteen skills (this router + one onboarding skill cargo-quickstart + one outcome skill cargo-gtm + twelve capability skills, including cargo-cdk for declarative workspace-as-code and cargo-diagnostics for run/batch/cost forensics), when to use the declarative CDK vs the imperative CLI, the UUID flow between them, async polling, end-to-end use cases (enrich one record, enrich and sync to CRM, AI lead scoring, custom workflow, error monitoring, fresh-workspace bootstrap, segment export, GTM context authoring), and common gotchas (`conjonction` spelling, run vs batch, model-uuid vs segment-uuid). Load first whenever working with the Cargo CLI, when unsure which sub-skill applies, when stitching multiple sub-skills together, when bootstrapping a workspace, or when the user asks about Cargo skills in general.
+version: "1.8.0"
 compatibility: Requires @cargo-ai/cli (npm) and a Cargo account (browser sign-in via --oauth, or an API token)
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -28,16 +28,18 @@ metadata:
 
 # Cargo CLI — Skills Overview
 
-This repository contains 13 skills at the repo root: one **onboarding skill** (`cargo-quickstart`), one **outcome skill** (`cargo-gtm`), and eleven **capability skills**.
+This repository contains 15 skills at the repo root: this **router** (`cargo`), one **onboarding skill** (`cargo-quickstart`), one **outcome skill** (`cargo-gtm`), and twelve **capability skills**.
 
 - **`cargo-quickstart`** — guided first-run demo. Fresh workspace → real deliverable (25 leads for the user's persona, with a cost receipt) in under two minutes, ending by saving the demo as a recurring play. Load for new users, demo/tour requests, or empty workspaces.
 - **`cargo-gtm`** — application library. The front door for any GTM task ("build a TAM list", "find 5 fintech CTOs", "monitor job changes"). Routes via internal recipes (`../cargo-gtm/recipes/*.md`) and provider playbooks (`../cargo-gtm/provider-playbooks/*.md`).
-- **Capability skills** — standard library. One per CLI domain (orchestration, storage, connection, AI, content, context, analytics, billing, hosting, cdk, workspace management). Loaded by `cargo-gtm`, or directly when you need a specific CLI domain.
+- **Capability skills** — standard library. One per CLI domain (orchestration, storage, connection, AI, content, context, analytics, billing, hosting, cdk, workspace management), plus `cargo-diagnostics` (cross-domain forensics over runs, batches, and credit spend). Loaded by `cargo-gtm`, or directly when you need a specific CLI domain.
 - **`cargo-cdk`** — the declarative one. Where the other capability skills wrap **imperative** one-off `cargo-ai <domain>` calls, `cargo-cdk` defines the whole workspace as code (`define*` builders + `cargo-ai cdk deploy`) and reconciles it. It spans every resource type — see "Declarative vs imperative" below to route between it and the imperative skills.
 
 `cargo-gtm` delegates to capability skills; capability skills never reference `cargo-gtm` (one-way dependency).
 
 **Glossary:** See [`references/glossary.md`](references/glossary.md) for term-by-term definitions (UUIDs, slugs, `conjonction`, run/batch/play/tool, signal/persona/ICP, etc.).
+
+**Interaction conventions:** See [`references/interaction.md`](references/interaction.md) for the pack-wide defaults on when to stop and ask (plan gate before building, recommended-default choices) and how to present results (narrate, summarize — never dump raw JSON).
 
 ## Installation
 
@@ -177,6 +179,7 @@ Load for a specific CLI domain. The first link in each row jumps to the actual S
 | [`cargo-orchestration`](../cargo-orchestration/SKILL.md) ([recap](#cargo-orchestration))                    | Execute actions, run workflows, trigger batches, chat with agents, query orchestration with SQL (ClickHouse) |
 | [`cargo-analytics`](../cargo-analytics/SKILL.md) ([recap](#cargo-analytics))                                | Download run results, export segment data, monitor error rates and metrics                         |
 | [`cargo-billing`](../cargo-billing/SKILL.md) ([recap](#cargo-billing))                                      | Check credit usage, view subscription details, track costs per workflow or connector               |
+| [`cargo-diagnostics`](../cargo-diagnostics/SKILL.md) ([recap](#cargo-diagnostics))                          | Diagnose after the fact: trace why one run misbehaved, sweep a batch/play for errors grouped by root cause, profile where a play's credits go |
 | [`cargo-storage`](../cargo-storage/SKILL.md) ([recap](#cargo-storage))                                      | Inspect or modify data models, columns, datasets, and relationships; query workspace storage with SQL |
 | [`cargo-connection`](../cargo-connection/SKILL.md) ([recap](#cargo-connection))                             | Manage connector authentication, discover available integrations and their actions                 |
 | [`cargo-ai`](../cargo-ai/SKILL.md) ([recap](#cargo-ai))                                                     | Create and configure agents, configure releases, attach knowledge for RAG, manage MCP servers and memories |
@@ -272,6 +275,7 @@ The CLI exposes several domains that no capability skill wraps yet. Reach for th
 - Before executing a workflow that uses an agent node, load `cargo-ai` to get `agentUuid`.
 - After runs complete, load `cargo-analytics` to download results or measure performance. **For action output retrieval, prefer `cargo-ai orchestration run download-outputs` over `run download` — the former returns a signed-URL CSV/JSON of just the output node's data.**
 - Load `cargo-billing` to understand credit consumption for any of the above.
+- When a run failed, a run "succeeded but looks wrong", a batch has errors, or a play costs too much, load `cargo-diagnostics` — it sequences the `run get` / orchestration-SQL / billing surfaces into forensic runbooks (trace one run, sweep a batch, profile credit spend).
 
 ---
 
@@ -352,6 +356,22 @@ The CLI exposes several domains that no capability skill wraps yet. Reach for th
 - `subscriptionAvailableCreditsCount - subscriptionCreditsUsedCount` from `subscription get` = remaining credits.
 
 **References:** `../cargo-billing/SKILL.md`
+
+---
+
+### cargo-diagnostics
+
+**Forensics over runs, batches, and spend.** Three runbooks that sequence existing surfaces (`run get`, `orchestration query execute`, `billing usage get-metrics`) into diagnoses: `references/run-trace.md` (explain one run end-to-end — executions, `runContext`, branch routing, per-node credits), `references/batch-error-sweep.md` (group a batch/play's failures by root cause, hand back exemplar run UUIDs), `references/play-optimize-credits.md` (attribute spend to workflows → nodes → providers, then apply cost levers in priority order).
+
+**Critical rules:**
+
+- Start with the **sweep** when you don't know which run to look at; it ends with exemplar UUIDs for the **trace**.
+- `runContext` is the source of truth for what a node produced; an execution's `title` is a truncated summary — never evidence.
+- Credit attribution (`billing …`) needs an **admin** token; the SQL and `run get` steps don't.
+- Any fix that re-runs paid nodes goes through the pilot gate in `../cargo-gtm/references/cost-discipline.md`.
+- Present conclusions first, evidence as compact tables — per `references/interaction.md` (in the `cargo` router skill).
+
+**References:** `../cargo-diagnostics/SKILL.md`
 
 ---
 
