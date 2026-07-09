@@ -1,7 +1,7 @@
 ---
 name: cargo-gtm
 description: "Front door for any GTM task on Cargo — sourcing, waterfall enrichment, email/phone/LinkedIn lookup, email verification, scoring, qualification, sequencing, CRM sync, and signal monitoring (job changes, funding, tech-stack/hiring intent). Use when the user states a real-world goal involving prospects, leads, accounts, contacts, ICP lists, or campaign activation. Routes to phase guides (Level 2), recipes (Level 2.5), and per-provider playbooks (Level 3) before any action call."
-version: "1.1.0"
+version: "1.1.1"
 compatibility: Requires @cargo-ai/cli (npm) and a Cargo account (browser sign-in via --oauth, or an API token)
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -99,6 +99,8 @@ End every completed run with the receipt (above), then propose **2–3 next step
 5. **An escape hatch** — always end with "or something else entirely."
 
 When a run produced a durable, repeatable result, one of the suggestions should be **making it systematic** — see [`recipes/save-as-play.md`](recipes/save-as-play.md).
+
+When a run or batch **misbehaved** — errors, missing downstream values, cost surprises — hand off to the `cargo-diagnostics` skill (`../cargo-diagnostics/SKILL.md`): sweep the batch for root causes before re-running anything paid. Interaction defaults for plan gates, shaped choices, and presenting results live in `../cargo/references/interaction.md`.
 
 ## 5) Priority provider stack (recipes lead with these 6)
 
