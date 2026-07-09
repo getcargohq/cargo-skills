@@ -29,7 +29,7 @@ cargo-ai orchestration action execute \
 
 # Connector action
 cargo-ai orchestration action execute \
-  --action '{"kind":"connector","integrationSlug":"clearbit","actionSlug":"company_enrich","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"clearbit","actionSlug":"enrichCompany","config":{}}' \
   --data '{"domain":"acme.com"}'
 
 # Agent action
@@ -42,7 +42,7 @@ Returns a `run` object. Poll with `run get <uuid>` until terminal, or pass `--wa
 
 ```bash
 cargo-ai orchestration action execute \
-  --action '{"kind":"connector","integrationSlug":"clearbit","actionSlug":"company_enrich","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"clearbit","actionSlug":"enrichCompany","config":{}}' \
   --data '{"domain":"acme.com"}' \
   --wait-until-finished
 ```
@@ -97,7 +97,7 @@ Returns a `batch` object. Poll with `batch get <uuid>` until terminal, or pass `
 
 ```bash
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"clearbit","actionSlug":"company_enrich","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"clearbit","actionSlug":"enrichCompany","config":{}}' \
   --records '[{"domain":"acme.com"},{"domain":"globex.com"}]' \
   --wait-until-finished
 ```
@@ -154,7 +154,7 @@ cargo-ai orchestration action execute \
   --action '{
     "kind":"connector",
     "integrationSlug":"clearbit",
-    "actionSlug":"company_enrich",
+    "actionSlug":"enrichCompany",
     "config":{},
     "retry":{"maximumAttempts":3,"initialInterval":1000,"backoffCoefficient":2}
   }' \
@@ -191,19 +191,23 @@ cargo-ai connection connector list
 
 ## Resolve an action's output schema
 
-`integration get <slug>` describes an action's **input** (`config.jsonSchema`). To discover what an action **produces** — the shape of its `data` output — resolve its output schema **without executing it** (no run, no credits):
+**Never guess what an action outputs.** `integration get <slug>` only describes an action's **input** (`config.jsonSchema`) — the integration catalog carries no output information. To discover what an action **produces**, resolve its output schema **without executing it** (no run, no credits):
 
 ```bash
 cargo-ai orchestration action get-output-schema \
-  --action '{"kind":"connector","integrationSlug":"clearbit","actionSlug":"company_enrich","config":{}}'
+  --action '{"kind":"connector","integrationSlug":"clearbit","actionSlug":"enrichCompany","config":{}}'
 ```
 
 It accepts the same `--action` object as `action execute`, so it works for every kind:
 
 ```bash
-# Tool action
+# Tool action — resolves the tool workflow's output-node schema
 cargo-ai orchestration action get-output-schema \
   --action '{"kind":"tool","toolUuid":"<tool-uuid>","config":{}}'
+
+# Agent action — resolves the deployed release's output schema
+cargo-ai orchestration action get-output-schema \
+  --action '{"kind":"agent","agentUuid":"<agent-uuid>","config":{}}'
 
 # Native action
 cargo-ai orchestration action get-output-schema \
@@ -212,23 +216,32 @@ cargo-ai orchestration action get-output-schema \
 
 ### Response
 
-A JSON Schema object describing the fields and types the action emits in its `data` output — e.g.:
+The JSON Schema sits under a top-level **`schema`** key (not returned bare) — e.g. `waterfall` / `verifyEmail` resolves to:
 
 ```json
 {
-  "type": "object",
-  "properties": {
-    "name": { "type": "string" },
-    "domain": { "type": "string" },
-    "employeesCount": { "type": "number" }
+  "schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+      "email": { "type": "string" },
+      "domain": { "type": "string" },
+      "email_status": { "type": "string" },
+      "smtp_provider": { "type": "string" },
+      "mx_records": { "type": "array", "items": { "type": "string" } }
+    }
   }
 }
 ```
 
+An `agent` action without a structured `output.jsonSchema` resolves to `{"schema":{"type":"object","properties":{"answer":{"type":"string"}}}}` — the free-text answer envelope. This is the authoritative confirmation that downstream references must go through `.answer` (`{{nodes.<slug>.answer}}`, or `{{nodes.<slug>.answer.<field>}}` for structured agents).
+
+An unknown `actionSlug` / `toolUuid` / `agentUuid` exits non-zero with `{"error":"Not found: RequestError: Action not found.. Verify the UUID(s) you passed.","status":404,...}` — action slugs are exact and case-sensitive (`enrichCompany`, not `company_enrich`); list them via `integration get <slug>` → `.integration.actions` keys.
+
 ### Why it's useful
 
 - **Wire a node graph correctly the first time.** Know which fields exist before referencing them downstream as `{{nodes.<slug>.<field>}}` — avoids the silent-`undefined` footgun (see `../node-selection.md`).
-- **Drive a structured `agent` node.** Shape the agent's `output.jsonSchema` from an upstream action's real output instead of guessing.
+- **Know an agent's output envelope** (`.answer` vs structured fields) before writing branch/filter expressions against it.
 - **Map onto storage columns** ahead of a batch, without a throwaway run to inspect the output.
 
 ---
@@ -238,11 +251,11 @@ A JSON Schema object describing the fields and types the action emits in its `da
 ```bash
 # 1. Find the integration and action
 cargo-ai connection integration get clearbit
-# → Find actionSlug: "company_enrich"
+# → Find actionSlug: "enrichCompany" (slugs are exact — keys of .integration.actions)
 
 # 2. Execute
 cargo-ai orchestration action execute \
-  --action '{"kind":"connector","integrationSlug":"clearbit","actionSlug":"company_enrich","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"clearbit","actionSlug":"enrichCompany","config":{}}' \
   --data '{"domain":"acme.com"}' \
   --wait-until-finished
 # → Done. Check run.status for success/error.

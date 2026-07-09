@@ -100,8 +100,8 @@ cargo-ai connection connector list         # all connectors
 ```bash
 # Single actions
 cargo-ai orchestration action execute --action '{"kind":"tool","toolUuid":"<uuid>","config":{}}' --data '{"domain":"acme.com"}'
-cargo-ai orchestration action execute-batch --action '{"kind":"connector","integrationSlug":"clearbit","actionSlug":"company_enrich","config":{}}' --records '[{...},{...}]'
-cargo-ai orchestration action get-output-schema --action '{"kind":"connector","integrationSlug":"clearbit","actionSlug":"company_enrich","config":{}}' # resolve output JSON Schema without executing
+cargo-ai orchestration action execute-batch --action '{"kind":"connector","integrationSlug":"clearbit","actionSlug":"enrichCompany","config":{}}' --records '[{...},{...}]'
+cargo-ai orchestration action get-output-schema --action '{"kind":"connector","integrationSlug":"clearbit","actionSlug":"enrichCompany","config":{}}' # → {"schema": <JSON Schema>} without executing
 
 # Workflows (chain multiple actions)
 cargo-ai orchestration run create --workflow-uuid <uuid> --data '{"company":"Acme","domain":"acme.com"}'
@@ -138,7 +138,7 @@ Run a single action — no workflow or node graph needed.
 ```bash
 # One action, one record → returns a run
 cargo-ai orchestration action execute \
-  --action '{"kind":"connector","integrationSlug":"clearbit","actionSlug":"company_enrich","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"clearbit","actionSlug":"enrichCompany","config":{}}' \
   --data '{"domain":"acme.com"}' \
   --wait-until-finished
 
@@ -153,21 +153,21 @@ Action kinds: `tool`, `connector`, `agent`, `native`. See `references/examples/a
 
 ### Resolve an action's output schema (without executing)
 
-`integration get <slug>` tells you an action's **input** shape (`config.jsonSchema`). To learn what an action **produces** — the fields and types in its `data` output — resolve its output schema **without spending credits or running anything**:
+**Never guess what an action outputs.** `integration get <slug>` tells you an action's **input** shape (`config.jsonSchema`); its output shape is resolvable too — **without spending credits or running anything**:
 
 ```bash
 cargo-ai orchestration action get-output-schema \
-  --action '{"kind":"connector","integrationSlug":"clearbit","actionSlug":"company_enrich","config":{}}'
-# → JSON Schema describing the action's data output
+  --action '{"kind":"connector","integrationSlug":"clearbit","actionSlug":"enrichCompany","config":{}}'
+# → {"schema": {"type": "object", "properties": {...}}}  — the JSON Schema is under the top-level "schema" key
 ```
 
-Takes the same `--action` shape as `action execute` (`tool` / `connector` / `agent` / `native`). Use it to:
+Takes the same `--action` object as `action execute` (`tool` / `connector` / `agent` / `native`). Use it to:
 
 - Know which fields a downstream node can read (`{{nodes.<slug>.<field>}}`) **before** wiring the graph.
-- Build a structured `agent` node `output.jsonSchema` from an upstream action's real output shape.
+- See an `agent` action's real output envelope — a default free-text agent resolves to `{"schema":{"type":"object","properties":{"answer":{"type":"string"}}}}`, which is why downstream references need `{{nodes.<slug>.answer...}}`.
 - Map an action's output onto storage columns without a throwaway run.
 
-See `references/examples/actions.md` ("Resolve an action's output schema") for response shape and end-to-end usage.
+See `references/examples/actions.md` ("Resolve an action's output schema") for verified per-kind examples and the response/error shapes.
 
 ## Create a run
 
