@@ -203,10 +203,12 @@ cargo-ai orchestration action execute-batch \
 Join the verification statuses back onto the culled rows (the audit must see **every** row with its real status — never pre-filter to `valid` first, or the VERIFY/REMOVE verdicts and their counts are lost), then stamp each row:
 
 ```bash
-# Merge: attach each row's verification status by email
+# Merge: attach each row's verification status by email — join on the
+# LOWERCASED address (verify results may re-case it; a missed join leaves
+# emailStatus empty and the row degrades to VERIFY)
 jq -c --slurpfile ver /tmp/p2-verified.json '
-  ($ver[0].results | map({key: .email, value: .status}) | from_entries) as $st
-  | map(. + {emailStatus: ($st[.email] // "")})
+  ($ver[0].results | map({key: (.email | ascii_downcase), value: .status}) | from_entries) as $st
+  | map(. + {emailStatus: ($st[(.email // "" | ascii_downcase)] // "")})
 ' /tmp/p2-culled.json > /tmp/p2-merged.json
 
 # Audit: SEND / VERIFY / REVIEW / REMOVE per row; summary counts go in the receipt

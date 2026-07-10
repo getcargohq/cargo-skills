@@ -79,7 +79,8 @@ node $S/contact-accuracy-audit.ts --workflow-uuid <uuid> --batch-uuid <uuid> --s
 - **REVIEW** — human-judgment rows: likely job changer (`role_confidence:
   low`), or a role account (info@/sales@). Present them to the user; don't
   silently send or drop.
-- **REMOVE** — wrong person, invalid/disposable email, or failed verification.
+- **REMOVE** — wrong person, invalid/disposable email, failed verification, or
+  a duplicate row (the first occurrence carries the send).
   Drop from the batch and report the count in the receipt.
 
 Report the audit summary with every deliverable — the stderr table (or

@@ -82,10 +82,12 @@ cargo-ai orchestration action execute-batch \
 
 # 4c. Merge statuses back onto ALL culled rows — do NOT pre-filter to "valid":
 #     the audit needs the catch-all/unknown/invalid rows to issue
-#     VERIFY/REVIEW/REMOVE verdicts (and the receipt needs their counts)
+#     VERIFY/REVIEW/REMOVE verdicts (and the receipt needs their counts).
+#     Join on the LOWERCASED email — verify results may re-case the address,
+#     and a missed join leaves emailStatus empty (row degrades to VERIFY).
 jq -c --slurpfile ver /tmp/verified.json '
-  ($ver[0].results | map({key: .email, value: .status}) | from_entries) as $st
-  | map(. + {emailStatus: ($st[.email] // "")})
+  ($ver[0].results | map({key: (.email | ascii_downcase), value: .status}) | from_entries) as $st
+  | map(. + {emailStatus: ($st[(.email // "" | ascii_downcase)] // "")})
 ' /tmp/culled.json > /tmp/merged.json
 
 # 4d. Audit, then hand ONLY the SEND rows to the next steps — this file is

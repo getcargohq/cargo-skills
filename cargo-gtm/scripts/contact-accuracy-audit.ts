@@ -10,12 +10,13 @@
 //   2. risk invalid/disposable or verification bad  → REMOVE  invalid-email /
 //                                                      disposable-email /
 //                                                      failed-verification
-//   3. name_match false (wrong person)              → REMOVE  name-mismatch
-//   4. catch-all with < 2 corroborating providers   → VERIFY  catchall-single-source
-//   5. verification unknown or missing              → VERIFY  unverified-email
-//   6. role confidence low (likely job changer)     → REVIEW  stale-or-ambiguous-role
-//   7. role-based address (info@, sales@, …)        → REVIEW  role-account
-//   8. otherwise                                    → SEND    (catchall-corroborated /
+//   3. is_duplicate true (later occurrence)         → REMOVE  duplicate-row
+//   4. name_match false (wrong person)              → REMOVE  name-mismatch
+//   5. catch-all with < 2 corroborating providers   → VERIFY  catchall-single-source
+//   6. verification unknown or missing              → VERIFY  unverified-email
+//   7. role confidence low (likely job changer)     → REVIEW  stale-or-ambiguous-role
+//   8. role-based address (info@, sales@, …)        → REVIEW  role-account
+//   9. otherwise                                    → SEND    (catchall-corroborated /
 //                                                      free-provider / partial-signals
 //                                                      kept for transparency)
 //
@@ -59,7 +60,8 @@ type ColumnKey =
   | "corroboration"
   | "nameMatch"
   | "roleConfidence"
-  | "emailRisk";
+  | "emailRisk"
+  | "isDuplicate";
 
 // Candidate header names, normalized (lowercase, separators stripped) and in
 // priority order. Status names follow what waterfall verifyEmail pipelines
@@ -85,6 +87,7 @@ const COLUMN_CANDIDATES: Record<ColumnKey, string[]> = {
   nameMatch: ["namematch"],
   roleConfidence: ["roleconfidence"],
   emailRisk: ["emailrisk"],
+  isDuplicate: ["isduplicate"],
 };
 
 const OVERRIDE_FLAGS: Record<ColumnKey, string> = {
@@ -94,6 +97,7 @@ const OVERRIDE_FLAGS: Record<ColumnKey, string> = {
   nameMatch: "name-match-column",
   roleConfidence: "role-confidence-column",
   emailRisk: "email-risk-column",
+  isDuplicate: "is-duplicate-column",
 };
 
 function normalizeKey(name: string): string {
@@ -135,7 +139,11 @@ type Signals = {
   nameMatch: string; // "true" | "false" | "" (not checked)
   roleConfidence: string; // "high" | "medium" | "low" | ""
   emailRisk: string; // "ok" | "free" | "role" | "disposable" | "invalid" | ""
-  /** name_match / role_confidence columns exist at all (upstream scripts ran). */
+  /** is_duplicate from validate-emails.ts: a later occurrence of an address
+   *  already in this list — the first occurrence carries the send. */
+  isDuplicate: boolean;
+  /** BOTH name_match and role_confidence columns exist (both upstream identity
+   *  scripts ran) — one alone is still a partial identity check. */
   identityColumnsPresent: boolean;
 };
 
@@ -170,8 +178,9 @@ function extractSignals(row: Row, columns: Columns): Signals {
     nameMatch: value("nameMatch").toLowerCase(),
     roleConfidence: value("roleConfidence").toLowerCase(),
     emailRisk: value("emailRisk").toLowerCase(),
+    isDuplicate: value("isDuplicate").trim().toLowerCase() === "true",
     identityColumnsPresent:
-      columns.nameMatch !== undefined || columns.roleConfidence !== undefined,
+      columns.nameMatch !== undefined && columns.roleConfidence !== undefined,
   };
 }
 
@@ -196,7 +205,9 @@ const FLAG_REASONS: Record<string, string> = {
     "Catch-all domain corroborated by 2+ independent providers — safe to send.",
   "free-provider": "Free email provider — fine for SMB outreach.",
   "partial-signals":
-    "Audited on email signals only — upstream name and role checks were not run.",
+    "Audited with incomplete identity signals — run both validate-linkedin-names.ts and select-current-role.ts for full coverage.",
+  "duplicate-row":
+    "Same address appears earlier in this list — the first occurrence carries the send.",
 };
 
 type Verdict = { action: Action; flags: string[]; flagReason: string };
@@ -208,6 +219,7 @@ export function auditRow(signals: Signals): Verdict {
   if (s.hasEmail && s.emailRisk === "invalid") flags.push("invalid-email");
   if (s.hasEmail && s.emailRisk === "disposable") flags.push("disposable-email");
   if (s.hasEmail && s.verification === "invalid") flags.push("failed-verification");
+  if (s.isDuplicate) flags.push("duplicate-row");
   if (s.nameMatch === "false") flags.push("name-mismatch");
   const singleSourceCatchAll =
     s.hasEmail && s.verification === "catch_all" && s.corroborations < 2;
@@ -238,6 +250,9 @@ export function auditRow(signals: Signals): Verdict {
         : s.emailRisk === "disposable"
           ? "disposable-email"
           : "failed-verification";
+  } else if (s.isDuplicate) {
+    action = "REMOVE";
+    primary = "duplicate-row";
   } else if (s.nameMatch === "false") {
     action = "REMOVE";
     primary = "name-mismatch";

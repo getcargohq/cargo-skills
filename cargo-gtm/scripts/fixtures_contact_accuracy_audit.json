@@ -404,6 +404,38 @@
         ]
       },
       "note": "bare \"status\" carrying catch_all still triggers the corroboration rule"
+    },
+    {
+      "row": {
+        "email": "lena@acme-widgets.example",
+        "emailStatus": "valid",
+        "providerCount": "2",
+        "name_match": "true"
+      },
+      "expected": {
+        "action": "SEND",
+        "flags": [
+          "partial-signals"
+        ]
+      },
+      "note": "only ONE identity script ran (name_match without role_confidence) — still partial-signals, one signal is not full identity coverage"
+    },
+    {
+      "row": {
+        "email": "kai@orbit-metrics.example",
+        "emailStatus": "valid",
+        "providerCount": "2",
+        "name_match": "true",
+        "role_confidence": "high",
+        "is_duplicate": "true"
+      },
+      "expected": {
+        "action": "REMOVE",
+        "flags": [
+          "duplicate-row"
+        ]
+      },
+      "note": "is_duplicate true removes the later occurrence even when every other signal is green — the first occurrence carries the send"
     }
   ]
 }
