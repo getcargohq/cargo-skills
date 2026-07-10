@@ -348,6 +348,7 @@ The CLI exposes several domains that no capability skill wraps yet. Reach for th
 - `segment download` requires `--model-uuid`, not `--segment-uuid`.
 - For batch result download, get the `output-node-slug` from `release get <release-uuid>` → `nodes[].slug`.
 - For billing and credit usage, use `cargo-billing` instead.
+- Analytics answers "what happened" (metrics, counts, exports). When the question is **why** — a failing run, a batch full of errors, surprising cost — hand off to `cargo-diagnostics`; its sweep runbook picks up exactly where analytics' error counts leave off.
 
 **References:** `../cargo-analytics/SKILL.md`
 
@@ -377,6 +378,7 @@ The CLI exposes several domains that no capability skill wraps yet. Reach for th
 - `runContext` is the source of truth for what a node produced; an execution's `title` is a truncated summary — never evidence.
 - Credit attribution (`billing …`) needs an **admin** token; the SQL and `run get` steps don't.
 - Any fix that re-runs paid nodes goes through the pilot gate in `../cargo-gtm/references/cost-discipline.md`.
+- Diagnostics explains; it doesn't export. For bulk retrieval after the diagnosis (`run download-outputs`, `batch download`, `segment download`) go back to `cargo-analytics`.
 - Present conclusions first, evidence as compact tables — per `references/interaction.md` (in the `cargo` router skill).
 
 **References:** `../cargo-diagnostics/SKILL.md`

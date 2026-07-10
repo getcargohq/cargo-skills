@@ -1,7 +1,7 @@
 ---
 name: cargo-diagnostics
 description: Diagnose and explain Cargo workflow behavior after the fact — trace why a single run produced the wrong output, sweep a batch or play for errors and group them by root cause, and profile where a play's credits go and how to cut the cost. Use when a run failed or "succeeded but looks wrong", a batch has errors, records are missing downstream values, or a play costs more than expected.
-version: "1.0.0"
+version: "1.0.1"
 compatibility: Requires @cargo-ai/cli (npm) and a Cargo account (browser sign-in via --oauth, or an API token)
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -41,6 +41,8 @@ What are you diagnosing?
 ```
 
 Rule of thumb: start with the **sweep** when you don't yet know which run to look at — it ends by handing you exemplar run UUIDs to feed into the **trace**.
+
+**Boundary with `cargo-analytics`:** analytics *measures and exports* ("what's the error rate?", "download the batch results", "export this segment"); this skill *explains* ("why is the error rate up?", "why is this record's output empty?"). A diagnosis often starts from an analytics signal (error count spiked, batch reports `failedRunsCount > 0`) and ends back in analytics — once the cause is fixed and runs re-executed, bulk retrieval goes through `run download-outputs` / `batch download` / `segment download`, all documented in `../cargo-analytics/SKILL.md`. This skill's evidence surfaces (`run get`, orchestration SQL, billing metrics) are for diagnosis, not bulk export.
 
 ## References
 

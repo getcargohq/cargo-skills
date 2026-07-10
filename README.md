@@ -132,9 +132,9 @@ Built-in recipes:
 | `account-expansion.md` | Multi-thread existing customer accounts — net-new buyers, deduped against the Contacts model. |
 | `save-as-play.md` | Convert a successful ad-hoc run into a durable scheduled play or cron tool. |
 
-### Capabilities — CLI surface
+### Capabilities
 
-Load when you need the syntax for a specific CLI domain.
+The standard library. Load when you need the syntax for a specific CLI domain — plus the two cross-cutting entries: **CDK** (the declarative mode) and **Diagnostics** (forensic runbooks over the other surfaces).
 
 | Domain            | What the agent learns                                                                                                                                              |
 | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -147,8 +147,9 @@ Load when you need the syntax for a specific CLI domain.
 | **Analytics**     | Download run results and outputs, export segment data, monitor error rates and success metrics                                                                     |
 | **Billing**       | Track credit consumption per workflow or connector, check subscription status, view invoices                                                                       |
 | **Hosting**       | Scaffold, deploy, and promote hosted apps (Vite SPAs on `*.cargo.app`) and edge workers (serverless HTTP handlers), and manage their deployments                   |
-| **CDK** *(declarative)* | Define an entire workspace in code (`define*` builders) and deploy it with `cargo-ai cdk` (init → types → plan → deploy → destroy). Spans every resource type; use for workspace-as-code / reproducible / version-controlled setups |
 | **Workspace**     | Invite users, create and rotate API tokens, organize resources into folders, manage roles                                                                          |
+| **CDK** *(declarative)* | Define an entire workspace in code (`define*` builders) and deploy it with `cargo-ai cdk` (init → types → plan → deploy → destroy). Spans every resource type; use for workspace-as-code / reproducible / version-controlled setups |
+| **Diagnostics** *(cross-domain)* | Explain workflow behavior after the fact: trace why one run misbehaved, sweep a batch or play for errors grouped by root cause, profile where a play's credits go. Forensic runbooks over the run / orchestration-SQL / billing surfaces |
 
 ## What can I ask for?
 

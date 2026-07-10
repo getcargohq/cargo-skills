@@ -154,6 +154,8 @@ cargo-ai orchestration run get-metrics \
 # → High error rate on a specific node = that step is failing
 ```
 
+This flow ends at **detection** — you now know how many runs fail and which node is the hotspot. To explain *why* (group failures by root cause, trace exemplar runs through `runContext`), continue with the `cargo-diagnostics` skill: `../../../cargo-diagnostics/references/batch-error-sweep.md`, then `run-trace.md` on the exemplars it hands back.
+
 ## List runs with filters
 
 ```bash
