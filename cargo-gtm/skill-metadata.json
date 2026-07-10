@@ -312,6 +312,11 @@
       "title": "Recipe — Surface ICP signals from Closed-Won vs Closed-Lost"
     },
     {
+      "path": "recipes/import-gtm-data.md",
+      "kind": "recipe",
+      "title": "Recipe — Import existing GTM data into Cargo"
+    },
+    {
       "path": "recipes/job-change-monitoring.md",
       "kind": "recipe",
       "title": "Recipe — Detect job changes in a contact segment"
@@ -463,5 +468,5 @@
       "kind": "script"
     }
   ],
-  "contentHash": "00a6821612a3a8b890d2a8007f2f5c095378f95e1330424c078eda598e8fcdce"
+  "contentHash": "dfbb8bfc47c162fbe08fdf585ba09f9f1c254f42e62b4bebde6958da55a659ed"
 }
