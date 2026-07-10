@@ -14,6 +14,11 @@
       "title": "Agent — Execution Plan Creator"
     },
     {
+      "path": "agents/list-builder.md",
+      "kind": "agent",
+      "title": "Agent — List Builder"
+    },
+    {
       "path": "guides/enriching-and-researching.md",
       "kind": "guide",
       "title": "Enriching and researching"
@@ -458,5 +463,5 @@
       "kind": "script"
     }
   ],
-  "contentHash": "8f03096ac0e5d6bae6aa79001f3bb3ba6d89c8418188a3d2623bed523319334d"
+  "contentHash": "00a6821612a3a8b890d2a8007f2f5c095378f95e1330424c078eda598e8fcdce"
 }
