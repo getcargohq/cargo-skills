@@ -1,0 +1,13 @@
+{
+  "name": "cargo",
+  "interface": { "displayName": "Cargo" },
+  "metadata": { "description": "Official Cargo plugin for Codex" },
+  "plugins": [
+    {
+      "name": "cargo",
+      "source": { "source": "local", "path": "./" },
+      "description": "Cargo GTM agent skills — sourcing, enrichment, orchestration, workspace-as-code (CDK), diagnostics, and analytics via the cargo-ai CLI.",
+      "policy": { "installation": "AVAILABLE", "authentication": "ON_INSTALL" }
+    }
+  ]
+}

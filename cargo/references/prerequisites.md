@@ -5,10 +5,10 @@ The same install, login, and runtime conventions apply to every Cargo skill in t
 ## Install
 
 ```bash
-npm install -g "@cargo-ai/cli@$(cat ~/.claude/skills/cargo/cli-version 2>/dev/null || echo latest)"
+npm install -g "@cargo-ai/cli@$(cat <path-to-the-cargo-skill-dir>/cli-version 2>/dev/null || echo latest)"
 ```
 
-The skills bundle pins the CLI version it was written against in `cargo/cli-version` (shipped inside the `cargo` router skill); installing that version avoids docs/CLI drift. `latest` is the fallback when the pin isn't readable. Without a global install, prefix every command with `npx @cargo-ai/cli` instead of `cargo-ai`.
+The skills bundle pins the CLI version it was written against in `cli-version`, which sits inside the `cargo` router skill directory — read it from wherever this bundle is installed (on Claude Code with `skills add`: `~/.claude/skills/cargo/`; plugin installs converge to the pin automatically via their SessionStart hook). Installing the pinned version avoids docs/CLI drift; `latest` is the fallback when the pin isn't readable. Without a global install, prefix every command with `npx @cargo-ai/cli` instead of `cargo-ai`.
 
 ## Authenticate
 
@@ -37,9 +37,9 @@ Always confirm `workspace.name` before any write — there is no dry-run mode fo
 - Failed commands exit non-zero and return `{"errorMessage": "..."}` — read this field for the cause.
 - Async commands (`run create`, `batch create`, `message create`, `action execute`, `action execute-batch`) return a UUID and a status that starts as `pending` / `running`. Pass `--wait-until-finished` to block, or poll the matching `get` command. See [`cargo-orchestration/references/polling.md`](../../cargo-orchestration/references/polling.md) for intervals and retry guidance.
 
-## Permission prompts (Claude Code)
+## Permission prompts
 
-When the Cargo plugin (or the installer's hook scaffolding) is present, a `PreToolUse` hook auto-approves ordinary `cargo-ai` calls — reads, queries, run/batch operations, and pipelines through read-only helpers (`jq`, `grep`, `head`, …) — so they don't prompt. Four categories always still prompt, deliberately: credentials (`login`/`logout`), token minting (`workspaceManagement token …`), report egress (`workspaceManagement report …` — reports can carry session traces, so consent stays explicit), and destruction/deploys (`cdk deploy`/`destroy`, any `remove`/`delete`). The hook is allow-only: it can skip a prompt but never override a deny rule. Don't restructure commands to dodge a prompt — if one of these prompts appears, it's supposed to.
+When the Cargo plugin (or the installer's hook scaffolding) is present, an approval hook — wired per agent as `PreToolUse` (Claude Code), `PermissionRequest` (Codex), or `beforeShellExecution` (Cursor) — auto-approves ordinary `cargo-ai` calls — reads, queries, run/batch operations, and pipelines through read-only helpers (`jq`, `grep`, `head`, …) — so they don't prompt. Four categories always still prompt, deliberately: credentials (`login`/`logout`), token minting (`workspaceManagement token …`), report egress (`workspaceManagement report …` — reports can carry session traces, so consent stays explicit), and destruction/deploys (`cdk deploy`/`destroy`, any `remove`/`delete`). The hook is allow-only: it can skip a prompt but never override a deny rule. Don't restructure commands to dodge a prompt — if one of these prompts appears, it's supposed to.
 
 ## Admin-only commands
 

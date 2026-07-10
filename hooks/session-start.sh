@@ -1,0 +1,122 @@
+#!/usr/bin/env bash
+# Cargo session-start hook: keep the CLI at the pinned version and register the
+# session row.
+#
+# SINGLE SOURCE OF TRUTH for both delivery channels. The same file runs as:
+#   - the PLUGIN copy (default) — shipped in the Cargo plugin, wired by
+#     .claude-plugin/plugin.json. Reads the pin from the plugin root, does NOT
+#     run `skills add` (the plugin owns the skills), and refreshes the plugin
+#     itself for the next session.
+#   - the STANDALONE copy — downloaded by the installer's fallback channel to
+#     ~/.claude/hooks/ for machines using `skills add` instead of the plugin.
+#     Refreshes the skills bundle, reads the pin from the skills-add install,
+#     and skips the plugin self-update.
+# Mode is auto-detected from the script's location (~/.claude/hooks/ ⇒
+# standalone) and can be forced with a first argument: plugin | standalone.
+# The plugin copy defers to a standalone copy when one exists, so exactly one
+# lifecycle ever runs.
+set -u
+
+SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
+MODE="${1:-}"
+if [ -z "$MODE" ]; then
+  if [ "$SCRIPT_DIR" = "$HOME/.claude/hooks" ]; then MODE="standalone"; else MODE="plugin"; fi
+fi
+# A standalone copy owns the lifecycle only when it is REGISTERED in
+# ~/.claude/settings.json — a leftover file nothing invokes must not suppress
+# the plugin copy. When registration cannot be verified (no jq, or no
+# settings.json), default to NOT owned: the plugin copy runs. That is the safe
+# direction — the session upsert is idempotent, so a duplicate with an active
+# standalone is harmless, whereas a wrong defer silently skips CLI pinning and
+# session logging with no signal.
+standalone_owns() {
+  s="$HOME/.claude/hooks/$1"
+  [ -x "$s" ] || return 1
+  command -v jq >/dev/null 2>&1 || return 1
+  [ -f "$HOME/.claude/settings.json" ] || return 1
+  jq -e --arg cmd "$s" \
+    '[.hooks[]?[]? | .hooks[]? | select(.command | contains($cmd))] | length > 0' \
+    "$HOME/.claude/settings.json" >/dev/null 2>&1
+}
+if [ "$MODE" = "plugin" ] && standalone_owns "session-start.sh"; then
+  exit 0
+fi
+
+INPUT="$(cat 2>/dev/null || true)"
+SESSION_ID="$(printf '%s' "$INPUT" | jq -r '.session_id // "unknown"' 2>/dev/null || echo "unknown")"
+
+# Resolve where the pin lives, refreshing the skills first on the standalone
+# channel (the plugin channel's skills refresh is the plugin self-update below).
+if [ "$MODE" = "standalone" ]; then
+  npx -y skills add getcargohq/cargo-skills \
+    --agents claude-code cursor codex \
+    --global --yes --skill '*' --full-depth >/dev/null 2>&1 || true
+  PIN_FILE="$HOME/.claude/skills/cargo/cli-version"
+else
+  PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-}"
+  [ -n "$PLUGIN_ROOT" ] || PLUGIN_ROOT="$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd)"
+  PIN_FILE="$PLUGIN_ROOT/cargo/cli-version"
+fi
+
+# Install the CLI version the bundle pins. Unreadable or malformed pin →
+# latest; a failed pinned install retries latest. Never a gate.
+PIN="$(cat "$PIN_FILE" 2>/dev/null | tr -d '[:space:]' || true)"
+printf '%s' "$PIN" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$' || PIN=""
+npm install -g "@cargo-ai/cli@${PIN:-latest}" >/dev/null 2>&1 \
+  || npm install -g @cargo-ai/cli@latest >/dev/null 2>&1 || true
+
+# Record a placeholder session row (overwritten by session-end).
+if command -v cargo-ai >/dev/null 2>&1; then
+  cargo-ai workspaceManagement session upsert \
+    --session-id "$SESSION_ID" \
+    --title "Claude Code session ${SESSION_ID}" \
+    --summary "Session in progress." >/dev/null 2>&1 || true
+fi
+
+[ "$MODE" = "plugin" ] || exit 0
+
+# Plugin channel only: keep the plugin itself current — the plugin's equivalent
+# of the standalone channel's `skills add` refresh. Detached (setsid/nohup +
+# closed fds) so session start is never blocked; the refreshed plugin takes
+# effect on the NEXT session. Resolve `claude` across the usual
+# Node/version-manager bin dirs first (hooks often run with a minimal PATH).
+add_path() {
+  [ -n "${1:-}" ] && [ -d "$1" ] || return 0
+  case ":$PATH:" in
+    *":$1:"*) ;;
+    *) PATH="$1:$PATH" ;;
+  esac
+}
+if command -v node >/dev/null 2>&1; then
+  add_path "$(dirname "$(command -v node)")"
+fi
+if command -v npm >/dev/null 2>&1; then
+  add_path "$(npm prefix -g 2>/dev/null)/bin"
+fi
+add_path "$HOME/.claude/local"
+add_path "$HOME/.local/bin"
+add_path "${VOLTA_HOME:-$HOME/.volta}/bin"
+add_path "$HOME/.asdf/shims"
+add_path "/usr/local/bin"
+add_path "/opt/homebrew/bin"
+for d in /opt/node*/bin "${NVM_DIR:-$HOME/.nvm}"/versions/node/*/bin; do
+  add_path "$d"
+done
+export PATH
+
+CLAUDE_BIN="$(command -v claude 2>/dev/null || true)"
+update_plugin() {
+  [ -n "$CLAUDE_BIN" ] || return 0
+  "$CLAUDE_BIN" plugin marketplace update cargo >/dev/null 2>&1 || true
+  "$CLAUDE_BIN" plugin update cargo@cargo >/dev/null 2>&1 || true
+}
+export -f update_plugin
+export CLAUDE_BIN
+if command -v setsid >/dev/null 2>&1; then
+  setsid bash -c update_plugin </dev/null >/dev/null 2>&1 &
+else
+  nohup bash -c update_plugin </dev/null >/dev/null 2>&1 &
+fi
+disown 2>/dev/null || true
+
+exit 0
