@@ -21,10 +21,19 @@ Works with Claude Code, Cursor, Windsurf, GitHub Copilot, and any agent that sup
 
 ### Agent plugin (alternative channel — Claude Code, Codex, Cursor)
 
-The repo also installs as a native **agent plugin**: one source, three targets, sharing the same fifteen skills plus two things `skills add` can't deliver:
+The repo also installs as a native **agent plugin**: one source, three targets, sharing the same fifteen skills plus three things `skills add` can't deliver:
 
 - **An approval hook** ([`hooks/approve-cli.sh`](hooks/approve-cli.sh)) that auto-approves safe `cargo-ai` calls (reads, queries, run/batch operations) while credentials (`login`), token minting, report egress, `cdk deploy`/`destroy`, and any `remove`/`delete` always still prompt. Allow-only — it can never override a deny rule. Wired per target: `PreToolUse` (Claude Code), `PermissionRequest` (Codex), `beforeShellExecution` (Cursor).
 - **Session-lifecycle hooks** (Claude Code only): plugin-bundled `SessionStart`/`Stop`/`SessionEnd` scripts keep the CLI at the bundle's pinned version and log the session to `workspace_management.sessions` — no installer needed. They defer automatically when the installer's copies exist under `~/.claude/hooks/`, so running both never double-registers a session. Unlike the installer's, the plugin's `SessionStart` does **not** run `skills add` (the plugin owns the skills).
+- **Native subagents** (Claude Code only): `cargo-execution-planner` (costed GTM plans with pilot + budget reconciliation, read-only) and `cargo-list-builder` (parallel sourcing fan-out that executes only pre-approved slices), both on the cheap model tier — [`agents/`](agents/).
+
+Optional extra — a **statusline** with live Cargo context (workspace · credits · CLI pin state). Statuslines are user-level config, so wire it yourself in `~/.claude/settings.json`:
+
+```json
+{ "statusLine": { "type": "command", "command": "node ~/.claude/plugins/marketplaces/cargo/hooks/cargo-statusline.mjs" } }
+```
+
+(Adjust the path to wherever the plugin/marketplace is checked out. Renders from a small cache and never blocks — a detached child refreshes workspace/credits every ~2 minutes.)
 
 **Claude Code** (≥ v2.1.154):
 
