@@ -1,7 +1,7 @@
 ---
 name: cargo-gtm
 description: "Front door for any GTM task on Cargo — sourcing, waterfall enrichment, email/phone/LinkedIn lookup, email verification, scoring, qualification, sequencing, CRM sync, and signal monitoring (job changes, funding, tech-stack/hiring intent). Use when the user states a real-world goal involving prospects, leads, accounts, contacts, ICP lists, or campaign activation. Routes to phase guides (Level 2), recipes (Level 2.5), and per-provider playbooks (Level 3) before any action call."
-version: "1.3.0"
+version: "1.4.0"
 compatibility: Requires @cargo-ai/cli (npm) and a Cargo account (browser sign-in via --oauth, or an API token)
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -206,6 +206,7 @@ If a recipe fails repeatedly and the cause isn't obvious, escalate via `cargo-ai
 
 - [`references/cost-discipline.md`](references/cost-discipline.md) — the mandatory spend rules: pilot → approval gate, per-run receipts, 1.4×N over-provision, count-first sizing, provider-billing rules.
 - [`references/contact-accuracy.md`](references/contact-accuracy.md) — the deterministic QA scripts (email cull, current-role, name match, final audit) and the SEND/VERIFY/REVIEW/REMOVE verdicts.
+- [`references/prompt-library/index.md`](references/prompt-library/index.md) — ~40 named, parameterized LLM prompts (personalization, scoring, research, qualification, signal analysis, extraction). **Before authoring any enrichment/scoring prompt from scratch, grep this index** — reuse beats reinvention, and each entry carries a tested output contract. Load only the shard you need, never all of them.
 - [`references/stage-action-map.md`](references/stage-action-map.md) — cheapest credits-based action per stage across the full 120-integration catalog.
 - [`references/credits-cost-table.md`](references/credits-cost-table.md) — auto-generated cost table for all 141 credits-based actions.
 - [`references/waterfall-strategy.md`](references/waterfall-strategy.md) — canonical waterfall chains by enrichment goal (every recipe's "fallback" follows these).

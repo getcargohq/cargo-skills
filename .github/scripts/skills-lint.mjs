@@ -16,6 +16,7 @@
 
 import { readFileSync, readdirSync, statSync, existsSync } from "node:fs";
 import { join, relative, resolve, dirname, basename } from "node:path";
+import { checkAllMetadata } from "./skills-metadata.mjs";
 
 const repoRoot = resolve(process.argv[2] || ".");
 
@@ -434,6 +435,13 @@ function main() {
     } catch (e) {
       err(p, 0, `${rel} does not parse as JSON: ${e.message}`);
     }
+  }
+
+  // Generated skill-metadata.json catalogs must match a fresh generation —
+  // stale metadata means the doc catalog or content hash is lying to consumers.
+  for (const message of checkAllMetadata(repoRoot)) {
+    const [file, ...rest] = message.split(": ");
+    err(file, 0, rest.join(": "));
   }
 
   const errors = findings.filter((f) => f.severity === "error");
