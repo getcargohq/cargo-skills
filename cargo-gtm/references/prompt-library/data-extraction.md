@@ -1,10 +1,10 @@
 # Prompt library — data extraction
 
-Prompts that turn messy input (scraped pages, raw name/address strings, job postings) into strict, parse-ready JSON. Every prompt carries its schema inline and instructs the model to emit ONLY the JSON object — pipe the response straight into `jq`. Run through `anthropic.instruct` with `temperature: 0` (haiku tier only — on `claude-sonnet-5` omit `temperature` entirely: it rejects non-default sampling parameters); extraction wants zero creativity.
+Prompts that turn messy input (scraped pages, raw name/address strings, job postings) into strict, parse-ready JSON. Every prompt carries its schema inline and instructs the model to emit ONLY the JSON object — pipe the response straight into `jq`. Run through `anthropic.instruct` with `temperature: 0` (bulk tier only — some judgment-tier models reject non-default sampling parameters with a 400; see [`../../provider-playbooks/anthropic.md`](../../provider-playbooks/anthropic.md) and omit the override when in doubt); extraction wants zero creativity.
 
 ### scraped-page-to-company-json
 
-**Purpose:** Extract company facts from a scraped page into a fixed schema — nulls, never guesses. **Variables:** {{page_text}}. **Model guidance:** claude-haiku-4-5. **Output:** JSON object matching the inline schema.
+**Purpose:** Extract company facts from a scraped page into a fixed schema — nulls, never guesses. **Variables:** {{page_text}}. **Model guidance:** claude-3-5-haiku-latest. **Output:** JSON object matching the inline schema.
 
 ```
 Extract company facts from this scraped page text into the exact schema below. Output ONLY the JSON object — no prose, no markdown fences.
@@ -16,7 +16,7 @@ Rules: every value must be supported by explicit text on the page — if the pag
 
 ### person-name-normalization
 
-**Purpose:** Split any raw name string into structured parts, handling "Last, First", particles, suffixes, and non-person strings. **Variables:** {{raw_name}}. **Model guidance:** claude-haiku-4-5. **Output:** JSON `{first_name, last_name, middle, suffix, honorific, is_person}`.
+**Purpose:** Split any raw name string into structured parts, handling "Last, First", particles, suffixes, and non-person strings. **Variables:** {{raw_name}}. **Model guidance:** claude-3-5-haiku-latest. **Output:** JSON `{first_name, last_name, middle, suffix, honorific, is_person}`.
 
 ```
 Normalize this raw person-name string into structured parts. Output ONLY the JSON object.
@@ -28,7 +28,7 @@ Rules: handle "Last, First" ordering; multi-word and particle surnames ("van der
 
 ### address-geo-parsing
 
-**Purpose:** Parse a raw address or location string into structured geography with an explicit precision level. **Variables:** {{raw_address}}. **Model guidance:** claude-haiku-4-5. **Output:** JSON `{street, city, region, postal_code, country, country_code, precision}`.
+**Purpose:** Parse a raw address or location string into structured geography with an explicit precision level. **Variables:** {{raw_address}}. **Model guidance:** claude-3-5-haiku-latest. **Output:** JSON `{street, city, region, postal_code, country, country_code, precision}`.
 
 ```
 Parse this raw address/location string into structured geography. Output ONLY the JSON object.
@@ -40,7 +40,7 @@ Rules: expand common abbreviations (NYC → New York; UK → United Kingdom); re
 
 ### employee-count-banding
 
-**Purpose:** Convert any raw headcount expression ("~500", "5k", "200-500 employees") into a canonical band. **Variables:** {{employee_count_raw}}. **Model guidance:** claude-haiku-4-5. **Output:** JSON `{band, count_parsed, source_kind}`.
+**Purpose:** Convert any raw headcount expression ("~500", "5k", "200-500 employees") into a canonical band. **Variables:** {{employee_count_raw}}. **Model guidance:** claude-3-5-haiku-latest. **Output:** JSON `{band, count_parsed, source_kind}`.
 
 ```
 Convert this raw employee-count value into a canonical band. Output ONLY the JSON object.
@@ -54,7 +54,7 @@ Rules: parse formats like "1,234", "~500", "500+", "200-500 employees", "5k", "1
 
 ### industry-taxonomy-slotting
 
-**Purpose:** Classify a company into exactly one slot of a caller-supplied fixed taxonomy — labels verbatim, no free text. **Variables:** {{company_description}}, {{taxonomy_list}}. **Model guidance:** claude-haiku-4-5; claude-sonnet-5 for fine-grained taxonomies (>40 slots). **Output:** JSON `{industry, confidence, runner_up}`.
+**Purpose:** Classify a company into exactly one slot of a caller-supplied fixed taxonomy — labels verbatim, no free text. **Variables:** {{company_description}}, {{taxonomy_list}}. **Model guidance:** claude-3-5-haiku-latest; claude-sonnet-4-6 for fine-grained taxonomies (>40 slots). **Output:** JSON `{industry, confidence, runner_up}`.
 
 ```
 Classify this company into exactly one slot of a fixed taxonomy. Output ONLY the JSON object.
@@ -70,7 +70,7 @@ Rules: classify by the primary revenue activity described, not the technology us
 
 ### contact-details-extraction
 
-**Purpose:** Pull emails, phones, and social URLs out of messy footer/contact-page/signature text — verbatim values only. **Variables:** {{page_text}}. **Model guidance:** claude-haiku-4-5. **Output:** JSON `{emails, phones, linkedin_urls, other_socials, physical_address}`.
+**Purpose:** Pull emails, phones, and social URLs out of messy footer/contact-page/signature text — verbatim values only. **Variables:** {{page_text}}. **Model guidance:** claude-3-5-haiku-latest. **Output:** JSON `{emails, phones, linkedin_urls, other_socials, physical_address}`.
 
 ```
 Extract contact details from this messy text (page footer, contact page, or email signature). Output ONLY the JSON object.
@@ -82,7 +82,7 @@ Rules: emails must be syntactically valid and appear in the text — de-obfuscat
 
 ### job-posting-fields-extraction
 
-**Purpose:** Extract structured fields (title, seniority, location, remote policy, salary, technologies) from a job posting. **Variables:** {{job_posting_text}}. **Model guidance:** claude-haiku-4-5. **Output:** JSON object matching the inline schema.
+**Purpose:** Extract structured fields (title, seniority, location, remote policy, salary, technologies) from a job posting. **Variables:** {{job_posting_text}}. **Model guidance:** claude-3-5-haiku-latest. **Output:** JSON object matching the inline schema.
 
 ```
 Extract structured fields from this job posting. Output ONLY the JSON object.

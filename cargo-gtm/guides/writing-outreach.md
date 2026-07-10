@@ -8,13 +8,13 @@ Cargo exposes five LLM providers as `kind: "connector"` actions with credits-bas
 
 | Provider | Strengths | Cost (credits, cheapest model) |
 |---|---|---|
-| **anthropic** | High-quality reasoning, long context, structured output via JSON mode | Haiku: 0.2 / Sonnet: 2 |
-| **openAi** | Broadest model selection (gpt-4o, gpt-4o-mini), tool-use friendly | Mini: 0.006 / 4o: 0.03 |
+| **anthropic** | High-quality reasoning, long context, structured output via JSON mode | Haiku: 0.2 / Sonnet: 0.2 / Opus: 2 |
+| **openAi** | Broadest model selection (gpt-5 family, gpt-4o), native JSON-schema output | nano: 0.006 / gpt-5: 0.2 / 4o: 0.5 |
 | **perplexity** | Web-grounded research with citations | Sonar: 0.3 / Sonar-pro: 1 |
 | **gemini** | Cheapest large-context option | Flash: 0.01 |
 | **deepSeek** | Lowest-cost reasoning when latency isn't critical | varies |
 
-For most outreach tasks: **anthropic Haiku** (0.2) is the right default. For deep research with citations: **perplexity sonar-pro**. For batch personalization on a large list: **openAi gpt-4o-mini** (0.006 — 30× cheaper than Haiku).
+For most outreach tasks: **anthropic Haiku** (0.2) is the right default. For deep research with citations: **perplexity sonar-pro**. For batch personalization on a large list: **openAi gpt-5-nano** (0.006 — ~30× cheaper than Haiku). Costs are per 1,000-token package — full tier tables live in the [`anthropic`](../provider-playbooks/anthropic.md) / [`openAi`](../provider-playbooks/openAi.md) / [`gemini`](../provider-playbooks/gemini.md) / [`perplexity`](../provider-playbooks/perplexity.md) playbooks.
 
 ## Prompt patterns
 
@@ -52,7 +52,7 @@ Recent signals: {signals}
 ICP angle: {icp_angle}
 ```
 
-Run with openAi gpt-4o-mini for batch jobs (cheap, fast). Inputs come from earlier enrichment passes — keep the prompt short to amortize cost.
+Run with openAi gpt-5-nano for batch jobs (cheap, fast). Inputs come from earlier enrichment passes — keep the prompt short to amortize cost.
 
 ### Qualification rubric
 
@@ -151,7 +151,7 @@ Per-record:
 ```json
 {
   "prompt": "...",
-  "model": "claude-haiku-4-5-20251001",
+  "model": "claude-3-5-haiku-latest",
   "maxTokens": 500
 }
 ```

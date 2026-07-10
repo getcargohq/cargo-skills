@@ -164,7 +164,7 @@ Prices are credits/record. "Priority?" marks providers in the priority stack (sa
 
 | Provider | Action | Cost (cheapest model) | Notes |
 |---|---|---|---|
-| openAi | instruct | 0.006 (mini) | Cheapest at-scale; gpt-4o-mini. |
+| openAi | instruct | 0.006 (nano) | Cheapest at-scale; gpt-5-nano. |
 | gemini | instruct | 0.01 (Flash) | Cheap large-context. |
 | anthropic | instruct | 0.2 (Haiku) | Default for high-quality reasoning + structured output. |
 | perplexity | instruct | 0.3 (Sonar) | Web-grounded research with citations. |

@@ -1,7 +1,7 @@
 ---
 name: cargo-gtm
 description: "Front door for any GTM task on Cargo — sourcing, waterfall enrichment, email/phone/LinkedIn lookup, email verification, scoring, qualification, sequencing, CRM sync, and signal monitoring (job changes, funding, tech-stack/hiring intent). Use when the user states a real-world goal involving prospects, leads, accounts, contacts, ICP lists, or campaign activation. Routes to phase guides (Level 2), recipes (Level 2.5), and per-provider playbooks (Level 3) before any action call."
-version: "1.6.0"
+version: "1.7.0"
 compatibility: Requires @cargo-ai/cli (npm) and a Cargo account (browser sign-in via --oauth, or an API token)
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -173,7 +173,7 @@ If a recipe fails repeatedly and the cause isn't obvious, escalate via `cargo-ai
 
 ## 11) Provider playbooks — read before you call
 
-**STOP — do not execute any paid action against a provider below until you have opened its playbook.** Each playbook carries the exact action slugs, config shapes, input quirks, and cost traps; reading it for five seconds is cheaper than one failed paid call, and a failed batch is 100 failed paid calls. Providers with no playbook: fall back to [`references/alternatives.md`](references/alternatives.md) and [`references/stage-action-map.md`](references/stage-action-map.md).
+**STOP — do not execute any paid action against a provider below until you have opened its playbook.** Each playbook carries the exact action slugs, config shapes, input quirks, and cost traps; reading it for five seconds is cheaper than one failed paid call, and a failed batch is 100 failed paid calls. **Every credits-based provider in the catalog now has a playbook**; only own-key integrations fall back to [`references/alternatives.md`](references/alternatives.md) and [`references/stage-action-map.md`](references/stage-action-map.md).
 
 **Priority stack (recipes lead with these):**
 - [`provider-playbooks/salesNavigator.md`](provider-playbooks/salesNavigator.md) — cheapest sourcing in the catalog (0.02–0.05/record).
@@ -189,6 +189,14 @@ If a recipe fails repeatedly and the cause isn't obvious, escalate via `cargo-ai
 - [`provider-playbooks/apolloio.md`](provider-playbooks/apolloio.md) — person/organization enrichment alternative; investor-niche coverage.
 - [`provider-playbooks/oceanio.md`](provider-playbooks/oceanio.md) — lookalike-company discovery from seed domains.
 - [`provider-playbooks/datagma.md`](provider-playbooks/datagma.md) — lightweight person/company enrichment alternative.
+- [`provider-playbooks/companyEnrich.md`](provider-playbooks/companyEnrich.md) — cheapest company-by-domain (0.25) + per-item-billed lookalikes.
+- [`provider-playbooks/enrichCrm.md`](provider-playbooks/enrichCrm.md) — CRM-record enrichment; `getFunding` is the funding-signal fallback.
+- [`provider-playbooks/societeInfo.md`](provider-playbooks/societeInfo.md) — French-registry company/contact data (SIREN/SIRET).
+- [`provider-playbooks/snitcher.md`](provider-playbooks/snitcher.md) — website-visitor identification; the recurring extractor is the cost trap.
+- [`provider-playbooks/piloterr.md`](provider-playbooks/piloterr.md) — ultra-cheap bulk company extractor + G2 product info.
+- [`provider-playbooks/g2.md`](provider-playbooks/g2.md) — software-review & category signal data.
+- [`provider-playbooks/theSwarm.md`](provider-playbooks/theSwarm.md) — warm-intro network mapping to target companies/people.
+- [`provider-playbooks/mixrank.md`](provider-playbooks/mixrank.md) — premium person/company backfill (4/lookup, phone-only reverse lookup).
 
 **Email & contact specialists** (all feed the VERIFY step — see [`references/waterfall-strategy.md`](references/waterfall-strategy.md)):
 - [`provider-playbooks/hunter.md`](provider-playbooks/hunter.md) — domain-search email finding + verification.
@@ -198,10 +206,24 @@ If a recipe fails repeatedly and the cause isn't obvious, escalate via `cargo-ai
 - [`provider-playbooks/leadMagic.md`](provider-playbooks/leadMagic.md) — email + mobile lookup alternative.
 - [`provider-playbooks/contactOut.md`](provider-playbooks/contactOut.md) — contact info from LinkedIn profiles.
 - [`provider-playbooks/zeroBounce.md`](provider-playbooks/zeroBounce.md) — email-verification second opinion to `waterfall.verifyEmail`.
+- [`provider-playbooks/bouncer.md`](provider-playbooks/bouncer.md) / [`neverBounce.md`](provider-playbooks/neverBounce.md) / [`kitt.md`](provider-playbooks/kitt.md) / [`enrichley.md`](provider-playbooks/enrichley.md) — verification long tail (0.3 / 0.2 / 0.05 / 0.1; enrichley's slug is `verify`, not `verifyEmail`).
+- [`provider-playbooks/dropcontact.md`](provider-playbooks/dropcontact.md) — email finding with French/EU registry depth; `email` output is an array.
+- [`provider-playbooks/enrowio.md`](provider-playbooks/enrowio.md) — email find (1) + verify (0.1); takes `fullName` only.
+- [`provider-playbooks/reverseContact.md`](provider-playbooks/reverseContact.md) — company-from-LinkedIn (credits); profile lookups are own-key.
+- [`provider-playbooks/rocketreach.md`](provider-playbooks/rocketreach.md) — person lookup (1); healthcare/NPI niche; beware the `currrentEmployer` schema key.
+- [`provider-playbooks/forager.md`](provider-playbooks/forager.md) — personal-email + phone from a LinkedIn URL.
+- [`provider-playbooks/cleon1.md`](provider-playbooks/cleon1.md) — terminal phone rung (15/lookup) — explicit user request only.
 
 **Research & scraping:**
 - [`provider-playbooks/firecrawl.md`](provider-playbooks/firecrawl.md) — web scraping for research/personalization stages.
 - [`provider-playbooks/serper.md`](provider-playbooks/serper.md) — Google SERP queries for research and URL discovery.
+- [`provider-playbooks/linkup.md`](provider-playbooks/linkup.md) — web search (0.5 standard / 2 deep) + sourced/structured answers.
+
+**LLM providers** (all: one `instruct` action, cost per 1,000-token package, per-model tiers — prompts come from [`references/prompt-library/index.md`](references/prompt-library/index.md)):
+- [`provider-playbooks/anthropic.md`](provider-playbooks/anthropic.md) — judgment-tier default (Haiku/Sonnet 0.2, Opus 2); temperature nests under `advancedSettings` with required `maxTokens`.
+- [`provider-playbooks/openAi.md`](provider-playbooks/openAi.md) — cheapest bulk tier (`gpt-5-nano` 0.006) + native JSON-schema output.
+- [`provider-playbooks/gemini.md`](provider-playbooks/gemini.md) — cheap high-throughput (Flash 0.01, 15,000/min) + search grounding.
+- [`provider-playbooks/perplexity.md`](provider-playbooks/perplexity.md) — web-grounded research answers; default model is the expensive `sonar-deep-research` — always set `model` explicitly.
 
 ## 12) References
 

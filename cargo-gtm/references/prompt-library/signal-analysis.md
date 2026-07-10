@@ -1,10 +1,10 @@
 # Prompt library — signal analysis
 
-Prompts that convert a detected signal (job posting, funding round, tech-stack change, job change, public filing) into a sales hypothesis, timing window, or triage verdict. These sit between signal recipes (`funding-watch`, `job-change-monitoring`, `tech-intent`) and [`outreach-activation`](../../recipes/outreach-activation.md) — their outputs feed `signal_summary` and routing branches. Run with `temperature: 0`–`0.2` (haiku tier only — on `claude-sonnet-5` omit `temperature` entirely: it rejects non-default sampling parameters).
+Prompts that convert a detected signal (job posting, funding round, tech-stack change, job change, public filing) into a sales hypothesis, timing window, or triage verdict. These sit between signal recipes (`funding-watch`, `job-change-monitoring`, `tech-intent`) and [`outreach-activation`](../../recipes/outreach-activation.md) — their outputs feed `signal_summary` and routing branches. Run with `temperature: 0`–`0.2` (bulk tier only — some judgment-tier models reject non-default sampling parameters with a 400; see [`../../provider-playbooks/anthropic.md`](../../provider-playbooks/anthropic.md) and omit the override when in doubt).
 
 ### job-posting-pain-hypothesis
 
-**Purpose:** Read a job posting as a budget line against a problem — hypothesize the pain and whether it maps to your product. **Variables:** {{job_posting_text}}, {{your_product_summary}}. **Model guidance:** claude-sonnet-5 — hypothesis quality drives the whole outreach angle; claude-haiku-4-5 for high-volume pre-filtering. **Output:** JSON `{pain_hypothesis, posting_evidence, maps_to_product, outreach_angle}`.
+**Purpose:** Read a job posting as a budget line against a problem — hypothesize the pain and whether it maps to your product. **Variables:** {{job_posting_text}}, {{your_product_summary}}. **Model guidance:** claude-sonnet-4-6 — hypothesis quality drives the whole outreach angle; claude-3-5-haiku-latest for high-volume pre-filtering. **Output:** JSON `{pain_hypothesis, posting_evidence, maps_to_product, outreach_angle}`.
 
 ```
 From this job posting, hypothesize the business pain behind the hire and whether it maps to our product. Posting: {{job_posting_text}}. Our product: {{your_product_summary}}.
@@ -16,7 +16,7 @@ Rules: posting_evidence must be quoted verbatim. If the posting is generic boile
 
 ### funding-budget-window
 
-**Purpose:** Convert a funding round into a budget-timing verdict — when to sell into the new money. **Variables:** {{round_type}}, {{round_amount}}, {{announced_date}}, {{stated_use_of_funds}}, {{product_category}}. **Model guidance:** claude-haiku-4-5. **Output:** JSON `{window, reasoning, use_of_funds_match}`.
+**Purpose:** Convert a funding round into a budget-timing verdict — when to sell into the new money. **Variables:** {{round_type}}, {{round_amount}}, {{announced_date}}, {{stated_use_of_funds}}, {{product_category}}. **Model guidance:** claude-3-5-haiku-latest. **Output:** JSON `{window, reasoning, use_of_funds_match}`.
 
 ```
 Estimate the budget-timing window for selling {{product_category}} to a company that raised a {{round_type}} of {{round_amount}}, announced {{announced_date}}. Stated use of funds: {{stated_use_of_funds}}.
@@ -26,7 +26,7 @@ Frame: new-budget planning typically lands 1-3 months post-announcement; team bu
 
 ### tech-change-displacement
 
-**Purpose:** Classify a detected tech-stack change as a displacement opportunity — open door, fresh incumbent, or replatform. **Variables:** {{added_technologies}}, {{removed_technologies}}, {{your_product_summary}}, {{competing_technologies}}. **Model guidance:** claude-haiku-4-5. **Output:** JSON `{opportunity, trigger_technology, angle, revisit_in_months}`.
+**Purpose:** Classify a detected tech-stack change as a displacement opportunity — open door, fresh incumbent, or replatform. **Variables:** {{added_technologies}}, {{removed_technologies}}, {{your_product_summary}}, {{competing_technologies}}. **Model guidance:** claude-3-5-haiku-latest. **Output:** JSON `{opportunity, trigger_technology, angle, revisit_in_months}`.
 
 ```
 A company's detected tech stack changed. Added: {{added_technologies}}. Removed: {{removed_technologies}}. Our product: {{your_product_summary}}. Technologies we displace: {{competing_technologies}}.
@@ -36,7 +36,7 @@ Classify the opportunity: "open_door" = they removed a competing technology (the
 
 ### job-change-angle
 
-**Purpose:** Turn a detected job change into a classified re-engagement play with a drafted hook. **Variables:** {{contact_name}}, {{new_title}}, {{new_company}}, {{previous_company}}, {{prior_relationship}}, {{product_category}}. **Model guidance:** claude-haiku-4-5; claude-sonnet-5 for strategic accounts. **Output:** JSON `{play, hook, urgency}`.
+**Purpose:** Turn a detected job change into a classified re-engagement play with a drafted hook. **Variables:** {{contact_name}}, {{new_title}}, {{new_company}}, {{previous_company}}, {{prior_relationship}}, {{product_category}}. **Model guidance:** claude-3-5-haiku-latest; claude-sonnet-4-6 for strategic accounts. **Output:** JSON `{play, hook, urgency}`.
 
 ```
 {{contact_name}} moved from {{previous_company}} to become {{new_title}} at {{new_company}}. Prior relationship with us: {{prior_relationship}}. We sell {{product_category}}.
@@ -46,7 +46,7 @@ Classify the re-engagement play and draft the hook. Frame: new-in-role buyers re
 
 ### filing-priorities-extraction
 
-**Purpose:** Pull sales-anchorable priorities and risks from any long filing text — 10-K, 10-Q, annual report, earnings remarks. **Variables:** {{filing_text}}. **Model guidance:** claude-sonnet-5 — long-document salience ranking; use claude-haiku-4-5 only on short excerpts. **Output:** JSON `{priorities: [{theme, quote, type}], fiscal_context}` (max 5 priorities).
+**Purpose:** Pull sales-anchorable priorities and risks from any long filing text — 10-K, 10-Q, annual report, earnings remarks. **Variables:** {{filing_text}}. **Model guidance:** claude-sonnet-4-6 — long-document salience ranking; use claude-3-5-haiku-latest only on short excerpts. **Output:** JSON `{priorities: [{theme, quote, type}], fiscal_context}` (max 5 priorities).
 
 ```
 From this excerpt of a company filing or shareholder communication (10-K, 10-Q, annual report, earnings remarks), extract the stated business priorities and risks a seller could anchor outreach on: {{filing_text}}
@@ -58,7 +58,7 @@ Rules: maximum 5 priorities, ranked by prominence in the text (repetition and pl
 
 ### signal-triage
 
-**Purpose:** Given all signals detected for one account, decide act-now vs monitor vs ignore — with decay, compounding, and an ICP-fit gate. **Variables:** {{signals}}, {{icp_fit_score}}. **Model guidance:** claude-haiku-4-5. **Output:** JSON `{verdict, primary_signal, reasoning}`.
+**Purpose:** Given all signals detected for one account, decide act-now vs monitor vs ignore — with decay, compounding, and an ICP-fit gate. **Variables:** {{signals}}, {{icp_fit_score}}. **Model guidance:** claude-3-5-haiku-latest. **Output:** JSON `{verdict, primary_signal, reasoning}`.
 
 ```
 Triage the signals detected for one account (one per line, each with a date): {{signals}}. Account ICP-fit score (1-10): {{icp_fit_score}}.
