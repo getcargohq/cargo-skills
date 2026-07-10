@@ -32,6 +32,7 @@ const SKILL_DIRS = [
   "cargo-context",
   "cargo-analytics",
   "cargo-billing",
+  "cargo-diagnostics",
   "cargo-hosting",
   "cargo-workspace-management",
 ];

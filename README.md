@@ -66,14 +66,14 @@ npm install -g @cargo-ai/cli@latest               # bumps the CLI
 
 `.github/workflows/clawhub-publish.yml` publishes every skill whose `version:` was bumped, on each GitHub release. One-time setup:
 
-1. Sign in at [clawhub.ai](https://clawhub.ai) with the GitHub account that owns the `getcargohq` org publisher (run `clawhub publisher create getcargohq` first if it doesn't exist), then generate an API token from the web UI.
+1. Sign in at [clawhub.ai](https://clawhub.ai) with the GitHub account that owns the `cargo-ai` org publisher (run `clawhub publisher create cargo-ai` first if it doesn't exist), then generate an API token from the web UI.
 2. Add it as a repo secret named `CLAWHUB_TOKEN`.
 
-Then bump the `version:` field in each changed `SKILL.md` (semver, e.g. `1.0.0` → `1.1.0`) and cut a release. The workflow authenticates with `clawhub login --token`, calls `clawhub skill publish ./<dir> --version <semver> --owner getcargohq` for each skill, skips ones whose published version is unchanged, and fails on any other error. Trigger a manual run with `workflow_dispatch` (optional `dry_run: true`) to preview.
+Then bump the `version:` field in each changed `SKILL.md` (semver, e.g. `1.0.0` → `1.1.0`) and cut a release. The workflow authenticates with `clawhub login --token`, calls `clawhub skill publish ./<dir> --version <semver> --owner cargo-ai` for each skill, skips ones whose published version is unchanged, and fails on any other error. Trigger a manual run with `workflow_dispatch` (optional `dry_run: true`) to preview.
 
 ## What this skill teaches
 
-**Cargo** connects your data models (companies, contacts, deals) to external integrations (CRMs, enrichment providers, AI agents) and runs them as automated workflows. The repo ships fourteen skills at the root — one **router skill** (`cargo`, the overview / front door for any Cargo CLI task), one **onboarding skill** (`cargo-quickstart`, the guided first-run demo), one **outcome skill** (`cargo-gtm`, the front door for any GTM task), and eleven **capability skills** (one per CLI domain). Ten of the capability skills wrap the **imperative** CLI (one-off `cargo-ai <domain>` operations); `cargo-cdk` is the **declarative** one — define a whole workspace in code and deploy it.
+**Cargo** connects your data models (companies, contacts, deals) to external integrations (CRMs, enrichment providers, AI agents) and runs them as automated workflows. The repo ships fifteen skills at the root — one **router skill** (`cargo`, the overview / front door for any Cargo CLI task), one **onboarding skill** (`cargo-quickstart`, the guided first-run demo), one **outcome skill** (`cargo-gtm`, the front door for any GTM task), and twelve **capability skills** (one per CLI domain, plus the cross-domain `cargo-diagnostics`). Most capability skills wrap the **imperative** CLI (one-off `cargo-ai <domain>` operations); `cargo-cdk` is the **declarative** one — define a whole workspace in code and deploy it — and `cargo-diagnostics` sequences the run/SQL/billing surfaces into forensic runbooks (trace a run, sweep a batch for errors, profile credit spend).
 
 ### Router — `cargo`
 

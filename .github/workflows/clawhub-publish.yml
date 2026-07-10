@@ -50,8 +50,9 @@ jobs:
           skipped=0
           failed=0
 
-          for dir in cargo cargo-gtm cargo-cdk cargo-orchestration cargo-storage cargo-connection \
-                     cargo-ai cargo-context cargo-analytics cargo-billing cargo-workspace-management; do
+          for dir in cargo cargo-quickstart cargo-gtm cargo-cdk cargo-orchestration cargo-storage \
+                     cargo-connection cargo-ai cargo-content cargo-context cargo-analytics \
+                     cargo-billing cargo-diagnostics cargo-hosting cargo-workspace-management; do
             version=$(awk -F'"' '/^version:/ {print $2; exit}' "$dir/SKILL.md")
             if [ -z "$version" ]; then
               echo "::error::No version: in $dir/SKILL.md"

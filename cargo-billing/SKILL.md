@@ -1,7 +1,7 @@
 ---
 name: cargo-billing
 description: Pull usage metrics, check subscription status, view invoices, and manage credits using the Cargo CLI. Use when the user wants billing analytics, usage reports, credit usage, cost analysis, subscription details, or invoice history for their Cargo workspace.
-version: "1.0.1"
+version: "1.0.2"
 compatibility: Requires @cargo-ai/cli (npm) and a Cargo account (browser sign-in via --oauth, or an API token)
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -106,6 +106,8 @@ cargo-ai billing usage get-metrics \
 | Add `filter` nodes early in the graph | Skip ineligible records before expensive connector calls |
 | Set `fallbackOnFailure: false` | Stop the run early on failures instead of continuing to downstream nodes |
 | Reduce `maxSteps` on agent nodes | Limit how many tool calls an agent can make per record |
+
+> To find out **which** node or provider dominates a play's spend before picking a lever, follow the attribution runbook in [`../cargo-diagnostics/references/play-optimize-credits.md`](../cargo-diagnostics/references/play-optimize-credits.md).
 
 ## Usage metrics
 
