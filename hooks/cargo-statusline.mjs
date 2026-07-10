@@ -69,19 +69,26 @@ function cli(args) {
 }
 
 function refresh() {
-  const cache = { at: Date.now() };
+  // Start from the previous cache: a transient failure in one CLI call must
+  // not blank fields that were still valid a moment ago.
+  const cache = readJsonSafe(CACHE_PATH) ?? {};
+  let fetchedAny = false;
   try {
     cache.workspace = cli(["whoami"]).workspace?.name ?? null;
+    fetchedAny = true;
   } catch {
-    cache.workspace = null; // not logged in — render degrades to bare "cargo"
+    // transient failure or logged out — keep the previous value
   }
   try {
     const sub = cli(["billing", "subscription", "get"]).subscription;
     const remaining =
       sub.subscriptionAvailableCreditsCount - sub.subscriptionCreditsUsedCount;
-    if (Number.isFinite(remaining)) cache.credits = Math.round(remaining);
+    if (Number.isFinite(remaining)) {
+      cache.credits = Math.round(remaining);
+      fetchedAny = true;
+    }
   } catch {
-    // billing needs an admin token — omit credits rather than fail
+    // billing needs an admin token — keep the previous value
   }
   try {
     const pin = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "..", "cargo", "cli-version"), "utf8").trim();
@@ -91,10 +98,16 @@ function refresh() {
     const installed = versionOutput.match(/\d+\.\d+\.\d+/)?.[0];
     if (installed) {
       cache.cli = installed === pin ? `v${pin}` : `v${installed}≠pin`;
+      fetchedAny = true;
     }
   } catch {
-    // no CLI on PATH — omit
+    // no CLI on PATH — keep the previous value
   }
+  // Advance the clock only when something was actually fetched: a fully
+  // failed refresh keeps the old timestamp, so the next render retries
+  // immediately (rate-limited by the refresh lock) instead of serving
+  // nothing for a whole TTL.
+  if (fetchedAny) cache.at = Date.now();
   mkdirSync(dirname(CACHE_PATH), { recursive: true });
   writeFileSync(CACHE_PATH, JSON.stringify(cache));
   rmSync(LOCK_PATH, { force: true });
