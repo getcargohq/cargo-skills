@@ -25,7 +25,9 @@ cargo-ai storage model get-ddl --model-uuid <uuid>   # column slugs + types
 Diff the CSV header against the model's columns. Create what's missing (see [`../../cargo-storage/SKILL.md`](../../cargo-storage/SKILL.md) for types):
 
 ```bash
-cargo-ai storage column create --model-uuid <uuid> --slug source_tool_id --type string
+cargo-ai storage column create \
+  --model-uuid <uuid> \
+  --column '{"slug":"source_tool_id","type":"string","label":"Source Tool ID","kind":"custom"}'
 ```
 
 **Always add a `source_tool_id` column** holding the source's record ID — it makes the import idempotent, dedupable, and diffable against later re-exports. Keep a scratch mapping table (CSV column → model column) in the conversation; you'll cite it in the receipt.
