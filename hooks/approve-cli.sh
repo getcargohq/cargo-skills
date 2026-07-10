@@ -101,12 +101,18 @@ esac
 #     `npx [-y|--yes] @cargo-ai/cli[@<version>] …` (its own path/URL args are
 #     left alone), so the pipeline stays anchored to a Cargo call wherever it
 #     sits; an `npx` of any other package is refused;
-#   - the cargo segment's first non-flag word is refused if it is a credential
-#     command (login, logout); the first two non-flag words are refused as a
-#     pair for token minting, report egress, and CDK deploy/destroy; and a
-#     destructive verb token (remove, delete, destroy) anywhere in the segment
-#     refuses it too -- ordinary read/write subcommands (whoami, storage,
-#     orchestration, billing, ...) still auto-approve;
+#   - the cargo segment is gated POSITION-INDEPENDENTLY: a credential command
+#     token (login, logout), a destructive verb token (remove, delete,
+#     destroy), or a gated adjacent pair (workspaceManagement token,
+#     workspaceManagement report, cdk deploy, cdk destroy) ANYWHERE in the
+#     segment refuses it. Positional checks alone are bypassable -- valid
+#     prefixes like `npx -p @cargo-ai/cli cargo-ai login` or a global flag
+#     with a value shift the real subcommand out of the first argument slots,
+#     so leading `cargo-ai` binary tokens are dropped and every token is
+#     scanned. Ordinary read/write subcommands (whoami, storage,
+#     orchestration, billing, ...) still auto-approve; the accepted cost is
+#     that a gated word appearing as a literal inside a quoted argument (a SQL
+#     string containing `login`) also falls through to the prompt;
 #   - every other segment's command must be in the allowlist (membership is an
 #     exact key lookup, so a token like `*` can't wildcard its way in); and
 #   - every other segment must not reference a path (`/`, `~`) or a read/write
@@ -191,28 +197,46 @@ verdict="$(printf '%s' "$cmd_stripped" | awk -v helpers="$allowed_helpers" -v ga
 
       if (is_cargo) {
         saw_cargo = 1
-        # Gate credential/egress/destructive invocations: resolve the first two
-        # non-flag words after the binary and refuse gated first-words, gated
-        # pairs, and destructive verb tokens anywhere in the segment.
+        # Gate credential/egress/destructive invocations. Normalize the token
+        # stream once (strip quotes, drop empties), then check gated tokens
+        # POSITION-INDEPENDENTLY: real subcommands can be shifted out of the
+        # first argument positions by valid invocation prefixes — e.g.
+        # `npx -p @cargo-ai/cli cargo-ai login` puts a literal `cargo-ai`
+        # before `login`, and a global flag with a value would shift the
+        # domain word too — so positional-only checks are bypassable. Refusing
+        # a gated token anywhere in the segment over-gates rare literals in
+        # quoted args (a SQL string containing the word `login` falls through
+        # to the prompt); that is the safe direction for an allow-only hook.
         m2 = split(rest, v, /[ \t]+/)
-        w1 = ""; w2 = ""
-        for (j = 1; j <= m2; j++) {
-          if (v[j] == "") continue
-          if (substr(v[j], 1, 1) == "-") continue
-          if (w1 == "") { w1 = v[j]; continue }
-          w2 = v[j]
-          break
-        }
-        gsub(/"/, "", w1); gsub(sq, "", w1)
-        gsub(/"/, "", w2); gsub(sq, "", w2)
-        # Refuse any globbable command token.
-        if (w1 ~ /[][*?]/ || w2 ~ /[][*?]/) exit
-        if (w1 in D) exit
-        if ((w1 " " w2) in P) exit
+        n2 = 0
         for (j = 1; j <= m2; j++) {
           tj = v[j]
           gsub(/"/, "", tj); gsub(sq, "", tj)
-          if (tj in G) exit
+          if (tj == "") continue
+          n2++; ct[n2] = tj
+        }
+        # Drop leading `cargo-ai` binary tokens (`npx -p @cargo-ai/cli
+        # cargo-ai …` runs the same CLI; the extra token must not consume a
+        # checked position).
+        s2 = 1
+        while (s2 <= n2 && ct[s2] == "cargo-ai") s2++
+        # First two non-flag words: refuse globbable command tokens.
+        w1 = ""; w2 = ""
+        for (j = s2; j <= n2; j++) {
+          if (substr(ct[j], 1, 1) == "-") continue
+          if (w1 == "") { w1 = ct[j]; continue }
+          w2 = ct[j]
+          break
+        }
+        if (w1 ~ /[][*?]/ || w2 ~ /[][*?]/) exit
+        # Gates, anywhere in the segment: credential first-words (login,
+        # logout), destructive verbs (remove, delete, destroy), and gated
+        # pairs as adjacent tokens (workspaceManagement token/report,
+        # cdk deploy/destroy).
+        for (j = s2; j <= n2; j++) {
+          if (ct[j] in D) exit
+          if (ct[j] in G) exit
+          if (j < n2 && ((ct[j] " " ct[j + 1]) in P)) exit
         }
       } else {
         if (!(tok in H)) exit
