@@ -70,12 +70,13 @@ type ColumnKey =
 const COLUMN_CANDIDATES: Record<ColumnKey, string[]> = {
   email: ["email", "workemail", "emailaddress"],
   status: [
+    // email_status (waterfall.verifyEmail output) normalizes to emailstatus;
+    // recipes merge that field onto rows as emailStatus before audit.
     "emailstatus",
     "verificationstatus",
     "verification",
     "emailverificationstatus",
-    // Bare "status" last: it's what raw waterfall verifyEmail rows carry, but
-    // it's generic enough that any more specific header must win over it.
+    // Bare "status" last — generic enough that any more specific header must win.
     "status",
   ],
   corroboration: [

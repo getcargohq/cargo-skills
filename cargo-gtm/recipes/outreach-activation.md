@@ -85,8 +85,9 @@ cargo-ai orchestration action execute-batch \
 #     VERIFY/REVIEW/REMOVE verdicts (and the receipt needs their counts).
 #     Join on the LOWERCASED email — verify results may re-case the address,
 #     and a missed join leaves emailStatus empty (row degrades to VERIFY).
+#     Read .email_status (waterfall.verifyEmail output schema) — not .status.
 jq -c --slurpfile ver /tmp/verified.json '
-  ($ver[0].results | map({key: (.email | ascii_downcase), value: .status}) | from_entries) as $st
+  ($ver[0].results | map({key: (.email | ascii_downcase), value: .email_status}) | from_entries) as $st
   | map(. + {emailStatus: ($st[(.email // "" | ascii_downcase)] // "")})
 ' /tmp/culled.json > /tmp/merged.json
 

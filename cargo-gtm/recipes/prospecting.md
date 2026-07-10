@@ -205,9 +205,10 @@ Join the verification statuses back onto the culled rows (the audit must see **e
 ```bash
 # Merge: attach each row's verification status by email — join on the
 # LOWERCASED address (verify results may re-case it; a missed join leaves
-# emailStatus empty and the row degrades to VERIFY)
+# emailStatus empty and the row degrades to VERIFY). Read .email_status
+# (waterfall.verifyEmail output schema) — not .status.
 jq -c --slurpfile ver /tmp/p2-verified.json '
-  ($ver[0].results | map({key: (.email | ascii_downcase), value: .status}) | from_entries) as $st
+  ($ver[0].results | map({key: (.email | ascii_downcase), value: .email_status}) | from_entries) as $st
   | map(. + {emailStatus: ($st[(.email // "" | ascii_downcase)] // "")})
 ' /tmp/p2-culled.json > /tmp/p2-merged.json
 
