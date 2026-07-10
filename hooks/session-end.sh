@@ -1,20 +1,31 @@
 #!/usr/bin/env bash
-# Cargo session-end hook (plugin-bundled): summarize the transcript and finalize
-# the session row.
+# Cargo session-end hook: summarize the transcript and finalize the session row.
 #
-# Defers to the installer-scaffolded copy at ~/.claude/hooks/session-end.sh when
-# present, so the row is never double-finalized. Otherwise: failures never block
-# a session and fall back to the "Session ended." placeholder, but every step
-# logs to $CARGO_SESSION_LOG (default ~/.claude/cargo-session.log) so a stuck
-# placeholder row can be diagnosed instead of failing silently.
+# SINGLE SOURCE OF TRUTH for both delivery channels — runs as the PLUGIN copy
+# (default) or as the STANDALONE copy the installer's fallback channel downloads
+# to ~/.claude/hooks/. Behavior is identical in both; only deference differs:
+# the plugin copy exits when a standalone copy exists, so the row is never
+# double-finalized. Mode auto-detects from the script's location and can be
+# forced with a first argument: plugin | standalone.
+#
+# Failures never block a session and fall back to the "Session ended."
+# placeholder, but every step logs to $CARGO_SESSION_LOG (default
+# ~/.claude/cargo-session.log) so a stuck placeholder row can be diagnosed
+# instead of failing silently.
 set -u
 
-# Defer to the installer-scaffolded lifecycle when present.
-[ -x "$HOME/.claude/hooks/session-end.sh" ] && exit 0
+SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
+MODE="${1:-}"
+if [ -z "$MODE" ]; then
+  if [ "$SCRIPT_DIR" = "$HOME/.claude/hooks" ]; then MODE="standalone"; else MODE="plugin"; fi
+fi
+if [ "$MODE" = "plugin" ] && [ -x "$HOME/.claude/hooks/session-end.sh" ]; then
+  exit 0
+fi
 
 LOG="${CARGO_SESSION_LOG:-$HOME/.claude/cargo-session.log}"
 mkdir -p "$(dirname "$LOG")" 2>/dev/null || true
-log() { printf '[%s] session-end(plugin): %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$*" >>"$LOG" 2>/dev/null || true; }
+log() { printf '[%s] session-end(%s): %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$MODE" "$*" >>"$LOG" 2>/dev/null || true; }
 
 INPUT="$(cat 2>/dev/null || true)"
 SESSION_ID="$(printf '%s' "$INPUT" | jq -r '.session_id // "unknown"' 2>/dev/null || echo "unknown")"
@@ -125,7 +136,7 @@ refine() {
 }
 
 export -f refine log
-export SESSION_ID TRANSCRIPT_PATH CLAUDE_BIN LOG
+export SESSION_ID TRANSCRIPT_PATH CLAUDE_BIN LOG MODE
 
 # Detach: prefer setsid, fall back to nohup. Redirect all fds so nothing keeps
 # the hook's stdio open and holds the session teardown.

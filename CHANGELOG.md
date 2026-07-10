@@ -28,6 +28,12 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 - **Plugin self-update.** The plugin's `session-start.sh` now also refreshes the plugin itself (`claude plugin marketplace update cargo` + `claude plugin update cargo@cargo`, detached so session start is never blocked; takes effect next session) — the plugin channel's equivalent of the installer's `skills add` refresh, with zero duplication by construction. Paired with the installer refactor (`install.sh` now installs the **plugin** on Claude Code instead of scaffolding standalone hooks, migrates legacy scaffolding away, and keeps `skills add` only as the no-plugin fallback), the plugin is the single source of truth for everything agent-facing; README's Claude Code section documents the new flow.
 - **Agent-portable docs.** The pinned-install command in `cargo/SKILL.md` (session job 1) and `references/prerequisites.md` no longer hardcodes `~/.claude/skills/…` — the pin is read from the skill directory the agent loaded, whatever the agent (the hardcoded path silently degraded Codex/Cursor to `@latest`). Session-row examples in the manual path are agent-neutral ("Agent session"), job 1 now says to skip `skills add` when the skills came from a plugin, and the permission-prompts note covers all three agents' hook events.
 
+- **Lifecycle scripts are single-sourced (dual-mode).** The three session-lifecycle scripts under `hooks/` are now the ONLY copies — the installer's fallback channel downloads them instead of embedding its own heredocs (which had already begun to drift). Each script auto-detects its channel from its location: a copy at `~/.claude/hooks/` runs in **standalone** mode (refreshes the skills bundle, reads the pin from the `skills add` install, no plugin self-update), any other location runs in **plugin** mode (pin from the plugin root, plugin self-update, no `skills add`); an explicit `plugin|standalone` first argument overrides. The plugin copy still defers when a standalone copy exists, so exactly one lifecycle ever runs. Log lines carry the mode (`session-end(standalone): …`) for diagnosability.
+
+### `cargo` → 1.13.0
+
+- Version bump carrying the dual-mode lifecycle scripts into the plugin bundle (no doc changes).
+
 ### `cargo` → 1.12.0
 
 - Session job 1 and `references/prerequisites.md` made agent-portable (bundle-local pin path, neutral session titles, per-agent permission-hook events); the three-jobs callout now names the plugin's bundled hooks as the first automation source.

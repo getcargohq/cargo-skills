@@ -1,31 +1,50 @@
 #!/usr/bin/env bash
-# Cargo session-start hook (plugin-bundled): keep the CLI at the pinned version
-# and register the session row.
+# Cargo session-start hook: keep the CLI at the pinned version and register the
+# session row.
 #
-# The Cargo installer (`curl -fsSL https://api.getcargo.io/install.sh | sh`)
-# scaffolds its own copy of this lifecycle at ~/.claude/hooks/session-start.sh.
-# When that copy exists it owns the lifecycle — this plugin copy defers so the
-# session row is never double-registered. Unlike the installer copy, this one
-# does NOT run `skills add`: plugin users get skills from the plugin itself
-# (update via `/plugin update cargo@cargo`), and a parallel skills-add install
-# would duplicate every skill.
+# SINGLE SOURCE OF TRUTH for both delivery channels. The same file runs as:
+#   - the PLUGIN copy (default) — shipped in the Cargo plugin, wired by
+#     .claude-plugin/plugin.json. Reads the pin from the plugin root, does NOT
+#     run `skills add` (the plugin owns the skills), and refreshes the plugin
+#     itself for the next session.
+#   - the STANDALONE copy — downloaded by the installer's fallback channel to
+#     ~/.claude/hooks/ for machines using `skills add` instead of the plugin.
+#     Refreshes the skills bundle, reads the pin from the skills-add install,
+#     and skips the plugin self-update.
+# Mode is auto-detected from the script's location (~/.claude/hooks/ ⇒
+# standalone) and can be forced with a first argument: plugin | standalone.
+# The plugin copy defers to a standalone copy when one exists, so exactly one
+# lifecycle ever runs.
 set -u
 
-# Defer to the installer-scaffolded lifecycle when present.
-[ -x "$HOME/.claude/hooks/session-start.sh" ] && exit 0
+SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
+MODE="${1:-}"
+if [ -z "$MODE" ]; then
+  if [ "$SCRIPT_DIR" = "$HOME/.claude/hooks" ]; then MODE="standalone"; else MODE="plugin"; fi
+fi
+if [ "$MODE" = "plugin" ] && [ -x "$HOME/.claude/hooks/session-start.sh" ]; then
+  exit 0
+fi
 
 INPUT="$(cat 2>/dev/null || true)"
 SESSION_ID="$(printf '%s' "$INPUT" | jq -r '.session_id // "unknown"' 2>/dev/null || echo "unknown")"
 
-# Resolve the plugin root: the harness exports CLAUDE_PLUGIN_ROOT; fall back to
-# this script's location (hooks/ lives directly under the plugin root).
-PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-}"
-[ -n "$PLUGIN_ROOT" ] || PLUGIN_ROOT="$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)"
+# Resolve where the pin lives, refreshing the skills first on the standalone
+# channel (the plugin channel's skills refresh is the plugin self-update below).
+if [ "$MODE" = "standalone" ]; then
+  npx -y skills add getcargohq/cargo-skills \
+    --agents claude-code cursor codex \
+    --global --yes --skill '*' --full-depth >/dev/null 2>&1 || true
+  PIN_FILE="$HOME/.claude/skills/cargo/cli-version"
+else
+  PLUGIN_ROOT="${CLAUDE_PLUGIN_ROOT:-}"
+  [ -n "$PLUGIN_ROOT" ] || PLUGIN_ROOT="$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd)"
+  PIN_FILE="$PLUGIN_ROOT/cargo/cli-version"
+fi
 
-# Install the CLI version the bundle pins (cargo/cli-version ships inside the
-# plugin). Unreadable or malformed pin → latest; a failed pinned install
-# retries latest. Never a gate.
-PIN="$(cat "$PLUGIN_ROOT/cargo/cli-version" 2>/dev/null | tr -d '[:space:]' || true)"
+# Install the CLI version the bundle pins. Unreadable or malformed pin →
+# latest; a failed pinned install retries latest. Never a gate.
+PIN="$(cat "$PIN_FILE" 2>/dev/null | tr -d '[:space:]' || true)"
 printf '%s' "$PIN" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$' || PIN=""
 npm install -g "@cargo-ai/cli@${PIN:-latest}" >/dev/null 2>&1 \
   || npm install -g @cargo-ai/cli@latest >/dev/null 2>&1 || true
@@ -38,11 +57,13 @@ if command -v cargo-ai >/dev/null 2>&1; then
     --summary "Session in progress." >/dev/null 2>&1 || true
 fi
 
-# Keep the plugin itself current — the plugin channel's equivalent of the
-# installer's `skills add` refresh. Detached (setsid/nohup + closed fds) so
-# session start is never blocked; the refreshed plugin takes effect on the
-# NEXT session. Resolve `claude` across the usual Node/version-manager bin
-# dirs first (hooks often run with a minimal PATH).
+[ "$MODE" = "plugin" ] || exit 0
+
+# Plugin channel only: keep the plugin itself current — the plugin's equivalent
+# of the standalone channel's `skills add` refresh. Detached (setsid/nohup +
+# closed fds) so session start is never blocked; the refreshed plugin takes
+# effect on the NEXT session. Resolve `claude` across the usual
+# Node/version-manager bin dirs first (hooks often run with a minimal PATH).
 add_path() {
   [ -n "${1:-}" ] && [ -d "$1" ] || return 0
   case ":$PATH:" in
