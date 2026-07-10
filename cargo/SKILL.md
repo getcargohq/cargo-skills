@@ -1,7 +1,7 @@
 ---
 name: cargo
 description: Router and overview for the Cargo CLI agent skills. Explains the fifteen skills (this router + one onboarding skill cargo-quickstart + one outcome skill cargo-gtm + twelve capability skills, including cargo-cdk for declarative workspace-as-code and cargo-diagnostics for run/batch/cost forensics), when to use the declarative CDK vs the imperative CLI, the UUID flow between them, async polling, end-to-end use cases (enrich one record, enrich and sync to CRM, AI lead scoring, custom workflow, error monitoring, fresh-workspace bootstrap, segment export, GTM context authoring), and common gotchas (`conjonction` spelling, run vs batch, model-uuid vs segment-uuid). Load first whenever working with the Cargo CLI, when unsure which sub-skill applies, when stitching multiple sub-skills together, when bootstrapping a workspace, or when the user asks about Cargo skills in general.
-version: "1.8.0"
+version: "1.10.0"
 compatibility: Requires @cargo-ai/cli (npm) and a Cargo account (browser sign-in via --oauth, or an API token)
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -66,9 +66,10 @@ All commands output JSON to stdout. Failed commands exit non-zero and return `{"
 Before any other Cargo command, refresh the CLI and skills, then register the session in workspace management:
 
 ```bash
-# Refresh — idempotent, ~10s
-npm install -g @cargo-ai/cli@latest
+# Refresh — idempotent, ~10s. Skills first, then the CLI at the version the
+# bundle pins (cargo/cli-version ships inside this skill; fall back to latest).
 npx -y skills add getcargohq/cargo-skills
+npm install -g "@cargo-ai/cli@$(cat ~/.claude/skills/cargo/cli-version 2>/dev/null || echo latest)"
 
 # Register the session (placeholders OK — overwritten at session end)
 cargo-ai workspaceManagement session upsert \
@@ -78,6 +79,8 @@ cargo-ai workspaceManagement session upsert \
 ```
 
 Skip the refresh only if the user explicitly pinned a version. Skip the `session upsert` only if the user opted out or no `session_id` is available.
+
+**Why the pin:** `cargo/cli-version` is bumped in lockstep with these skills (a PR from the CLI release pipeline), so the CLI you install is the one this bundle was written against — no docs/CLI drift mid-session. If the pin file is missing or unreadable, `latest` is the safe fallback. To move the pin, merge the pending version-bump PR on `getcargohq/cargo-skills` (or edit `cargo/cli-version`) — the next session refresh converges automatically.
 
 ### 2. Mid-session — re-refresh, or escalate when stuck
 

@@ -19,6 +19,17 @@ npx skills add getcargohq/cargo-skills
 
 Works with Claude Code, Cursor, Windsurf, GitHub Copilot, and any agent that supports the [skills.sh](https://skills.sh) standard.
 
+### Claude Code plugin (alternative channel)
+
+On Claude Code ≥ v2.1.154 the repo also installs as a plugin — same fifteen skills, plus a `PreToolUse` hook that auto-approves safe `cargo-ai` calls (reads, queries, run/batch operations) while credentials (`login`), token minting, report egress, `cdk deploy`/`destroy`, and any `remove`/`delete` always still prompt ([`hooks/approve-cli.sh`](hooks/approve-cli.sh) — allow-only, it can never override a deny rule):
+
+```
+/plugin marketplace add getcargohq/cargo-skills
+/plugin install cargo@cargo
+```
+
+**Pick one channel.** Plugin install and `skills add` both register the skills; using both duplicates them (plugin copies are namespaced `cargo:<skill>`). Plugin users should uninstall the `skills add` copies (or skip the installer's SessionStart refresh) and update via `/plugin marketplace update cargo` + `/plugin update cargo@cargo` instead.
+
 For [OpenClaw](https://openclaw.ai), install the bundle from ClawHub:
 
 ```bash
@@ -30,7 +41,7 @@ Each skill ships a `metadata.openclaw.install` block that pulls `@cargo-ai/cli@l
 
 ## Staying current
 
-The Cargo CLI and these skills ship updates regularly. To always run the latest:
+The Cargo CLI and these skills ship updates regularly. The bundle pins the CLI version it was written against in [`cargo/cli-version`](cargo/cli-version) — the CLI release pipeline PRs a bump here, and merging that PR is the deliberate "skills + CLI verified together" promotion. Session hooks and the install docs read the pin and fall back to `latest` when it's unreadable, so the pin can never block an install.
 
 ### Claude Code
 
@@ -50,7 +61,7 @@ Without the installer, the `cargo` router skill still instructs the agent to ref
 
 ```bash
 clawhub install getcargohq/cargo-skills           # re-run to pull latest skills
-npm install -g @cargo-ai/cli@latest               # bump the CLI
+npm install -g "@cargo-ai/cli@$(cat ~/.openclaw/skills/cargo/cli-version 2>/dev/null || echo latest)"
 ```
 
 ### Cursor / Windsurf / Copilot / other skills.sh agents
@@ -58,8 +69,8 @@ npm install -g @cargo-ai/cli@latest               # bump the CLI
 Re-run the install command — `skills add` clones the repo fresh each time, so the bundle is always current:
 
 ```bash
-npx skills add getcargohq/cargo-skills            # refreshes skills
-npm install -g @cargo-ai/cli@latest               # bumps the CLI
+npx skills add getcargohq/cargo-skills            # refreshes skills (brings the pin with it)
+npm install -g "@cargo-ai/cli@$(cat ~/.claude/skills/cargo/cli-version 2>/dev/null || echo latest)"
 ```
 
 ### Publishing new versions to ClawHub

@@ -17,6 +17,19 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 - **Interaction conventions.** New shared reference [`cargo/references/interaction.md`](cargo/references/interaction.md): the plan gate (design approval before building a node graph or deploying, complementing the cost gate's spend approval), real choices presented with a recommended default (never pick silently between providers/actions), and presenting defaults (narrate, summarize instead of dumping raw JSON, conclusion first, always surface the `app.getcargo.io` URL). Linked from the router, `cargo-gtm`, `cargo-orchestration`, and the new diagnostics runbooks.
 - Note: `cargo` 1.7.0 shipped without a changelog entry (terminal-experience quick wins — quickstart routing, cost discipline, save-as-play, anti-drift); recorded here for the version trail.
 
+- **Claude Code plugin channel.** The repo now doubles as a Claude Code plugin marketplace: [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json) + [`.claude-plugin/plugin.json`](.claude-plugin/plugin.json) (repo root as the skills scan root — no restructuring; plugin version mirrors the router's, linter-enforced). Install with `/plugin marketplace add getcargohq/cargo-skills` → `/plugin install cargo@cargo` (Claude Code ≥ v2.1.154). README documents the **pick-one-channel** rule: plugin and `skills add` both register the skills, so use one.
+- **Prompt-free safe CLI calls.** New [`hooks/approve-cli.sh`](hooks/approve-cli.sh) — an allow-only `PreToolUse` hook (wired by the plugin) that auto-approves `cargo-ai` / `npx @cargo-ai/cli` calls, including pipelines through read-only helpers, after a quote-aware structural pass that rejects chaining/redirection/substitution/env-assignment. Credentials (`login`/`logout`), token minting (`workspaceManagement token`), report egress (`workspaceManagement report`), `cdk deploy`/`destroy`, and any `remove`/`delete` never auto-approve. Allow-only: it can skip a prompt, never override a deny rule.
+
+- **CLI version pinning.** New [`cargo/cli-version`](cargo/cli-version) — a single-line semver pin, the source of truth for which `@cargo-ai/cli` the skills were written against. It lives *inside* the router skill so it ships with `skills add` and the ClawHub bundle, letting session hooks read it locally (`~/.claude/skills/cargo/cli-version`) with zero extra network calls. Consumers (SessionStart hook, install.sh, the refresh snippets in these docs) install `@cargo-ai/cli@$(cat …cli-version || echo latest)` — the pin is a coherence optimization, never a gate: unreadable pin → `latest`. The CLI release pipeline PRs pin bumps to this repo; merging is the deliberate skills+CLI promotion. Linter now asserts the pin exists and is bare semver, and that every skill's `openclaw` install block stays `@cargo-ai/cli@latest` (frontmatter pinning would cost 14 bumps per CLI release; the session hook converges to the pin right after bootstrap).
+
+### `cargo` → 1.10.0
+
+- Session job 1 reordered: `skills add` first, then `npm install -g "@cargo-ai/cli@$(cat ~/.claude/skills/cargo/cli-version …)"` — plus a "why the pin" note and how to move it. `references/prerequisites.md` install section now uses the pinned form.
+
+### `cargo` → 1.9.0
+
+- New "Permission prompts (Claude Code)" section in `references/prerequisites.md`: what auto-approves, the four categories that always prompt and why, and the rule that prompts are not to be dodged.
+
 ### `cargo` → 1.8.0
 
 - **Register the `cargo-diagnostics` skill.** Counts bumped to 15 skills / twelve capability, capability-table row, full recap, and a dependency-rule bullet (when a run fails or "succeeds but looks wrong", load diagnostics). Frontmatter description updated to the fifteen-skill framing, now counting the router itself.
