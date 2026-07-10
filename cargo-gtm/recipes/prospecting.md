@@ -26,6 +26,8 @@ For sourcing-only / TAM list builds, see [`build-tam.md`](build-tam.md). For inv
 
 Adapt by phase: drop steps that aren't relevant. Pure sourcing → step 1 only. "Enrich list I already have" → steps 2–6.
 
+**QA gates (free, local — [`../references/contact-accuracy.md`](../references/contact-accuracy.md)):** run `scripts/validate-emails.ts` on the step-5 output *before* paying for step 6 (culls invalid/disposable/duplicate emails from the verify batch), and `scripts/contact-accuracy-audit.ts` on the merged output *before* step 7 — only `audit_action: SEND` rows go to write-back; report the audit counts in the receipt.
+
 ## Discovery sequence (run before any pipeline)
 
 ```bash
@@ -179,13 +181,28 @@ cargo-ai orchestration action execute-batch \
   --wait-until-finished > /tmp/p2-emails.json
 ```
 
-### Step 6 — Verify emails (waterfall)
+### Step 6 — Verify emails (free cull, then waterfall)
 
 ```bash
+# 6a. FREE pre-cull — drop invalid/disposable/duplicate emails before paying
+#     (QA scripts: ../references/contact-accuracy.md; Node >= 22.18)
+jq '[.results[] | select(.email)]' /tmp/p2-emails.json > /tmp/p2-candidates.json
+node <skill-dir>/scripts/validate-emails.ts --input /tmp/p2-candidates.json --output /tmp/p2-culled.csv
+# keep only rows with recommendation != "skip", then verify those
+
+# 6b. Paid verification on the survivors
 cargo-ai orchestration action execute-batch \
   --action '{"kind":"connector","integrationSlug":"waterfall","actionSlug":"verifyEmail","config":{}}' \
   --records "$(jq -c '[.results[] | select(.email) | {email}]' /tmp/p2-emails.json)" \
   --wait-until-finished > /tmp/p2-verified.json
+```
+
+### Step 6.5 — Audit before handoff (free)
+
+Stamp every merged row with a `SEND / VERIFY / REVIEW / REMOVE` verdict; only `SEND` rows proceed to Step 7, and the summary counts go in the receipt:
+
+```bash
+node <skill-dir>/scripts/contact-accuracy-audit.ts --input /tmp/p2-merged.csv --output /tmp/p2-final.csv
 ```
 
 ### Step 7 — Write back to a segment

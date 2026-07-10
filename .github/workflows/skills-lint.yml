@@ -22,3 +22,29 @@ jobs:
 
       - name: Run skill-bundle linter
         run: node .github/scripts/skills-lint.mjs .
+
+  qa-script-fixtures:
+    name: Run QA script fixture suites
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Node >= 22.18: the QA scripts are .ts run via native type-stripping.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Run every QA script against its fixtures
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          scripts=(cargo-gtm/scripts/*.ts)
+          if [ ${#scripts[@]} -eq 0 ]; then
+            echo "no QA scripts found — expected cargo-gtm/scripts/*.ts" >&2
+            exit 1
+          fi
+          for script in "${scripts[@]}"; do
+            echo "::group::${script} --fixtures"
+            node "$script" --fixtures
+            echo "::endgroup::"
+          done

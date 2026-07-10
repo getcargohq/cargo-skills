@@ -1,0 +1,234 @@
+{
+  "cases": [
+    {
+      "name": "single-current-role",
+      "experiences": [
+        { "title": "Head of Growth", "companyName": "Northwind Labs", "startDate": "2022-03", "current": true }
+      ],
+      "expected": { "title": "Head of Growth", "company": "Northwind Labs", "confidence": "high" },
+      "note": "Exactly one active operating role."
+    },
+    {
+      "name": "ended-then-current",
+      "experiences": [
+        { "title": "Account Executive", "companyName": "Old Harbor Software", "startDate": "2019-02", "endDate": "2022-05" },
+        { "title": "Senior Account Executive", "companyName": "Northwind Labs", "startDate": "2022-06" }
+      ],
+      "expected": { "title": "Senior Account Executive", "company": "Northwind Labs", "confidence": "high" },
+      "note": "Past endDate makes the first role inactive; no endDate means active."
+    },
+    {
+      "name": "string-false-current-flag",
+      "experiences": [
+        { "title": "VP Engineering", "companyName": "Old Harbor Software", "start_date": "2018-01", "end_date": "2021-03", "jobStillWorking": "false" },
+        { "title": "VP Engineering", "companyName": "Vector Systems", "start_date": "2021-04", "jobStillWorking": "true" }
+      ],
+      "expected": { "title": "VP Engineering", "company": "Vector Systems", "confidence": "high" },
+      "note": "The classic bug: the string \"false\" is truthy — naive code picks Old Harbor."
+    },
+    {
+      "name": "string-true-current-flag",
+      "experiences": [
+        { "title": "CTO", "company": "Vector Systems", "startDate": "2020-06", "isCurrent": "true" },
+        { "title": "Engineering Manager", "company": "Old Harbor Software", "startDate": "2016-01", "endDate": "2020-05", "isCurrent": "false" }
+      ],
+      "expected": { "title": "CTO", "company": "Vector Systems", "confidence": "high" },
+      "note": "String \"true\" flag counts as current; string \"false\" does not."
+    },
+    {
+      "name": "string-false-capitalized-no-end-date",
+      "experiences": [
+        { "title": "Sales Director", "companyName": "Old Harbor Software", "startDate": "2019-01", "jobStillWorking": "False" },
+        { "title": "Sales Director", "companyName": "BrightWave", "startDate": "2023-02", "jobStillWorking": "True" }
+      ],
+      "expected": { "title": "Sales Director", "company": "BrightWave", "confidence": "high" },
+      "note": "\"False\" with a missing end date means left-with-unknown-end, not active."
+    },
+    {
+      "name": "string-zero-and-one-flags",
+      "experiences": [
+        { "title": "Recruiter", "companyName": "Old Harbor Software", "startDate": "2019-05", "endDate": "2021-06", "isCurrent": "0" },
+        { "title": "Senior Recruiter", "companyName": "BrightWave", "startDate": "2021-07", "isCurrent": "1" }
+      ],
+      "expected": { "title": "Senior Recruiter", "company": "BrightWave", "confidence": "high" },
+      "note": "\"0\" is false and \"1\" is true — both are strings, never truthiness-test."
+    },
+    {
+      "name": "operator-beats-board-seat",
+      "experiences": [
+        { "title": "Board Member", "companyName": "Harbor Ventures", "startDate": "2023-01", "current": true },
+        { "title": "Chief Executive Officer", "companyName": "Northwind Labs", "startDate": "2021-05", "current": true }
+      ],
+      "expected": { "title": "Chief Executive Officer", "company": "Northwind Labs", "confidence": "high" },
+      "note": "Board seat is excluded even though it started later; the operator role wins."
+    },
+    {
+      "name": "only-board-roles",
+      "experiences": [
+        { "title": "Advisor", "companyName": "BrightWave", "startDate": "2021-03", "current": true },
+        { "title": "Board Member", "companyName": "Harbor Ventures", "startDate": "2023-06", "current": true }
+      ],
+      "expected": { "title": "Board Member", "company": "Harbor Ventures", "confidence": "low" },
+      "note": "Only non-operating roles are active: pick the most recent, confidence low."
+    },
+    {
+      "name": "charity-org-excluded",
+      "experiences": [
+        { "title": "Program Lead", "companyName": "City Harvest Charity", "startDate": "2023-01", "current": true },
+        { "title": "Operations Manager", "companyName": "Northwind Labs", "startDate": "2020-04", "current": true }
+      ],
+      "expected": { "title": "Operations Manager", "company": "Northwind Labs", "confidence": "high" },
+      "note": "Charity/volunteer orgs are excluded from primary selection by company name."
+    },
+    {
+      "name": "multiple-active-no-flags",
+      "experiences": [
+        { "title": "Co-Founder", "companyName": "Quantum Forge", "startDate": "2021-01" },
+        { "title": "Chief Product Officer", "companyName": "Orbit Metrics", "startDate": "2023-04" }
+      ],
+      "expected": { "title": "Chief Product Officer", "company": "Orbit Metrics", "confidence": "medium" },
+      "note": "Two concurrent operating roles, neither flagged: pick latest start, medium."
+    },
+    {
+      "name": "multiple-active-latest-flagged",
+      "experiences": [
+        { "title": "Co-Founder", "companyName": "Quantum Forge", "startDate": "2021-01", "current": true },
+        { "title": "Chief Executive Officer", "companyName": "Orbit Metrics", "startDate": "2023-04", "current": true }
+      ],
+      "expected": { "title": "Chief Executive Officer", "company": "Orbit Metrics", "confidence": "high" },
+      "note": "A clear latest start that also carries a current-flag is high confidence."
+    },
+    {
+      "name": "no-active-roles",
+      "experiences": [
+        { "title": "Product Manager", "companyName": "Old Harbor Software", "startDate": "2015-01", "endDate": "2019-12" },
+        { "title": "Senior Product Manager", "companyName": "BrightWave", "startDate": "2020-01", "endDate": "2023-08", "jobStillWorking": false }
+      ],
+      "expected": { "title": "Senior Product Manager", "company": "BrightWave", "confidence": "low" },
+      "note": "Everything ended: pick the most recently ended role, low — re-verify downstream."
+    },
+    {
+      "name": "title-repair-at",
+      "experiences": [
+        { "title": "VP Sales at Acme Corp", "companyName": "Acme Corp", "startDate": "2022-01", "current": true }
+      ],
+      "expected": { "title": "VP Sales", "company": "Acme Corp", "confidence": "high" },
+      "note": "Trailing \" at <company>\" segment equals the company: stripped."
+    },
+    {
+      "name": "title-repair-at-symbol-fuzzy",
+      "experiences": [
+        { "title": "Head of Marketing @ BrightWave", "companyName": "BrightWave Inc", "startDate": "2021-09", "current": true }
+      ],
+      "expected": { "title": "Head of Marketing", "company": "BrightWave Inc", "confidence": "high" },
+      "note": "\"@ BrightWave\" fuzzy-equals \"BrightWave Inc\" once the legal suffix is ignored."
+    },
+    {
+      "name": "title-repair-dash-legal-suffix",
+      "experiences": [
+        { "title": "CTO - Quantum Forge Inc", "companyName": "Quantum Forge", "startDate": "2020-02", "current": true }
+      ],
+      "expected": { "title": "CTO", "company": "Quantum Forge", "confidence": "high" },
+      "note": "\" - <company> Inc\" trailing segment stripped despite the suffix mismatch."
+    },
+    {
+      "name": "title-repair-pipe",
+      "experiences": [
+        { "title": "Director of Operations | Helios Ltd", "companyName": "Helios", "startDate": "2022-07", "current": true }
+      ],
+      "expected": { "title": "Director of Operations", "company": "Helios", "confidence": "high" },
+      "note": "Pipe separator variant, Ltd suffix ignored during the match."
+    },
+    {
+      "name": "title-with-at-not-stripped",
+      "experiences": [
+        { "title": "Head of Data at Scale", "companyName": "Meridian Analytics", "startDate": "2022-05", "current": true }
+      ],
+      "expected": { "title": "Head of Data at Scale", "company": "Meridian Analytics", "confidence": "high" },
+      "note": "\"at Scale\" is part of the real title — trailing segment does not match the company, so no repair."
+    },
+    {
+      "name": "company-as-object",
+      "experiences": [
+        { "position": "Staff Engineer", "company": { "name": "Orbit Metrics" }, "start_date": "2021-11", "isCurrent": true }
+      ],
+      "expected": { "title": "Staff Engineer", "company": "Orbit Metrics", "confidence": "high" },
+      "note": "Company arrives as an object {name}; title arrives under \"position\"."
+    },
+    {
+      "name": "year-only-dates",
+      "experiences": [
+        { "title": "Analyst", "companyName": "Old Harbor Software", "startDate": "2016", "endDate": "2019" },
+        { "title": "Senior Analyst", "companyName": "Northwind Labs", "startDate": "2019" }
+      ],
+      "expected": { "title": "Senior Analyst", "company": "Northwind Labs", "confidence": "high" },
+      "note": "Bare \"YYYY\" strings parse with month defaulting to January."
+    },
+    {
+      "name": "year-month-object-dates",
+      "experiences": [
+        { "title": "Data Engineer", "companyName": "Northwind Labs", "startDate": { "year": 2022, "month": 3 } },
+        { "title": "Senior Data Engineer", "companyName": "Northwind Labs", "startDate": { "year": 2022, "month": 7 } }
+      ],
+      "expected": { "title": "Senior Data Engineer", "company": "Northwind Labs", "confidence": "medium" },
+      "note": "{year, month} objects compare correctly; two concurrent roles → medium."
+    },
+    {
+      "name": "iso-timestamp-dates",
+      "experiences": [
+        { "title": "Platform Engineer", "companyName": "Old Harbor Software", "startDate": "2017-02-01T00:00:00.000Z", "endDate": "2021-03-31T00:00:00.000Z" },
+        { "title": "Staff Platform Engineer", "companyName": "Vector Systems", "startDate": "2021-04-15T09:30:00Z" }
+      ],
+      "expected": { "title": "Staff Platform Engineer", "company": "Vector Systems", "confidence": "high" },
+      "note": "Full ISO timestamps reduce to (year, month) tuples."
+    },
+    {
+      "name": "future-end-date",
+      "experiences": [
+        { "title": "Interim CFO", "companyName": "Helios", "startDate": "2024-01", "endDate": "2099-12-31" },
+        { "title": "Finance Director", "companyName": "Old Harbor Software", "startDate": "2018-03", "endDate": "2023-12" }
+      ],
+      "expected": { "title": "Interim CFO", "company": "Helios", "confidence": "high" },
+      "note": "An endDate in the future counts as active (fixed-term contract)."
+    },
+    {
+      "name": "snake-case-and-jobTitle-variants",
+      "experiences": [
+        { "jobTitle": "Growth Lead", "organization": "BrightWave", "dateFrom": "2020-08", "dateTo": "2022-01" },
+        { "jobTitle": "Head of Growth", "organization": "Orbit Metrics", "start_date": "2022-02", "jobStillWorking": true }
+      ],
+      "expected": { "title": "Head of Growth", "company": "Orbit Metrics", "confidence": "high" },
+      "note": "jobTitle/organization/dateFrom/dateTo/start_date field variants all resolve."
+    },
+    {
+      "name": "tie-start-prefers-current-flag",
+      "experiences": [
+        { "title": "Principal Consultant", "companyName": "Helios", "startDate": "2022-01" },
+        { "title": "Field CTO", "companyName": "Vector Systems", "startDate": "2022-01", "current": "1" }
+      ],
+      "expected": { "title": "Field CTO", "company": "Vector Systems", "confidence": "medium" },
+      "note": "Same startDate: the role with a true current-flag wins the tie; still medium."
+    },
+    {
+      "name": "tie-start-no-flags-first-listed",
+      "experiences": [
+        { "title": "Fractional CMO", "companyName": "BrightWave", "startDate": "2023-01" },
+        { "title": "Fractional CMO", "companyName": "Orbit Metrics", "startDate": "2023-01" }
+      ],
+      "expected": { "title": "Fractional CMO", "company": "BrightWave", "confidence": "medium" },
+      "note": "Same startDate, no flags: the role listed first wins (providers list newest first)."
+    },
+    {
+      "name": "unparseable-experiences",
+      "experiences": "{{not valid json",
+      "expected": { "title": "", "company": "", "confidence": "low" },
+      "note": "A cell that fails JSON.parse yields empty title/company, low, reason unparseable-experiences."
+    },
+    {
+      "name": "empty-experiences",
+      "experiences": [],
+      "expected": { "title": "", "company": "", "confidence": "low" },
+      "note": "An empty array yields empty title/company, low."
+    }
+  ]
+}

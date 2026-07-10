@@ -1,7 +1,7 @@
 ---
 name: cargo-gtm
 description: "Front door for any GTM task on Cargo — sourcing, waterfall enrichment, email/phone/LinkedIn lookup, email verification, scoring, qualification, sequencing, CRM sync, and signal monitoring (job changes, funding, tech-stack/hiring intent). Use when the user states a real-world goal involving prospects, leads, accounts, contacts, ICP lists, or campaign activation. Routes to phase guides (Level 2), recipes (Level 2.5), and per-provider playbooks (Level 3) before any action call."
-version: "1.1.1"
+version: "1.2.0"
 compatibility: Requires @cargo-ai/cli (npm) and a Cargo account (browser sign-in via --oauth, or an API token)
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -130,6 +130,7 @@ See [`provider-playbooks/`](provider-playbooks/) for per-provider deep dives. Se
 5. CONTACT  → FullEnrich.findEmail (fallback peopleDataLabs)         (1–3/record)
 6. VERIFY   → waterfall.verifyEmail                                  (0.1/record)
 7. BACKFILL → peopleDataLabs.enrichPerson (only if step 5 missed)    (3/record)
+8. QA       → scripts/contact-accuracy-audit.ts                      (free, local)
 ```
 
 Adapt by phase: drop steps that aren't relevant to the user's goal. For pure sourcing, run step 1 only. For "enrich a list I already have," run steps 2–7.
@@ -149,18 +150,27 @@ cargo-ai orchestration run download-outputs \
 
 Returns `{"url": "..."}` — a signed URL to a CSV/JSON containing only the output node's data. Faster and cheaper than `run download` (which pulls full run records). See [`references/output-retrieval.md`](references/output-retrieval.md) and [`../cargo-analytics/SKILL.md`](../cargo-analytics/SKILL.md).
 
-## 8) Action shape rules (every recipe)
+## 8) Contact accuracy — run the QA scripts, don't eyeball
+
+Four deterministic TypeScript scripts in [`scripts/`](scripts/) (Node ≥ 22.18, zero deps, fixture-tested in CI) replace in-context row checking. **Run the script — never re-derive its logic by reasoning over rows.** Full doctrine, pipeline order, and the SEND/VERIFY/REVIEW/REMOVE verdict semantics: [`references/contact-accuracy.md`](references/contact-accuracy.md).
+
+- `scripts/validate-emails.ts` — free syntax/risk/duplicate cull **before** paid `verifyEmail`.
+- `scripts/select-current-role.ts` — pick the real current role from an experiences array (catches job changers).
+- `scripts/validate-linkedin-names.ts` — name↔profile match (catches same-name decoys); pairs with [`recipes/linkedin-url-lookup.md`](recipes/linkedin-url-lookup.md).
+- `scripts/contact-accuracy-audit.ts` — final per-row `audit_action` stamp on the merged output; cite its summary counts in the receipt. Reads files or a finished run directly (`--workflow-uuid`, via `@cargo-ai/api`).
+
+## 9) Action shape rules (every recipe)
 
 Every action JSON in this skill follows the rules in [`../cargo-orchestration/references/examples/actions.md`](../cargo-orchestration/references/examples/actions.md):
 
 - `kind: "connector"` action shape: `{"kind":"connector","integrationSlug":"<slug>","actionSlug":"<slug>","config":{}}`. **`connectorUuid` is NOT in `config`** — the platform resolves the workspace's authenticated connector from `integrationSlug` automatically.
 - For multi-step node graphs: `connectorUuid` lives at the top level of the node, not in `config`. Cross-node interpolation uses `{{nodes.<slug>.<field>}}`. Agent node outputs wrap under `.answer` (read as `{{nodes.<slug>.answer.<field>}}`).
 
-## 9) When stuck — file a workspace report
+## 10) When stuck — file a workspace report
 
 If a recipe fails repeatedly and the cause isn't obvious, escalate via `cargo-ai workspaceManagement report create`. See [`../cargo-workspace-management/SKILL.md`](../cargo-workspace-management/SKILL.md) (Reports section).
 
-## 10) Provider playbooks
+## 11) Provider playbooks
 
 Per-provider deep dives for the priority stack. Long-tail providers don't have dedicated playbooks yet — fall back to [`references/alternatives.md`](references/alternatives.md) and [`references/stage-action-map.md`](references/stage-action-map.md).
 
@@ -172,9 +182,10 @@ Per-provider deep dives for the priority stack. Long-tail providers don't have d
 - [`provider-playbooks/theirStack.md`](provider-playbooks/theirStack.md) — tech-stack + hiring-intent signals.
 - [`provider-playbooks/peopleDataLabs.md`](provider-playbooks/peopleDataLabs.md) — heavyweight backfill at flat 3-credit tier.
 
-## 11) References
+## 12) References
 
 - [`references/cost-discipline.md`](references/cost-discipline.md) — the mandatory spend rules: pilot → approval gate, per-run receipts, 1.4×N over-provision, count-first sizing, provider-billing rules.
+- [`references/contact-accuracy.md`](references/contact-accuracy.md) — the deterministic QA scripts (email cull, current-role, name match, final audit) and the SEND/VERIFY/REVIEW/REMOVE verdicts.
 - [`references/stage-action-map.md`](references/stage-action-map.md) — cheapest credits-based action per stage across the full 120-integration catalog.
 - [`references/credits-cost-table.md`](references/credits-cost-table.md) — auto-generated cost table for all 141 credits-based actions.
 - [`references/waterfall-strategy.md`](references/waterfall-strategy.md) — canonical waterfall chains by enrichment goal (every recipe's "fallback" follows these).

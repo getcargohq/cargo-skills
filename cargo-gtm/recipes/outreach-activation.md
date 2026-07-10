@@ -66,9 +66,13 @@ Waterfall returns the best-coverage `email`, `phone`, and a normalized contact p
 
 ### Step 4 — Verify emails before personalizing
 
-Cheap insurance against bounces and sender-reputation damage:
+Cheap insurance against bounces and sender-reputation damage. First cull for free, then verify only the survivors:
 
 ```bash
+# FREE pre-cull — drops invalid/disposable/duplicate emails before paying
+# (QA scripts: ../references/contact-accuracy.md; Node >= 22.18)
+node <skill-dir>/scripts/validate-emails.ts --input /tmp/enriched.json --output /tmp/culled.csv
+
 cargo-ai orchestration action execute-batch \
   --action '{"kind":"connector","integrationSlug":"waterfall","actionSlug":"verifyEmail","config":{}}' \
   --records "$(jq -c '[.results[] | {email}]' /tmp/enriched.json)" \
@@ -76,6 +80,10 @@ cargo-ai orchestration action execute-batch \
 
 # Keep only deliverable
 jq -c '[.results[] | select(.status == "valid")]' /tmp/verified.json > /tmp/deliverable.json
+
+# Final gate before the sequencer sees anything: stamp SEND/VERIFY/REVIEW/REMOVE
+# and hand off only the SEND rows (report the counts in the receipt)
+node <skill-dir>/scripts/contact-accuracy-audit.ts --input /tmp/deliverable.json --output /tmp/send-ready.csv
 ```
 
 ### Step 5 — Generate a personalized first line per contact

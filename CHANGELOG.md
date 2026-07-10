@@ -10,6 +10,11 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### `cargo-gtm` → 1.2.0
+
+- **Executable QA layer.** New [`cargo-gtm/scripts/`](cargo-gtm/scripts/) — four deterministic, fixture-tested TypeScript scripts (Node ≥ 22.18 native type-stripping, zero deps in file mode) that replace in-context row checking: `validate-emails.ts` (free syntax/risk/duplicate cull before paid `verifyEmail`), `select-current-role.ts` (current role from an experiences array; catches job changers), `validate-linkedin-names.ts` (name↔profile match; catches same-name decoys), and `contact-accuracy-audit.ts` (final per-row `SEND/VERIFY/REVIEW/REMOVE` stamp). Each supports `--input` files or **API mode** (`--workflow-uuid`, fetching outputs via `@cargo-ai/api` with the CLI's stored login) and a `--fixtures` self-test. Doctrine in [`references/contact-accuracy.md`](cargo-gtm/references/contact-accuracy.md): *run the script, don't re-derive its logic in-context*. Wired into the router (new §8, spine step 8) and the `prospecting` / `outreach-activation` recipes' verify steps.
+- **CI fixture gate.** `skills-lint.yml` gains a `qa-script-fixtures` job (Node 22) running every `cargo-gtm/scripts/*.ts --fixtures` on push/PR — `validate-linkedin-names.ts` enforces precision ≥ 0.95 / recall ≥ 0.85; the others require exact-match on every case.
+
 ### Repository-wide
 
 - **ClawHub publish loop caught up.** `clawhub-publish.yml` was missing three shipped skills — `cargo-quickstart`, `cargo-content`, and `cargo-hosting` were lint-covered but never published. All fifteen skills (including the new `cargo-diagnostics`) are now in the publish loop.

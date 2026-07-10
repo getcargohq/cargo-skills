@@ -1,0 +1,224 @@
+{
+  "cases": [
+    {
+      "email": "jane.doe@acme-widgets.example",
+      "expected": { "valid": true, "risk": "ok" },
+      "note": "plain business address on a reserved .example TLD"
+    },
+    {
+      "email": "  JOHN.SMITH@Northwind-Traders.EXAMPLE  ",
+      "expected": { "valid": true, "risk": "ok" },
+      "note": "uppercase + surrounding whitespace is normalized before checks"
+    },
+    {
+      "email": "jane+tag@globex-corp.example",
+      "expected": { "valid": true, "risk": "ok" },
+      "note": "plus-tagged local part is legal"
+    },
+    {
+      "email": "cto@a.b.co",
+      "expected": { "valid": true, "risk": "ok" },
+      "note": "subdomain domain with short labels and 2-char TLD"
+    },
+    {
+      "email": "vp.sales@emea.initech-labs.example",
+      "expected": { "valid": true, "risk": "ok" },
+      "note": "role words inside a longer local part are NOT a role account"
+    },
+    {
+      "email": "user@acme.test",
+      "expected": { "valid": true, "risk": "ok" },
+      "note": "reserved .test TLD is a fine synthetic business domain"
+    },
+    {
+      "email": "ops@intra-net.example",
+      "expected": { "valid": true, "risk": "ok" },
+      "note": "hyphen inside a domain label is legal"
+    },
+    {
+      "email": "jane..doe@acme-widgets.example",
+      "expected": { "valid": false, "risk": "invalid" },
+      "note": "consecutive dots in local part"
+    },
+    {
+      "email": ".jane@acme-widgets.example",
+      "expected": { "valid": false, "risk": "invalid" },
+      "note": "local part starts with a dot"
+    },
+    {
+      "email": "jane.@acme-widgets.example",
+      "expected": { "valid": false, "risk": "invalid" },
+      "note": "local part ends with a dot"
+    },
+    {
+      "email": "janedoe.acme-widgets.example",
+      "expected": { "valid": false, "risk": "invalid" },
+      "note": "missing @"
+    },
+    {
+      "email": "jane@doe@acme-widgets.example",
+      "expected": { "valid": false, "risk": "invalid" },
+      "note": "two @ signs"
+    },
+    {
+      "email": "@acme-widgets.example",
+      "expected": { "valid": false, "risk": "invalid" },
+      "note": "empty local part"
+    },
+    {
+      "email": "jane@acme.123",
+      "expected": { "valid": false, "risk": "invalid" },
+      "note": "numeric TLD"
+    },
+    {
+      "email": "jane@acme.x",
+      "expected": { "valid": false, "risk": "invalid" },
+      "note": "1-char TLD"
+    },
+    {
+      "email": "jane@localhost",
+      "expected": { "valid": false, "risk": "invalid" },
+      "note": "domain needs at least two labels"
+    },
+    {
+      "email": "bob@-badstart.example",
+      "expected": { "valid": false, "risk": "invalid" },
+      "note": "domain label starts with a hyphen"
+    },
+    {
+      "email": "bob@badend-.example",
+      "expected": { "valid": false, "risk": "invalid" },
+      "note": "domain label ends with a hyphen"
+    },
+    {
+      "email": "jane@acme_widgets.example",
+      "expected": { "valid": false, "risk": "invalid" },
+      "note": "underscore is not allowed in a domain label"
+    },
+    {
+      "email": "jane doe@acme-widgets.example",
+      "expected": { "valid": false, "risk": "invalid" },
+      "note": "embedded space"
+    },
+    {
+      "email": "jane,doe@acme-widgets.example",
+      "expected": { "valid": false, "risk": "invalid" },
+      "note": "embedded comma"
+    },
+    {
+      "email": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa@acme-widgets.example",
+      "expected": { "valid": false, "risk": "invalid" },
+      "note": "local part of 65 chars exceeds the 64-char limit"
+    },
+    {
+      "email": "user@example.com",
+      "expected": { "valid": false, "risk": "invalid" },
+      "note": "placeholder: exact domain example.com (rule matches example.com/org/net exactly, so acme-widgets.example stays valid)"
+    },
+    {
+      "email": "user@example.org",
+      "expected": { "valid": false, "risk": "invalid" },
+      "note": "placeholder: exact domain example.org"
+    },
+    {
+      "email": "test@test.example",
+      "expected": { "valid": false, "risk": "invalid" },
+      "note": "placeholder: contains the test@test pattern"
+    },
+    {
+      "email": "noemail@acme-widgets.example",
+      "expected": { "valid": false, "risk": "invalid" },
+      "note": "placeholder: contains noemail"
+    },
+    {
+      "email": "no-reply@acme-widgets.example",
+      "expected": { "valid": false, "risk": "invalid" },
+      "note": "placeholder: no-reply@ is caught before the role check runs"
+    },
+    {
+      "email": "unknown@acme-widgets.example",
+      "expected": { "valid": false, "risk": "invalid" },
+      "note": "placeholder: contains unknown@"
+    },
+    {
+      "email": "n/a",
+      "expected": { "valid": false, "risk": "invalid" },
+      "note": "literal placeholder n/a"
+    },
+    {
+      "email": "null",
+      "expected": { "valid": false, "risk": "invalid" },
+      "note": "literal placeholder null"
+    },
+    {
+      "email": "NONE",
+      "expected": { "valid": false, "risk": "invalid" },
+      "note": "literal placeholder none, case-insensitive"
+    },
+    {
+      "email": "foo@mailinator.com",
+      "expected": { "valid": true, "risk": "disposable" },
+      "note": "disposable provider"
+    },
+    {
+      "email": "BAR@YOPMAIL.COM",
+      "expected": { "valid": true, "risk": "disposable" },
+      "note": "disposable provider matched after lowercasing"
+    },
+    {
+      "email": "baz@temp-mail.org",
+      "expected": { "valid": true, "risk": "disposable" },
+      "note": "disposable provider with hyphenated domain"
+    },
+    {
+      "email": "qux@guerrillamail.com",
+      "expected": { "valid": true, "risk": "disposable" },
+      "note": "disposable provider"
+    },
+    {
+      "email": "info@acme-widgets.example",
+      "expected": { "valid": true, "risk": "role" },
+      "note": "role account: info@"
+    },
+    {
+      "email": "sales@globex-corp.example",
+      "expected": { "valid": true, "risk": "role" },
+      "note": "role account: sales@"
+    },
+    {
+      "email": "hr@initech-labs.example",
+      "expected": { "valid": true, "risk": "role" },
+      "note": "role account: hr@"
+    },
+    {
+      "email": "noreply@acme-widgets.example",
+      "expected": { "valid": true, "risk": "role" },
+      "note": "noreply (no hyphen) misses the no-reply@ placeholder pattern and classifies as a role account"
+    },
+    {
+      "email": "jane.doe@gmail.com",
+      "expected": { "valid": true, "risk": "free" },
+      "note": "consumer free-mail: gmail"
+    },
+    {
+      "email": "john@yahoo.co.uk",
+      "expected": { "valid": true, "risk": "free" },
+      "note": "consumer free-mail: regional yahoo"
+    },
+    {
+      "email": "pierre@orange.fr",
+      "expected": { "valid": true, "risk": "free" },
+      "note": "consumer free-mail: orange.fr"
+    },
+    {
+      "email": "li@qq.com",
+      "expected": { "valid": true, "risk": "free" },
+      "note": "consumer free-mail: qq.com"
+    },
+    {
+      "email": "sam@protonmail.com",
+      "expected": { "valid": true, "risk": "free" },
+      "note": "consumer free-mail: protonmail"
+    }
+  ]
+}
