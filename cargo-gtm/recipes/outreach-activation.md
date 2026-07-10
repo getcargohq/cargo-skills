@@ -101,7 +101,7 @@ jq '[.[] | select(.audit_action == "SEND")]' /tmp/audited.json > /tmp/deliverabl
 
 ```bash
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"anthropic","actionSlug":"instruct","config":{"model":"claude-haiku-4-5","temperature":0.3}}' \
+  --action '{"kind":"connector","integrationSlug":"anthropic","actionSlug":"instruct","config":{"model":"claude-3-5-haiku-latest","advancedSettings":{"temperature":0.3,"maxTokens":1024}}}' \
   --records "$(jq -c '[.[] | {
     prompt: ("You are writing the opening line of a cold email. The recipient is " + .first_name + " " + .last_name + ", " + .title + " at " + .company_name + ". Signal triggering this outreach: " + .signal_summary + ". Write ONE sentence that references the signal naturally and ties it to a relevant business outcome. No greeting. No follow-up. ≤30 words.")
   }]' /tmp/deliverable.json)" \
@@ -110,7 +110,7 @@ cargo-ai orchestration action execute-batch \
 
 More proven prompts (subject lines, follow-ups, job-change angles): [`../references/prompt-library/index.md`](../references/prompt-library/index.md).
 
-For higher quality at higher cost, swap `claude-haiku-4-5` for `claude-sonnet-4-6`. For 30× cheaper at scale: `openAi` with `gpt-4o-mini` (0.006 credits/call vs Haiku's 0.2).
+For higher quality at higher cost, swap `claude-3-5-haiku-latest` for `claude-sonnet-4-6`. For ~30× cheaper at scale: `openAi` with `gpt-5-nano` (0.006 credits/1k tokens vs Haiku's 0.2) — see [`../provider-playbooks/openAi.md`](../provider-playbooks/openAi.md) for the full tier table.
 
 ### Step 6 — Hand off to the sequencer
 
@@ -158,7 +158,7 @@ For a 500-contact signal segment (waterfall + verify + Haiku personalization):
 | `anthropic.instruct` (Haiku) | 0.2 | 100 |
 | **Total** | **1.7** | **850** |
 
-Halve to ~425 credits by switching personalization to `openAi.instruct` with `gpt-4o-mini`.
+Cut personalization ~30× by switching to `openAi.instruct` with `gpt-5-nano` (0.006/1k tokens).
 
 ## Action shape
 
