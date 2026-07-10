@@ -10,6 +10,10 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### `cargo-gtm` → 1.6.1
+
+- Import recipe step 5 now points at schema-as-JSON exports as the mapping input for rebuilding source-tool logic, citing [ClayMate Lite](https://github.com/GTM-Base/claymate-lite) for Clay tables (third-party MIT extension, with a review-before-loading caution). Explicit exception to the no-competitor-names convention, approved 2026-07-10.
+
 ### `cargo-gtm` → 1.7.0
 
 - **Provider playbooks: 20 → 43 — every credits-based provider covered.** Twenty-three more playbooks grounded in `connection integration get`: the LLM tier (`anthropic`, `openAi`, `gemini`, `perplexity` — per-model cost tiers and bulk-vs-judgment routing), verification/contact long tail (`bouncer`, `neverBounce`, `dropcontact`, `enrichley`, `enrowio`, `reverseContact`, `rocketreach`, `forager`, `cleon1`, `mixrank`, `kitt`), enrichment (`companyEnrich`, `enrichCrm`, `societeInfo`, `snitcher`), and sourcing/signal (`piloterr`, `g2`, `theSwarm`, `linkup`). The §11 read-first gate now covers the whole credits catalog; the "no playbook → alternatives.md" fallback remains only for own-key integrations.

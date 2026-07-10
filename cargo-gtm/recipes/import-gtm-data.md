@@ -63,7 +63,7 @@ Report the SEND/VERIFY/REVIEW/REMOVE counts — then **write the verdicts back t
 
 For each recurring enrichment/workflow in the source tool, decide with the user: **retire, keep manual, or rebuild**. For rebuilds:
 
-1. Identify what each source column *did* (find email, enrich firmographics, score, personalize).
+1. Identify what each source column *did* (find email, enrich firmographics, score, personalize). If the source tool can export its table/workflow **schema as JSON**, use that as the mapping input instead of eyeballing the UI — e.g. for Clay tables, [ClayMate Lite](https://github.com/GTM-Base/claymate-lite) (MIT Chrome extension) exports column structures as portable JSON. *Third-party code: review it before loading — it runs on your logged-in session.*
 2. Map it to the cheapest Cargo action for that stage — [`../references/stage-action-map.md`](../references/stage-action-map.md), then the provider's playbook (§11 gate applies).
 3. LLM prompt columns: check [`../references/prompt-library/index.md`](../references/prompt-library/index.md) for a proven equivalent before porting the prompt text.
 4. Compose the chain per the recipe spine and save it as a play — [`save-as-play.md`](save-as-play.md).
