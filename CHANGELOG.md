@@ -10,6 +10,17 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### `cargo-gtm` → 1.3.0
+
+- **Provider playbooks: 6 → 20.** Fourteen new per-provider deep dives grounded in `connection integration get` output: sourcing/company-data (`linkedin`, `proxycurl`, `apolloio`, `oceanio`, `datagma`), email/contact specialists (`hunter`, `prospeo`, `icypeas`, `findyMail`, `leadMagic`, `contactOut`, `zeroBounce`), research/scraping (`firecrawl`, `serper`). Each carries the action table with credit costs, real config-shape examples, input quirks, cost traps, and its place in the recipe spine.
+- **Read-first gate.** Router §11 now opens with a hard stop: no paid action against a covered provider until its playbook is open — one playbook read is cheaper than one failed paid call. Linter gains the matching drift guard: every playbook on disk must be catalogued in `cargo-gtm/SKILL.md`.
+- **Fixed:** `recipes/linkedin-url-lookup.md` documented `findProfileUrl` inputs as `firstName`/`lastName`/`companyName`/`companyDomain` — the live schema takes `fullName` (required) + `companyName` only. Caught while grounding the playbooks in `connection integration get`; known-stale rows in `credits-cost-table.md`/`stage-action-map.md` (`prospeo.verifyEmail` no longer exists; `serper.*` now 0.05, not 1) are flagged for the next table regeneration.
+
+### `cargo-gtm` → 1.2.0
+
+- **Executable QA layer.** New [`cargo-gtm/scripts/`](cargo-gtm/scripts/) — four deterministic, fixture-tested TypeScript scripts (Node ≥ 22.18 native type-stripping, zero deps in file mode) that replace in-context row checking: `validate-emails.ts` (free syntax/risk/duplicate cull before paid `verifyEmail`), `select-current-role.ts` (current role from an experiences array; catches job changers), `validate-linkedin-names.ts` (name↔profile match; catches same-name decoys), and `contact-accuracy-audit.ts` (final per-row `SEND/VERIFY/REVIEW/REMOVE` stamp). Each supports `--input` files — CSV, JSON array, or raw `execute-batch` output (`{"results": [...]}` unwraps automatically) — or **API mode** (`--workflow-uuid`, fetching outputs via `@cargo-ai/api` with the CLI's stored login), plus a `--fixtures` self-test; `validate-emails.ts` and `contact-accuracy-audit.ts` also take `--json` to emit rows for `jq` chaining, and duplicates are `recommendation: skip` so they never reach paid verification. The recipes' verify chains build the paid batch from the culled output, merge statuses back onto **all** rows before the audit (never pre-filter to `valid`), and hand only `audit_action == "SEND"` rows downstream. Doctrine in [`references/contact-accuracy.md`](cargo-gtm/references/contact-accuracy.md): *run the script, don't re-derive its logic in-context*. Wired into the router (new §8, spine step 8) and the `prospecting` / `outreach-activation` recipes' verify steps.
+- **CI fixture gate.** `skills-lint.yml` gains a `qa-script-fixtures` job (Node 22) running every `cargo-gtm/scripts/*.ts --fixtures` on push/PR — `validate-linkedin-names.ts` enforces precision ≥ 0.95 / recall ≥ 0.85; the others require exact-match on every case.
+
 ### Repository-wide
 
 - **ClawHub publish loop caught up.** `clawhub-publish.yml` was missing three shipped skills — `cargo-quickstart`, `cargo-content`, and `cargo-hosting` were lint-covered but never published. All fifteen skills (including the new `cargo-diagnostics`) are now in the publish loop.

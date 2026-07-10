@@ -1,0 +1,441 @@
+{
+  "cases": [
+    {
+      "row": {
+        "firstName": "Ada",
+        "lastName": "Lovelace",
+        "company": "Analytical Engines",
+        "email": "ada@analyticalengines.com",
+        "emailStatus": "valid",
+        "providerCount": "2",
+        "name_match": "true",
+        "role_confidence": "high",
+        "email_risk": "ok"
+      },
+      "expected": {
+        "action": "SEND",
+        "flags": []
+      },
+      "note": "happy path: valid, corroborated, full identity signals"
+    },
+    {
+      "row": {
+        "firstName": "Grace",
+        "lastName": "Hopper",
+        "company": "Compilers Inc",
+        "email": "grace@compilersinc.com",
+        "emailStatus": "catch_all",
+        "providerCount": "1",
+        "name_match": "true",
+        "role_confidence": "high",
+        "email_risk": "ok"
+      },
+      "expected": {
+        "action": "VERIFY",
+        "flags": [
+          "catchall-single-source"
+        ]
+      },
+      "note": "catch_all with a single source needs corroboration"
+    },
+    {
+      "row": {
+        "firstName": "Alan",
+        "lastName": "Turing",
+        "company": "Enigma Labs",
+        "email": "alan@enigmalabs.io",
+        "emailStatus": "catch_all",
+        "providerCount": "2",
+        "name_match": "true",
+        "role_confidence": "high",
+        "email_risk": "ok"
+      },
+      "expected": {
+        "action": "SEND",
+        "flags": [
+          "catchall-corroborated"
+        ]
+      },
+      "note": "catch_all corroborated by 2 providers is sendable"
+    },
+    {
+      "row": {
+        "firstName": "Katherine",
+        "lastName": "Johnson",
+        "company": "Orbit Analytics",
+        "email": "katherine@orbitanalytics.com",
+        "emailStatus": "accept_all",
+        "providerCount": "1",
+        "name_match": "true",
+        "role_confidence": "high",
+        "email_risk": "ok"
+      },
+      "expected": {
+        "action": "VERIFY",
+        "flags": [
+          "catchall-single-source"
+        ]
+      },
+      "note": "accept_all alias normalizes to catch_all"
+    },
+    {
+      "row": {
+        "firstName": "Edsger",
+        "lastName": "Dijkstra",
+        "company": "Shortest Path BV",
+        "email": "edsger@shortestpath.nl",
+        "emailStatus": "deliverable",
+        "providerCount": "3",
+        "name_match": "true",
+        "role_confidence": "high",
+        "email_risk": "ok"
+      },
+      "expected": {
+        "action": "SEND",
+        "flags": []
+      },
+      "note": "deliverable alias normalizes to valid"
+    },
+    {
+      "row": {
+        "firstName": "Barbara",
+        "lastName": "Liskov",
+        "company": "Substitution Systems",
+        "email": "barbara@substitutionsystems.com",
+        "emailStatus": "valid",
+        "providerCount": "2",
+        "name_match": "false",
+        "role_confidence": "high",
+        "email_risk": "ok"
+      },
+      "expected": {
+        "action": "REMOVE",
+        "flags": [
+          "name-mismatch"
+        ]
+      },
+      "note": "name mismatch overrides a valid email — wrong person is worse than no send"
+    },
+    {
+      "row": {
+        "firstName": "Donald",
+        "lastName": "Knuth",
+        "company": "Literate Programs",
+        "email": "donald@literateprograms.com",
+        "emailStatus": "valid",
+        "providerCount": "2",
+        "name_match": "true",
+        "role_confidence": "low",
+        "email_risk": "ok"
+      },
+      "expected": {
+        "action": "REVIEW",
+        "flags": [
+          "stale-or-ambiguous-role"
+        ]
+      },
+      "note": "low role confidence: likely job changer, review before sending"
+    },
+    {
+      "row": {
+        "firstName": "Info",
+        "lastName": "Desk",
+        "company": "Frontdoor Corp",
+        "email": "info@frontdoorcorp.com",
+        "emailStatus": "valid",
+        "providerCount": "2",
+        "name_match": "true",
+        "role_confidence": "high",
+        "email_risk": "role"
+      },
+      "expected": {
+        "action": "REVIEW",
+        "flags": [
+          "role-account"
+        ]
+      },
+      "note": "role-based address is deliverable but rarely reaches a person"
+    },
+    {
+      "row": {
+        "firstName": "Tommy",
+        "lastName": "Throwaway",
+        "company": "Mayfly Media",
+        "email": "tommy@tempmailbox.net",
+        "emailStatus": "valid",
+        "providerCount": "1",
+        "name_match": "true",
+        "role_confidence": "high",
+        "email_risk": "disposable"
+      },
+      "expected": {
+        "action": "REMOVE",
+        "flags": [
+          "disposable-email"
+        ]
+      },
+      "note": "disposable domain: remove even when verification passes"
+    },
+    {
+      "row": {
+        "firstName": "Margaret",
+        "lastName": "Hamilton",
+        "company": "Harborview Software",
+        "email": "margaret@harborviewsoftware.com",
+        "emailStatus": "",
+        "providerCount": "2",
+        "name_match": "true",
+        "role_confidence": "high",
+        "email_risk": "ok"
+      },
+      "expected": {
+        "action": "VERIFY",
+        "flags": [
+          "unverified-email"
+        ]
+      },
+      "note": "verification never ran (empty status) — verify before sending"
+    },
+    {
+      "row": {
+        "firstName": "Nolan",
+        "lastName": "Noaddress",
+        "company": "Ghost Holdings",
+        "email": "",
+        "emailStatus": "",
+        "providerCount": "",
+        "name_match": "",
+        "role_confidence": "",
+        "email_risk": ""
+      },
+      "expected": {
+        "action": "REMOVE",
+        "flags": [
+          "no-email"
+        ]
+      },
+      "note": "no email at all: nothing to send to"
+    },
+    {
+      "row": {
+        "firstName": "Radia",
+        "lastName": "Perlman",
+        "company": "Spanning Tree Co",
+        "email": "radia@spanningtree.co",
+        "emailStatus": "valid",
+        "providerCount": "2",
+        "email_risk": "ok"
+      },
+      "expected": {
+        "action": "SEND",
+        "flags": [
+          "partial-signals"
+        ]
+      },
+      "note": "name/role columns absent entirely (upstream scripts not run) — audit on email signals alone"
+    },
+    {
+      "row": {
+        "firstName": "Sami",
+        "lastName": "Solo",
+        "company": "Solo Consulting",
+        "email": "sami.solo@gmail.com",
+        "emailStatus": "valid",
+        "providerCount": "2",
+        "name_match": "true",
+        "role_confidence": "medium",
+        "email_risk": "free"
+      },
+      "expected": {
+        "action": "SEND",
+        "flags": [
+          "free-provider"
+        ]
+      },
+      "note": "free provider still sends (fine for SMB), flagged for transparency"
+    },
+    {
+      "row": {
+        "firstName": "Bea",
+        "lastName": "Bounce",
+        "company": "Hardfail Inc",
+        "email": "bea@hardfail.com",
+        "emailStatus": "invalid",
+        "providerCount": "2",
+        "name_match": "true",
+        "role_confidence": "high",
+        "email_risk": "ok"
+      },
+      "expected": {
+        "action": "REMOVE",
+        "flags": [
+          "failed-verification"
+        ]
+      },
+      "note": "verification returned invalid: the address bounces"
+    },
+    {
+      "row": {
+        "firstName": "Vint",
+        "lastName": "Cerf",
+        "company": "Packet Partners",
+        "workEmail": "vint@packetpartners.com",
+        "verificationStatus": "catchall",
+        "corroborations": "1",
+        "name_match": "true",
+        "role_confidence": "high",
+        "email_risk": "ok"
+      },
+      "expected": {
+        "action": "VERIFY",
+        "flags": [
+          "catchall-single-source"
+        ]
+      },
+      "note": "alternate column names (workEmail, verificationStatus, corroborations) + catchall alias"
+    },
+    {
+      "row": {
+        "firstName": "Rosa",
+        "lastName": "Riskova",
+        "company": "Maybe Mail",
+        "email": "rosa@maybemail.com",
+        "emailStatus": "risky",
+        "name_match": "true",
+        "role_confidence": "high",
+        "email_risk": "ok"
+      },
+      "expected": {
+        "action": "VERIFY",
+        "flags": [
+          "catchall-single-source"
+        ]
+      },
+      "note": "risky alias maps to catch_all; missing corroboration count defaults to 1"
+    },
+    {
+      "row": {
+        "firstName": "Jean",
+        "lastName": "Bartik",
+        "company": "Eniac Ventures",
+        "email": "jean@eniacventures.com",
+        "emailStatus": "catch-all",
+        "providerCount": "3",
+        "name_match": "true",
+        "role_confidence": "low",
+        "email_risk": "ok"
+      },
+      "expected": {
+        "action": "REVIEW",
+        "flags": [
+          "stale-or-ambiguous-role",
+          "catchall-corroborated"
+        ]
+      },
+      "note": "corroborated catch-all clears the email but low role confidence still demands review"
+    },
+    {
+      "row": {
+        "firstName": "Uma",
+        "lastName": "Unreachable",
+        "company": "Wrongco",
+        "email": "uma@wrongco.com",
+        "emailStatus": "undeliverable",
+        "providerCount": "2",
+        "name_match": "false",
+        "role_confidence": "high",
+        "email_risk": "ok"
+      },
+      "expected": {
+        "action": "REMOVE",
+        "flags": [
+          "failed-verification",
+          "name-mismatch"
+        ]
+      },
+      "note": "undeliverable alias + name mismatch: primary action from verification, all flags collected"
+    },
+    {
+      "row": {
+        "firstName": "Milo",
+        "lastName": "Malformed",
+        "company": "Typo Traders",
+        "email": "milo@typo,traders",
+        "emailStatus": "valid",
+        "providerCount": "2",
+        "name_match": "true",
+        "role_confidence": "high",
+        "email_risk": "invalid"
+      },
+      "expected": {
+        "action": "REMOVE",
+        "flags": [
+          "invalid-email"
+        ]
+      },
+      "note": "syntax-invalid email removes regardless of what the verifier claimed"
+    },
+    {
+      "row": {
+        "email": "nora@brightwave.example",
+        "status": "valid",
+        "providerCount": "2",
+        "name_match": "true",
+        "role_confidence": "high"
+      },
+      "expected": {
+        "action": "SEND",
+        "flags": []
+      },
+      "note": "bare \"status\" header (raw waterfall verifyEmail output) must be detected as the verification column"
+    },
+    {
+      "row": {
+        "email": "omar@northwind-labs.example",
+        "status": "catch_all",
+        "providerCount": "1",
+        "name_match": "true",
+        "role_confidence": "high"
+      },
+      "expected": {
+        "action": "VERIFY",
+        "flags": [
+          "catchall-single-source"
+        ]
+      },
+      "note": "bare \"status\" carrying catch_all still triggers the corroboration rule"
+    },
+    {
+      "row": {
+        "email": "lena@acme-widgets.example",
+        "emailStatus": "valid",
+        "providerCount": "2",
+        "name_match": "true"
+      },
+      "expected": {
+        "action": "SEND",
+        "flags": [
+          "partial-signals"
+        ]
+      },
+      "note": "only ONE identity script ran (name_match without role_confidence) — still partial-signals, one signal is not full identity coverage"
+    },
+    {
+      "row": {
+        "email": "kai@orbit-metrics.example",
+        "emailStatus": "valid",
+        "providerCount": "2",
+        "name_match": "true",
+        "role_confidence": "high",
+        "is_duplicate": "true"
+      },
+      "expected": {
+        "action": "REMOVE",
+        "flags": [
+          "duplicate-row"
+        ]
+      },
+      "note": "is_duplicate true removes the later occurrence even when every other signal is green — the first occurrence carries the send"
+    }
+  ]
+}

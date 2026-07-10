@@ -1,0 +1,376 @@
+{
+  "cases": [
+    {
+      "sourceName": "John Carter",
+      "profileName": "John Carter",
+      "expected": true,
+      "note": "exact match"
+    },
+    {
+      "sourceName": "MARIA LOPES",
+      "profileName": "maria lopes",
+      "expected": true,
+      "note": "case-insensitive"
+    },
+    {
+      "sourceName": "José Álvarez",
+      "profileName": "Jose Alvarez",
+      "expected": true,
+      "note": "accents normalized (NFD strip)"
+    },
+    {
+      "sourceName": "Renee Dupont",
+      "profileName": "Renée Dupont",
+      "expected": true,
+      "note": "accents normalized, profile side"
+    },
+    {
+      "sourceName": "Mike Turner",
+      "profileName": "Michael Turner",
+      "expected": true,
+      "note": "nickname source→formal"
+    },
+    {
+      "sourceName": "Michael Turner",
+      "profileName": "Mike Turner",
+      "expected": true,
+      "note": "nickname formal→source"
+    },
+    {
+      "sourceName": "Bob Whitfield",
+      "profileName": "Robert Whitfield",
+      "expected": true,
+      "note": "nickname Bob/Robert"
+    },
+    {
+      "sourceName": "Elizabeth Kraus",
+      "profileName": "Liz Kraus",
+      "expected": true,
+      "note": "nickname Liz/Elizabeth"
+    },
+    {
+      "sourceName": "Beth Nolan",
+      "profileName": "Elizabeth Nolan",
+      "expected": true,
+      "note": "nickname Beth/Elizabeth"
+    },
+    {
+      "sourceName": "Rick Osborne",
+      "profileName": "Richard Osborne",
+      "expected": true,
+      "note": "nickname Rick/Richard"
+    },
+    {
+      "sourceName": "Jim Falk",
+      "profileName": "James Falk",
+      "expected": true,
+      "note": "nickname Jim/James"
+    },
+    {
+      "sourceName": "Katie Merton",
+      "profileName": "Katherine Merton",
+      "expected": true,
+      "note": "nickname Katie/Katherine"
+    },
+    {
+      "sourceName": "Tony Marek",
+      "profileName": "Anthony Marek",
+      "expected": true,
+      "note": "nickname Tony/Anthony"
+    },
+    {
+      "sourceName": "Chris Devlin",
+      "profileName": "Christopher Devlin",
+      "expected": true,
+      "note": "nickname Chris/Christopher"
+    },
+    {
+      "sourceName": "Chris Halloran",
+      "profileName": "Christine Halloran",
+      "expected": true,
+      "note": "nickname Chris/Christine (same nickname, second formal)"
+    },
+    {
+      "sourceName": "Dave Pemberton",
+      "profileName": "David Pemberton",
+      "expected": true,
+      "note": "nickname Dave/David"
+    },
+    {
+      "sourceName": "Ted Grayson",
+      "profileName": "Edward Grayson",
+      "expected": true,
+      "note": "nickname Ted/Edward"
+    },
+    {
+      "sourceName": "Alex Riven",
+      "profileName": "Alexandra Riven",
+      "expected": true,
+      "note": "nickname Alex/Alexandra"
+    },
+    {
+      "sourceName": "Chuck Ambrose",
+      "profileName": "Charles Ambrose",
+      "expected": true,
+      "note": "nickname Chuck/Charles"
+    },
+    {
+      "sourceName": "Peggy Lindqvist",
+      "profileName": "Margaret Lindqvist",
+      "expected": true,
+      "note": "nickname Peggy/Margaret"
+    },
+    {
+      "sourceName": "Jack Tremaine",
+      "profileName": "John Tremaine",
+      "expected": true,
+      "note": "nickname Jack/John"
+    },
+    {
+      "sourceName": "Sam Ellery",
+      "profileName": "Samantha Ellery",
+      "expected": true,
+      "note": "nickname Sam/Samantha"
+    },
+    {
+      "sourceName": "Steve Calloway",
+      "profileName": "Stephen Calloway",
+      "expected": true,
+      "note": "nickname Steve/Stephen"
+    },
+    {
+      "sourceName": "Zack Templeton",
+      "profileName": "Zachary Templeton",
+      "expected": true,
+      "note": "nickname Zack/Zachary"
+    },
+    {
+      "sourceName": "Meg Ostrander",
+      "profileName": "Margaret Ostrander",
+      "expected": true,
+      "note": "nickname Meg/Margaret"
+    },
+    {
+      "sourceName": "J. Rutherford",
+      "profileName": "James Rutherford",
+      "expected": true,
+      "note": "source first name is an initial"
+    },
+    {
+      "sourceName": "Nathaniel Brooks",
+      "profileName": "N. Brooks",
+      "expected": true,
+      "note": "profile first name is an initial"
+    },
+    {
+      "sourceName": "Ana García",
+      "profileName": "Ana García Fernández",
+      "expected": true,
+      "note": "maiden/married double surname on profile"
+    },
+    {
+      "sourceName": "Laura Jensen",
+      "profileName": "Laura Jensen Holt",
+      "expected": true,
+      "note": "married surname appended on profile"
+    },
+    {
+      "sourceName": "Claire Beaumont",
+      "profileName": "Claire Beaumont-Ridley",
+      "expected": true,
+      "note": "hyphenated profile surname contains source surname"
+    },
+    {
+      "sourceName": "Priya Raghavan-Iyer",
+      "profileName": "Priya Raghavan",
+      "expected": true,
+      "note": "hyphenated source surname, profile has one half"
+    },
+    {
+      "sourceName": "Bob Callahan",
+      "profileName": "Robert \"Bob\" Callahan",
+      "expected": true,
+      "note": "quoted nickname in profile"
+    },
+    {
+      "sourceName": "Kate Winslow",
+      "profileName": "Katherine (Kate) Winslow",
+      "expected": true,
+      "note": "parenthesized nickname in profile"
+    },
+    {
+      "sourceName": "Sunny Deshpande",
+      "profileName": "Suniti (Sunny) Deshpande",
+      "expected": true,
+      "note": "parenthesized nickname not in the nickname table"
+    },
+    {
+      "sourceName": "Daniel Okafor",
+      "profileName": "Daniel Okafor, PhD",
+      "expected": true,
+      "note": "credentials after comma stripped"
+    },
+    {
+      "sourceName": "Marcus Bell Jr",
+      "profileName": "Marcus Bell",
+      "expected": true,
+      "note": "generational suffix stripped from source"
+    },
+    {
+      "sourceName": "Dr Helena Voss",
+      "profileName": "Helena Voss",
+      "expected": true,
+      "note": "title stripped from source"
+    },
+    {
+      "sourceName": "Tara Whitcombe",
+      "profileName": "Tara Whitcombe 🚀",
+      "expected": true,
+      "note": "emoji stripped from profile"
+    },
+    {
+      "sourceName": "Sofia Marchetti",
+      "profileName": "Sofia Elena Marchetti",
+      "expected": true,
+      "note": "middle name on profile ignored"
+    },
+    {
+      "sourceName": "Omar Haddad",
+      "profileName": "Omar K. Haddad",
+      "expected": true,
+      "note": "middle initial on profile ignored"
+    },
+    {
+      "sourceName": "Peter James Quill",
+      "profileName": "Peter Quill",
+      "expected": true,
+      "note": "middle name on source ignored"
+    },
+    {
+      "sourceName": "田中 太郎",
+      "profileName": "田中 太郎",
+      "expected": true,
+      "note": "non-Latin (CJK) exact match"
+    },
+    {
+      "sourceName": "Иван Смирнов",
+      "profileName": "Иван Смирнов",
+      "expected": true,
+      "note": "non-Latin (Cyrillic) exact match"
+    },
+    {
+      "sourceName": "Jen Falco",
+      "profileName": "Jennifer Falco Marsh",
+      "expected": true,
+      "note": "nickname plus married surname combined"
+    },
+    {
+      "sourceName": "WILLIAM HART",
+      "profileName": "Will Hart, MBA",
+      "expected": true,
+      "note": "case + nickname + credential suffix combined"
+    },
+    {
+      "sourceName": "John Carter",
+      "profileName": "John Mercer",
+      "expected": false,
+      "note": "same first name, different surname — decoy"
+    },
+    {
+      "sourceName": "Alice Fontaine",
+      "profileName": "Marie Fontaine",
+      "expected": false,
+      "note": "same surname, different first name"
+    },
+    {
+      "sourceName": "David Kowalski",
+      "profileName": "",
+      "expected": false,
+      "note": "empty profile name"
+    },
+    {
+      "sourceName": "Sarah Linden",
+      "profileName": "Tobias Grunwald",
+      "expected": false,
+      "note": "completely different names"
+    },
+    {
+      "sourceName": "Mike Turner",
+      "profileName": "Nick Turner",
+      "expected": false,
+      "note": "different nicknames of different formal names"
+    },
+    {
+      "sourceName": "Robert Callahan",
+      "profileName": "Robert",
+      "expected": false,
+      "note": "single-token profile cannot confirm surname"
+    },
+    {
+      "sourceName": "Иван Смирнов",
+      "profileName": "Пётр Волков",
+      "expected": false,
+      "note": "non-Latin (Cyrillic) mismatch"
+    },
+    {
+      "sourceName": "李 伟",
+      "profileName": "王 芳",
+      "expected": false,
+      "note": "non-Latin (CJK) mismatch"
+    },
+    {
+      "sourceName": "Jonathan Pierce",
+      "profileName": "John Pierson",
+      "expected": false,
+      "note": "near-miss decoy on both name parts"
+    },
+    {
+      "sourceName": "Emily Watkins",
+      "profileName": "Emma Watkins",
+      "expected": false,
+      "note": "similar first names are not nicknames"
+    },
+    {
+      "sourceName": "T. Vasquez",
+      "profileName": "Ramon Vasquez",
+      "expected": false,
+      "note": "initial does not match first letter"
+    },
+    {
+      "sourceName": "Karen Doyle",
+      "profileName": "LinkedIn Member",
+      "expected": false,
+      "note": "scraper placeholder garbage"
+    },
+    {
+      "sourceName": "Hannah Brightwater",
+      "profileName": "H",
+      "expected": false,
+      "note": "single-letter profile name"
+    },
+    {
+      "sourceName": "Noah Feldstein",
+      "profileName": "   ",
+      "expected": false,
+      "note": "whitespace-only profile name"
+    },
+    {
+      "sourceName": "Greg Santos",
+      "profileName": "Theodore \"Teddy\" Santos",
+      "expected": false,
+      "note": "quoted nickname does not rescue a first-name mismatch"
+    },
+    {
+      "sourceName": "Kate Holm",
+      "profileName": "Katie Holm",
+      "expected": true,
+      "note": "two nicknames sharing a formal name (Kate/Katie via Katherine)"
+    },
+    {
+      "sourceName": "Rick Sanders",
+      "profileName": "Dick Sanders",
+      "expected": true,
+      "note": "shared formal via Richard"
+    }
+  ]
+}

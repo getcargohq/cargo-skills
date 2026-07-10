@@ -26,6 +26,8 @@ For sourcing-only / TAM list builds, see [`build-tam.md`](build-tam.md). For inv
 
 Adapt by phase: drop steps that aren't relevant. Pure sourcing → step 1 only. "Enrich list I already have" → steps 2–6.
 
+**QA gates (free, local — [`../references/contact-accuracy.md`](../references/contact-accuracy.md)):** run `scripts/validate-emails.ts` on the step-5 output *before* paying for step 6 (culls invalid/disposable/duplicate emails from the verify batch), and `scripts/contact-accuracy-audit.ts` on the merged output *before* step 7 — only `audit_action: SEND` rows go to write-back; report the audit counts in the receipt.
+
 ## Discovery sequence (run before any pipeline)
 
 ```bash
@@ -179,13 +181,42 @@ cargo-ai orchestration action execute-batch \
   --wait-until-finished > /tmp/p2-emails.json
 ```
 
-### Step 6 — Verify emails (waterfall)
+### Step 6 — Verify emails (free cull, then waterfall)
 
 ```bash
+# 6a. FREE pre-cull — stamp every row with email_risk/recommendation
+#     (QA scripts: ../references/contact-accuracy.md; Node >= 22.18;
+#     execute-batch output is accepted directly — no unwrapping needed)
+node <skill-dir>/scripts/validate-emails.ts --input /tmp/p2-emails.json --json > /tmp/p2-culled.json
+
+# 6b. Paid verification on the SURVIVORS ONLY — the cull is what saves the
+#     credits, so the verify batch must be built from its output, never from
+#     the original list
 cargo-ai orchestration action execute-batch \
   --action '{"kind":"connector","integrationSlug":"waterfall","actionSlug":"verifyEmail","config":{}}' \
-  --records "$(jq -c '[.results[] | select(.email) | {email}]' /tmp/p2-emails.json)" \
+  --records "$(jq -c '[.[] | select(.recommendation != "skip") | {email}]' /tmp/p2-culled.json)" \
   --wait-until-finished > /tmp/p2-verified.json
+```
+
+### Step 6.5 — Merge, then audit before handoff (free)
+
+Join the verification statuses back onto the culled rows (the audit must see **every** row with its real status — never pre-filter to `valid` first, or the VERIFY/REMOVE verdicts and their counts are lost), then stamp each row:
+
+```bash
+# Merge: attach each row's verification status by email — join on the
+# LOWERCASED address (verify results may re-case it; a missed join leaves
+# emailStatus empty and the row degrades to VERIFY). Read .email_status
+# (waterfall.verifyEmail output schema) — not .status.
+jq -c --slurpfile ver /tmp/p2-verified.json '
+  ($ver[0].results | map({key: (.email | ascii_downcase), value: .email_status}) | from_entries) as $st
+  | map(. + {emailStatus: ($st[(.email // "" | ascii_downcase)] // "")})
+' /tmp/p2-culled.json > /tmp/p2-merged.json
+
+# Audit: SEND / VERIFY / REVIEW / REMOVE per row; summary counts go in the receipt
+node <skill-dir>/scripts/contact-accuracy-audit.ts --input /tmp/p2-merged.json --json > /tmp/p2-final.json
+
+# Only SEND rows proceed to Step 7
+jq '[.[] | select(.audit_action == "SEND")]' /tmp/p2-final.json > /tmp/p2-send.json
 ```
 
 ### Step 7 — Write back to a segment
