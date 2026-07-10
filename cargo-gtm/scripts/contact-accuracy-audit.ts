@@ -72,6 +72,9 @@ const COLUMN_CANDIDATES: Record<ColumnKey, string[]> = {
     "verificationstatus",
     "verification",
     "emailverificationstatus",
+    // Bare "status" last: it's what raw waterfall verifyEmail rows carry, but
+    // it's generic enough that any more specific header must win over it.
+    "status",
   ],
   corroboration: [
     "providercount",
@@ -303,7 +306,7 @@ async function main(): Promise<void> {
       "output",
       ...Object.values(OVERRIDE_FLAGS),
     ],
-    boolean: ["fixtures", "summary-json"],
+    boolean: ["fixtures", "summary-json", "json"],
   });
   if (args.flags.has("fixtures")) return runFixtures();
 
@@ -353,14 +356,13 @@ async function main(): Promise<void> {
   process.stderr.write(summaryLines.join("\n") + "\n");
 
   const outputPath = args.values.get("output");
-  const csv = toCsv(audited, [
-    ...headers,
-    "audit_action",
-    "audit_flags",
-    "audit_flag_reason",
-  ]);
+  // --json renders the audited rows as a JSON array instead of CSV — the shape
+  // jq chains want (e.g. select(.audit_action == "SEND") before handoff).
+  const rendered = args.flags.has("json")
+    ? JSON.stringify(audited, null, 2) + "\n"
+    : toCsv(audited, [...headers, "audit_action", "audit_flags", "audit_flag_reason"]);
   if (outputPath) {
-    writeFileSync(outputPath, csv);
+    writeFileSync(outputPath, rendered);
     process.stderr.write(`wrote ${audited.length} audited rows to ${outputPath}\n`);
   }
   if (args.flags.has("summary-json")) {
@@ -373,7 +375,7 @@ async function main(): Promise<void> {
     };
     process.stdout.write(JSON.stringify(summary, null, 2) + "\n");
   } else if (!outputPath) {
-    process.stdout.write(csv);
+    process.stdout.write(rendered);
   }
 }
 

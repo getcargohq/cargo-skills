@@ -184,25 +184,36 @@ cargo-ai orchestration action execute-batch \
 ### Step 6 — Verify emails (free cull, then waterfall)
 
 ```bash
-# 6a. FREE pre-cull — drop invalid/disposable/duplicate emails before paying
-#     (QA scripts: ../references/contact-accuracy.md; Node >= 22.18)
-jq '[.results[] | select(.email)]' /tmp/p2-emails.json > /tmp/p2-candidates.json
-node <skill-dir>/scripts/validate-emails.ts --input /tmp/p2-candidates.json --output /tmp/p2-culled.csv
-# keep only rows with recommendation != "skip", then verify those
+# 6a. FREE pre-cull — stamp every row with email_risk/recommendation
+#     (QA scripts: ../references/contact-accuracy.md; Node >= 22.18;
+#     execute-batch output is accepted directly — no unwrapping needed)
+node <skill-dir>/scripts/validate-emails.ts --input /tmp/p2-emails.json --json > /tmp/p2-culled.json
 
-# 6b. Paid verification on the survivors
+# 6b. Paid verification on the SURVIVORS ONLY — the cull is what saves the
+#     credits, so the verify batch must be built from its output, never from
+#     the original list
 cargo-ai orchestration action execute-batch \
   --action '{"kind":"connector","integrationSlug":"waterfall","actionSlug":"verifyEmail","config":{}}' \
-  --records "$(jq -c '[.results[] | select(.email) | {email}]' /tmp/p2-emails.json)" \
+  --records "$(jq -c '[.[] | select(.recommendation != "skip") | {email}]' /tmp/p2-culled.json)" \
   --wait-until-finished > /tmp/p2-verified.json
 ```
 
-### Step 6.5 — Audit before handoff (free)
+### Step 6.5 — Merge, then audit before handoff (free)
 
-Stamp every merged row with a `SEND / VERIFY / REVIEW / REMOVE` verdict; only `SEND` rows proceed to Step 7, and the summary counts go in the receipt:
+Join the verification statuses back onto the culled rows (the audit must see **every** row with its real status — never pre-filter to `valid` first, or the VERIFY/REMOVE verdicts and their counts are lost), then stamp each row:
 
 ```bash
-node <skill-dir>/scripts/contact-accuracy-audit.ts --input /tmp/p2-merged.csv --output /tmp/p2-final.csv
+# Merge: attach each row's verification status by email
+jq -c --slurpfile ver /tmp/p2-verified.json '
+  ($ver[0].results | map({key: .email, value: .status}) | from_entries) as $st
+  | map(. + {emailStatus: ($st[.email] // "")})
+' /tmp/p2-culled.json > /tmp/p2-merged.json
+
+# Audit: SEND / VERIFY / REVIEW / REMOVE per row; summary counts go in the receipt
+node <skill-dir>/scripts/contact-accuracy-audit.ts --input /tmp/p2-merged.json --json > /tmp/p2-final.json
+
+# Only SEND rows proceed to Step 7
+jq '[.[] | select(.audit_action == "SEND")]' /tmp/p2-final.json > /tmp/p2-send.json
 ```
 
 ### Step 7 — Write back to a segment

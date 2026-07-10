@@ -12,7 +12,10 @@
         "role_confidence": "high",
         "email_risk": "ok"
       },
-      "expected": { "action": "SEND", "flags": [] },
+      "expected": {
+        "action": "SEND",
+        "flags": []
+      },
       "note": "happy path: valid, corroborated, full identity signals"
     },
     {
@@ -27,7 +30,12 @@
         "role_confidence": "high",
         "email_risk": "ok"
       },
-      "expected": { "action": "VERIFY", "flags": ["catchall-single-source"] },
+      "expected": {
+        "action": "VERIFY",
+        "flags": [
+          "catchall-single-source"
+        ]
+      },
       "note": "catch_all with a single source needs corroboration"
     },
     {
@@ -42,7 +50,12 @@
         "role_confidence": "high",
         "email_risk": "ok"
       },
-      "expected": { "action": "SEND", "flags": ["catchall-corroborated"] },
+      "expected": {
+        "action": "SEND",
+        "flags": [
+          "catchall-corroborated"
+        ]
+      },
       "note": "catch_all corroborated by 2 providers is sendable"
     },
     {
@@ -57,7 +70,12 @@
         "role_confidence": "high",
         "email_risk": "ok"
       },
-      "expected": { "action": "VERIFY", "flags": ["catchall-single-source"] },
+      "expected": {
+        "action": "VERIFY",
+        "flags": [
+          "catchall-single-source"
+        ]
+      },
       "note": "accept_all alias normalizes to catch_all"
     },
     {
@@ -72,7 +90,10 @@
         "role_confidence": "high",
         "email_risk": "ok"
       },
-      "expected": { "action": "SEND", "flags": [] },
+      "expected": {
+        "action": "SEND",
+        "flags": []
+      },
       "note": "deliverable alias normalizes to valid"
     },
     {
@@ -87,7 +108,12 @@
         "role_confidence": "high",
         "email_risk": "ok"
       },
-      "expected": { "action": "REMOVE", "flags": ["name-mismatch"] },
+      "expected": {
+        "action": "REMOVE",
+        "flags": [
+          "name-mismatch"
+        ]
+      },
       "note": "name mismatch overrides a valid email — wrong person is worse than no send"
     },
     {
@@ -102,7 +128,12 @@
         "role_confidence": "low",
         "email_risk": "ok"
       },
-      "expected": { "action": "REVIEW", "flags": ["stale-or-ambiguous-role"] },
+      "expected": {
+        "action": "REVIEW",
+        "flags": [
+          "stale-or-ambiguous-role"
+        ]
+      },
       "note": "low role confidence: likely job changer, review before sending"
     },
     {
@@ -117,7 +148,12 @@
         "role_confidence": "high",
         "email_risk": "role"
       },
-      "expected": { "action": "REVIEW", "flags": ["role-account"] },
+      "expected": {
+        "action": "REVIEW",
+        "flags": [
+          "role-account"
+        ]
+      },
       "note": "role-based address is deliverable but rarely reaches a person"
     },
     {
@@ -132,7 +168,12 @@
         "role_confidence": "high",
         "email_risk": "disposable"
       },
-      "expected": { "action": "REMOVE", "flags": ["disposable-email"] },
+      "expected": {
+        "action": "REMOVE",
+        "flags": [
+          "disposable-email"
+        ]
+      },
       "note": "disposable domain: remove even when verification passes"
     },
     {
@@ -147,7 +188,12 @@
         "role_confidence": "high",
         "email_risk": "ok"
       },
-      "expected": { "action": "VERIFY", "flags": ["unverified-email"] },
+      "expected": {
+        "action": "VERIFY",
+        "flags": [
+          "unverified-email"
+        ]
+      },
       "note": "verification never ran (empty status) — verify before sending"
     },
     {
@@ -162,7 +208,12 @@
         "role_confidence": "",
         "email_risk": ""
       },
-      "expected": { "action": "REMOVE", "flags": ["no-email"] },
+      "expected": {
+        "action": "REMOVE",
+        "flags": [
+          "no-email"
+        ]
+      },
       "note": "no email at all: nothing to send to"
     },
     {
@@ -175,7 +226,12 @@
         "providerCount": "2",
         "email_risk": "ok"
       },
-      "expected": { "action": "SEND", "flags": ["partial-signals"] },
+      "expected": {
+        "action": "SEND",
+        "flags": [
+          "partial-signals"
+        ]
+      },
       "note": "name/role columns absent entirely (upstream scripts not run) — audit on email signals alone"
     },
     {
@@ -190,7 +246,12 @@
         "role_confidence": "medium",
         "email_risk": "free"
       },
-      "expected": { "action": "SEND", "flags": ["free-provider"] },
+      "expected": {
+        "action": "SEND",
+        "flags": [
+          "free-provider"
+        ]
+      },
       "note": "free provider still sends (fine for SMB), flagged for transparency"
     },
     {
@@ -205,7 +266,12 @@
         "role_confidence": "high",
         "email_risk": "ok"
       },
-      "expected": { "action": "REMOVE", "flags": ["failed-verification"] },
+      "expected": {
+        "action": "REMOVE",
+        "flags": [
+          "failed-verification"
+        ]
+      },
       "note": "verification returned invalid: the address bounces"
     },
     {
@@ -220,7 +286,12 @@
         "role_confidence": "high",
         "email_risk": "ok"
       },
-      "expected": { "action": "VERIFY", "flags": ["catchall-single-source"] },
+      "expected": {
+        "action": "VERIFY",
+        "flags": [
+          "catchall-single-source"
+        ]
+      },
       "note": "alternate column names (workEmail, verificationStatus, corroborations) + catchall alias"
     },
     {
@@ -234,7 +305,12 @@
         "role_confidence": "high",
         "email_risk": "ok"
       },
-      "expected": { "action": "VERIFY", "flags": ["catchall-single-source"] },
+      "expected": {
+        "action": "VERIFY",
+        "flags": [
+          "catchall-single-source"
+        ]
+      },
       "note": "risky alias maps to catch_all; missing corroboration count defaults to 1"
     },
     {
@@ -251,7 +327,10 @@
       },
       "expected": {
         "action": "REVIEW",
-        "flags": ["stale-or-ambiguous-role", "catchall-corroborated"]
+        "flags": [
+          "stale-or-ambiguous-role",
+          "catchall-corroborated"
+        ]
       },
       "note": "corroborated catch-all clears the email but low role confidence still demands review"
     },
@@ -269,7 +348,10 @@
       },
       "expected": {
         "action": "REMOVE",
-        "flags": ["failed-verification", "name-mismatch"]
+        "flags": [
+          "failed-verification",
+          "name-mismatch"
+        ]
       },
       "note": "undeliverable alias + name mismatch: primary action from verification, all flags collected"
     },
@@ -285,8 +367,43 @@
         "role_confidence": "high",
         "email_risk": "invalid"
       },
-      "expected": { "action": "REMOVE", "flags": ["invalid-email"] },
+      "expected": {
+        "action": "REMOVE",
+        "flags": [
+          "invalid-email"
+        ]
+      },
       "note": "syntax-invalid email removes regardless of what the verifier claimed"
+    },
+    {
+      "row": {
+        "email": "nora@brightwave.example",
+        "status": "valid",
+        "providerCount": "2",
+        "name_match": "true",
+        "role_confidence": "high"
+      },
+      "expected": {
+        "action": "SEND",
+        "flags": []
+      },
+      "note": "bare \"status\" header (raw waterfall verifyEmail output) must be detected as the verification column"
+    },
+    {
+      "row": {
+        "email": "omar@northwind-labs.example",
+        "status": "catch_all",
+        "providerCount": "1",
+        "name_match": "true",
+        "role_confidence": "high"
+      },
+      "expected": {
+        "action": "VERIFY",
+        "flags": [
+          "catchall-single-source"
+        ]
+      },
+      "note": "bare \"status\" carrying catch_all still triggers the corroboration rule"
     }
   ]
 }

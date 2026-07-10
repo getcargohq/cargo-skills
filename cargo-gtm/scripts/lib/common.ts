@@ -133,7 +133,14 @@ export function readJson<T>(path: string): T {
 }
 
 function rowsFromJson(data: unknown): Row[] {
-  if (!Array.isArray(data)) fail("expected a JSON array of objects");
+  // Accept `orchestration action execute-batch` output directly: rows live
+  // under a top-level "results" (or "records") key rather than at the root.
+  if (data !== null && typeof data === "object" && !Array.isArray(data)) {
+    const wrapped = data as { results?: unknown; records?: unknown };
+    if (Array.isArray(wrapped.results)) data = wrapped.results;
+    else if (Array.isArray(wrapped.records)) data = wrapped.records;
+  }
+  if (!Array.isArray(data)) fail("expected a JSON array of objects (or {\"results\": [...]} batch output)");
   return data.map((item) => {
     const row: Row = {};
     for (const [key, value] of Object.entries(item as Record<string, unknown>)) {

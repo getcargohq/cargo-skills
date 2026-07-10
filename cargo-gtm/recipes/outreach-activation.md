@@ -66,24 +66,32 @@ Waterfall returns the best-coverage `email`, `phone`, and a normalized contact p
 
 ### Step 4 — Verify emails before personalizing
 
-Cheap insurance against bounces and sender-reputation damage. First cull for free, then verify only the survivors:
+Cheap insurance against bounces and sender-reputation damage. Free cull → paid verify on the survivors only → merge statuses back → audit **all** rows → keep SEND:
 
 ```bash
-# FREE pre-cull — drops invalid/disposable/duplicate emails before paying
-# (QA scripts: ../references/contact-accuracy.md; Node >= 22.18)
-node <skill-dir>/scripts/validate-emails.ts --input /tmp/enriched.json --output /tmp/culled.csv
+# 4a. FREE pre-cull (QA scripts: ../references/contact-accuracy.md; Node >= 22.18;
+#     execute-batch output is accepted directly)
+node <skill-dir>/scripts/validate-emails.ts --input /tmp/enriched.json --json > /tmp/culled.json
 
+# 4b. Paid verification — build the batch from the CULLED rows, never the
+#     original list (that's where the credit saving happens)
 cargo-ai orchestration action execute-batch \
   --action '{"kind":"connector","integrationSlug":"waterfall","actionSlug":"verifyEmail","config":{}}' \
-  --records "$(jq -c '[.results[] | {email}]' /tmp/enriched.json)" \
+  --records "$(jq -c '[.[] | select(.recommendation != "skip") | {email}]' /tmp/culled.json)" \
   --wait-until-finished > /tmp/verified.json
 
-# Keep only deliverable
-jq -c '[.results[] | select(.status == "valid")]' /tmp/verified.json > /tmp/deliverable.json
+# 4c. Merge statuses back onto ALL culled rows — do NOT pre-filter to "valid":
+#     the audit needs the catch-all/unknown/invalid rows to issue
+#     VERIFY/REVIEW/REMOVE verdicts (and the receipt needs their counts)
+jq -c --slurpfile ver /tmp/verified.json '
+  ($ver[0].results | map({key: .email, value: .status}) | from_entries) as $st
+  | map(. + {emailStatus: ($st[.email] // "")})
+' /tmp/culled.json > /tmp/merged.json
 
-# Final gate before the sequencer sees anything: stamp SEND/VERIFY/REVIEW/REMOVE
-# and hand off only the SEND rows (report the counts in the receipt)
-node <skill-dir>/scripts/contact-accuracy-audit.ts --input /tmp/deliverable.json --output /tmp/send-ready.csv
+# 4d. Audit, then hand ONLY the SEND rows to the next steps — this file is
+#     what steps 5 and 6 read
+node <skill-dir>/scripts/contact-accuracy-audit.ts --input /tmp/merged.json --json > /tmp/audited.json
+jq '[.[] | select(.audit_action == "SEND")]' /tmp/audited.json > /tmp/deliverable.json
 ```
 
 ### Step 5 — Generate a personalized first line per contact
@@ -91,7 +99,7 @@ node <skill-dir>/scripts/contact-accuracy-audit.ts --input /tmp/deliverable.json
 ```bash
 cargo-ai orchestration action execute-batch \
   --action '{"kind":"connector","integrationSlug":"anthropic","actionSlug":"instruct","config":{"model":"claude-haiku-4-5","temperature":0.3}}' \
-  --records "$(jq -c '[.results[] | {
+  --records "$(jq -c '[.[] | {
     prompt: ("You are writing the opening line of a cold email. The recipient is " + .first_name + " " + .last_name + ", " + .title + " at " + .company_name + ". Signal triggering this outreach: " + .signal_summary + ". Write ONE sentence that references the signal naturally and ties it to a relevant business outcome. No greeting. No follow-up. ≤30 words.")
   }]' /tmp/deliverable.json)" \
   --wait-until-finished > /tmp/personalized.json
@@ -104,11 +112,12 @@ For higher quality at higher cost, swap `claude-haiku-4-5` for `claude-sonnet-4-
 Compose the send-ready payload — one row per contact with email, signal, and the personalized first line:
 
 ```bash
-jq -c '[
-  (input_filename as $f | inputs)
-  | .results[] as $p
-  | {email: $p.email, first_line: $p.text, signal: $p.signal_summary}
-]' /tmp/deliverable.json /tmp/personalized.json > /tmp/send-ready.json
+# deliverable.json is the audited SEND array; personalized.json is batch output
+# ({results: [...]}) in the same order — zip them by index
+jq -n --slurpfile d /tmp/deliverable.json --slurpfile p /tmp/personalized.json '
+  [range(0; ($d[0] | length)) as $i
+   | {email: $d[0][$i].email, first_line: $p[0].results[$i].text, signal: $d[0][$i].signal_summary}]
+' > /tmp/send-ready.json
 ```
 
 Then push to the user's sequencer. Discover the action via:

@@ -20,14 +20,19 @@ relative to wherever the skill loaded from). They run directly with Node ≥
 22.18 (`node <script>.ts`, native type-stripping; `npx tsx <script>.ts` on
 older Nodes). Zero dependencies for file mode. Every script supports:
 
-- `--input <file.csv|file.json>` — rows from a file (e.g. the CSV from
-  `run download-outputs`), **or**
+- `--input <file.csv|file.json>` — rows from a file: a CSV from
+  `run download-outputs`, a JSON array, or raw `action execute-batch` output
+  (`{"results": [...]}` is unwrapped automatically), **or**
 - `--workflow-uuid <uuid>` (+ optional `--batch-uuid`, `--output-node-slug`,
   `--workspace-uuid`) — **API mode**: fetches the output rows directly via the
   `@cargo-ai/api` package (`npm install -g @cargo-ai/api` if missing), reusing
   the CLI's stored login (`~/.config/cargo-ai/credentials.json`) or
   `CARGO_API_TOKEN`. Equivalent to `run download-outputs`, no temp file.
-- `--output <file.csv>` — write augmented rows (default: stdout).
+- `--output <file>` — write augmented rows (default: stdout). On
+  `validate-emails.ts` and `contact-accuracy-audit.ts`, `--json` switches the
+  row output from CSV to a JSON array — use it when the next step is a `jq`
+  filter (build the paid-verify batch from `recommendation != "skip"` rows;
+  hand off only `audit_action == "SEND"` rows).
 - `--fixtures` — self-test against the bundled fixture file; exits non-zero on
   failure (CI runs this on every push).
 
@@ -39,6 +44,12 @@ older Nodes). Zero dependencies for file mode. Every script supports:
 | After enrichment | `select-current-role.ts` | `current_title`, `current_company`, `role_confidence` (high/medium/low), `role_reason` | whenever a provider returned an experiences array — never trust the top experience blindly |
 | After enrichment | `validate-linkedin-names.ts` | `name_match` (true/false), `name_match_reason` | whenever a LinkedIn URL was looked up from a name (see [`../recipes/linkedin-url-lookup.md`](../recipes/linkedin-url-lookup.md)) — catches same-name decoys |
 | Last, before handoff | `contact-accuracy-audit.ts` | `audit_action` (**SEND / VERIFY / REVIEW / REMOVE**), `audit_flags`, `audit_flag_reason` | on the final merged output, after verification — the audit consumes the columns the other three produced (it degrades gracefully if some are missing) |
+
+**The audit must see every row.** Merge verification statuses back onto the
+full row set before auditing — never pre-filter to `status == "valid"` first,
+or the catch-all/unknown/invalid rows silently vanish along with their
+VERIFY/REVIEW/REMOVE verdicts and the receipt counts. Filtering happens once,
+after the audit: only `audit_action == "SEND"` rows proceed.
 
 Chaining example (each script reads the previous one's output):
 

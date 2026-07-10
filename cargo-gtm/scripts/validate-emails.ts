@@ -332,7 +332,7 @@ async function main(): Promise<void> {
       "email-column",
       "output",
     ],
-    boolean: ["fixtures"],
+    boolean: ["fixtures", "json"],
   });
 
   if (args.flags.has("fixtures")) {
@@ -371,20 +371,26 @@ async function main(): Promise<void> {
       email_syntax_valid: String(result.valid),
       email_risk: result.risk,
       email_risk_reason: result.reason,
-      recommendation: RECOMMENDATION[result.risk],
+      // Duplicates skip regardless of risk — verifying the same address twice
+      // is pure credit waste; the first occurrence carries the verdict.
+      recommendation: isDuplicate ? "skip" : RECOMMENDATION[result.risk],
       is_duplicate: String(isDuplicate),
     };
   });
 
-  const csv = toCsv(output);
+  // --json renders rows as a JSON array — the shape jq chains want (e.g.
+  // select(.recommendation != "skip") to build the paid-verify batch).
+  const rendered = args.flags.has("json")
+    ? JSON.stringify(output, null, 2) + "\n"
+    : toCsv(output);
   const outputPath = args.values.get("output");
   if (outputPath) {
-    writeFileSync(outputPath, csv);
+    writeFileSync(outputPath, rendered);
   } else {
-    process.stdout.write(csv);
+    process.stdout.write(rendered);
   }
 
-  const saved = counts.invalid + counts.disposable;
+  const saved = counts.invalid + counts.disposable + duplicates;
   process.stderr.write(
     `validate-emails: ${rows.length} rows — ok=${counts.ok} free=${counts.free} ` +
       `role=${counts.role} disposable=${counts.disposable} invalid=${counts.invalid}; ` +
