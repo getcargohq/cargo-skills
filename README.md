@@ -19,16 +19,30 @@ npx skills add getcargohq/cargo-skills
 
 Works with Claude Code, Cursor, Windsurf, GitHub Copilot, and any agent that supports the [skills.sh](https://skills.sh) standard.
 
-### Claude Code plugin (alternative channel)
+### Agent plugin (alternative channel — Claude Code, Codex, Cursor)
 
-On Claude Code ≥ v2.1.154 the repo also installs as a plugin — same fifteen skills, plus a `PreToolUse` hook that auto-approves safe `cargo-ai` calls (reads, queries, run/batch operations) while credentials (`login`), token minting, report egress, `cdk deploy`/`destroy`, and any `remove`/`delete` always still prompt ([`hooks/approve-cli.sh`](hooks/approve-cli.sh) — allow-only, it can never override a deny rule):
+The repo also installs as a native **agent plugin**: one source, three targets, sharing the same fifteen skills plus two things `skills add` can't deliver:
+
+- **An approval hook** ([`hooks/approve-cli.sh`](hooks/approve-cli.sh)) that auto-approves safe `cargo-ai` calls (reads, queries, run/batch operations) while credentials (`login`), token minting, report egress, `cdk deploy`/`destroy`, and any `remove`/`delete` always still prompt. Allow-only — it can never override a deny rule. Wired per target: `PreToolUse` (Claude Code), `PermissionRequest` (Codex), `beforeShellExecution` (Cursor).
+- **Session-lifecycle hooks** (Claude Code only): plugin-bundled `SessionStart`/`Stop`/`SessionEnd` scripts keep the CLI at the bundle's pinned version and log the session to `workspace_management.sessions` — no installer needed. They defer automatically when the installer's copies exist under `~/.claude/hooks/`, so running both never double-registers a session. Unlike the installer's, the plugin's `SessionStart` does **not** run `skills add` (the plugin owns the skills).
+
+**Claude Code** (≥ v2.1.154):
 
 ```
 /plugin marketplace add getcargohq/cargo-skills
 /plugin install cargo@cargo
 ```
 
-**Pick one channel.** Plugin install and `skills add` both register the skills; using both duplicates them (plugin copies are namespaced `cargo:<skill>`). Plugin users should uninstall the `skills add` copies (or skip the installer's SessionStart refresh) and update via `/plugin marketplace update cargo` + `/plugin update cargo@cargo` instead.
+**Codex:**
+
+```bash
+codex plugin marketplace add getcargohq/cargo-skills
+# then install "cargo" from the Plugins menu
+```
+
+**Cursor:** open **Customize** in the sidebar → add the `getcargohq/cargo-skills` marketplace → install the **Cargo** plugin (UI-driven; the `.cursor-plugin/` manifests are picked up automatically).
+
+**Pick one channel.** Plugin install and `skills add` both register the skills; using both duplicates them (plugin copies are namespaced `cargo:<skill>`). Plugin users should uninstall the `skills add` copies (and skip the installer) and update via `/plugin marketplace update cargo` + `/plugin update cargo@cargo` instead.
 
 For [OpenClaw](https://openclaw.ai), install the bundle from ClawHub:
 

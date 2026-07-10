@@ -1,2 +1,6 @@
-.agents/
+# Locally-vendored skills (skills add) are machine-local — ignore everything
+# under .agents/ EXCEPT .agents/plugins/, which is repo content (the Codex
+# plugin-marketplace manifest lives there by convention).
+.agents/*
+!.agents/plugins/
 skills-lock.json

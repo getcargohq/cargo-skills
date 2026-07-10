@@ -376,25 +376,47 @@ function main() {
     }
   }
 
-  // 5. The Claude Code plugin manifest must parse and stay in lockstep with the
-  //    router's version — plugin.json's version IS the bundle version.
-  const pluginPath = join(repoRoot, ".claude-plugin", "plugin.json");
-  if (existsSync(pluginPath)) {
+  // 5. The agent plugin manifests (Claude Code, Codex, Cursor) must parse and
+  //    stay in lockstep with the router's version — the plugin version IS the
+  //    bundle version, identical across all three targets.
+  const routerVersion = existsSync(routerPath)
+    ? (readFileSync(routerPath, "utf8").match(/^version:\s*"([^"]+)"/m) || [])[1]
+    : null;
+  for (const rel of [
+    ".claude-plugin/plugin.json",
+    ".codex-plugin/plugin.json",
+    ".cursor-plugin/plugin.json",
+  ]) {
+    const pluginPath = join(repoRoot, rel);
+    if (!existsSync(pluginPath)) continue;
     let plugin = null;
     try {
       plugin = JSON.parse(readFileSync(pluginPath, "utf8"));
     } catch (e) {
-      err(pluginPath, 0, `.claude-plugin/plugin.json does not parse as JSON: ${e.message}`);
+      err(pluginPath, 0, `${rel} does not parse as JSON: ${e.message}`);
     }
-    if (plugin && existsSync(routerPath)) {
-      const routerVersion = (readFileSync(routerPath, "utf8").match(/^version:\s*"([^"]+)"/m) || [])[1];
-      if (routerVersion && plugin.version !== routerVersion) {
-        err(
-          pluginPath,
-          0,
-          `plugin.json version \`${plugin.version}\` does not match cargo/SKILL.md version \`${routerVersion}\` — the plugin version mirrors the router's.`
-        );
-      }
+    if (plugin && routerVersion && plugin.version !== routerVersion) {
+      err(
+        pluginPath,
+        0,
+        `${rel} version \`${plugin.version}\` does not match cargo/SKILL.md version \`${routerVersion}\` — the plugin version mirrors the router's.`
+      );
+    }
+  }
+  // The marketplace manifests and hook-wiring files just need to parse.
+  for (const rel of [
+    ".claude-plugin/marketplace.json",
+    ".agents/plugins/marketplace.json",
+    ".cursor-plugin/marketplace.json",
+    "hooks/codex-hooks.json",
+    "hooks/cursor-hooks.json",
+  ]) {
+    const p = join(repoRoot, rel);
+    if (!existsSync(p)) continue;
+    try {
+      JSON.parse(readFileSync(p, "utf8"));
+    } catch (e) {
+      err(p, 0, `${rel} does not parse as JSON: ${e.message}`);
     }
   }
 
