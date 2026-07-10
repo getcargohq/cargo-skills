@@ -1,7 +1,7 @@
 ---
 name: cargo-analytics
-description: Download workflow run results, export segment data, and monitor run metrics using the Cargo CLI. Use when the user wants run metrics, error rates, data export, or download results for their Cargo workspace. For billing and credit usage, use the cargo-billing skill instead.
-version: "1.4.1"
+description: Download workflow run results, export segment data, and monitor run metrics using the Cargo CLI. Use when the user wants run metrics, error rates, data export, or download results for their Cargo workspace. For billing and credit usage, use the cargo-billing skill instead. For explaining WHY a run failed or a batch has errors, use the cargo-diagnostics skill instead.
+version: "1.4.2"
 compatibility: Requires @cargo-ai/cli (npm) and a Cargo account (browser sign-in via --oauth, or an API token)
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -27,6 +27,19 @@ Measurement and export: monitoring run metrics, downloading run and batch result
 > See `references/examples/run-analytics.md` for run metrics and error monitoring.
 > See `references/examples/exports.md` for data export and download examples.
 > For billing, usage metrics, and subscription: use the `cargo-billing` skill.
+
+## Scope — measure and export, not explain
+
+This skill answers **"what happened"** and **"give me the data"**: metrics, counts, downloads, exports. The moment the question becomes **"why"** — why did this run fail, why is the output wrong or empty, which root cause explains these errors, why is this play so expensive — switch to the `cargo-diagnostics` skill; its runbooks sequence the raw surfaces into a diagnosis.
+
+| The question sounds like… | Load |
+| --- | --- |
+| "What's the error rate?" / "How many runs failed this week?" / "Export the results / segment" | **this skill** |
+| "Why did this run fail?" / "Run succeeded but the output looks wrong" | `cargo-diagnostics` → `references/run-trace.md` |
+| "Why does this batch have errors? Which node keeps failing, and is it one cause or many?" | `cargo-diagnostics` → `references/batch-error-sweep.md` |
+| "Why is this play so expensive? Where do the credits go?" | `cargo-diagnostics` → `references/play-optimize-credits.md` |
+
+The two skills chain naturally: analytics **detects** (error rate spiked, batch reports failures), diagnostics **explains** (18 of 20 failures share one root cause), then analytics **retrieves** the clean results once the cause is fixed and the runs re-executed.
 
 ## Prerequisites
 
@@ -182,27 +195,25 @@ cargo-ai orchestration batch get <batch-uuid>
 # → .failedRunsCount    = records that errored
 ```
 
-**Step 2 — Count errors for the batch:**
+**Step 2 — Count and download the failed runs:**
 
 ```bash
 cargo-ai orchestration run count \
   --workflow-uuid <uuid> \
   --batch-uuid <batch-uuid> \
   --statuses error
-```
 
-**Step 3 — Download failed runs to inspect root causes:**
-
-```bash
 cargo-ai orchestration run download \
   --workflow-uuid <uuid> \
   --batch-uuid <batch-uuid> \
   --statuses error
 ```
 
+**Step 3 — Diagnose.** Working out *why* they failed — grouping failures by root cause, picking exemplar runs, reading `runContext` — is the `cargo-diagnostics` skill's job: load `../cargo-diagnostics/references/batch-error-sweep.md` and feed it the batch UUID.
+
 **Step 4 — Re-run only the failed records:**
 
-After fixing the underlying issue (connector credentials, bad input data, rate limits):
+After the diagnosis and fixing the underlying issue (connector credentials, bad input data, rate limits):
 
 ```bash
 # Extract record IDs from the failed run download, then:
