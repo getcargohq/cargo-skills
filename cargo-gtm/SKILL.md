@@ -1,7 +1,7 @@
 ---
 name: cargo-gtm
 description: "Front door for any GTM task on Cargo — sourcing, waterfall enrichment, email/phone/LinkedIn lookup, email verification, scoring, qualification, sequencing, CRM sync, and signal monitoring (job changes, funding, tech-stack/hiring intent). Use when the user states a real-world goal involving prospects, leads, accounts, contacts, ICP lists, or campaign activation. Routes to phase guides (Level 2), recipes (Level 2.5), and per-provider playbooks (Level 3) before any action call."
-version: "1.4.0"
+version: "1.5.0"
 compatibility: Requires @cargo-ai/cli (npm) and a Cargo account (browser sign-in via --oauth, or an API token)
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -76,7 +76,7 @@ Scan this list and read the recipe matching your task. **When a recipe matches: 
 | [`recipes/account-expansion.md`](recipes/account-expansion.md) | Multi-threading existing customer accounts — net-new buyers, deduped against the workspace's Contacts model |
 | [`recipes/save-as-play.md`](recipes/save-as-play.md) | Converting a successful ad-hoc run into a durable scheduled play or cron tool — offer after any repeatable pull |
 
-If none match, scan the phase docs above for the closest pattern and adapt — or invoke [`agents/execution-plan-creator.md`](agents/execution-plan-creator.md) to compose a custom chain with provider/action slugs and cost estimates.
+If none match, scan the phase docs above for the closest pattern and adapt — or invoke [`agents/execution-plan-creator.md`](agents/execution-plan-creator.md) to compose a custom chain with provider/action slugs and cost estimates. For wide sourcing sweeps that fan out (per-industry, per-geo), delegate approved slices to [`agents/list-builder.md`](agents/list-builder.md) — it executes exactly one pre-approved action per slice and returns rows to a file, keeping row data out of the main context. (On Claude Code with the plugin, both are installed as native subagents: `cargo-execution-planner` and `cargo-list-builder`.)
 
 ## 3) Cost discipline — MANDATORY gates
 
