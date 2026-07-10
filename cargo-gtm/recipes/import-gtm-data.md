@@ -43,16 +43,21 @@ cargo-ai workspaceManagement file upload --file-path ./contacts-export.csv
 
 Dedupe before writing: match on `source_tool_id` first, then email, then company domain (`cargo.matchProspect` / `cargo.matchBusiness` at 0.5/record are the paid fallback — only for rows with no natural key; that spend goes through the pilot gate).
 
-## Step 4 — QA the imported list (free)
+## Step 4 — QA what actually landed (free)
 
-Imported ≠ trustworthy: exports carry stale roles and unverified emails. Run the QA scripts ([`../references/contact-accuracy.md`](../references/contact-accuracy.md)) on the loaded rows:
+Imported ≠ trustworthy: exports carry stale roles and unverified emails. Audit **the stored rows, not the source export** ([`../references/contact-accuracy.md`](../references/contact-accuracy.md)) — dedupe and column mapping in step 3 changed the set, so auditing `contacts-export.csv` grades rows that never landed and misses the transforms. Pull the loaded rows back out first:
 
 ```bash
-node <skill-dir>/scripts/validate-emails.ts --input ./contacts-export.csv --output ./culled.csv
+# Export the just-loaded rows from the model (source_tool_id marks this import)
+cargo-ai storage query download \
+  --query "SELECT * FROM <datasetSlug>.<modelSlug> WHERE source_tool_id IS NOT NULL"
+# → returns a signed URL; save the file as ./loaded.csv
+
+node <skill-dir>/scripts/validate-emails.ts --input ./loaded.csv --output ./culled.csv
 node <skill-dir>/scripts/contact-accuracy-audit.ts --input ./culled.csv --output ./audited.csv
 ```
 
-Report the SEND/VERIFY/REVIEW/REMOVE counts. Only the VERIFY bucket needs paid re-verification (`waterfall.verifyEmail`, 0.1/record) — pilot-gate it.
+Report the SEND/VERIFY/REVIEW/REMOVE counts — then **write the verdicts back to the stored records** so downstream segments can act on them: create an `audit_action` column (same `--column` shape as step 2) and batch-upsert it from `./audited.csv` keyed on `source_tool_id`. Activation segments filter on `audit_action = "SEND"`; only the VERIFY bucket needs paid re-verification (`waterfall.verifyEmail`, 0.1/record — pilot-gate it); REMOVE rows stay stored but excluded from segments (bulk-delete only after the user reviews them).
 
 ## Step 5 — Rebuild recurring logic as plays (selective)
 
