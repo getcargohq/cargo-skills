@@ -25,7 +25,7 @@ Use `linkedin.findProfileUrl` (0.25 cred) — cheapest credible source.
 cargo-ai orchestration action execute-batch \
   --action '{"kind":"connector","integrationSlug":"linkedin","actionSlug":"findProfileUrl","config":{}}' \
   --records '[
-    {"firstName":"John","lastName":"Smith","companyName":"Acme","companyDomain":"acme.com"},
+    {"fullName":"John Smith","companyName":"Acme"},
     ...
   ]' \
   --wait-until-finished > /tmp/candidates.json
@@ -88,4 +88,4 @@ Only the rows that passed the validation gate get written back. Mark unresolved 
 
 ## Action shape rules
 
-`{"kind":"connector","integrationSlug":"linkedin","actionSlug":"findProfileUrl","config":{}}`. **No `connectorUuid` in config.** Per-record data: `firstName`, `lastName`, `companyName`, `companyDomain` (any combination accepted).
+`{"kind":"connector","integrationSlug":"linkedin","actionSlug":"findProfileUrl","config":{}}`. **No `connectorUuid` in config.** Per-record data: `fullName` (required), `companyName` (optional — improves matching). If the source data has separate first/last columns, concatenate them into `fullName` first (see [`../provider-playbooks/linkedin.md`](../provider-playbooks/linkedin.md)).
