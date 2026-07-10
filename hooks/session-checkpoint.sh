@@ -24,17 +24,19 @@ if [ -z "$MODE" ]; then
 fi
 # A standalone copy owns the lifecycle only when it is REGISTERED in
 # ~/.claude/settings.json — a leftover file nothing invokes must not suppress
-# the plugin copy. Falls back to file existence when jq is unavailable.
+# the plugin copy. When registration cannot be verified (no jq, or no
+# settings.json), default to NOT owned: the plugin copy runs. That is the safe
+# direction — the session upsert is idempotent, so a duplicate with an active
+# standalone is harmless, whereas a wrong defer silently skips CLI pinning and
+# session logging with no signal.
 standalone_owns() {
   s="$HOME/.claude/hooks/$1"
   [ -x "$s" ] || return 1
-  if command -v jq >/dev/null 2>&1 && [ -f "$HOME/.claude/settings.json" ]; then
-    jq -e --arg cmd "$s" \
-      '[.hooks[]?[]? | .hooks[]? | select(.command | contains($cmd))] | length > 0' \
-      "$HOME/.claude/settings.json" >/dev/null 2>&1
-    return $?
-  fi
-  return 0
+  command -v jq >/dev/null 2>&1 || return 1
+  [ -f "$HOME/.claude/settings.json" ] || return 1
+  jq -e --arg cmd "$s" \
+    '[.hooks[]?[]? | .hooks[]? | select(.command | contains($cmd))] | length > 0' \
+    "$HOME/.claude/settings.json" >/dev/null 2>&1
 }
 if [ "$MODE" = "plugin" ] && standalone_owns "session-checkpoint.sh"; then
   exit 0
