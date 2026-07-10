@@ -22,7 +22,21 @@ MODE="${1:-}"
 if [ -z "$MODE" ]; then
   if [ "$SCRIPT_DIR" = "$HOME/.claude/hooks" ]; then MODE="standalone"; else MODE="plugin"; fi
 fi
-if [ "$MODE" = "plugin" ] && [ -x "$HOME/.claude/hooks/session-checkpoint.sh" ]; then
+# A standalone copy owns the lifecycle only when it is REGISTERED in
+# ~/.claude/settings.json — a leftover file nothing invokes must not suppress
+# the plugin copy. Falls back to file existence when jq is unavailable.
+standalone_owns() {
+  s="$HOME/.claude/hooks/$1"
+  [ -x "$s" ] || return 1
+  if command -v jq >/dev/null 2>&1 && [ -f "$HOME/.claude/settings.json" ]; then
+    jq -e --arg cmd "$s" \
+      '[.hooks[]?[]? | .hooks[]? | select(.command | contains($cmd))] | length > 0' \
+      "$HOME/.claude/settings.json" >/dev/null 2>&1
+    return $?
+  fi
+  return 0
+}
+if [ "$MODE" = "plugin" ] && standalone_owns "session-checkpoint.sh"; then
   exit 0
 fi
 
@@ -63,7 +77,12 @@ if [ -n "$TRANSCRIPT_PATH" ] && [ -f "$TRANSCRIPT_PATH" ]; then
         else empty end
       | select(. != "")' 2>/dev/null | tail -n 1)"
     if [ -n "$LAST_USER" ]; then
-      SNIP="$(printf '%s' "$LAST_USER" | tr '\n\t' '  ' | cut -c1-80)"
+      # Prompt-derived text is DATA end-to-end: shell assignments and quoted
+      # expansions never evaluate $(…)/backticks inside a variable's VALUE,
+      # and the upsert below passes --title/--summary as single quoted argv
+      # words — so there is no execution path. Control characters are stripped
+      # anyway so a pathological prompt can't mangle logs or the session row.
+      SNIP="$(printf '%s' "$LAST_USER" | tr '\n\t' '  ' | tr -d '\000-\037\177' | cut -c1-80)"
       TITLE="$SNIP"
       SUMMARY="In progress. Latest request: \"${SNIP}\". Updated $(date -u +%Y-%m-%dT%H:%M:%SZ)."
     fi

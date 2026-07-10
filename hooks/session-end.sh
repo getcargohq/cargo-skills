@@ -19,7 +19,21 @@ MODE="${1:-}"
 if [ -z "$MODE" ]; then
   if [ "$SCRIPT_DIR" = "$HOME/.claude/hooks" ]; then MODE="standalone"; else MODE="plugin"; fi
 fi
-if [ "$MODE" = "plugin" ] && [ -x "$HOME/.claude/hooks/session-end.sh" ]; then
+# A standalone copy owns the lifecycle only when it is REGISTERED in
+# ~/.claude/settings.json — a leftover file nothing invokes must not suppress
+# the plugin copy. Falls back to file existence when jq is unavailable.
+standalone_owns() {
+  s="$HOME/.claude/hooks/$1"
+  [ -x "$s" ] || return 1
+  if command -v jq >/dev/null 2>&1 && [ -f "$HOME/.claude/settings.json" ]; then
+    jq -e --arg cmd "$s" \
+      '[.hooks[]?[]? | .hooks[]? | select(.command | contains($cmd))] | length > 0' \
+      "$HOME/.claude/settings.json" >/dev/null 2>&1
+    return $?
+  fi
+  return 0
+}
+if [ "$MODE" = "plugin" ] && standalone_owns "session-end.sh"; then
   exit 0
 fi
 
