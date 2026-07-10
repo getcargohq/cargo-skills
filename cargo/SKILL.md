@@ -1,7 +1,7 @@
 ---
 name: cargo
 description: Router and overview for the Cargo CLI agent skills. Explains the fifteen skills (this router + one onboarding skill cargo-quickstart + one outcome skill cargo-gtm + twelve capability skills, including cargo-cdk for declarative workspace-as-code and cargo-diagnostics for run/batch/cost forensics), when to use the declarative CDK vs the imperative CLI, the UUID flow between them, async polling, end-to-end use cases (enrich one record, enrich and sync to CRM, AI lead scoring, custom workflow, error monitoring, fresh-workspace bootstrap, segment export, GTM context authoring), and common gotchas (`conjonction` spelling, run vs batch, model-uuid vs segment-uuid). Load first whenever working with the Cargo CLI, when unsure which sub-skill applies, when stitching multiple sub-skills together, when bootstrapping a workspace, or when the user asks about Cargo skills in general.
-version: "1.11.0"
+version: "1.12.0"
 compatibility: Requires @cargo-ai/cli (npm) and a Cargo account (browser sign-in via --oauth, or an API token)
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -61,7 +61,7 @@ All commands output JSON to stdout. Failed commands exit non-zero and return `{"
 
 ## Every Cargo session has three jobs
 
-> **Automated by the Cargo installer.** Jobs 1 and 3 (refresh + session register/finalize) run on their own when the `SessionStart` + `Stop` + `SessionEnd` hooks scaffolded by `curl -fsSL https://api.getcargo.io/install.sh | sh` are present. The `Stop` hook also checkpoints the session row each turn, so a session that never reaches `SessionEnd` still shows recent context instead of a bare placeholder. Do these by hand only when the hooks aren't installed. Job 2 (reporting) is always your responsibility — it can't be automated.
+> **Automated on Claude Code.** Jobs 1 and 3 (refresh + session register/finalize) run on their own when either the **Cargo plugin** is installed (its bundled `SessionStart`/`Stop`/`SessionEnd` hooks handle them) or the installer's hooks (`curl -fsSL https://api.getcargo.io/install.sh | sh`) are present. The `Stop` hook also checkpoints the session row each turn, so a session that never reaches `SessionEnd` still shows recent context instead of a bare placeholder. Do these by hand only when neither is installed (or on agents without lifecycle hooks). Job 2 (reporting) is always your responsibility — it can't be automated.
 
 ### 1. At session start — refresh and register
 
@@ -69,18 +69,21 @@ Before any other Cargo command, refresh the CLI and skills, then register the se
 
 ```bash
 # Refresh — idempotent, ~10s. Skills first, then the CLI at the version the
-# bundle pins (cargo/cli-version ships inside this skill; fall back to latest).
+# bundle pins. The pin file `cli-version` sits in the same directory as this
+# SKILL.md — read it from wherever you loaded this skill (on Claude Code with
+# `skills add` that is ~/.claude/skills/cargo/; plugin installs handle this
+# automatically via their SessionStart hook). Fall back to latest.
 npx -y skills add getcargohq/cargo-skills
-npm install -g "@cargo-ai/cli@$(cat ~/.claude/skills/cargo/cli-version 2>/dev/null || echo latest)"
+npm install -g "@cargo-ai/cli@$(cat <path-to-this-skill-dir>/cli-version 2>/dev/null || echo latest)"
 
 # Register the session (placeholders OK — overwritten at session end)
 cargo-ai workspaceManagement session upsert \
-  --session-id <claude-session-id> \
-  --title "Claude Code session <claude-session-id>" \
+  --session-id <session-id> \
+  --title "Agent session <session-id>" \
   --summary "Session in progress."
 ```
 
-Skip the refresh only if the user explicitly pinned a version. Skip the `session upsert` only if the user opted out or no `session_id` is available.
+Skip the refresh only if the user explicitly pinned a version — and skip the `skills add` entirely if the skills came from a **plugin** (the plugin owns them; a parallel `skills add` duplicates every skill). Skip the `session upsert` only if the user opted out or no session id is available.
 
 **Why the pin:** `cargo/cli-version` is bumped in lockstep with these skills (a PR from the CLI release pipeline), so the CLI you install is the one this bundle was written against — no docs/CLI drift mid-session. If the pin file is missing or unreadable, `latest` is the safe fallback. To move the pin, merge the pending version-bump PR on `getcargohq/cargo-skills` (or edit `cargo/cli-version`) — the next session refresh converges automatically.
 

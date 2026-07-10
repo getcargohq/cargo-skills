@@ -59,13 +59,15 @@ The Cargo CLI and these skills ship updates regularly. The bundle pins the CLI v
 
 ### Claude Code
 
-The Cargo installer wires this up for you. Run it once and answer **y** at the session-hooks prompt:
+The Cargo installer wires this up for you. Run it once and answer **y** at the plugin prompt:
 
 ```bash
 curl -fsSL https://api.getcargo.io/install.sh | sh
 ```
 
-It scaffolds `SessionStart` + `Stop` + `SessionEnd` hooks under `~/.claude/` so that every new Claude Code session automatically (1) refreshes `@cargo-ai/cli` and the skills bundle, (2) checkpoints the session row each turn so progress is captured even if the session never ends cleanly, and (3) logs the session to `workspace_management.sessions` with an AI-generated title and summary at the end. The hooks swallow errors, so a missing `cargo-ai`/`claude`/`jq` binary never blocks a session. Set `CARGO_INSTALL_HOOKS=0` to skip the prompt.
+It installs the CLI (at the bundle's pinned version) and the **Cargo plugin**, whose bundled hooks then keep everything current automatically: every new Claude Code session (1) converges `@cargo-ai/cli` to the pin and refreshes the plugin itself for the next session, (2) checkpoints the session row each turn so progress is captured even if the session never ends cleanly, and (3) logs the session to `workspace_management.sessions` with an AI-generated title and summary at the end. All hooks swallow errors, so a missing `cargo-ai`/`claude`/`jq` binary never blocks a session. Set `CARGO_INSTALL_HOOKS=0` to skip the prompt — the installer then falls back to `skills add` and scaffolds nothing.
+
+(Older installer versions scaffolded standalone `SessionStart`/`Stop`/`SessionEnd` hooks under `~/.claude/hooks/` instead; the plugin's hooks defer to those when present, and re-running the installer migrates them away.)
 
 Without the installer, the `cargo` router skill still instructs the agent to refresh CLI + skills at the start of every session ([see `cargo/SKILL.md`](cargo/SKILL.md)) — that works out of the box, just without the hard enforcement and session logging the hooks provide.
 

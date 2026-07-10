@@ -38,4 +38,43 @@ if command -v cargo-ai >/dev/null 2>&1; then
     --summary "Session in progress." >/dev/null 2>&1 || true
 fi
 
+# Keep the plugin itself current — the plugin channel's equivalent of the
+# installer's `skills add` refresh. Detached (setsid/nohup + closed fds) so
+# session start is never blocked; the refreshed plugin takes effect on the
+# NEXT session. Resolve `claude` across the usual Node/version-manager bin
+# dirs first (hooks often run with a minimal PATH).
+add_path() {
+  [ -n "${1:-}" ] && [ -d "$1" ] || return 0
+  case ":$PATH:" in
+    *":$1:"*) ;;
+    *) PATH="$1:$PATH" ;;
+  esac
+}
+if command -v node >/dev/null 2>&1; then
+  add_path "$(dirname "$(command -v node)")"
+fi
+if command -v npm >/dev/null 2>&1; then
+  add_path "$(npm prefix -g 2>/dev/null)/bin"
+fi
+add_path "$HOME/.claude/local"
+add_path "$HOME/.local/bin"
+add_path "/usr/local/bin"
+add_path "/opt/homebrew/bin"
+export PATH
+
+CLAUDE_BIN="$(command -v claude 2>/dev/null || true)"
+update_plugin() {
+  [ -n "$CLAUDE_BIN" ] || return 0
+  "$CLAUDE_BIN" plugin marketplace update cargo >/dev/null 2>&1 || true
+  "$CLAUDE_BIN" plugin update cargo@cargo >/dev/null 2>&1 || true
+}
+export -f update_plugin
+export CLAUDE_BIN
+if command -v setsid >/dev/null 2>&1; then
+  setsid bash -c update_plugin </dev/null >/dev/null 2>&1 &
+else
+  nohup bash -c update_plugin </dev/null >/dev/null 2>&1 &
+fi
+disown 2>/dev/null || true
+
 exit 0
