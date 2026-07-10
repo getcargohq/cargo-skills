@@ -108,6 +108,8 @@ cargo-ai orchestration action execute-batch \
   --wait-until-finished > /tmp/personalized.json
 ```
 
+More proven prompts (subject lines, follow-ups, job-change angles): [`../references/prompt-library/index.md`](../references/prompt-library/index.md).
+
 For higher quality at higher cost, swap `claude-haiku-4-5` for `claude-sonnet-4-6`. For 30× cheaper at scale: `openAi` with `gpt-4o-mini` (0.006 credits/call vs Haiku's 0.2).
 
 ### Step 6 — Hand off to the sequencer
