@@ -1,7 +1,7 @@
 ---
 name: cargo-gtm
 description: "Front door for any GTM task on Cargo — sourcing, waterfall enrichment, email/phone/LinkedIn lookup, email verification, scoring, qualification, sequencing, CRM sync, and signal monitoring (job changes, funding, tech-stack/hiring intent). Use when the user states a real-world goal involving prospects, leads, accounts, contacts, ICP lists, or campaign activation. Routes to phase guides (Level 2), recipes (Level 2.5), and per-provider playbooks (Level 3) before any action call."
-version: "1.2.0"
+version: "1.3.0"
 compatibility: Requires @cargo-ai/cli (npm) and a Cargo account (browser sign-in via --oauth, or an API token)
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -170,17 +170,37 @@ Every action JSON in this skill follows the rules in [`../cargo-orchestration/re
 
 If a recipe fails repeatedly and the cause isn't obvious, escalate via `cargo-ai workspaceManagement report create`. See [`../cargo-workspace-management/SKILL.md`](../cargo-workspace-management/SKILL.md) (Reports section).
 
-## 11) Provider playbooks
+## 11) Provider playbooks — read before you call
 
-Per-provider deep dives for the priority stack. Long-tail providers don't have dedicated playbooks yet — fall back to [`references/alternatives.md`](references/alternatives.md) and [`references/stage-action-map.md`](references/stage-action-map.md).
+**STOP — do not execute any paid action against a provider below until you have opened its playbook.** Each playbook carries the exact action slugs, config shapes, input quirks, and cost traps; reading it for five seconds is cheaper than one failed paid call, and a failed batch is 100 failed paid calls. Providers with no playbook: fall back to [`references/alternatives.md`](references/alternatives.md) and [`references/stage-action-map.md`](references/stage-action-map.md).
 
-**Priority stack:**
+**Priority stack (recipes lead with these):**
 - [`provider-playbooks/salesNavigator.md`](provider-playbooks/salesNavigator.md) — cheapest sourcing in the catalog (0.02–0.05/record).
 - [`provider-playbooks/cargo.md`](provider-playbooks/cargo.md) — 22 native enrichment + signal actions; the `match*` actions are key for dedup.
 - [`provider-playbooks/waterfall.md`](provider-playbooks/waterfall.md) — swiss-army-knife: enrichment, verification, and the cargo-unique `detectJobChange` signal.
 - [`provider-playbooks/FullEnrich.md`](provider-playbooks/FullEnrich.md) — premium contact lookup; `reverseEmailLookup` is unique.
 - [`provider-playbooks/theirStack.md`](provider-playbooks/theirStack.md) — tech-stack + hiring-intent signals.
 - [`provider-playbooks/peopleDataLabs.md`](provider-playbooks/peopleDataLabs.md) — heavyweight backfill at flat 3-credit tier.
+
+**Sourcing & company-data specialists:**
+- [`provider-playbooks/linkedin.md`](provider-playbooks/linkedin.md) — the native LinkedIn integration's action set (profiles, companies, posts, jobs).
+- [`provider-playbooks/proxycurl.md`](provider-playbooks/proxycurl.md) — LinkedIn-data lookups by URL when the native integration misses.
+- [`provider-playbooks/apolloio.md`](provider-playbooks/apolloio.md) — person/organization enrichment alternative; investor-niche coverage.
+- [`provider-playbooks/oceanio.md`](provider-playbooks/oceanio.md) — lookalike-company discovery from seed domains.
+- [`provider-playbooks/datagma.md`](provider-playbooks/datagma.md) — lightweight person/company enrichment alternative.
+
+**Email & contact specialists** (all feed the VERIFY step — see [`references/waterfall-strategy.md`](references/waterfall-strategy.md)):
+- [`provider-playbooks/hunter.md`](provider-playbooks/hunter.md) — domain-search email finding + verification.
+- [`provider-playbooks/prospeo.md`](provider-playbooks/prospeo.md) — email/phone lookup, LinkedIn-URL input path.
+- [`provider-playbooks/icypeas.md`](provider-playbooks/icypeas.md) — budget email find/verify.
+- [`provider-playbooks/findyMail.md`](provider-playbooks/findyMail.md) — email finding alternative.
+- [`provider-playbooks/leadMagic.md`](provider-playbooks/leadMagic.md) — email + mobile lookup alternative.
+- [`provider-playbooks/contactOut.md`](provider-playbooks/contactOut.md) — contact info from LinkedIn profiles.
+- [`provider-playbooks/zeroBounce.md`](provider-playbooks/zeroBounce.md) — email-verification second opinion to `waterfall.verifyEmail`.
+
+**Research & scraping:**
+- [`provider-playbooks/firecrawl.md`](provider-playbooks/firecrawl.md) — web scraping for research/personalization stages.
+- [`provider-playbooks/serper.md`](provider-playbooks/serper.md) — Google SERP queries for research and URL discovery.
 
 ## 12) References
 

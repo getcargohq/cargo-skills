@@ -354,6 +354,22 @@ function main() {
       }
     }
   }
+  // Same drift guard for provider playbooks: the router's read-first gate only
+  // works if every playbook on disk is discoverable from the SKILL.md catalog.
+  const playbooksDir = join(repoRoot, "cargo-gtm", "provider-playbooks");
+  if (existsSync(playbooksDir)) {
+    const gtmSkillPath = join(repoRoot, "cargo-gtm", "SKILL.md");
+    const gtmSkill = existsSync(gtmSkillPath) ? readFileSync(gtmSkillPath, "utf8") : "";
+    for (const f of readdirSync(playbooksDir).filter((n) => n.endsWith(".md"))) {
+      if (!gtmSkill.includes(`provider-playbooks/${f}`)) {
+        err(
+          gtmSkillPath,
+          0,
+          `Playbook \`provider-playbooks/${f}\` exists on disk but is not referenced in cargo-gtm/SKILL.md — add it to the playbook catalog.`
+        );
+      }
+    }
+  }
 
   // 4. The CLI pin: cargo/cli-version is the source of truth the SessionStart
   //    hook and install.sh consume. It must exist and be a bare semver line.
