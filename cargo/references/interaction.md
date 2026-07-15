@@ -43,6 +43,16 @@ FullEnrich premium (~1 cr/row, better coverage on small companies)?
 - **Always surface the URL.** Every created or touched resource gets its `app.getcargo.io` link (URL patterns: [`uuid-flow.md`](uuid-flow.md)) so the user can open it in the Cargo app.
 - **Receipts after paid actions** are their own convention — format in [`cost-discipline.md`](../../cargo-gtm/references/cost-discipline.md) §2.
 
+## 4. Show the rows, not the schema
+
+A user who has just built a model can't tell from a column list whether they built the right thing. Ten real rows tell them in one glance. So whenever a model gains structure or data, show the table:
+
+- **After creating a model or adding columns** — echo the resulting schema as a compact table (column, type, what fills it). The model is still empty at this point; don't run a preview query expecting rows, and don't present emptiness as a result.
+- **After the first data lands** (a batch, a play, an import writes into the model) — run `cargo-ai storage query execute "SELECT * FROM <dataset>.<model> LIMIT 10"` and show those rows. This is the checkpoint that matters: it's the first moment the user can see what they actually built.
+- **After a play populates a new column** — preview that column alongside the record's identifying fields (`name`, `domain`, …), so filled vs. empty is obvious at a glance.
+
+Storage queries are free and fast, so this preview costs nothing but a line of output. Keep it to ~10 rows and the columns that carry meaning — this is a glance, not an export (§3: summarize, don't dump). If the preview comes back empty or full of nulls when it shouldn't, that's a finding — say so instead of moving on.
+
 ## Where these apply most
 
 - Building or editing plays/workflows (`cargo-orchestration`, and node-graph steps in `cargo-gtm` recipes).
