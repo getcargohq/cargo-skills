@@ -13,7 +13,7 @@ cargo-ai content file list
 ### Upload a file
 
 ```bash
-cargo-ai content file upload --file-path ./knowledge-base.pdf
+cargo-ai content file upload --file ./knowledge-base.pdf
 ```
 
 Supported content types include PDFs, CSVs, plain text, and other common document formats. The response includes the `uuid` and `s3Filename` needed to reference the file.
@@ -22,7 +22,7 @@ Supported content types include PDFs, CSVs, plain text, and other common documen
 
 ```bash
 # 1. Upload the file
-cargo-ai content file upload --file-path ./product-docs.pdf
+cargo-ai content file upload --file ./product-docs.pdf
 # → file.uuid
 
 # 2. Add the file as a resource on the agent's draft release
@@ -44,7 +44,7 @@ Folders are managed by the [`cargo-workspace-management`](../../../cargo-workspa
 cargo-ai workspaceManagement folder list
 
 # 2a. Upload straight into the folder…
-cargo-ai content file upload --file-path ./notes.pdf --folder-uuid <folder-uuid>
+cargo-ai content file upload --file ./notes.pdf --folder-uuid <folder-uuid>
 
 # 2b. …or move an existing file afterwards
 cargo-ai content file update --uuid <file-uuid> --folder-uuid <folder-uuid>

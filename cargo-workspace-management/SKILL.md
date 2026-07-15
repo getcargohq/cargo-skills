@@ -204,7 +204,7 @@ Workspace files are CSVs or other data files uploaded for use in batch runs.
 
 ```bash
 # Upload a file
-cargo-ai workspaceManagement file upload --file-path <path-to-file>
+cargo-ai workspaceManagement file upload --file <path-to-file>
 # → Returns s3Filename
 
 # Inspect a file's columns before running a batch
