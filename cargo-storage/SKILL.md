@@ -135,6 +135,23 @@ Column types: `string`, `number`, `boolean`, `date`, `object`, `array`, `vector`
 
 Column kinds: `custom` (user-defined), `computed` (expression over other columns), `metric` (aggregated from a related model), `lookup` (single field pulled from a related model via a join).
 
+## Preview what you built
+
+A column list doesn't tell the user whether the model is right — rows do. Two checkpoints (the pack-wide convention lives in [`../cargo/references/interaction.md`](../cargo/references/interaction.md) §4):
+
+**1. Right after `model create` / `column create` — show the schema, not rows.** A new model is empty; a `LIMIT 10` here returns nothing and reads as failure. Echo the columns as a compact table instead (column, type, what will fill it).
+
+**2. As soon as data lands — show the rows.** After a batch, play, or import writes into the model, preview it:
+
+```bash
+cargo-ai storage query execute \
+  "SELECT * FROM <dataset-slug>.<model-slug> LIMIT 10"
+```
+
+Show ~10 rows and only the columns that carry meaning. Storage queries are free, so this costs nothing but a few lines of output — and it's the first moment the user can actually see what they built. When a play fills a *new* column, preview that column next to the record's identifying fields (`name`, `domain`) so filled vs. empty is obvious.
+
+If the preview comes back empty or all-null when it shouldn't, that's a finding — surface it rather than reporting the write as a success. See [`cargo-diagnostics`](../cargo-diagnostics/SKILL.md) to trace why.
+
 ## Relationships
 
 Relationships link models together (e.g. Contacts belong to Companies).

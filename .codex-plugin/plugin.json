@@ -1,7 +1,7 @@
 {
   "name": "cargo",
   "description": "Build with Cargo in Codex — 15 skills over the cargo-ai CLI (GTM recipes, orchestration, storage, CDK, diagnostics) plus prompt-free approval for safe cargo-ai calls.",
-  "version": "1.14.0",
+  "version": "1.14.1",
   "author": { "name": "getcargo" },
   "homepage": "https://github.com/getcargohq/cargo-skills",
   "skills": "./",
