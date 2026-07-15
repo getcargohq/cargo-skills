@@ -55,8 +55,8 @@ cargo-ai content file list
 cargo-ai content file get <file-uuid>
 
 # Upload a file (optionally straight into a folder)
-cargo-ai content file upload --file-path ./knowledge-base.pdf
-cargo-ai content file upload --file-path ./knowledge-base.pdf --folder-uuid <folder-uuid>
+cargo-ai content file upload --file ./knowledge-base.pdf
+cargo-ai content file upload --file ./knowledge-base.pdf --folder-uuid <folder-uuid>
 
 # Update a file's name or folder
 cargo-ai content file update --uuid <file-uuid> --name "Q1 Research Notes"

@@ -37,7 +37,7 @@ cargo-ai storage column create \
 Upload the CSV and drive a batch from it (full flow: `cargo-orchestration` → [`references/examples/tools.md`](../../cargo-orchestration/references/examples/tools.md)):
 
 ```bash
-cargo-ai workspaceManagement file upload --file-path ./contacts-export.csv
+cargo-ai workspaceManagement file upload --file ./contacts-export.csv
 # → returns s3-filename; use it as the batch input for the write-back workflow
 ```
 

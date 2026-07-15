@@ -82,7 +82,7 @@ cargo-ai ai release update-draft --agent-uuid <agent-uuid> \
   --temperature 0.3
 
 # 4. Attach a knowledge file (optional)
-cargo-ai content file upload --file-path ./icp-criteria.pdf
+cargo-ai content file upload --file ./icp-criteria.pdf
 # → Extract file.uuid — attach to agent via release update-draft --resources
 
 # 5. Test with a message
