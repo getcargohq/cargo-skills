@@ -138,6 +138,16 @@ Organization & knowledge:
 // Folder — per-kind (a "model" folder and an "agent" folder are separate).
 export const modelsFolder = defineFolder("crm-models", { kind: "model", name: "CRM" });
 
+// RECOMMENDED: route every CDK-managed resource into a dedicated, clearly
+// labelled folder (via each builder's `folder:`), so a human in the UI sees at a
+// glance that these resources are owned by code and shouldn't be hand-edited —
+// manual UI changes read back as drift on the next `plan`. Because folders are
+// per-kind, give each kind its own but share ONE recognizable name/prefix, e.g.
+// `⚙️ Managed by CDK` (or `[CDK] Models`, `[CDK] Agents`, …). A lock/gear emoji
+// plus a "do not edit" signal in the name is the clearest cue in the folder tree.
+export const cdkModels = defineFolder("cdk-models", { kind: "model", name: "⚙️ Managed by CDK — do not edit" });
+export const cdkAgents = defineFolder("cdk-agents", { kind: "agent", name: "⚙️ Managed by CDK — do not edit" });
+
 // File — content uploaded from a local path (hashed at define time, so edits show as drift).
 export const playbook = defineFile("playbook", {
   path: new URL("./playbook.md", import.meta.url).pathname,
