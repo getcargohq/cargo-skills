@@ -142,11 +142,11 @@ export const modelsFolder = defineFolder("crm-models", { kind: "model", name: "C
 // labelled folder (via each builder's `folder:`), so a human in the UI sees at a
 // glance that these resources are owned by code and shouldn't be hand-edited —
 // manual UI changes read back as drift on the next `plan`. Because folders are
-// per-kind, give each kind its own but share ONE recognizable name/prefix, e.g.
-// `⚙️ Managed by CDK` (or `[CDK] Models`, `[CDK] Agents`, …). A lock/gear emoji
-// plus a "do not edit" signal in the name is the clearest cue in the folder tree.
-export const cdkModels = defineFolder("cdk-models", { kind: "model", name: "⚙️ Managed by CDK — do not edit" });
-export const cdkAgents = defineFolder("cdk-agents", { kind: "agent", name: "⚙️ Managed by CDK — do not edit" });
+// per-kind, give each kind its own but share ONE short, recognizable prefix, e.g.
+// `🔒 CDK` (or `🔒 CDK Models`, `🔒 CDK Agents`). Keep names short — long labels
+// truncate in the folder tree; the lock emoji is the "don't touch" cue.
+export const cdkModels = defineFolder("cdk-models", { kind: "model", name: "🔒 CDK Models" });
+export const cdkAgents = defineFolder("cdk-agents", { kind: "agent", name: "🔒 CDK Agents" });
 
 // File — content uploaded from a local path (hashed at define time, so edits show as drift).
 export const playbook = defineFile("playbook", {
