@@ -157,6 +157,14 @@ state) · `cargo-ai cdk rollback` (restore the pre-deploy state snapshot).
   land in the wrong directory. Use `--dir <path>` to be explicit.
 - **`--yes` in CI.** `deploy` and `destroy` prompt for confirmation; non-interactive
   runs must pass `--yes`.
+- **Route CDK-managed resources into a clearly-labelled folder.** Set `folder:` on
+  each builder so everything CDK owns lands in a dedicated folder whose name signals
+  "owned by code — don't hand-edit" to anyone in the UI (manual UI edits read back as
+  drift on the next `plan`). Folders are per-kind, so give each kind its own but share
+  one short, recognizable prefix — recommended: **`🔒 CDK`** (e.g. `🔒 CDK Models`,
+  `🔒 CDK Agents`). Keep names short (long labels truncate in the folder tree); the
+  lock emoji is the "don't touch" cue. See
+  [`guides/authoring-resources.md`](guides/authoring-resources.md).
 
 ## Prerequisites
 
