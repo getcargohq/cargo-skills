@@ -1,6 +1,6 @@
 # Credits cost table
 
-All 141 credits-based actions across the 120-integration cargo catalog, sorted by cost. **Auto-generated** from `cargo-ai connection integration list` — regenerate with `python3 scripts/gen-credits-table.py` if pricing changes.
+All 145 credits-based actions across the 120-integration cargo catalog, sorted by cost. **Auto-generated** from `cargo-ai connection integration list` — regenerate with `python3 scripts/gen-credits-table.py` if pricing changes.
 
 Generated: n/a
 
@@ -10,12 +10,16 @@ Generated: n/a
 | 0 | `snitcher` | enrichment | `searchSessions` | Search and retrieve website visitor sessions with filtering options for date ran |
 | 0.006,0.03,0.2,0.2,0.03,0.006,0.2,0.2,0.01,0.05,0.3,0.02,0.5,0.5,0.006,0.03,0.2,0.2,0.03,0.006,0.2,0.2,0.01,0.05,0.3,0.02,0.5,0.5 | `openAi` | freeform | `instruct` | Instruct prompt |
 | 0.2,0.2,0.05,0.15,0.03,0.1,0.01,0.01,0.2,0.2,0.05,0.15,0.03,0.1,0.01,0.01 | `gemini` | freeform | `instruct` | Instruct prompt |
+| 0.01 | `aiArk` | enrichment | `searchCompanies` | Search for companies matching company filters or lookalike domains |
 | 0.01 | `icypeas` | enrichment | `verifyEmail` | Verify a person's email status |
 | 0.01 | `piloterr` | enrichment | `getG2ProductInfo` | Retrieve detailed information about a product from G2 including reviews, ratings |
 | 0.02 | `icypeas` | enrichment | `findCompanies` | Search the Icypeas lead database for companies matching the given criteria. Retu |
 | 0.02 | `icypeas` | enrichment | `findPeople` | Search the Icypeas lead database for people matching the given criteria. Returns |
 | 0.02 | `salesNavigator` | enrichment | `extractLeadSearch` | Retrieve leads from Sales Navigator |
 | 0.02 | `salesNavigator` | enrichment | `searchLeads` | Search and retrieve contact profiles from Sales Navigator based on various filte |
+| 0.05 | `aiArk` | enrichment | `analyzePersonality` | Analyze a LinkedIn profile to get personality insights (OCEAN, DISC) and selling |
+| 0.05 | `aiArk` | enrichment | `reverseLookup` | Find a person's full profile from an email address or a phone number |
+| 0.05 | `aiArk` | enrichment | `searchPeople` | Search for people matching person and company filters |
 | 0.05 | `firecrawl` | enrichment | `crawl` | Recursively search through a urls subdomains, and gather the content |
 | 0.05 | `firecrawl` | enrichment | `scrape` | Turn any url into clean data |
 | 0.05 | `firecrawl` | enrichment | `search` | Search the web using Firecrawl |
@@ -25,6 +29,7 @@ Generated: n/a
 | 0.05 | `linkedin` | enrichment | `searchPostReactions` | Search for post reactions |
 | 0.05 | `salesNavigator` | enrichment | `extractAccountSearch` | Retrieve accounts from Sales Navigator |
 | 0.05 | `salesNavigator` | enrichment | `searchAccounts` | Search and retrieve company accounts from Sales Navigator based on various filte |
+| 0.1 | `aiArk` | enrichment | `enrichPerson` | Enrich a person's full profile and find their verified email from a LinkedIn URL |
 | 0.1 | `enrichley` | enrichment | `verify` | Verify email |
 | 0.1 | `enrowio` | enrichment | `verifyEmail` | Verify a person's email |
 | 0.1 | `icypeas` | enrichment | `findEmail` | Find an email address from a firstname, a lastname and a company domain name. |
@@ -53,6 +58,7 @@ Generated: n/a
 | 0.25 | `salesNavigator` | enrichment | `findEmployeesDistribution` | Retrieve employees distribution from Sales Navigator |
 | 0.3 | `bouncer` | enrichment | `verifyEmail` | Verify an email address |
 | 0.5,0.5,0.4,0.3,1,0.8,0.6,0.6,0.5,0.4,0.9,0.7,0.5 | `perplexity` | freeform | `instruct` | Instruct prompt |
+| 0.5 | `aiArk` | enrichment | `findMobilePhone` | Find a person's mobile phone number from a LinkedIn URL, or from a company domai |
 | 0.5 | `cargo` | enrichment | `enrichBusinessFinancialMetrics` | Enrich business financial metrics |
 | 0.5 | `cargo` | enrichment | `enrichBusinessFirmographics` | Enrich business firmographics |
 | 0.5 | `cargo` | enrichment | `enrichBusinessFundingAndAcquisitions` | Enrich business funding and acquisitions |

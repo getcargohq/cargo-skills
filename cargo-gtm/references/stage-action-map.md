@@ -10,6 +10,7 @@ Prices are credits/record. "Priority?" marks providers in the priority stack (sa
 |---|---|---|---|---|
 | salesNavigator | searchLeads | 0.02 | ✅ | LinkedIn-anchored. Default at-scale. |
 | icypeas | findPeople | 0.02 |   | Cheapest non-LinkedIn source. |
+| aiArk | searchPeople | 0.05 |   | Rich filters (education, skills, tenure, seniority, past company). Per returned record. |
 | firecrawl | search | 0.05 |   | Web search; use when no structured provider has the data. |
 | linkup | search | 0.5 |   | Web search with structured answers. |
 | contactOut | search | 1 |   | Mid-tier when other sources miss. |
@@ -21,7 +22,8 @@ Prices are credits/record. "Priority?" marks providers in the priority stack (sa
 
 | Provider | Action | Cost | Priority? | Notes |
 |---|---|---|---|---|
-| icypeas | findCompanies | 0.02 |   | Cheapest. |
+| aiArk | searchCompanies | 0.01 |   | **Cheapest in catalog.** Per returned record; supports `lookalikeDomains` (≤5 seeds). |
+| icypeas | findCompanies | 0.02 |   | Cheapest non-lookalike. |
 | salesNavigator | searchAccounts | 0.05 | ✅ | LinkedIn-anchored. Default at-scale. |
 | theirStack | searchCompanies | 0.5 | ✅ | Tech-stack + hiring-intent filter. |
 | oceanio | searchCompanies | 1 |   | Mid-tier. |
@@ -38,8 +40,9 @@ Prices are credits/record. "Priority?" marks providers in the priority stack (sa
 
 | Provider | Action | Cost | Priority? | Notes |
 |---|---|---|---|---|
+| aiArk | enrichPerson | 0.1 |   | LinkedIn URL → full profile **+ verified email**; bills 0 on no-email. Cheapest URL-anchored enrich that also returns an email. |
 | contactOut | enrich | 0–3 |   | Variable cost depending on data returned. |
-| linkedin | enrichProfile | 0.25 |   | LinkedIn-anchored. |
+| linkedin | enrichProfile | 0.25 |   | LinkedIn-anchored (no email). |
 | prospeo | enrichLinkedin | 0.5 |   | Cheapest LinkedIn URL → details. |
 | linkedin | enrichProfileFromName | 0.5 |   | Name+company → LinkedIn details. |
 | cargo | enrichProspectDetails | 2 | ✅ | After matchProspect. Default in priority stack. |
@@ -95,7 +98,8 @@ Prices are credits/record. "Priority?" marks providers in the priority stack (sa
 
 | Provider | Action | Cost | Priority? | Notes |
 |---|---|---|---|---|
-| prospeo | findPhone | 3 |   | Cheapest. Default first stop. |
+| aiArk | findMobilePhone | 0.5 |   | **Cheapest.** Mobile-only; needs a LinkedIn URL or domain+name. Bills 0 on miss. First stop with a URL in hand. |
+| prospeo | findPhone | 3 |   | Cheapest landline/DID; escalate from aiArk on a mobile miss. |
 | forager | findPhone | 5 |   | Mid-tier. |
 | findyMail | findPhone | 5 |   | Mid-tier. |
 | FullEnrich | findPhone | 6 | ✅ | Better hit rate; escalate from prospeo. |
@@ -171,6 +175,6 @@ Prices are credits/record. "Priority?" marks providers in the priority stack (sa
 
 ## Notes on this map
 
-- All 141 credits-based actions documented. Free CRUD actions (sequencer / CRM upserts, list/get/delete) not shown — they don't consume credits.
+- All 145 credits-based actions documented. Free CRUD actions (sequencer / CRM upserts, list/get/delete) not shown — they don't consume credits.
 - Costs are per-record at the cheapest config. Some actions have variable cost by config (e.g., `contactOut.enrich` returns 0/1/2/3 credits depending on data returned).
 - Priority stack: see `../SKILL.md` for the canonical 6-provider priority list and `../provider-playbooks/` for per-provider deep dives.
