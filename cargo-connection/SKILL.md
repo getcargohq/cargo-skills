@@ -1,7 +1,7 @@
 ---
 name: cargo-connection
 description: Manage connectors and integrations using the Cargo CLI. Use when the user wants to list, create, update, or remove connectors, discover available integrations, or understand what connector actions are available for use in workflows.
-version: "1.1.0"
+version: "1.2.0"
 compatibility: Requires @cargo-ai/cli (npm) and a Cargo account (browser sign-in via --oauth, or an API token)
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -273,6 +273,22 @@ cargo-ai connection integration get <integration-slug>
 # 3. Reference the connector and action in a node graph
 # See cargo-orchestration references/nodes.md for the full node syntax
 ```
+
+### Reading an action's input schema — and where the inputs go
+
+An action's **input** fields live at `actions.<slug>.config.schema` in the `integration get <slug>` output (`config.jsonSchema` is the same schema decorated for the form UI). Read it before calling an action — don't guess field names.
+
+```bash
+# the required input fields for an action:
+cargo-ai connection integration get linkedin \
+  | jq '.integration.actions.connectProfile.config.schema'
+# → required: linkedinProfileUrl, identityIds
+```
+
+Two footguns:
+
+- **For a top-level action (`action execute` / `execute-batch`), the input values go in `--data`, NOT in the action's `config`.** The action definition's `config` (`{"kind":"connector",…,"config":{}}`) stays `{}`; the fields described by `config.schema` are the `--data` payload. Passing them in `config` fails with `A top-level action does not use action.config; pass the action's inputs via data instead.` (Inside a workflow **node graph** those same fields go in the node's `config` — see `cargo-orchestration/references/nodes.md`. The "`--data`, not `config`" rule is specific to `action execute`/`execute-batch`.)
+- **Some inputs must be resolved first via autocomplete.** If a field's `uiSchema` carries `IntegrationAutocompleteWidget`, fetch its values with `connector autocomplete` (above). Notably, LinkedIn engagement/extraction actions (`connectProfile`, `visitProfile`, `extractEventAttendees`, `extractProfileViewers`) require `identityIds` — the connected account that *acts* — resolved via the `listIdentityIds` autocomplete. A `must match format "uuid"` error means that identity is missing.
 
 Example connector node (Clearbit company enrichment):
 

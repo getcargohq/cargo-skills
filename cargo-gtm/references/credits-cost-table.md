@@ -106,8 +106,6 @@ Generated: n/a
 | 1 | `oceanio` | enrichment | `searchCompanies` | Search for companies |
 | 1 | `oceanio` | enrichment | `searchPeople` | Search for people |
 | 1 | `prospeo` | enrichment | `searchEmails` | Search for people in a domain |
-| 1 | `proxycurl` | enrichment | `enrich` | Retrieve information about a person/organization |
-| 1 | `proxycurl` | enrichment | `search` | Retrieve object records |
 | 1 | `reverseContact` | enrichment | `enrichCompanyFromLinkedin` | Retrieve information about a company from Linkedin |
 | 1 | `rocketreach` | enrichment | `lookupPerson` | Lookup person and company |
 | 1 | `serper` | enrichment | `search` | Retrieve Google searches |

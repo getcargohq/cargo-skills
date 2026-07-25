@@ -226,12 +226,6 @@
       "provider": "prospeo"
     },
     {
-      "path": "provider-playbooks/proxycurl.md",
-      "kind": "provider-playbook",
-      "title": "proxycurl",
-      "provider": "proxycurl"
-    },
-    {
       "path": "provider-playbooks/reverseContact.md",
       "kind": "provider-playbook",
       "title": "reverseContact (Reverse Contact)",

@@ -1,7 +1,7 @@
 ---
 name: cargo-gtm
 description: "Front door for any GTM task on Cargo — sourcing, waterfall enrichment, email/phone/LinkedIn lookup, email verification, scoring, qualification, sequencing, CRM sync, and signal monitoring (job changes, funding, tech-stack/hiring intent). Use when the user states a real-world goal involving prospects, leads, accounts, contacts, ICP lists, or campaign activation. Routes to phase guides (Level 2), recipes (Level 2.5), and per-provider playbooks (Level 3) before any action call."
-version: "1.7.0"
+version: "1.8.0"
 compatibility: Requires @cargo-ai/cli (npm) and a Cargo account (browser sign-in via --oauth, or an API token)
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -118,12 +118,15 @@ These six credits-based providers cover the full prospecting → enrichment → 
 
 See [`provider-playbooks/`](provider-playbooks/) for per-provider deep dives. See [`references/stage-action-map.md`](references/stage-action-map.md) for the complete cheapest-action-per-stage table across the full 120-integration catalog.
 
+> **Already holding identifiers (not sourcing)?** The stack above leads the *sourcing-first* spine. When you already have **LinkedIn URLs**, the cheapest enrich is [`linkedin`](provider-playbooks/linkedin.md) — `enrichProfile` / `enrichCompany` (0.25, URL → person/company details incl. headcount, industry, funding), *not* `waterfall.enrichContact` (which keys on email or name+company). Have a **LinkedIn event URL**? `linkedin.extractEventAttendees` sources the attendee list directly. Have **emails**? `leadMagic` / `contactOut`. See `references/stage-action-map.md` for the full input-type → cheapest-action map.
+
 ## 6) Recipe spine (default chain)
 
 ```
 1. SOURCE   → salesNavigator.searchLeads / searchAccounts            (0.02–0.05/record)
 2. DEDUPE   → cargo.matchProspect / cargo.matchBusiness              (0.5/record)
-3. ENRICH   → cargo.enrichBusinessFirmographics / Technographics
+3. ENRICH   → LinkedIn URL in hand? linkedin.enrichProfile/enrichCompany  (0.25) FIRST
+              cargo.enrichBusinessFirmographics / Technographics
               + waterfall.enrichContact / enrichCompany              (0.5–2/record)
 4. SIGNAL   → cargo.enrichBusinessFundingAndAcquisitions
               + theirStack.searchJobs
@@ -185,7 +188,6 @@ If a recipe fails repeatedly and the cause isn't obvious, escalate via `cargo-ai
 
 **Sourcing & company-data specialists:**
 - [`provider-playbooks/linkedin.md`](provider-playbooks/linkedin.md) — the native LinkedIn integration's action set (profiles, companies, posts, jobs).
-- [`provider-playbooks/proxycurl.md`](provider-playbooks/proxycurl.md) — LinkedIn-data lookups by URL when the native integration misses.
 - [`provider-playbooks/apolloio.md`](provider-playbooks/apolloio.md) — person/organization enrichment alternative; investor-niche coverage.
 - [`provider-playbooks/oceanio.md`](provider-playbooks/oceanio.md) — lookalike-company discovery from seed domains.
 - [`provider-playbooks/datagma.md`](provider-playbooks/datagma.md) — lightweight person/company enrichment alternative.
