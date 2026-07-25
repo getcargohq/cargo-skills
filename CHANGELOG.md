@@ -10,6 +10,11 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### `cargo-gtm` → 1.9.0
+
+- **New `aiArk` (AI Ark) provider playbook.** Added [`provider-playbooks/aiArk.md`](cargo-gtm/provider-playbooks/aiArk.md) for the newly released AI Ark integration (slug `aiArk`, category `enrichment`). All six actions are credits-based and run on cargo's managed connection: `enrichPerson` (0.1 — full profile **+ verified email** from a LinkedIn URL, bills 0 on no-email), `reverseLookup` (0.05 — email/phone → profile), `analyzePersonality` (0.05 — OCEAN/DISC + selling guidance, catalog-unique), `findMobilePhone` (0.5 — the cheapest phone rung), `searchPeople` (0.05/record), and `searchCompanies` (0.01/record with lookalike-domain seeds — cheapest company search in the catalog). Documents the nested filter-group shape (`peopleInfo`/`jobRole`/`industry`/`employeeSize`/… with `_or`/`_not` keys and autocomplete-backed enums) and the per-record billing cap.
+- **Wired AI Ark into the routing surfaces:** SKILL.md §11 provider list (Sourcing & company-data specialists), `references/stage-action-map.md` (new cheapest rungs for company search, person enrich, and phone), `references/alternatives.md` (person-enrich / phone / account-search swaps), and `references/credits-cost-table.md` (six new rows). Catalog action count 141 → 145.
+
 ### `cargo-connection` → 1.2.0
 
 - New **"Reading an action's input schema — and where the inputs go"** section: an action's inputs live at `actions.<slug>.config.schema`; for top-level `action execute`/`execute-batch` the values go in `--data`, **not** the action `config` (documents the `A top-level action does not use action.config` error); and identity-driven actions (`connectProfile`, `visitProfile`, `extractEventAttendees`) need `identityIds` from the `listIdentityIds` autocomplete (a `must match format "uuid"` error means it's missing).
@@ -22,6 +27,7 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 ### `cargo` → 1.15.0 (router)
 
 - Priority-provider-stack line now points agents holding LinkedIn/event URLs straight to `linkedin` (cheapest URL-anchored enrich) rather than the sourcing-first stack — the miss that prompted these edits.
+- Catalog action count updated 141 → 145 (the six new `aiArk` credits-based actions; proxycurl's two were already dropped).
 
 ### `cargo-gtm` → 1.6.1
 

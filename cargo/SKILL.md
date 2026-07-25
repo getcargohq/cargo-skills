@@ -313,7 +313,7 @@ The CLI exposes several domains that no capability skill wraps yet. Reach for th
 **Priority provider stack** (recipes lead with these): salesNavigator (sourcing), cargo native (firmographics + signals), waterfall (multi-source enrichment + email verify + job-change), FullEnrich (premium contact lookup), theirStack (tech-stack + hiring intent), peopleDataLabs (heavyweight backfill). **Already have LinkedIn URLs (or an event URL)?** Don't source — go straight to `linkedin` (`enrichProfile`/`enrichCompany` 0.25, `extractEventAttendees`); it's the cheapest URL-anchored enrich and easy to miss because the stack above is sourcing-first.
 
 **Critical rules:**
-- All recipes use credits-based actions (`cargo-ai connection integration list` → 141 credits-based actions across 120 integrations).
+- All recipes use credits-based actions (`cargo-ai connection integration list` → 145 credits-based actions across 120 integrations).
 - Action shape: `{"kind":"connector","integrationSlug":"<slug>","actionSlug":"<slug>","config":{}}` — **no `connectorUuid` in `config`**.
 - Output retrieval: `cargo-ai orchestration run download-outputs --output-node-slug <slug>` (NOT `run download`).
 - peopleDataLabs filter shape: `searchX` uses cargo's `{conjonction, groups, conditions}` shape; `queryX` takes a PDL **SQL string** — never Elasticsearch.

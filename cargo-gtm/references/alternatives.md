@@ -19,7 +19,8 @@ Default rule: **don't swap to chase 2× cheaper if hit-rate drops 30%**. The tot
 | Goal | Priority | Alternative | When to swap |
 |---|---|---|---|
 | At-scale lead search | salesNavigator.searchLeads (0.02) | icypeas.findPeople (0.02) | When LinkedIn coverage is thin (e.g., privacy-focused industries). |
-| At-scale account search | salesNavigator.searchAccounts (0.05) | peopleDataLabs.searchCompanies (3) for cargo-filter shape, or queryCompanies (3) for SQL | When salesNavigator's filters miss (funding, investor, complex bool). |
+| At-scale account search | salesNavigator.searchAccounts (0.05) | aiArk.searchCompanies (0.01) | Cheapest per record; also does lookalike discovery from ≤5 seed domains. |
+|   |   | peopleDataLabs.searchCompanies (3) for cargo-filter shape, or queryCompanies (3) for SQL | When salesNavigator's filters miss (funding, investor, complex bool). |
 | Tech-intent sourcing | theirStack.searchJobs / searchCompanies (0.5) | (no priority alternative — theirStack IS priority) | n/a |
 | SMB / local | (none in priority — priority skips SMB) | serper.searchPlaces (1), firecrawl.scrape (0.05) | Always for local/storefront. |
 | Visitor de-anonymization | (none — niche) | snitcher.searchSessions (0) | Always for visitor ID — free credits-tier. |
@@ -29,7 +30,8 @@ Default rule: **don't swap to chase 2× cheaper if hit-rate drops 30%**. The tot
 
 | Goal | Priority | Alternative | When to swap |
 |---|---|---|---|
-| Person enrichment (default) | cargo.enrichProspectDetails (2) | linkedin.enrichProfile (0.25) | When you only need LinkedIn-anchored details and have the URL. |
+| Person enrichment (default) | cargo.enrichProspectDetails (2) | aiArk.enrichPerson (0.1) | When you have a LinkedIn URL and want profile **+ verified email** in one call (bills 0 on no-email). |
+|   |   | linkedin.enrichProfile (0.25) | When you only need LinkedIn-anchored details and have the URL. |
 |   |   | apolloio.enrichPerson (1, 3) | When Apollo coverage is stronger for the niche. |
 |   |   | hunter.enrichPerson (1) | Cheap mid-tier alternative. |
 | Reverse email → person | (none in priority) | FullEnrich.reverseEmailLookup (2) | Always for email → LinkedIn. |
@@ -67,7 +69,8 @@ Default rule: **don't swap to chase 2× cheaper if hit-rate drops 30%**. The tot
 
 | Goal | Priority | Alternative | When to swap |
 |---|---|---|---|
-| Find phone (default) | FullEnrich.findPhone (6) | prospeo.findPhone (3) | Cheaper first stop; escalate to FullEnrich on miss. |
+| Find phone (default) | FullEnrich.findPhone (6) | aiArk.findMobilePhone (0.5) | Cheapest first stop when you hold a LinkedIn URL (or domain+name); mobile-only, bills 0 on miss. |
+|   |   | prospeo.findPhone (3) | Landline/DID fallback; escalate from aiArk on a mobile miss. |
 |   |   | forager.findPhone (5) | Mid-tier. |
 |   |   | findyMail.findPhone (5) | Mid-tier. |
 |   |   | cleon1.findPhoneFromLinkedin (15) | Premium; only for high-value leads where standard sources fail. |

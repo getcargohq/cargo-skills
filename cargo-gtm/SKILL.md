@@ -1,7 +1,7 @@
 ---
 name: cargo-gtm
 description: "Front door for any GTM task on Cargo — sourcing, waterfall enrichment, email/phone/LinkedIn lookup, email verification, scoring, qualification, sequencing, CRM sync, and signal monitoring (job changes, funding, tech-stack/hiring intent). Use when the user states a real-world goal involving prospects, leads, accounts, contacts, ICP lists, or campaign activation. Routes to phase guides (Level 2), recipes (Level 2.5), and per-provider playbooks (Level 3) before any action call."
-version: "1.8.0"
+version: "1.9.0"
 compatibility: Requires @cargo-ai/cli (npm) and a Cargo account (browser sign-in via --oauth, or an API token)
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -188,6 +188,7 @@ If a recipe fails repeatedly and the cause isn't obvious, escalate via `cargo-ai
 
 **Sourcing & company-data specialists:**
 - [`provider-playbooks/linkedin.md`](provider-playbooks/linkedin.md) — the native LinkedIn integration's action set (profiles, companies, posts, jobs).
+- [`provider-playbooks/aiArk.md`](provider-playbooks/aiArk.md) — LinkedIn-anchored people/company data: `enrichPerson` returns profile **+ verified email** at 0.1, `findMobilePhone` (0.5) is the cheapest phone rung, `searchCompanies` (0.01/record) does lookalikes, and `analyzePersonality` (0.05) is catalog-unique. All actions run on the managed connection.
 - [`provider-playbooks/apolloio.md`](provider-playbooks/apolloio.md) — person/organization enrichment alternative; investor-niche coverage.
 - [`provider-playbooks/oceanio.md`](provider-playbooks/oceanio.md) — lookalike-company discovery from seed domains.
 - [`provider-playbooks/datagma.md`](provider-playbooks/datagma.md) — lightweight person/company enrichment alternative.
@@ -233,7 +234,7 @@ If a recipe fails repeatedly and the cause isn't obvious, escalate via `cargo-ai
 - [`references/contact-accuracy.md`](references/contact-accuracy.md) — the deterministic QA scripts (email cull, current-role, name match, final audit) and the SEND/VERIFY/REVIEW/REMOVE verdicts.
 - [`references/prompt-library/index.md`](references/prompt-library/index.md) — ~40 named, parameterized LLM prompts (personalization, scoring, research, qualification, signal analysis, extraction). **Before authoring any enrichment/scoring prompt from scratch, grep this index** — reuse beats reinvention, and each entry carries a tested output contract. Load only the shard you need, never all of them.
 - [`references/stage-action-map.md`](references/stage-action-map.md) — cheapest credits-based action per stage across the full 120-integration catalog.
-- [`references/credits-cost-table.md`](references/credits-cost-table.md) — auto-generated cost table for all 141 credits-based actions.
+- [`references/credits-cost-table.md`](references/credits-cost-table.md) — auto-generated cost table for all 145 credits-based actions.
 - [`references/waterfall-strategy.md`](references/waterfall-strategy.md) — canonical waterfall chains by enrichment goal (every recipe's "fallback" follows these).
 - [`references/alternatives.md`](references/alternatives.md) — provider swap-ins from the long tail when the priority stack can't serve.
 - [`references/output-retrieval.md`](references/output-retrieval.md) — `run download-outputs` patterns for fetching action data.
