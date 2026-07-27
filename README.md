@@ -13,6 +13,18 @@ Agent skill for [Cargo](https://getcargo.ai) — the AI-native revenue infrastru
 
 ## Install
 
+### Fastest — paste one line into your agent
+
+Paste this prompt into Claude Code, Codex, or Cursor:
+
+```
+Install Cargo by following every step in https://api.getcargo.io/agent-install.txt
+```
+
+The agent runs the whole setup itself: installs the CLI at the bundle's pinned version, walks you through browser sign-in, installs the skills bundle for its own platform (the plugin on Claude Code; `skills add` on Codex/Cursor), verifies the hooks landed, and offers the two-minute [quickstart demo](#onboarding--cargo-quickstart). The hosted instructions are deterministic numbered steps, so the agent can't skip the parts that matter.
+
+### Manual — skills.sh
+
 ```bash
 npx skills add getcargohq/cargo-skills
 ```
@@ -50,6 +62,11 @@ codex plugin marketplace add getcargohq/cargo-skills
 ```
 
 **Cursor:** open **Customize** in the sidebar → add the `getcargohq/cargo-skills` marketplace → install the **Cargo** plugin (UI-driven; the `.cursor-plugin/` manifests are picked up automatically).
+
+**Claude Cowork** (Claude Desktop): open **Customize** in the sidebar → **+** next to **Personal plugins** → **Create plugin** → **Add marketplace** → enter `https://github.com/getcargohq/cargo-skills` → install the **Cargo** plugin. Two sandbox-specific notes:
+
+- **Network egress:** in the session's **Settings → Capabilities**, turn on network egress and allow at least `api.getcargo.io` and `registry.npmjs.org` (or all domains) so the CLI can install and reach Cargo.
+- **Sign-in:** the Cowork sandbox has no TTY, so the browser sign-in flow can't complete there. Mint a workspace API token at [app.getcargo.io](https://app.getcargo.io) → **Settings → API** and have the agent run `cargo-ai login --token <token>` instead. Start the session on a project folder — auth persists in that folder, so later Cowork sessions on the same folder reuse it.
 
 **Pick one channel.** Plugin install and `skills add` both register the skills; using both duplicates them (plugin copies are namespaced `cargo:<skill>`). Plugin users should uninstall the `skills add` copies (and skip the installer) and update via `/plugin marketplace update cargo` + `/plugin update cargo@cargo` instead.
 
