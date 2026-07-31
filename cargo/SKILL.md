@@ -279,7 +279,7 @@ The CLI exposes several domains that no capability skill wraps yet. Reach for th
 - `cargo-context` is **orthogonal** to the workflow-execution flow. It touches the git-backed GTM knowledge base (markdown/MDX), not storage or workflow runs. Use it for capturing/editing the workspace's prose context — personas, plays, proof, objections, signals — and for inspecting the typed knowledge graph.
 - For SQL queries against storage, use `cargo-ai storage query execute "<sql>"` (tables as `<datasetSlug>.<modelSlug>`). Load `cargo-storage` to discover dataset and model slugs, and to fetch the DDL when you need column types or the SQL dialect.
 - For SQL queries against orchestration runtime tables (`runs`, `batches`, `spans`, `records`) — error rates, per-node failures, time-series — use `cargo-ai orchestration query execute "<sql>"`. Workspace scoping is automatic; tables are referenced without a schema prefix.
-- Before building a workflow node graph, load `cargo-connection` to get `connectorUuid` and `actionSlug`.
+- Before building a workflow node graph, load `cargo-connection` to get `connectorUuid` and `actionSlug`. If any node calls a **credits-based provider action**, also load `cargo-gtm` and read that provider's playbook (`../cargo-gtm/provider-playbooks/<slug>.md`) — including its **Recurring use** section whenever the workflow is a scheduled tool or play, since a bad config or wrong cadence re-bills on every run. This applies even when the task arrived through `cargo-orchestration` or `cargo-cdk` directly, without a GTM framing.
 - Before executing a workflow that uses an agent node, load `cargo-ai` to get `agentUuid`.
 - After runs complete, load `cargo-analytics` to download results or measure performance. **For action output retrieval, prefer `cargo-ai orchestration run download-outputs` over `run download` — the former returns a signed-URL CSV/JSON of just the output node's data.**
 - Load `cargo-billing` to understand credit consumption for any of the above.
@@ -514,6 +514,10 @@ against the workspace) → author `define*` files → `cdk plan` (offline diff) 
 - **`--yes`** is required for non-interactive `deploy`/`destroy` (CI).
 - **Run `cargo-ai cdk types`** after workspace integrations change so config
   type-checks; typing is a bonus, deploy works without it.
+- **`definePlay`/`defineTool` graphs with credits-based connector actions:** read
+  the provider's playbook in `../cargo-gtm/provider-playbooks/` (esp. its
+  **Recurring use** section) before `cdk deploy` — a deployed play re-bills its
+  nodes on every scheduled run.
 
 **Recipes shipped:** `recipes/scaffold-a-workspace.md`, `add-connector-and-model.md`,
 `build-an-agent.md`, `migrate-existing-workspace.md`, `deploy-from-ci.md`.
