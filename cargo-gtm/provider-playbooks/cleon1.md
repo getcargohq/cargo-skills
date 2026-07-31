@@ -62,6 +62,13 @@ Only `firstName` + `lastName` are required — but a bare name is the weakest po
 - `findPhoneFromLinkedin` / `findPhone` — **CONTACT stage, terminal rung** of the phone chain: `prospeo` (3) → `FullEnrich` (6) → `waterfall` (7) → `datagma` (8) → **cleon1 (15)**. Explicit user request only, qualified leads only.
 - Phones don't flow to VERIFY (that's an email stage) — but the record they attach to should already be verified before you spend 15 credits on it.
 
+## Recurring use
+
+No scheduled fit — per-record phone lookup only, and at 15 credits it should barely appear in recurring infrastructure at all.
+
+- **In-play gate:** if cleon1 sits in a play, it fires only where the phone column is **still empty after the entire cheaper chain** (`prospeo` → `FullEnrich` → `waterfall` → `datagma`) has run and missed, on qualified rows only — a re-evaluation that re-fires it bills 15 per row.
+- **Stable output:** a found phone doesn't decay; there is no case for re-running cleon1 on a row that already holds one.
+
 ## Action shape
 
 `{"kind":"connector","integrationSlug":"cleon1","actionSlug":"<slug>","config":{}}`. **No `connectorUuid` in `config`.**

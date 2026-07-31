@@ -54,7 +54,7 @@ These docs encode what works, what fails, and why. They contain validated parame
 | **Finding companies, finding people, building lead lists, prospecting, portfolio/VC sourcing, contact finding at known companies** | [`guides/finding-companies-and-contacts.md`](guides/finding-companies-and-contacts.md) | Provider filter schemas, cheapest-source decision tree, parallel patterns, role-based search rules, portfolio/VC shortcuts, contact-finding patterns. |
 | **Enriching companies or contacts, finding emails/phones/LinkedIn, waterfall enrichment, signal lookup (job change, funding, tech stack), coalescing data** | [`guides/enriching-and-researching.md`](guides/enriching-and-researching.md) | Waterfall patterns with fallback chains, when to use cargo-native vs waterfall vs FullEnrich vs peopleDataLabs, email/phone/LinkedIn fallback orders, signal segments, output retrieval via `run download-outputs`. |
 | **Writing cold emails, personalizing outreach, lead scoring, qualification, sequence design, campaign copy** | [`guides/writing-outreach.md`](guides/writing-outreach.md) | LLM provider routing (openAi/anthropic/perplexity/gemini), prompt templates, scoring rubrics, email length/tone rules, personalization patterns. |
-| **Building or modifying a recurring workflow** (cron / webhook / scheduled tool / play), designing step sequences, triggers, deploy/verify cycles | [`../cargo-orchestration/SKILL.md`](../cargo-orchestration/SKILL.md) (capability) + apply-patterns from this skill's recipes | Schema for tool/play workflows, node graph syntax, polling strategies, output retrieval. |
+| **Building or modifying a recurring workflow** (cron / webhook / scheduled tool / play), designing step sequences, triggers, deploy/verify cycles | [`../cargo-orchestration/SKILL.md`](../cargo-orchestration/SKILL.md) (capability) + apply-patterns from this skill's recipes + the [provider playbook](provider-playbooks/) of **every paid node** (§11, esp. its **Recurring use** section) | Schema for tool/play workflows, node graph syntax, polling strategies, output retrieval; per-provider cadence defaults and re-billing gates. |
 
 ### Recipes: step-by-step playbooks (check before executing)
 
@@ -116,7 +116,7 @@ These six credits-based providers cover the full prospecting → enrichment → 
 | **theirStack** | Tech-stack + hiring intent | `searchTechnologies` (0.5), `searchJobs` (0.5), `searchCompanies` (0.5) |
 | **peopleDataLabs** | Heavyweight backfill | `enrichPerson` (3), `enrichCompany` (3), `searchPeople` (3), `searchCompanies` (3), `queryPeople/Companies` (3) |
 
-See [`provider-playbooks/`](provider-playbooks/) for per-provider deep dives. See [`references/stage-action-map.md`](references/stage-action-map.md) for the complete cheapest-action-per-stage table across the full 120-integration catalog.
+See [`provider-playbooks/`](provider-playbooks/) for per-provider deep dives — including each provider's **Recurring use** section for when the task is a monitor, play, or scheduled pull rather than a one-off. See [`references/stage-action-map.md`](references/stage-action-map.md) for the complete cheapest-action-per-stage table across the full 120-integration catalog.
 
 > **Already holding identifiers (not sourcing)?** The stack above leads the *sourcing-first* spine. When you already have **LinkedIn URLs**, the cheapest enrich is [`linkedin`](provider-playbooks/linkedin.md) — `enrichProfile` / `enrichCompany` (0.25, URL → person/company details incl. headcount, industry, funding), *not* `waterfall.enrichContact` (which keys on email or name+company). Have a **LinkedIn event URL**? `linkedin.extractEventAttendees` sources the attendee list directly. Have **emails**? `leadMagic` / `contactOut`. See `references/stage-action-map.md` for the full input-type → cheapest-action map.
 
@@ -174,9 +174,9 @@ Every action JSON in this skill follows the rules in [`../cargo-orchestration/re
 
 If a recipe fails repeatedly and the cause isn't obvious, escalate via `cargo-ai workspaceManagement report create`. See [`../cargo-workspace-management/SKILL.md`](../cargo-workspace-management/SKILL.md) (Reports section).
 
-## 11) Provider playbooks — read before you call
+## 11) Provider playbooks — read before you call (one-off or recurring)
 
-**STOP — do not execute any paid action against a provider below until you have opened its playbook.** Each playbook carries the exact action slugs, config shapes, input quirks, and cost traps; reading it for five seconds is cheaper than one failed paid call, and a failed batch is 100 failed paid calls. **Every credits-based provider in the catalog now has a playbook**; only own-key integrations fall back to [`references/alternatives.md`](references/alternatives.md) and [`references/stage-action-map.md`](references/stage-action-map.md).
+**STOP — do not execute any paid action against a provider below, and do not wire a provider into a recurring play/tool node graph, until you have opened its playbook.** Each playbook carries the exact action slugs, config shapes, input quirks, and cost traps; reading it for five seconds is cheaper than one failed paid call, and a failed batch is 100 failed paid calls. The stakes are higher, not lower, when the provider goes into a **recurring** workflow: a bad config repeats on every scheduled run, and a wrong cadence re-bills the same rows forever — each playbook ends with a **Recurring use** section (schedule fit, cadence default, re-billing gates, extractors) for exactly this. **Every credits-based provider in the catalog now has a playbook**; only own-key integrations fall back to [`references/alternatives.md`](references/alternatives.md) and [`references/stage-action-map.md`](references/stage-action-map.md).
 
 **Priority stack (recipes lead with these):**
 - [`provider-playbooks/salesNavigator.md`](provider-playbooks/salesNavigator.md) — cheapest sourcing in the catalog (0.02–0.05/record).

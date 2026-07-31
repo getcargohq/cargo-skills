@@ -74,3 +74,9 @@ Read `status` + `sub_status` for the verdict, `catchall_domain` / `free_email` f
 
 - [`../recipes/outreach-activation.md`](../recipes/outreach-activation.md) — the verify step before personalization; never sequence unverified emails.
 - [`../recipes/prospecting.md`](../recipes/prospecting.md) — the verify rung of the find → enrich → verify → sync spine.
+
+## Recurring use
+
+- **Re-verify before the send wave, not on a timer** — deliverability decays as people change jobs, so the recurring shape is a verify node inside each send play, gated to rows whose last verdict is missing or stale; a blanket cron over the whole model re-bills 0.1/row on addresses nobody is about to email.
+- **In-play gate:** filter on empty/stale `status` — plus the first verifier's ambiguous verdicts, per Pattern A — so play re-evaluation never re-bills freshly-verified rows.
+- **Second-opinion discipline holds on a schedule too:** recurring double-verification of rows waterfall already passed cleanly is the "double-verifying everything" pitfall above, compounding every cycle.

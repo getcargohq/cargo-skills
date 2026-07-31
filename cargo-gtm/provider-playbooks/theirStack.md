@@ -112,3 +112,11 @@ After sourcing with theirStack, **enrich with cargo** rather than running theirS
 3. `cargo.enrichBusinessFirmographics` + `cargo.enrichBusinessTechnographics` → fill firmographic/tech detail (750 credits combined).
 
 Total: ~1,250 credits for 500 fully-enriched companies with intent signal. Cheaper than running peopleDataLabs (3 credits/record × 3 actions = 4,500 credits).
+
+## Recurring use
+
+Hiring intent decays in days — theirStack is **built for the monitor shape, not the one-off pull**.
+
+- **Scheduled pull:** re-run `searchJobs` / `searchCompanies` on the daily hiring-intent default, with `posted_at_max_age_days` matched to the cadence (daily → 1–2 days) so each run bills only postings that appeared since the last one, never the same window twice. Cadence table: [`../recipes/save-as-play.md`](../recipes/save-as-play.md).
+- **In-play gate:** dedup discovered companies against the Companies model via `cargo.matchBusiness` (the "combine with cargo native" pattern above) before any paid enrichment — a company re-posting the same role must not re-enter the enrich chain.
+- **Postings expire; stacks don't.** `searchTechnologies`-derived tech-stack fields are slow-moving — re-pull them on demand for a batch, not on the daily intent cadence.

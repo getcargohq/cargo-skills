@@ -74,6 +74,14 @@ Configure the model's extractor with the cargo filter shape (note the `conjoncti
 
 **SOURCE stage, bulk/scheduled rung.** For recurring TAM refresh: **piloterr extractor (0.01/item)** → `salesNavigator.searchAccounts` (0.05, interactive) → `oceanio.searchCompanies` (1, lookalike/technographic) → `peopleDataLabs` (3, heavyweight filters). See [`../references/stage-action-map.md`](../references/stage-action-map.md).
 
+## Recurring use
+
+Recurring is **built in** — the `fetchCompanies` extractor *is* the scheduled pull, a model sync rather than a play node.
+
+- **Scheduled pull:** the extractor re-fetches on its own schedule — 14-day minimum interval, non-incremental, billing 0.01 × rows returned per fetch (~100 credits per 10,000-row refresh) — and re-fetches dedupe into the account model on `domain`/`linkedin_url` instead of duplicating. The 14-day floor overrides the weekly company-search default in [`../recipes/save-as-play.md`](../recipes/save-as-play.md).
+- **`getG2ProductInfo` on a schedule:** legitimate when the tracked product list changes — gate on the G2 output field being empty (or a stale scraped-at timestamp) so unchanged products aren't re-scraped, and mind the 30 calls/min limit.
+- **Time-sensitivity:** firmographics move slowly — a cadence tighter than the 14-day floor buys nothing.
+
 ## Action shape
 
 `{"kind":"connector","integrationSlug":"piloterr","actionSlug":"getG2ProductInfo","config":{}}`. **No `connectorUuid` in `config`.**

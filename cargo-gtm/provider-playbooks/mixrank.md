@@ -59,6 +59,13 @@ Stack every identifier you have per row — more keys, better match confidence a
 
 **ENRICH stage, last rung.** Person: `linkedin.enrichProfile` (0.25) → `cargo.enrichProspectDetails` (2) → `peopleDataLabs` (3) → **mixrank (4)**. Company: `waterfall.enrichCompany` / `oceanio.enrichCompany` (1) → `peopleDataLabs.enrichCompany` (3) → **mixrank (4)**. Promote it out of order only for the phone-keyed niche. See [`../references/stage-action-map.md`](../references/stage-action-map.md).
 
+## Recurring use
+
+No scheduled fit — **last-rung, per-record backfill only**; at 4 credits a recurring blanket pass is the fastest way to torch a budget.
+
+- **In-play gate:** double gate — run only where the cheaper rungs' output fields are still empty *and* at least one identifier is present (the no-required-fields pitfall means an empty row bills 4 credits on every re-evaluation).
+- **Time-sensitivity:** identity resolution is stable — re-running `findPerson` / `findCompany` on a matched row re-buys the same answer, and fixed-cost-on-miss means even a "retry later" pass must be deliberately scoped.
+
 ## Action shape
 
 `{"kind":"connector","integrationSlug":"mixrank","actionSlug":"<slug>","config":{}}`. **No `connectorUuid` in `config`.**

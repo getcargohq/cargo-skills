@@ -92,6 +92,14 @@ The `filters` array is discriminated by `name`: list-type filters (`skills`, `ed
 - Contact enrich — **mid rung** of the email/phone chain: after cargo native + FullEnrich, alongside `waterfall.enrichContact` (2); its `includePhone` tier (3) sits at the `prospeo.findPhone` price, below FullEnrich (6) and waterfall (7).
 - `search` — coverage fallback when salesNavigator/icypeas miss the segment.
 
+## Recurring use
+
+No scheduled fit — per-record enrichment only; a re-run `search` re-bills every item returned (1–3/item) for a mostly unchanged result set.
+
+- **In-play gate:** run contact `enrich` only where the target field is still empty — gate on empty `email` (1–2-tier) or empty phone (3-tier), and keep `includePhone: false` in the play config: it triples the price on every row the play re-touches.
+- **The free rung is safe to repeat:** company `enrich` (0 credits) can sit ungated in a play — it never bills. Every paid action needs the empty-field gate.
+- **Stability:** emails/phones behind a LinkedIn URL don't decay fast — re-enriching filled rows on a timer just re-bills unchanged data.
+
 ## Action shape
 
 `{"kind":"connector","integrationSlug":"contactOut","actionSlug":"<slug>","config":{}}`. **No `connectorUuid` in `config`.**

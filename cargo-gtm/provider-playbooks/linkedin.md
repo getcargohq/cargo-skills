@@ -120,6 +120,14 @@ Chain with `extractSimilarCompanies` (0.25) for a cheap lookalike seed list, or 
 - Posts / jobs / activity extraction — **SIGNAL stage**: engagement pools and personalization inputs; `searchJobs` sits beside `theirStack.searchJobs` (both 0.5) for hiring intent.
 - Engagement actions — post-VERIFY activation touches, outside the sourcing spine.
 
+## Recurring use
+
+Split by data half-life: **posts, jobs, and activity decay — profiles and company pages don't**.
+
+- **Scheduled pulls:** `searchJobs` daily (hiring intent) and `searchPosts` weekly, with `datePosted` matched to the cadence (`Past 24 hours` / `Past week`) so each run bills only the fresh window — cadence defaults in [`../recipes/save-as-play.md`](../recipes/save-as-play.md). Per-item activity pulls (`extractProfilePostActivity` et al., 0.05/item) fit a pre-outreach refresh, sized first per the per-item pitfall above.
+- **Don't re-pull stable pages:** `enrichProfile` / `enrichCompany` (0.25) on a timer re-bills unchanged rows; in a play, gate them on an empty enriched field.
+- **In-play gate:** run `findProfileUrl` only where the LinkedIn-URL column is still empty.
+
 ## Action shape
 
 `{"kind":"connector","integrationSlug":"linkedin","actionSlug":"<slug>","config":{}}`. **No `connectorUuid` in `config`.**

@@ -70,3 +70,10 @@ cargo-ai orchestration action execute-batch \
 
 - [`../references/prompt-library/index.md`](../references/prompt-library/index.md) — the prompt source for every `instruct` call (extraction, qualification, scoring, personalization, research, signal analysis).
 - [`../recipes/outreach-activation.md`](../recipes/outreach-activation.md) — personalize stage; [`../recipes/icp-discovery.md`](../recipes/icp-discovery.md) — pattern analysis; [`../recipes/tech-intent.md`](../recipes/tech-intent.md) — scrape → LLM extract.
+
+## Recurring use
+
+No scheduled fit — `instruct` is a transform, not a data source; it belongs **inside** plays and tools, never on its own timer.
+
+- **In-play gate:** run only where the column the prompt fills (score, personalization line, extracted JSON) is still empty — at `temperature: 0` a re-run reproduces the same output for the same token spend, so ungated re-evaluation is pure re-billing.
+- **Prompt or model changes:** to redo rows after revising the prompt or tier, clear the target column deliberately for just those rows rather than dropping the gate — the 500-row batch math above compounds on every ungated pass.

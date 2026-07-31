@@ -82,6 +82,12 @@ cargo-ai orchestration action execute-batch \
 - `enrichOrganization` — **ENRICH (company), fallback rung** after `cargo.enrichBusinessFirmographics` (0.5) and `linkedin` (0.25–0.5).
 - Own-key sequence actions — post-VERIFY **activation**, outside the credits spine.
 
+## Recurring use
+
+- **No scheduled fit on credits** — both credits actions are per-record enrichment. The own-key `search*` actions can feed a scheduled sourcing tool on your Apollo plan's quota; dedup re-pulls there with the `prospected_by_current_team` filter.
+- **In-play gate:** `enrichPerson` only where the target contact field (`email`) is still empty; `enrichOrganization` only where firmographics are empty. Never leave `revealPhoneNumber: true` on a play node — every re-evaluated row bills 3 instead of 1.
+- **Stable data, tight ceiling:** enrichment output doesn't decay, and the 400 calls/hour limit means an ungated recurring batch both re-bills and stalls the queue.
+
 ## Action shape
 
 `{"kind":"connector","integrationSlug":"apolloio","actionSlug":"<slug>","config":{}}`. **No `connectorUuid` in `config`.**

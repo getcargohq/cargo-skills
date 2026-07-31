@@ -124,3 +124,10 @@ If cargo's filter shape can't express the criteria (e.g., array-membership filte
 - Step 7 (BACKFILL): canonical last-resort for missing emails / details.
 
 Never the first stop unless the filter shape demands it.
+
+## Recurring use
+
+**Never on a timer.** At a flat 3 credits per row, scheduled re-enrichment is the expensive recurring anti-pattern — it re-bills mostly unchanged data every cycle.
+
+- **In-play gate:** last rung only — `enrichPerson`/`enrichCompany` behind a gate requiring the target field still empty AND the cargo + waterfall rungs already missed (the escalation rule from Common pitfalls, enforced as a segment filter). Stamp an attempted-at column so a row PDL missed doesn't retry at 3 credits every re-evaluation.
+- **Scheduled search:** avoid recurring `searchX`/`queryX` — billed 3 per returned row on every run, with no incremental mode; a list that must refresh on a schedule belongs on a cheaper sourcing rung, with PDL reserved for the residue. Cadence table for the play wrapper: [`../recipes/save-as-play.md`](../recipes/save-as-play.md).

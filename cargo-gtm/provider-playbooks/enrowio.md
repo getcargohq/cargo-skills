@@ -69,6 +69,14 @@ The catalog dump documents no output schema for either action — inspect the fi
 - `findEmail` — **late escalation rung** of the CONTACT-stage find-email chain, outside the default order (see [`../references/stage-action-map.md`](../references/stage-action-map.md), Find email — "Alt mid-tier").
 - `verifyEmail` — **VERIFY stage, alternative rung** at the default 0.1 price, alongside `zeroBounce.verifyEmail` and `enrichley.verify`.
 
+## Recurring use
+
+No scheduled fit — both actions are per-record; their recurring shape is a gated play node, not a timer.
+
+- **`findEmail` gate:** run only where `email` is still empty *and* the earlier chain rungs already missed — an ungated 1-credit escalation rung re-billing on every segment re-evaluation defeats its reason for existing (see the anti-pattern above).
+- **`verifyEmail` gate:** verification decays, but a timed re-verify re-bills the list — gate the node to rows entering a send wave with a missing or stale `*_verified_at` timestamp (verify-before-send).
+- **Rate limit:** the 60 calls/minute cap (see pitfalls) suits trickle-through segment-change triggers better than scheduled bulk re-pulls.
+
 ## Action shape
 
 `{"kind":"connector","integrationSlug":"enrowio","actionSlug":"<slug>","config":{}}`. **No `connectorUuid` in `config`.**

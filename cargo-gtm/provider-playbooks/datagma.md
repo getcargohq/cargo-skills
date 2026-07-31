@@ -69,6 +69,13 @@ Neither field is marked required in the schema — pass at least one identifier;
 - `findPhone` / `findPhoneAndEmail` — **CONTACT stage, last rung** of the phone chain: `prospeo` (3) → `FullEnrich` (6) → `waterfall` (7) → **datagma (8)** → `cleon1` (15, premium).
 - Every found email flows to **VERIFY** (`waterfall.verifyEmail`, 0.1) before activation.
 
+## Recurring use
+
+No scheduled fit — per-record enrichment only; every datagma action is an escalation rung, never a monitor.
+
+- **In-play gate:** `findEmail` runs only where `email` is still empty *and* the earlier rungs already missed; `findPhone` / `findPhoneAndEmail` (8) additionally gate on an empty phone field **and** the qualified-lead condition — the anti-pattern above ("ungated batch") applies doubly to a play that re-evaluates its segment.
+- **Stability:** a filled email or phone doesn't improve on re-lookup — re-running datagma on enriched rows re-bills last-rung prices for the same data.
+
 ## Action shape
 
 `{"kind":"connector","integrationSlug":"datagma","actionSlug":"<slug>","config":{}}`. **No `connectorUuid` in `config`.**

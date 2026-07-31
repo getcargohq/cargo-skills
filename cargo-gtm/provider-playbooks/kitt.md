@@ -54,6 +54,14 @@ cargo-ai orchestration action execute \
 
 **VERIFY stage, budget rung.** `icypeas.verifyEmail` (0.01, bulk floor) → **kitt (0.05, cheap + diagnostics)** → `waterfall.verifyEmail` (0.1, priority default) → `zeroBounce.verifyEmail` (0.1, second opinion). See [`../references/stage-action-map.md`](../references/stage-action-map.md), Verify email.
 
+## Recurring use
+
+Verification recurs per **send wave**, not per calendar — no scheduled fit beyond that.
+
+- **Re-verify gate:** run `verifyEmail` (0.05) only on rows entering a send wave whose last clean verdict is stale — never on a blanket timer that re-bills the whole list.
+- **In-play gate:** filter to rows where the kitt `validity` output is still empty, or gate on a verify-timestamp column older than the wave threshold.
+- **Time-sensitivity:** verdicts decay slowly (mailboxes churn, not daily) — and when a pre-wave pass *is* due, the 100 calls/second rate limit keeps it fast.
+
 ## Action shape
 
 `{"kind":"connector","integrationSlug":"kitt","actionSlug":"verifyEmail","config":{}}`. **No `connectorUuid` in `config`.**

@@ -65,6 +65,13 @@ Every hit still flows to VERIFY: free pre-cull, then `waterfall.verifyEmail` (0.
 - `enrichPerson` / `enrichCompany` — **ENRICH, fallback rungs** behind the stack (`cargo` → `waterfall` → `peopleDataLabs`).
 - `getFunding` — **SIGNAL (funding), fallback** behind `cargo.enrichBusinessFundingAndAcquisitions` (0.5).
 
+## Recurring use
+
+The one action here with a real monitor shape is `getFunding` — funding is an event stream, not a static field.
+
+- **Scheduled pull:** re-run `getFunding` (1) **weekly** on the watched-companies segment as the fallback rung behind `cargo.enrichBusinessFundingAndAcquisitions` (0.5), per [`../recipes/funding-watch.md`](../recipes/funding-watch.md); cadence defaults in [`../recipes/save-as-play.md`](../recipes/save-as-play.md). Diff each pull against the stored funding fields so only *changed* rows trigger paid downstream steps.
+- **In-play gate:** the other three actions are per-record enrichment — `findEmail` only where `email` is still empty, `enrichPerson` / `enrichCompany` only where their target profile/firmographic fields are unfilled. Re-running them on a timer re-bills stable data.
+
 ## Action shape
 
 `{"kind":"connector","integrationSlug":"enrichCrm","actionSlug":"<slug>","config":{}}`. **No `connectorUuid` in `config`.**

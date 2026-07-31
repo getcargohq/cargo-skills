@@ -110,6 +110,12 @@ cargo-ai orchestration action execute \
 
 **First rung for all enrichment** (match + firmographics at 0.5 each is unbeatable when the company is in-catalog). Unmatched rows fall to `waterfall.enrich*`, then `peopleDataLabs.enrich*`. If `matchBusiness` misses heavily on the pilot (niche/SMB-heavy segments), demote cargo native and lead with waterfall for that batch.
 
+## Recurring use
+
+- **Scheduled monitor:** `fetchProspectEvents` / `fetchBusinessEvents` are the native signal feed — set `timestamp_from` to the previous run's timestamp so each pull bills only the new window (Pattern C). Cadence defaults: job changes → every 2 weeks, funding events → weekly ([`../recipes/save-as-play.md`](../recipes/save-as-play.md)).
+- **In-play gate:** `matchBusiness` / `matchProspect` only where `business_id` / `prospect_id` is still empty — the matched ID is stable and never needs re-resolving; each `enrichBusiness*` / `enrichProspect*` node only where its own target columns are empty.
+- **Stable firmographics:** `enrichBusiness*` output barely moves month to month — scheduled re-enrichment mostly re-bills unchanged data; reserve recurring pulls for the event actions above.
+
 ## Action shape
 
 `{"kind":"connector","integrationSlug":"cargo","actionSlug":"<slug>","config":{}}`. **No `connectorUuid` in `config`** — single workspace connector resolves automatically.

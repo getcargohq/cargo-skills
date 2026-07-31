@@ -81,6 +81,13 @@ Filters are coarse (title, company, location, keyword) — nothing like salesNav
 - `verifyEmail` — VERIFY-stage alternative to `waterfall.verifyEmail` for very large lists.
 - `findPeople` / `findCompanies` — SOURCE-stage alternative when LinkedIn-anchored search isn't viable.
 
+## Recurring use
+
+- **Scheduled sourcing fits:** a weekly `findPeople`/`findCompanies` pull (persona/company-search cadence, see [`../recipes/save-as-play.md`](../recipes/save-as-play.md)) is the cheapest recurring source at 0.02/record — dedupe new rows against the model before any paid enrichment runs downstream.
+- **Re-verify before send waves:** `verifyEmail` (0.01) is the natural pre-send gate — run it on rows entering the send segment or whose last verify is stale, never on a blanket timer over the whole list; even at 0.01, the free cull comes first (see Pattern A).
+- **In-play `findEmail` gate:** the last rung stays conditional — run only where the FullEnrich, hunter, AND peopleDataLabs email columns are all still empty. Found emails are stable data; never re-find on a schedule.
+- **Cadence × rate limit:** at 30 requests/minute (see Common pitfalls), large recurring batches run long — size scheduled pulls so one run finishes before the next fires.
+
 ## Action shape
 
 `{"kind":"connector","integrationSlug":"icypeas","actionSlug":"<slug>","config":{}}`. **No `connectorUuid` in `config`.**

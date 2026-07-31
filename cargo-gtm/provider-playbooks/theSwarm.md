@@ -74,3 +74,9 @@ cargo-ai orchestration action execute \
 
 - [`../recipes/account-expansion.md`](../recipes/account-expansion.md) — multi-threading a customer account through colleagues who already know the new buyers.
 - [`../recipes/outreach-activation.md`](../recipes/outreach-activation.md) — branch send-ready records: warm path → intro request, otherwise → sequencer.
+
+## Recurring use
+
+- **Re-checks can flip "no path" to "path"** — results improve as the team maps its network (see intro), so periodically re-running `searchWarmIntrosToCompany` on strategic accounts that previously returned no path is justified; keep it slow (monthly-ish) and only after the mapped network has actually grown.
+- **In-play gate:** 2 credits path-or-no-path — gate on account tier AND an empty warm-path result column; once a path is found, that row never re-bills, and re-checks target only the tier-1 no-path subset.
+- **Never a whole-TAM cron** — the whole-TAM-sweep warning above compounds on a schedule (10,000 credits per sweep, mostly "no path", every interval).
