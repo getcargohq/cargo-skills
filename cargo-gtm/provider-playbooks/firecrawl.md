@@ -83,6 +83,12 @@ cargo-ai orchestration action execute \
 
 Firecrawl's `crawl` also exists as an **extractor** — usable to sync a website into a connector-backed knowledge library (see the `cargo-content` skill) rather than as a one-off action.
 
+## Recurring use
+
+- **Scheduled fit: yes, for decaying pages.** A scheduled `crawl` of a niche job board (daily — hiring-intent cadence, see [`../recipes/save-as-play.md`](../recipes/save-as-play.md)) or a weekly `search` sweep works — but every run re-bills 0.05 per page/result returned, so keep `limit`/`maxDepth` as tight on run 50 as on run 1.
+- **Prefer the extractor for "keep this site fresh".** A recurring site sync is what the `crawl` extractor → knowledge library path is for (see Position in the waterfall), not a cron'd one-off action.
+- **In-play gate:** never crawl per-record (see Anti-patterns). For per-record `scrape`, gate on the scraped-markdown column still being empty so play re-evaluation doesn't re-fetch pages already stored.
+
 ## Action shape
 
 `{"kind":"connector","integrationSlug":"firecrawl","actionSlug":"<slug>","config":{}}`. **No `connectorUuid` in `config`.**

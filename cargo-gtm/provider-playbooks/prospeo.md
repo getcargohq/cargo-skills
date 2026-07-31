@@ -72,6 +72,13 @@ cargo-ai orchestration action execute-batch \
 - `findEmail` — mid-tier CONTACT alternative alongside `hunter`/`findyMail`/`leadMagic` (all 0.5); every hit flows to the VERIFY stage (`waterfall.verifyEmail`, 0.1).
 - `enrichLinkedin` / `enrichCompany` — enrich-stage fillers when the identifier you hold matches their required input.
 
+## Recurring use
+
+No scheduled fit — per-record contact lookup only; recurring use means **paid nodes inside a play**, each behind an empty-field gate.
+
+- **In-play gate:** `findEmail` only where the email column is still empty; `findPhone` only where phone is empty AND the row is qualified (the cost-discipline gate applies per-run, forever, in a play). A miss escalates to the next chain rung — stamp an attempted-at column so it never retries prospeo on the next cycle.
+- **Time-sensitivity:** a found-and-verified email or phone is stable until the person moves — re-lookup belongs downstream of a job-change signal ([`../recipes/job-change-monitoring.md`](../recipes/job-change-monitoring.md)), not on a cadence. Play wrapper + cadence table: [`../recipes/save-as-play.md`](../recipes/save-as-play.md).
+
 ## Action shape
 
 `{"kind":"connector","integrationSlug":"prospeo","actionSlug":"<slug>","config":{}}`. **No `connectorUuid` in `config`.**

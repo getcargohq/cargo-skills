@@ -69,6 +69,14 @@ cargo-ai orchestration action execute-batch \
 - Every hit still flows to the VERIFY stage: free pre-cull ([`../references/contact-accuracy.md`](../references/contact-accuracy.md)) → `waterfall.verifyEmail` (0.1).
 - Demote dynamically: if hunter misses on the pilot's first ~10 rows, drop it behind peopleDataLabs for the rest of that batch.
 
+## Recurring use
+
+No scheduled fit — a found email is stable data; re-running `findEmail` on a timer re-bills rows that won't change.
+
+- **In-play gate:** rung 2 stays conditional inside the play — filter to rows where the FullEnrich email column AND the hunter email column are both still empty, so each row pays the 0.5 at most once per entry into the segment.
+- **Pre-send re-verify:** before each recurring send wave, re-verify stale finds with `waterfall.verifyEmail` (0.1) — never `hunter.verifyEmail` (1), per Anti-patterns — and gate on rows entering the wave, not a blanket timer over the whole list.
+- **Don't cron `searchDomain`:** the 10-record cap at 1 credit/call makes a scheduled loop the "don't loop it to build a list" pitfall on a timer.
+
 ## Action shape
 
 `{"kind":"connector","integrationSlug":"hunter","actionSlug":"<slug>","config":{}}`. **No `connectorUuid` in `config`.**

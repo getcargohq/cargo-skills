@@ -129,6 +129,12 @@ Conventions inside a group:
 - `reverseLookup` — **niche**: email/phone → profile, beside `FullEnrich.reverseEmailLookup` (2, email → LinkedIn URL).
 - `analyzePersonality` — **WRITE/personalization input**, outside the credits spine's find-and-verify path.
 
+## Recurring use
+
+- **Scheduled search:** `searchCompanies` / `searchPeople` fit a weekly sourcing tool (persona/company searches → weekly; cadence table: [`../recipes/save-as-play.md`](../recipes/save-as-play.md)) — but they bill 0.01/0.05 **per returned record on every run**, so dedup results against the workspace model (`cargo.matchBusiness` / `matchProspect`) before any paid downstream node.
+- **In-play gate:** `enrichPerson` runs only where `email` is still empty; `findMobilePhone` only where the phone column is empty. Misses bill 0, but a hit on an already-filled row is pure re-spend.
+- **Stable data:** profiles and emails don't decay week to week — never schedule blanket re-enrichment; `analyzePersonality` belongs in a play's WRITE step on newly qualified rows, not on a timer (see anti-patterns).
+
 ## Action shape
 
 `{"kind":"connector","integrationSlug":"aiArk","actionSlug":"<slug>","config":{}}`. **No `connectorUuid` in `config`.** For top-level `action execute` / `execute-batch`, inputs go in `--data` (single) or `--records` (batch), **not** in the action `config`.

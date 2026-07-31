@@ -89,6 +89,14 @@ cargo-ai orchestration action execute-batch \
 - **ENRICH — mid-tier rung** (both enriches at 1): peer of `waterfall.enrichCompany` (1) and `apolloio.enrichOrganization` (1); pilot 10 rows to pick by coverage.
 - Sourced people flow on to CONTACT (`FullEnrich.findEmail`, 1) and VERIFY (`waterfall.verifyEmail`, 0.1) as usual.
 
+## Recurring use
+
+Lookalike discovery compounds — **re-run `searchCompanies` weekly as the seed list grows** (cadence table: [`../recipes/save-as-play.md`](../recipes/save-as-play.md)).
+
+- **Dedup before paid nodes:** each re-discovery returns known winners again — refresh `lookalikeDomains` with new Closed-Won domains, keep owned accounts in `excludeDomains`, and dedup hits against the Companies model before any downstream enrichment bills.
+- **Per-record billing recurs too:** `searchCompanies` bills per returned record on every scheduled run — hold `limit` at the approved scope so recurring pulls bill mostly-new rows.
+- **In-play gate:** `enrichCompany` / `enrichPerson` (1) run only where the target enriched field is still empty — firmographics are stable; re-enriching a filled row re-buys the same data.
+
 ## Action shape
 
 `{"kind":"connector","integrationSlug":"oceanio","actionSlug":"<slug>","config":{}}`. **No `connectorUuid` in `config`.**

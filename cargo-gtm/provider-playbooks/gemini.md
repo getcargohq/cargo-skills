@@ -71,3 +71,10 @@ cargo-ai orchestration action execute-batch \
 
 - [`../references/prompt-library/index.md`](../references/prompt-library/index.md) — the library's extraction/qualification/personalization prompts port unchanged; keep `temperature: 0` for the deterministic families.
 - [`../recipes/build-tam.md`](../recipes/build-tam.md) / [`../recipes/tech-intent.md`](../recipes/tech-intent.md) — high-volume classify/extract stages where Flash throughput pays off.
+
+## Recurring use
+
+- **The recurring shape is a play node, not a scheduled re-pull:** `instruct` as the classify/score/personalize step, gated on rows newly entering the segment or newly enriched — never re-prompt the whole model each evaluation.
+- **Per-row cost compounds with cadence:** the 500-row math in Cost traps repeats every run — a daily play on `gemini-2.5-flash` is ≈15 credits/day. Keep recurring nodes on Flash; pilot on Pro, demote before scheduling.
+- **`withWebSearch` is the compounding trap in a recurring node** — 0.4 fixed per call, every run. Ground only rows whose facts actually went stale.
+- **Idempotence gate:** write the output to a dedicated column and run only where it's still empty (or where an input-changed timestamp is newer than the output's).

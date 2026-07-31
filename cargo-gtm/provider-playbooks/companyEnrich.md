@@ -63,6 +63,12 @@ cargo-ai orchestration action execute \
 - `enrichByDomain` — **ENRICH (company), budget rung**: cheapest of the chain (`companyEnrich` 0.25 → `linkedin` 0.25–0.5 → `cargo` 0.5 ✅ → `waterfall` 1 ✅ → `peopleDataLabs` 3).
 - `findSimilarCompanies` — **SOURCE-adjacent**: lookalike expansion feeding TAM builds, upstream of ENRICH.
 
+## Recurring use
+
+- **Scheduled lookalikes:** `findSimilarCompanies` can re-run weekly to keep a TAM growing (persona/company searches → weekly; [`../recipes/save-as-play.md`](../recipes/save-as-play.md)) — but results overlap heavily run to run and bill 1 credit **per company returned**, so keep `limit` tight and dedup against the Companies model (`cargo.matchBusiness`) before any downstream enrichment.
+- **In-play gate:** `enrichByDomain` runs only where the row's firmographic target columns are still empty — and never beside the cargo default (see anti-patterns).
+- **Stable data:** firmographics don't decay; a scheduled re-enrich of an existing TAM just re-bills unchanged data at 0.25/row.
+
 ## Action shape
 
 `{"kind":"connector","integrationSlug":"companyEnrich","actionSlug":"<slug>","config":{}}`. **No `connectorUuid` in `config`.**

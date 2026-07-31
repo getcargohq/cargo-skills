@@ -30,6 +30,8 @@ Cadence defaults by signal type:
 
 A saved play spends credits **every run, forever**. Before deploying, extend the [approval gate](../references/cost-discipline.md): state *per-run cost × cadence = monthly burn* ("~1.1 credits/run, weekly → ~4.4/month") and get an explicit yes on the recurring number, not just the one-off.
 
+Also open the [provider playbook](../provider-playbooks/) of **every paid node** and read its **Recurring use** section — it carries the provider-specific cadence default, the filter gate that keeps re-runs from re-billing already-enriched rows, and any extractor alternative that replaces the scheduled pull entirely.
+
 ## Path A — save as a tool with a cron trigger
 
 ```bash

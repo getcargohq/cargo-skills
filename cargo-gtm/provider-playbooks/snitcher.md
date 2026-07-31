@@ -65,6 +65,12 @@ Both UUIDs are **Snitcher's** identifiers (workspace = the tracked site; organis
 
 - **SIGNAL stage** — visitor identification sits beside job-change, funding, and tech-intent as a trigger source ([`../references/stage-action-map.md`](../references/stage-action-map.md)); identified accounts then enter the normal ENRICH → CONTACT → VERIFY → activation spine.
 
+## Recurring use
+
+- **The extractors are the recurring surface** — `fetchOrganisations` / `fetchSessions` already sync incrementally via `autoFetch` (≥30 min); no cron, and never wrap `searchSessions` in a scheduled tool to simulate a feed. The recurring cost trap is the `fetchOrganisations` pitfall above — re-read it before enabling on a high-traffic site.
+- **In-play gate:** trigger plays off the synced segment (e.g. `last_seen` this week), gating paid downstream enrichment on the account's enrichment fields being empty — a returning visitor re-enters the segment but must not re-bill the ENRICH chain.
+- **Decay:** visit intent fades in days; a play on the fresh-visit segment beats any scheduled sweep over historical visitors.
+
 ## Action shape
 
 `{"kind":"connector","integrationSlug":"snitcher","actionSlug":"searchSessions","config":{}}`. **No `connectorUuid` in `config`.**

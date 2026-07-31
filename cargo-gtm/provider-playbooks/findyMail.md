@@ -69,6 +69,14 @@ LinkedIn URL is the only accepted identifier. Output is `phone` + `line_type`.
 - `findPhone` — **rung 2** of the phone chain (prospeo → findyMail or FullEnrich → waterfall).
 - `verifyEmail` — VERIFY stage, but off-default on price; the spine verifies with `waterfall.verifyEmail` (0.1).
 
+## Recurring use
+
+No scheduled fit — per-record enrichment only; findyMail earns its recurring keep as a gated rung inside a play.
+
+- **`findEmail` gate:** run only where `email` is still empty and the alternate 0.5 rung missed — alternates in a recurring play must stay waterfall-ordered, or every re-evaluation double-spends the tier (see anti-patterns).
+- **`findPhone` gate:** empty phone field **and** the qualified-lead condition — at 5/record, an ungated phone node re-firing on segment changes is the play's biggest cost risk.
+- **Stability:** found emails/phones don't improve on re-lookup — a filled row re-entering the segment should skip the node, which is exactly what the empty-field gates guarantee.
+
 ## Action shape
 
 `{"kind":"connector","integrationSlug":"findyMail","actionSlug":"<slug>","config":{}}`. **No `connectorUuid` in `config`.** Note the capitalization: `findyMail` (camel-case with capital `M`).

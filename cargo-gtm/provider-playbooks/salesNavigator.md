@@ -98,3 +98,9 @@ For people search niches salesNavigator misses:
 - **Local SMBs**: `serper.searchPlaces` (Google Maps).
 - **Tech-stack-driven**: `theirStack.searchCompanies`.
 - **Very specific role + industry combos with low LinkedIn coverage**: `peopleDataLabs.searchPeople`.
+
+## Recurring use
+
+- **Scheduled pull:** the weekly saved persona search is the canonical recurring source — re-run `searchLeads` / `extractLeadSearch` (same saved URL) on the weekly persona-search default; new matches accumulate slowly, so tighter cadences mostly return rows you already have. Cadence table: [`../recipes/save-as-play.md`](../recipes/save-as-play.md).
+- **Dedup gate:** search bills per **returned** record with no memory of prior pulls — dedup returned lead/account IDs against the model so only net-new rows flow to paid downstream nodes (find-email, enrich, verify).
+- **Stable snapshots:** `findEmployeesCount` / `findCompanyInsights` (0.25) drift over quarters, not weeks — refresh them on tracked accounts rarely and deliberately, never inside the weekly search play.

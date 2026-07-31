@@ -65,6 +65,13 @@ cargo-ai orchestration action execute-batch \
 
 - **The bulk rung** of [`../references/stage-action-map.md`](../references/stage-action-map.md) LLM section: pilot the prompt on `anthropic` Sonnet (~10 rows), then demote the batch to `gpt-5-nano`/`gpt-5-mini` per [`../references/cost-discipline.md`](../references/cost-discipline.md).
 
+## Recurring use
+
+No scheduled fit — `instruct` is an offline transform; the recurring shape is **a scoring/personalization/extraction node inside a play**, never a timed re-pull.
+
+- **In-play gate:** run only where the node's output column (score, extracted field, personalization line) is still empty — with `temperature: 0`, re-prompting an unchanged row returns the same answer and just re-bills. Trigger on newly-arrived or newly-enriched rows entering the segment.
+- **Cadence compounds cost:** per-row token spend × new rows × every cycle, forever — keep the play on the nano/mini tiers per the batch math above, and never leave `withWebSearch` on in a recurring node (fixed +0.4 × rows, every run). Cadence defaults: [`../recipes/save-as-play.md`](../recipes/save-as-play.md).
+
 ## Action shape
 
 `{"kind":"connector","integrationSlug":"openAi","actionSlug":"instruct","config":{"model":"…","output":{…}}}`. **No `connectorUuid` in `config`.** Costs above are the Cargo-credits rules; a workspace can instead attach its own OpenAI key (connector config takes a single required `apiKey`) and bill the provider directly.

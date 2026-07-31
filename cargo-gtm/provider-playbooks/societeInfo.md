@@ -62,6 +62,12 @@ cargo-ai orchestration action execute \
 - `enrich` — **ENRICH (company/contact), French specialist rung**: outside the default chain; promote per-batch for French entities needing registry fields.
 - `search` — **SOURCE, French specialist**: registry-filtered sourcing feeding the normal ENRICH → VERIFY path (found contacts' emails still verify via `waterfall.verifyEmail`, 0.1).
 
+## Recurring use
+
+- **No schedule fit** — registry identity (registration number, NAF code, juridical form) is near-immutable; a scheduled re-`search` or re-`enrich` just re-bills 4 credits per unchanged row.
+- **Recurring role = in-play enrich node:** run `enrich` only on net-new French rows entering a play, gated on an empty `registrationNumber` column so segment re-evaluation never re-bills resolved rows.
+- **Filed financials move yearly at most** — if `minSales`/`minProfits`-derived fields need refreshing, do it as a rare, explicitly-approved capped batch, not a cadence.
+
 ## Action shape
 
 `{"kind":"connector","integrationSlug":"societeInfo","actionSlug":"<slug>","config":{}}`. **No `connectorUuid` in `config`.**

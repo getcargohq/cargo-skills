@@ -62,6 +62,14 @@ cargo-ai orchestration action execute-batch \
 - **The web-grounded rung** of [`../references/stage-action-map.md`](../references/stage-action-map.md) LLM section; escalation path for facts: model data → `serper.search` (0.05) + cheap extract → `perplexity.instruct` when synthesis/citations are needed.
 - Gate batch research spend through [`../references/cost-discipline.md`](../references/cost-discipline.md) — pilot ~10 rows first.
 
+## Recurring use
+
+Web-grounded answers decay — **re-research is legitimate here**, but only on rows a fresh signal touched, never the whole segment on a timer.
+
+- **Recurring shape:** a `sonar`-low `instruct` node inside a signal-triggered play (funding, job change — see [`../recipes/funding-watch.md`](../recipes/funding-watch.md)), with `searchRecencyFilter` matched to the trigger cadence (weekly funding watch → `week`) so each answer covers only the new window. Cadence defaults: [`../recipes/save-as-play.md`](../recipes/save-as-play.md).
+- **In-play gate:** gate on timestamps, not empty-only — run where the signal's detected-at is newer than the row's last-researched column; stale answers *should* refresh, but only when a signal fires.
+- **Cost compounds:** 0.3–1 per row per cycle — keep the "research the account, not the contact list" dedupe from Cost traps: one call per company per signal, fanned out to contacts.
+
 ## Action shape
 
 `{"kind":"connector","integrationSlug":"perplexity","actionSlug":"instruct","config":{"model":"…","advancedSettings":{…}}}`. **No `connectorUuid` in `config`.** Costs above are the Cargo-credits rules; a workspace can instead attach its own Perplexity key (connector config takes a single required `apiKey`) and bill the provider directly.

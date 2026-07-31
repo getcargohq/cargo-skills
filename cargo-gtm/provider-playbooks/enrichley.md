@@ -60,6 +60,14 @@ Keep an email when either verifier passes it cleanly; drop it only when both agr
 
 **VERIFY stage, alternative rung.** Default chain: `waterfall.verifyEmail` (0.1) first; `zeroBounce.verifyEmail` / `enrichley.verify` (0.1) as equal-cost second opinions; `icypeas.verifyEmail` (0.01) when volume dominates.
 
+## Recurring use
+
+Verification status decays, but re-verifying a whole list on a timer re-bills every row — the recurring shape is **verify-before-send**, not verify-on-schedule.
+
+- **In-play gate:** gate the `verify` node to rows entering a send wave whose `*_verified_at` timestamp is missing or stale (older than the send cycle) — never the full segment on each evaluation.
+- **Second-opinion discipline recurs too:** in a play, keep enrichley on the ambiguous subset only (catch-all/risky from the first verifier) — 0.2/re-checked row compounds fast on repeat.
+- **SEG rows don't ripen:** `mx_secure_email_gateway: true` domains stay structurally unverifiable — route them by risk policy once and exclude them from re-verification.
+
 ## Action shape
 
 `{"kind":"connector","integrationSlug":"enrichley","actionSlug":"verify","config":{}}`. **No `connectorUuid` in `config`.**

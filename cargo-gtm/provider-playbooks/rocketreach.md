@@ -65,6 +65,13 @@ cargo-ai orchestration action execute \
 - `lookupPerson` — **ENRICH (person), 1-credit fallback rung** beside `apolloio.enrichPerson` (1), behind the stack's `cargo` (2) → `waterfall` (2) → `peopleDataLabs` (3) chain; promote it per-batch only when a pilot shows better niche coverage (healthcare especially).
 - Emails it surfaces flow to **VERIFY** before activation.
 
+## Recurring use
+
+No scheduled fit — `lookupPerson` is a per-record fallback lookup; there is nothing to poll.
+
+- **In-play gate:** run only where the priority stack already missed and the target contact columns (email, phone) are still empty; stamp an attempted-at column so misses don't retry at 1 credit every re-evaluation. The 250/min rate limit suits this residue-sized gating, not full-list sweeps.
+- **Time-sensitivity:** the person + company bundle is stable between job changes — a legitimate re-lookup is signal-triggered ([`../recipes/job-change-monitoring.md`](../recipes/job-change-monitoring.md)), and the `job_history` it returns can feed that very check. Play wrapper + cadence table: [`../recipes/save-as-play.md`](../recipes/save-as-play.md).
+
 ## Action shape
 
 `{"kind":"connector","integrationSlug":"rocketreach","actionSlug":"lookupPerson","config":{}}`. **No `connectorUuid` in `config`.**

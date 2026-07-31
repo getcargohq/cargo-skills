@@ -73,3 +73,9 @@ Pipe the results into an LLM step (`anthropic.instruct`) to extract the fact you
 
 - [`../recipes/build-tam.md`](../recipes/build-tam.md) — the local-SMB sourcing variant.
 - [`../recipes/outreach-activation.md`](../recipes/outreach-activation.md) — quick public-web facts feeding the personalization step.
+
+## Recurring use
+
+- **Signal-triggered, not timer-driven.** Google results are live, so re-running `search` on a row that just fired a signal (funding, job change, site visit) is legitimate re-research; a blanket scheduled re-search of a whole list is the fan-out anti-pattern above wired to a cron.
+- **In-play gate:** filter to rows where the research output column is empty or the triggering signal is newer than the last search, so segment re-evaluation never re-bills settled rows.
+- **`searchPlaces` re-pulls:** local TAM churns slowly — if scheduled at all, re-run the same fixed query set (0.05 per query either way) and dedupe places against the Companies model before any paid enrichment runs downstream.

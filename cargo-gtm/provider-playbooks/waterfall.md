@@ -93,6 +93,12 @@ cargo-ai orchestration action execute-batch \
 - `enrichContact` / `enrichCompany` — **second rung**, after cargo native, before peopleDataLabs.
 - `findPhone` — **last rung** of the phone chain (after prospeo, FullEnrich). Demote any rung that misses on the pilot's first ~10 rows for the rest of the batch.
 
+## Recurring use
+
+- **`detectJobChange` is the canonical recurring signal** — save it as a play over the tracked-contact segment at the every-2-weeks default; the fresh-cadence anti-pattern above explains why tighter is pure re-billing at 3 credits/record. Cadence table: [`../recipes/save-as-play.md`](../recipes/save-as-play.md); full pattern: [`../recipes/job-change-monitoring.md`](../recipes/job-change-monitoring.md).
+- **`verifyEmail` recurs as verify-before-send** — a node at the top of each send-wave play, gated to rows entering the wave with a missing or stale verdict; never a standing timer over the whole model.
+- **In-play gate for enrichment:** `enrichContact` / `enrichCompany` (1–2 credits) gate on the target enrichment column being empty — segment re-evaluation must not re-bill filled rows; the underlying person/company data is stable enough that a blanket refresh buys nothing.
+
 ## Action shape
 
 `{"kind":"connector","integrationSlug":"waterfall","actionSlug":"<slug>","config":{}}`. **No `connectorUuid` in `config`.**

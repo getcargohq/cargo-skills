@@ -57,6 +57,14 @@ Keep an email when either verifier passes it cleanly; drop it only when both agr
 
 **VERIFY stage, mid-premium rung — outside the default chain.** Default: free pre-cull → `waterfall.verifyEmail` (0.1) → `zeroBounce.verifyEmail` (0.1) second opinion → `icypeas.verifyEmail` (0.01) for bulk. `neverBounce.verifyEmail` (0.2) enters via own key or as a deliberate extra opinion.
 
+## Recurring use
+
+Verification recurs per **send wave**, not per calendar — at 0.2/row this is the costliest list to re-sweep on a timer.
+
+- **Re-verify gate:** run `verifyEmail` only on rows entering a send wave whose last clean verdict is stale — gate on a verify-timestamp column, never the whole list.
+- **In-play gate:** as the second-opinion rung, filter to rows the first verifier flagged catch-all/ambiguous (Pattern A) and where the neverBounce `result` column is still empty.
+- **Own key for standing use:** a play that re-verifies every wave multiplies the 2×-default cost trap — wire the own-key connector before making this a recurring step.
+
 ## Action shape
 
 `{"kind":"connector","integrationSlug":"neverBounce","actionSlug":"verifyEmail","config":{}}`. **No `connectorUuid` in `config`.**
