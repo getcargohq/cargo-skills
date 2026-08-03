@@ -76,9 +76,19 @@ The `description` field is the only text an agent weighs before deciding whether
 - Applied in [`cargo-orchestration/SKILL.md`](cargo-orchestration/SKILL.md) (new "The sample gate" section with per-data-kind sampling mechanics — `kind: "filter"` + `limit`, `recordIds`, sliced `records`, truncated CSV — plus the note that `kind: "segment"`/`"change"` have no limit and can't be sampled directly), [`cargo-gtm/references/cost-discipline.md`](cargo-gtm/references/cost-discipline.md) §1 (pilot → **sample**: 1–3 rows proves a config, 10–20 records proves a hit-rate), [`cargo/references/interaction.md`](cargo/references/interaction.md) §1, [`cargo/references/gotchas.md`](cargo/references/gotchas.md), and [`cargo-cdk/SKILL.md`](cargo-cdk/SKILL.md) §6 (a deployed play's first batch, and the per-run re-bill of a scheduled one).
 - Aligned the downstream surfaces that quoted the old 1–3 row pilot: the execution-plan agent (both the role spec and the plugin mirror), `recipes/build-tam.md`, and `recipes/save-as-play.md` (play sample raised from 1 record to 10–20, with the reminder that a scheduled play's estimate is per-run).
 
+### `cargo-orchestration` → 1.6.1
+
+- **Fixed the play-triggering recipe, which could never work.** Every example told the agent to take `segmentUuid` from `play list` and pass it to `batch create --data '{"kind":"segment",...}'`. That UUID is the play's internally generated segment, whose record count is never populated, so the batch is always rejected — as `segmentLinkedToPlay`, or as a misleading `noRecords` on older backends that sends you off debugging a filter that was never the problem. Switched every play example to `{"kind":"filter","modelUuid":"<play.modelUuid>"}`, which queries the model directly and enrols every row by default. Touches `SKILL.md` (quick reference, both compatibility blocks, "Create a batch"), `references/examples/plays.md`, `references/examples/templates.md`, and `references/polling.md`.
+- Documented that `{"kind":"segment"}` is for **standalone** segments from `segmentation segment list` only — the kind itself is not broken, only the instruction to feed it a play's generated segment.
+
 ### `cargo-orchestration` → 1.6.0
 
 - New **"The sample gate"** section under "Create a batch": count-first commands, how to build a 10–20 record sample for each data kind, the confirmation format carrying record count + credit estimate, and when the gate may be skipped (free *and* small, or scope already approved this session). Callouts added to the decision flowchart and to `action execute-batch`.
+
+### `cargo` → 1.17.1 (router)
+
+- New **"Triggering a play"** row in [`references/gotchas.md`](cargo/references/gotchas.md) covering the `play.segmentUuid` trap above.
+- `references/glossary.md` (`segmentUuid`) and `references/uuid-flow.md` now distinguish standalone segments from a play's generated one, and list `play list` as a source of `modelUuid`.
 
 ### `cargo` → 1.16.0 (router)
 

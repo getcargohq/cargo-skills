@@ -16,7 +16,7 @@ cargo-ai orchestration run create \
 # Blocks until the batch finishes, returns the final batch result
 cargo-ai orchestration batch create \
   --workflow-uuid <uuid> \
-  --data '{"kind":"segment","segmentUuid":"..."}' \
+  --data '{"kind":"filter","modelUuid":"..."}' \
   --wait-until-finished
 ```
 
@@ -48,7 +48,7 @@ cargo-ai orchestration run create \
 # Blocks until the batch finishes, returns the final batch result
 cargo-ai orchestration batch create \
   --workflow-uuid <uuid> \
-  --data '{"kind":"segment","segmentUuid":"..."}' \
+  --data '{"kind":"filter","modelUuid":"..."}' \
   --wait-until-finished
 ```
 

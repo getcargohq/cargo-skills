@@ -5,8 +5,8 @@ Most `cargo-orchestration` operations require UUIDs from other skills. This tabl
 | UUID            | Produced by                                | Consumed by                                                             |
 | --------------- | ------------------------------------------ | ----------------------------------------------------------------------- |
 | `workflowUuid`  | `orchestration play list` / `tool list`    | `run create`, `batch create`, `run get-metrics`, `run download`         |
-| `modelUuid`     | `storage model list`                       | `segment fetch`, `segment download`, `model get-ddl`. Note: `storage query execute` references models by slug, not UUID |
-| `segmentUuid`   | `segmentation segment list`                | `batch create --data '{"kind":"segment",...}'`                          |
+| `modelUuid`     | `storage model list` / `orchestration play list` | `batch create --data '{"kind":"filter",...}'` (the way to trigger a play), `segment fetch`, `segment download`, `model get-ddl`. Note: `storage query execute` references models by slug, not UUID |
+| `segmentUuid`   | `segmentation segment list`                | `batch create --data '{"kind":"segment",...}'`. Standalone segments only — the `segmentUuid` from `play list` is rejected |
 | `agentUuid`     | `ai agent list`                            | `ai chat create`, node graph (`kind: "agent"`)                          |
 | `connectorUuid` | `connection connector list`                | Node graph (`kind: "connector"`), `billing usage --connector-uuid`      |
 | `actionSlug`    | `connection integration get <slug>` (third-party) or `connection native-integration get` (built-in) | Node graph (`kind: "connector"` or `kind: "native"`) |

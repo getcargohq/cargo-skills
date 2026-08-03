@@ -116,7 +116,7 @@ cargo-ai connection connector list         # all connectors
 
 - **`run create`** — only works with **tool** workflows (or no `workflowUuid`). Play workflows return `playNotCompatible`.
 - **`batch create`** — allowed data kinds depend on the workflow type:
-  - **Play** workflows: `segment`, `change`, `filter`, `recordIds`
+  - **Play** workflows: `filter`, `recordIds`, `segment`, `change`. Trigger a play with `filter`; `segment` takes a standalone segment only, never the `segmentUuid` from `play list`.
   - **Tool** workflows (or no `workflowUuid`): `file`, `records`
 
 ## Quick reference
@@ -130,7 +130,7 @@ cargo-ai orchestration action get-output-schema --action '{"kind":"connector","i
 # Workflows (chain multiple actions)
 cargo-ai orchestration run create --workflow-uuid <uuid> --data '{"company":"Acme","domain":"acme.com"}'
 cargo-ai orchestration run create --data '{"domain":"acme.com"}' --nodes '[...]'
-cargo-ai orchestration batch create --workflow-uuid <uuid> --data '{"kind":"segment","segmentUuid":"..."}'
+cargo-ai orchestration batch create --workflow-uuid <uuid> --data '{"kind":"filter","modelUuid":"..."}'
 
 # AI agents
 cargo-ai ai message create --chat-uuid <uuid> --parts '[{"type":"text","text":"..."}]'
@@ -284,14 +284,20 @@ Wait for an explicit answer. **Do not enroll the full set on an unanswered quest
 
 Batches process multiple records at once. Allowed data kinds depend on the workflow type:
 
-- **Play** workflows: `segment`, `change`, `filter`, `recordIds`
+- **Play** workflows: `filter`, `recordIds`, `segment`, `change`
 - **Tool** workflows (or no `workflowUuid`): `file`, `records`
 
+Use `filter` to trigger a play — it queries the model directly. `segment` only
+accepts a **standalone** segment from `segmentation segment list`; passing the
+`segmentUuid` that `play list` returns is rejected (`segmentLinkedToPlay`, or
+`noRecords` on older backends) because a play's generated segment never has a
+populated record count.
+
 ```bash
-# Play workflow — run on a segment
+# Play workflow — run over the play's model
 cargo-ai orchestration batch create \
   --workflow-uuid <play.workflowUuid> \
-  --data '{"kind":"segment","segmentUuid":"..."}'
+  --data '{"kind":"filter","modelUuid":"..."}'
 
 # Tool workflow — run on a file
 cargo-ai orchestration batch create \
@@ -302,7 +308,7 @@ cargo-ai orchestration batch create \
 # Or wait synchronously — blocks until the batch reaches a terminal state and returns the final result
 cargo-ai orchestration batch create \
   --workflow-uuid <play.workflowUuid> \
-  --data '{"kind":"segment","segmentUuid":"..."}' \
+  --data '{"kind":"filter","modelUuid":"..."}' \
   --wait-until-finished
 ```
 
