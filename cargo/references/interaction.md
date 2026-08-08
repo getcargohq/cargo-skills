@@ -12,7 +12,9 @@ Before creating or editing a node graph, deploying a release, or launching anyth
 - **Nodes and data flow** — what each node does and what feeds it, in human-readable names.
 - **Cost shape** — which nodes are paid, rough per-record estimate.
 
-Treat this as a hard gate: don't start building from an unconfirmed plan. It complements the **cost gate** in [`../../cargo-gtm/references/cost-discipline.md`](../../cargo-gtm/references/cost-discipline.md), which stays authoritative for spend (pilot → approval → full run): the plan gate approves the *design*, the pilot gate approves the *spend*. A trivial change (fix one expression, rename a node) doesn't need the ceremony — say what you changed and why.
+Treat this as a hard gate: don't start building from an unconfirmed plan. It complements the **cost gate** in [`../../cargo-gtm/references/cost-discipline.md`](../../cargo-gtm/references/cost-discipline.md), which stays authoritative for spend (sample → approval → full run): the plan gate approves the *design*, the sample gate approves the *spend*. A trivial change (fix one expression, rename a node) doesn't need the ceremony — say what you changed and why.
+
+**Batches get their own gate, every time.** Launching a batch is the one action that turns a design mistake into a full bill in a single command, so it never goes straight to full scope: run 10–20 records, show what came back and what it cost, then ask whether to enroll the rest — with the **record count** and the **credit estimate** in the question, not just "proceed?". This holds even when the plan gate already passed, and even when the batch arrived through `cargo-orchestration` or `cargo-cdk` with no GTM framing. Mechanics per data kind: [`../../cargo-orchestration/SKILL.md`](../../cargo-orchestration/SKILL.md) → "Create a batch".
 
 ## 2. Real choices: ask, with a recommended default
 

@@ -7,10 +7,17 @@ Canonical spend rules for every credits-based action in this skill. Recipes and 
 Required order for **every** paid batch (anything beyond a handful of records, or any action whose cost is unknown):
 
 ```
-1. PILOT     Run 1–3 rows of the EXACT input data through the EXACT action config.
+1. SAMPLE    Run a small slice of the EXACT input data through the EXACT config.
+             1–3 rows to prove one action's config shape.
+             10–20 records before any BATCH — one row can't show a hit-rate,
+             and a batch's cost is (per-row cost × hit-rate) × N.
 2. APPROVAL  Present the approval message (format below). Wait for the user.
-3. FULL RUN  Only after explicit approval, fan out across N records.
+             It must state the RECORD COUNT to be enrolled and the CREDIT
+             ESTIMATE for them.
+3. FULL RUN  Only after explicit approval, fan out across the remaining records.
 ```
+
+Size the pool before you can quote either number — `segment get <uuid>` → `recordsCount`, a `storage query execute` count, or `wc -l` on the input file. All free. Approval of the sample is **not** approval of the full run; ask again, explicitly. Batch-sampling mechanics per data kind (`filter` + `limit`, `recordIds`, sliced `records`, truncated CSV) live in [`../../cargo-orchestration/SKILL.md`](../../cargo-orchestration/SKILL.md) → "Create a batch".
 
 The approval message has four required sections. **If any section is missing, stay in AWAIT_APPROVAL — do not run paid or cost-unknown actions.**
 
@@ -23,12 +30,15 @@ ASSUMPTIONS
   Declare data decisions already made (rows dropped and why, domains fixed)
   and the cost trade-off chosen (cheap chain vs premium play, and why).
 
-PILOT RESULT (verbatim)
+SAMPLE RESULT (verbatim)
   Rows run, credits spent, per-row cost, hit-rate — observed numbers,
   not catalog numbers. Paste a preview of the actual output rows.
 
 CREDITS · SCOPE · CAP
-  Full-run estimate = observed per-row cost × remaining rows.
+  Both numbers, always, in one line the user can decide on:
+    - HOW MANY records the full run would enroll (the counted pool minus
+      the sample), and
+    - WHAT IT COSTS = observed per-row cost × remaining rows.
   Reconcile against the ACTUAL balance (see §2) — if the estimate exceeds
   the balance, say so BEFORE the user hits it mid-run.
 

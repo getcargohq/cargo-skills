@@ -10,8 +10,27 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### Batch sample gate (cross-skill)
+
+- **Never enroll a full batch on the first attempt.** `batch create` / `action execute-batch` fan out across every record in the source, so a config mistake and the full bill arrive together. Every surface that can launch one now requires the same three steps: count the pool for free (`segment get` → `recordsCount`, a storage `count()`, `wc -l`), run a **10–20 record sample** through the exact workflow and config, then ask the user to approve the full enrollment with **both** the record count and the credit estimate in the question. Approval of the sample is explicitly not approval of the full run.
+- Applied in [`cargo-orchestration/SKILL.md`](cargo-orchestration/SKILL.md) (new "The sample gate" section with per-data-kind sampling mechanics — `kind: "filter"` + `limit`, `recordIds`, sliced `records`, truncated CSV — plus the note that `kind: "segment"`/`"change"` have no limit and can't be sampled directly), [`cargo-gtm/references/cost-discipline.md`](cargo-gtm/references/cost-discipline.md) §1 (pilot → **sample**: 1–3 rows proves a config, 10–20 records proves a hit-rate), [`cargo/references/interaction.md`](cargo/references/interaction.md) §1, [`cargo/references/gotchas.md`](cargo/references/gotchas.md), and [`cargo-cdk/SKILL.md`](cargo-cdk/SKILL.md) §6 (a deployed play's first batch, and the per-run re-bill of a scheduled one).
+- Aligned the downstream surfaces that quoted the old 1–3 row pilot: the execution-plan agent (both the role spec and the plugin mirror), `recipes/build-tam.md`, and `recipes/save-as-play.md` (play sample raised from 1 record to 10–20, with the reminder that a scheduled play's estimate is per-run).
+
+### `cargo-orchestration` → 1.6.0
+
+- New **"The sample gate"** section under "Create a batch": count-first commands, how to build a 10–20 record sample for each data kind, the confirmation format carrying record count + credit estimate, and when the gate may be skipped (free *and* small, or scope already approved this session). Callouts added to the decision flowchart and to `action execute-batch`.
+
+### `cargo` → 1.16.0 (router)
+
+- Router recap for `cargo-orchestration` gains the batch sample rule; new gotcha row ("Never enroll a full batch first"); [`references/interaction.md`](cargo/references/interaction.md) §1 gains a standing batch gate that holds even when a batch arrives through `cargo-orchestration` or `cargo-cdk` with no GTM framing.
+
+### `cargo-cdk` → 1.1.0
+
+- New critical rule: a `definePlay`/`defineTool` graph with paid nodes gets a 10–20 record sample run (or `batch create --file` test-run) before full enrollment or before a schedule is enabled — a scheduled play re-bills every node on every run.
+
 ### `cargo-gtm` → 1.9.0
 
+- **Cost gate is now sample-first for batches** — §1 of [`references/cost-discipline.md`](cargo-gtm/references/cost-discipline.md) renamed pilot → sample and split by shape (1–3 rows for one action's config, 10–20 records before any batch), and the approval message must state the record count alongside the credit estimate. See the cross-skill entry above.
 - **New `aiArk` (AI Ark) provider playbook.** Added [`provider-playbooks/aiArk.md`](cargo-gtm/provider-playbooks/aiArk.md) for the newly released AI Ark integration (slug `aiArk`, category `enrichment`). All six actions are credits-based and run on cargo's managed connection: `enrichPerson` (0.1 — full profile **+ verified email** from a LinkedIn URL, bills 0 on no-email), `reverseLookup` (0.05 — email/phone → profile), `analyzePersonality` (0.05 — OCEAN/DISC + selling guidance, catalog-unique), `findMobilePhone` (0.5 — the cheapest phone rung), `searchPeople` (0.05/record), and `searchCompanies` (0.01/record with lookalike-domain seeds — cheapest company search in the catalog). Documents the nested filter-group shape (`peopleInfo`/`jobRole`/`industry`/`employeeSize`/… with `_or`/`_not` keys and autocomplete-backed enums) and the per-record billing cap.
 - **Wired AI Ark into the routing surfaces:** SKILL.md §11 provider list (Sourcing & company-data specialists), `references/stage-action-map.md` (new cheapest rungs for company search, person enrich, and phone), `references/alternatives.md` (person-enrich / phone / account-search swaps), and `references/credits-cost-table.md` (six new rows). Catalog action count 141 → 145.
 

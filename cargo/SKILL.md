@@ -1,7 +1,7 @@
 ---
 name: cargo
 description: Router and overview for the Cargo CLI agent skills. Explains the fifteen skills (this router + one onboarding skill cargo-quickstart + one outcome skill cargo-gtm + twelve capability skills, including cargo-cdk for declarative workspace-as-code and cargo-diagnostics for run/batch/cost forensics), when to use the declarative CDK vs the imperative CLI, the UUID flow between them, async polling, end-to-end use cases (enrich one record, enrich and sync to CRM, AI lead scoring, custom workflow, error monitoring, fresh-workspace bootstrap, segment export, GTM context authoring), and common gotchas (`conjonction` spelling, run vs batch, model-uuid vs segment-uuid). Load first whenever working with the Cargo CLI, when unsure which sub-skill applies, when stitching multiple sub-skills together, when bootstrapping a workspace, or when the user asks about Cargo skills in general.
-version: "1.15.0"
+version: "1.16.0"
 compatibility: Requires @cargo-ai/cli (npm) and a Cargo account (browser sign-in via --oauth, or an API token)
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -329,6 +329,7 @@ The CLI exposes several domains that no capability skill wraps yet. Reach for th
 **Critical rules:**
 
 - See the decision flowchart at the top of `../cargo-orchestration/SKILL.md` for when to use `action execute` vs `run create` vs `batch create`.
+- **Never enroll a full batch on the first attempt.** `batch create` / `action execute-batch` fan out across every record in the source. Sample **10–20 records**, report observed cost + hit-rate, then ask the user to approve the full enrollment — quoting the **record count** and the **credit estimate**. Mechanics: `../cargo-orchestration/SKILL.md` → "Create a batch"; spend rules: `../cargo-gtm/references/cost-discipline.md` §1.
 - **`action execute` is the default for running an operation; `node execute` is debug-only.** Use `node execute` only to test a single node of a workflow you're authoring — it requires `--workflow-uuid`, `--release-uuid`, `--node`, `--computed-config` and `--context` (all five). Anything else — enrich a record, call a connector action, invoke a tool or agent — goes through `action execute` / `action execute-batch`.
 - **Prefer built-in actions + expressions when building a node graph.** Avoid `python`, `script` (JS), and raw HTTP nodes unless necessary: use `variables` for transforms, the native `agent` node for LLM calls, the integration's dedicated connector action for APIs, and `branch`/`filter`/`switch` for routing. See `../cargo-orchestration/references/node-selection.md`.
 - Filter JSON uses `conjonction` (not `conjunction`) — breaks silently if misspelled.
