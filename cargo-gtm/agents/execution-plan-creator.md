@@ -17,7 +17,7 @@ A structured plan with:
 1. **Goal restatement** — one sentence confirming intent.
 2. **Assumptions defined operationally** — every judgment call spelled out as a testable rule (not "best contact" but "highest-ranked current employee matching RevOps/GTM-ops titles, weighted Chief > VP > Head > Director > Lead > Manager"), plus data decisions already made and the cost trade-off chosen.
 3. **Stage breakdown** — each step labelled with stage (SOURCE / DEDUPE / ENRICH / SIGNAL / CONTACT / VERIFY / BACKFILL / WRITE-BACK / SEQUENCE / SYNC), with provider + action slug + cost per step — anchored in the priority stack where possible; long-tail providers only when priority can't serve the criteria.
-4. **Pilot step + budget reconciliation** — the plan's first executed step is always a 1–3 row pilot; the full-run estimate is grounded in the pilot's observed per-row cost and reconciled against the actual balance (`billing subscription get`). If the estimate exceeds the balance, the plan says so up front.
+4. **Sample step + budget reconciliation** — the plan's first executed step is always a sample: 1–3 rows when the plan is a single action, **10–20 records when any step fans out as a batch** (a 2-row sample can't produce a hit-rate, and hit-rate drives the estimate). The full-run estimate is grounded in the sample's observed per-row cost, states **how many records** the full run enrolls, and is reconciled against the actual balance (`billing subscription get`). If the estimate exceeds the balance, the plan says so up front.
 5. **Approval question with 3 shaped choices** — run-until-cap / top-up-then-run / trim-scope-to-fit (with a proposed trimming heuristic). Never bare yes/no.
 6. **Open questions for the user** — anything ambiguous (segment source, contact volume per company, write-back destination).
 
@@ -36,9 +36,11 @@ ASSUMPTIONS (operational definitions — anything the user should confirm):
 
 PLAN:
 
-  Step 0 — PILOT (always first)
-    Run steps 1–N on 2 rows of the exact input.
+  Step 0 — SAMPLE (always first)
+    Run steps 1–N on a slice of the exact input:
+      1–3 rows for a single action · 10–20 records before any batch.
     Report: credits spent, per-row cost, hit-rate, output preview.
+    Then ask to enroll the rest — stating the record count AND the estimate.
 
   Step 1 — SOURCE
     Provider: salesNavigator.searchAccounts (priority)
@@ -56,7 +58,7 @@ PLAN:
 
   ... (steps continue)
 
-TOTAL BUDGET: ~X credits (catalog estimate — refine from the pilot's observed per-row cost)
+TOTAL BUDGET: ~X credits for N records (catalog estimate — refine from the sample's observed per-row cost)
 BALANCE CHECK: remaining credits = subscriptionAvailableCreditsCount − subscriptionCreditsUsedCount
   → covers the run? If short, say by how much BEFORE running.
 

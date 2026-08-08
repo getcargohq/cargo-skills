@@ -1,7 +1,7 @@
 ---
 name: cargo-orchestration
 description: Interact with the Cargo platform via CLI. Use when the user wants to execute an action, run a workflow, trigger a batch, message an AI agent, query orchestration runtime tables (runs/batches/spans/records) with SQL, fetch segment records, resolve an action's output schema, or inspect a model schema.
-version: "1.5.2"
+version: "1.6.0"
 compatibility: Requires @cargo-ai/cli (npm) and a Cargo account (browser sign-in via --oauth, or an API token)
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -37,6 +37,8 @@ Need to run something?
 └── Testing ONE node of a
     workflow you're building     → node execute (debug only — see below)
 ```
+
+> **Fanning out across many records (`action execute-batch`, `batch create`)? Sample first.** Run 10–20 records, report the observed cost and hit-rate, then ask the user to approve the full enrollment — quoting the **record count** and the **credit estimate**. See [Create a batch → the sample gate](#the-sample-gate).
 
 > **`action execute`, not `node execute`, is the default for running something.**
 > `node execute` is a **debug** surface for a node that already lives in a workflow:
@@ -164,6 +166,8 @@ cargo-ai orchestration action execute-batch \
 
 Action kinds: `tool`, `connector`, `agent`, `native`. See `references/examples/actions.md` for all action kinds, parameters, retry config, response shapes, and end-to-end examples.
 
+> **`execute-batch` bills per record.** Pass a 10–20 record slice of `--records` first, report the observed per-record cost and hit-rate, and get approval (with the full record count and credit estimate) before sending the rest — same gate as [Create a batch](#the-sample-gate).
+
 ### Resolve an action's output schema (without executing)
 
 **Never guess what an action outputs.** Two free sources — no run, no credits:
@@ -215,6 +219,59 @@ cargo-ai orchestration run cancel --workflow-uuid <uuid> --uuids run-uuid-1,run-
 See `references/examples/tools.md` for file uploads, monitoring, and cancellation. See `references/nodes.md` for custom node graphs.
 
 ## Create a batch
+
+> **Sample first, then ask before enrolling everything — blocking.** A batch fans one workflow across every record in its data source, so a mistake and a full bill land together. Never enroll a full segment/file/model on the first attempt: run a **10–20 record sample**, report what it cost and returned, then ask the user to approve the full enrollment with the **record count and credit estimate** in the question. Mechanics below; the spend rules behind it are [`../cargo-gtm/references/cost-discipline.md`](../cargo-gtm/references/cost-discipline.md).
+
+### The sample gate
+
+**1. Count the pool first (free).** Never quote an estimate from a guess:
+
+```bash
+cargo-ai segmentation segment get <segment-uuid>          # → recordsCount (also on `segment list`)
+cargo-ai storage query execute "SELECT count() FROM <dataset>.<model>"   # for a filter/model source
+# For a file source: wc -l on the CSV, minus the header row.
+```
+
+**2. Run 10–20 records through the exact workflow and config.** Sample by data kind:
+
+```bash
+# Play workflow, segment source → reuse the segment's own filter, capped by `limit`
+cargo-ai segmentation segment get <segment-uuid>          # → copy .filter and .modelUuid
+cargo-ai orchestration batch create \
+  --workflow-uuid <play.workflowUuid> \
+  --data '{"kind":"filter","modelUuid":"<modelUuid>","filter":<segment.filter>,"limit":15}' \
+  --wait-until-finished
+
+# Play workflow, explicit records → pick 10–20 ids
+cargo-ai orchestration batch create \
+  --workflow-uuid <play.workflowUuid> \
+  --data '{"kind":"recordIds","modelUuid":"<modelUuid>","ids":["id-1","…","id-15"]}'
+
+# Tool workflow, inline records → slice the array
+cargo-ai orchestration batch create \
+  --workflow-uuid <tool.workflowUuid> \
+  --data '{"kind":"records","records":[ /* first 15 only */ ]}'
+
+# Tool workflow, file → upload a truncated CSV (header + 15 rows), not the full file
+head -n 16 leads.csv > leads-sample.csv
+cargo-ai workspaceManagement file upload --file ./leads-sample.csv
+```
+
+`limit` is the sampling lever for `kind: "filter"`. `kind: "segment"` and `kind: "change"` have **no limit** — they always enroll the whole set, so sample via `filter` or `recordIds` and switch to `segment` only for the approved full run.
+
+**3. Report the sample, then ask.** The confirmation must carry both numbers the user needs to decide:
+
+```
+Sample: 15 of 1,240 records · 6.2 credits (0.41/record) · 13/15 enriched (87%)
+Full enrollment: 1,225 remaining records ≈ 502 credits (balance: 780)
+
+Enroll all 1,225? Or:
+  1. Enroll all 1,225 (≈502 cr, leaves ~278)
+  2. Trim scope — e.g. the 610 records with a domain set (≈250 cr)
+  3. Stop here and review the sample output first
+```
+
+Wait for an explicit answer. **Do not enroll the full set on an unanswered question**, and don't treat approval of the sample as approval of the full run. Skip the gate only when the batch is free (no paid nodes) *and* small, or when the user has already named the scope and approved the cost this session.
 
 Batches process multiple records at once. Allowed data kinds depend on the workflow type:
 

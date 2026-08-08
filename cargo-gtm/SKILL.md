@@ -83,7 +83,7 @@ If none match, scan the phase docs above for the closest pattern and adapt — o
 
 Full spec: [`references/cost-discipline.md`](references/cost-discipline.md). The short version every task must honor:
 
-1. **Pilot → approval → full run, in that order.** Run 1–3 rows of the exact input first; present the 4-section approval message (Assumptions · Pilot result verbatim · Credits/Scope/Cap reconciled against the actual balance · 3 shaped choices); stay in AWAIT_APPROVAL until the user picks. Never fan out on an unapproved or cost-unknown action.
+1. **Sample → approval → full run, in that order.** Run a slice of the exact input first — 1–3 rows to prove one action's config, **10–20 records before any batch** (one row can't show a hit-rate). Then present the 4-section approval message (Assumptions · Sample result verbatim · Credits/Scope/Cap — always stating **how many records** the full run enrolls and **what they cost**, reconciled against the actual balance · 3 shaped choices); stay in AWAIT_APPROVAL until the user picks. Never fan out on an unapproved or cost-unknown action, and never read approval of the sample as approval of the full enrollment.
 2. **Receipt after every paid action**: credits spent + balance remaining + hit-rate ("found 34 emails of 40") + estimate-vs-actual with the why when they diverge. Prefer `billing usage get-metrics` over your own arithmetic.
 3. **Over-provision 1.4×N, then filter** — coverage is a property of the company; drop incomplete rows instead of chasing them with more providers.
 4. **Count first, pay second** — search is billed on returned rows; keep `limit` strict and size the pool with a 1-row probe before any full pull.
