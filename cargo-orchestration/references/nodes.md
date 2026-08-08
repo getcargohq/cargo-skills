@@ -696,13 +696,35 @@ Response shows the resolved config values that would be sent to the connector or
 
 ## Node execute
 
-`node execute` runs a **single node** in isolation with real side effects — it makes the actual API call (connector, tool, or agent). Use it to test one node without running the full workflow.
+`node execute` runs a **single node of an existing workflow** in isolation with real side effects — it makes the actual API call (connector, tool, or agent). It exists for **one job: testing/debugging a node you are authoring inside a workflow.**
+
+> **Not a general-purpose runner — prefer `action execute`.** If you just want to
+> run an operation (enrich a domain, call a connector action, invoke a tool or
+> agent) and get its output, use `action execute` / `action execute-batch`. Those
+> take a small `--action` + `--data` payload, need no workflow, no release, and no
+> hand-built node JSON. Reach for `node execute` **only** when the node already
+> belongs to a workflow graph and you are verifying that node's behavior before
+> running the full graph.
+>
+> | You want to… | Use |
+> | --- | --- |
+> | Run one operation on one record | `action execute` |
+> | Run one operation on many records | `action execute-batch` |
+> | Test one node of a workflow you're building | `node execute` |
+> | Run the whole graph | `run create` / `batch create` |
 
 > **Note:** `node execute` consumes credits. It is a live execution, not a dry run.
+
+**All five flags are required** — `--workflow-uuid`, `--release-uuid`, `--node`,
+`--computed-config`, `--context`. The CLI rejects the call client-side if any is
+missing, which is why this command is unusable outside an existing workflow +
+release: get `--workflow-uuid` from `tool list` / `play list`, and `--release-uuid`
+from `release get-deployed --workflow-uuid <uuid>` (or `release get-draft`).
 
 ```bash
 cargo-ai orchestration node execute \
   --workflow-uuid <tool.workflowUuid> \
+  --release-uuid <release.uuid> \
   --node '{
     "uuid": "22222222-2222-4222-a222-222222222222",
     "slug": "enrich_company",
@@ -728,15 +750,17 @@ cargo-ai orchestration node execute \
   --context '{"nodes": {"start": {"domain": "acme.com"}}}'
 ```
 
-**`--computed-config`** — the already-resolved config values (output of `node compute`). If you skip this, the CLI resolves expressions from `--context` automatically.
+**`--computed-config`** — required; the already-resolved config values. Produce them with `node compute` and pass the result through — the CLI does **not** resolve expressions for you here.
 
-**`--release-uuid`** — optional; pins the execution to a specific workflow release.
+**`--release-uuid`** — required; pins the execution to a specific workflow release. Resolve it with `release get-deployed --workflow-uuid <uuid>` (or `release get-draft` while iterating on a draft).
 
 ### Recommended debug workflow
 
+Use this while **authoring a workflow**. For a one-off operation that isn't part of a graph, skip straight to `action execute`.
+
 1. **Validate structure** — `node validate --nodes '[...]'` — catches structural errors
 2. **Preview expressions** — `node compute --node '{...}' --context '{...}'` — check resolved values
-3. **Test live** — `node execute --node '{...}' --computed-config '{...}' --context '{...}'` — confirm real output
+3. **Test live** — `node execute --workflow-uuid <uuid> --release-uuid <uuid> --node '{...}' --computed-config '{...}' --context '{...}'` — confirm real output for that one node
 4. **Run full graph** — `run create --nodes '[...]'` — execute the complete workflow
 
 ## Polling

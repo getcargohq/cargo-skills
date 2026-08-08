@@ -1,7 +1,7 @@
 ---
 name: cargo-orchestration
 description: Interact with the Cargo platform via CLI. Use when the user wants to execute an action, run a workflow, trigger a batch, message an AI agent, query orchestration runtime tables (runs/batches/spans/records) with SQL, fetch segment records, resolve an action's output schema, or inspect a model schema.
-version: "1.5.1"
+version: "1.5.2"
 compatibility: Requires @cargo-ai/cli (npm) and a Cargo account (browser sign-in via --oauth, or an API token)
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -33,8 +33,19 @@ Need to run something?
 │   │                              batch create --nodes (many records)
 │   └── Reusable workflow        → build a tool, then run create --workflow-uuid
 │                                  or batch create --workflow-uuid
-└── Conversational AI agent      → message create
+├── Conversational AI agent      → message create
+└── Testing ONE node of a
+    workflow you're building     → node execute (debug only — see below)
 ```
+
+> **`action execute`, not `node execute`, is the default for running something.**
+> `node execute` is a **debug** surface for a node that already lives in a workflow:
+> it requires `--workflow-uuid`, `--release-uuid`, `--node`, `--computed-config`
+> **and** `--context` (all five, enforced client-side), and it bills like any live
+> call. If you just want an operation's output — enrich a domain, call a connector
+> action, invoke a tool or agent — use `action execute` / `action execute-batch`
+> with a small `--action` + `--data` payload. Only reach for `node execute` when
+> verifying one node's behavior before running the full graph.
 
 > **Terminology:** An orchestration **tool** is a saved on-demand workflow (listed via `tool list`). An **action** is a single operation you execute without building a workflow — it can embed a saved orchestration tool (`kind: "tool"`), call a third-party connector (`kind: "connector"`), invoke an AI agent (`kind: "agent"`), or run a built-in platform operation (`kind: "native"`).
 
@@ -335,7 +346,7 @@ cargo-ai orchestration node validate --nodes '[...]'
 # → { "outcome": "valid" } or { "outcome": "notValid", "invalidNodes": [...] }
 ```
 
-For debugging, use `node compute` (dry-run expressions) or `node execute` (live test, costs credits). For runs that complete with `status: success` but produce wrong output (wrong branch taken, empty downstream values), use `run.executions[].title` from `run get` only as a quick summary — it may be truncated — and read `runContext.<nodeSlug>` (returned at the top level of the same `run get <run-uuid>` response) to verify field-level data. See `references/troubleshooting.md` → "Debugging a workflow run" and `references/nodes.md` for the full node creation guide, validation error codes, and examples.
+For debugging, use `node compute` (dry-run expressions) or `node execute` (live test of one node **of an existing workflow** — needs `--workflow-uuid` + `--release-uuid` + `--computed-config`, and costs credits; for anything that isn't node-level debugging, use `action execute` instead). For runs that complete with `status: success` but produce wrong output (wrong branch taken, empty downstream values), use `run.executions[].title` from `run get` only as a quick summary — it may be truncated — and read `runContext.<nodeSlug>` (returned at the top level of the same `run get <run-uuid>` response) to verify field-level data. See `references/troubleshooting.md` → "Debugging a workflow run" and `references/nodes.md` for the full node creation guide, validation error codes, and examples.
 
 ## Help
 
