@@ -187,6 +187,29 @@ export const dashboard = defineApp("dashboard", {
 });
 ```
 
+Observability:
+
+```ts
+// Alert — a scheduled threshold check; fires actions as runs on breach. The
+// scope wires the watched resource by handle, and scope + threshold are a
+// matched pair (TS narrows the metric menu to the scope's kind).
+export const syncErrors = defineAlert("crm-sync-errors", {
+  schedule: { type: "cron", cron: "*/30 * * * *" },
+  scope: { kind: "runs", workflow: onboarding },   // the definePlay handle
+  threshold: { metric: "errorRate", operator: "gte", value: 10 },
+  actions: [
+    // Bare { ref, config } for an agent; config is templated against the firing
+    // context. Typed connector/tool actions use the alertConnectorAction /
+    // alertToolAction helpers (config checked against the action's input schema).
+    { ref: sdr, config: { message: "CRM sync error rate at {{event.value}}% — {{alert.url}}" } },
+  ],
+});
+```
+
+`defineAlert` is the declarative front for the observability domain — the full
+scope/threshold matrix, metric units, and firing semantics live in
+[`../../cargo-observability/SKILL.md`](../../cargo-observability/SKILL.md).
+
 The full `full` template wires all of the above together end-to-end — see
 [`../references/examples/full-workspace.md`](../references/examples/full-workspace.md).
 

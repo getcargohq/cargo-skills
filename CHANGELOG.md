@@ -10,6 +10,23 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### New skill — `cargo-observability` → 1.0.0
+
+- **New capability skill for the `observability` CLI domain** (`cargo-ai observability alert …` / `event …`), covering the alerts feature just shipped in the backend/api. An alert is a scheduled threshold check: it measures a **scope** (`spans` / `runs` / `records` / `orchestrationQuery` / `storageQuery` / `model`), compares it to a **threshold** (`metric` + `gte`/`lte` + `value`), and on breach fires **actions** (the shared orchestration `Action[]`) each as its own run, recording an **event**.
+- [`cargo-observability/SKILL.md`](cargo-observability/SKILL.md) documents every command (`alert list/get/create/update/remove/preview`, `event list`), the "**preview before create**" discipline, the scope/threshold/action model, `observability:read`/`observability:write` permissions, and cost discipline (actions fire as billable runs; a scheduled alert re-bills on every breach).
+- [`references/scopes-and-thresholds.md`](cargo-observability/references/scopes-and-thresholds.md) — the full scope↔threshold compatibility matrix, every scope filter field, per-metric meanings and units (telemetry `errorRate`/`duration`/`credits`/`count`; `query`; model `recordsCount`/`recordsShare`/`freshness`/`syncDuration`), and the empty-window-vs-real-zero rule.
+- [`references/alert-lifecycle.md`](cargo-observability/references/alert-lifecycle.md) — cron windows + ClickHouse indexing lag, the **at-most-once** firing guarantee (a sustained breach re-fires per tick, never on the same rows twice), the dead-man's-switch rule, and the full `{{alert.*}}`/`{{event.*}}` templating context.
+- [`references/examples/recipes.md`](cargo-observability/references/examples/recipes.md) — seven copy-paste recipes: error-rate pager, credit-budget guard, p95 latency, dead-man's switch (`count lte 0`), model freshness, empty-model, and custom SQL-query alerts.
+
+### `cargo` → 1.17.0 (router)
+
+- Routes the new `cargo-observability` skill: capability-skills table row, a full recap under "Skill details", a dependency rule (proactive counterpart to `cargo-diagnostics`), and a box in the relationship diagram. Skill counts updated (15 → 16 skills; twelve → thirteen capability skills), and `defineAlert` added to the `cargo-cdk` builder list. Plugin manifests (`.claude-plugin` / `.codex-plugin` / `.cursor-plugin`) bumped to 1.17.0 to mirror the router, and the linter's `SKILL_DIRS` gains `cargo-observability`.
+
+### `cargo-cdk` → 1.2.0
+
+- **Documents the `defineAlert` builder** (the declarative front for the observability domain). [`references/resources.md`](cargo-cdk/references/resources.md) gains a Builders-table row and a "Notes on specific fields" entry: the scope↔threshold matched pair (TS narrows the metric menu by `scope.kind`), scope wiring by handle (`workflow`/`connector`/`tool`/`agent`/`model`), the `{ ref, config }` action wrapper with the typed `alertConnectorAction`/`alertToolAction` helpers and `{{event.*}}`/`{{alert.*}}` templating, and the slugless-identity note (state uuid, like a play).
+- [`guides/authoring-resources.md`](cargo-cdk/guides/authoring-resources.md) gains an Observability example wiring an alert to a `definePlay` handle with an agent action. [`SKILL.md`](cargo-cdk/SKILL.md) §6: `alert` added to the slugless "commit `cargo.state.json`" resources, and a new critical rule that a `defineAlert` whose actions call paid nodes re-bills on every breach (preview the threshold; prefer cheap notification actions). Cross-links to [`cargo-observability`](cargo-observability/SKILL.md) for the scope/threshold matrix and firing semantics.
+
 ### Batch sample gate (cross-skill)
 
 - **Never enroll a full batch on the first attempt.** `batch create` / `action execute-batch` fan out across every record in the source, so a config mistake and the full bill arrive together. Every surface that can launch one now requires the same three steps: count the pool for free (`segment get` → `recordsCount`, a storage `count()`, `wc -l`), run a **10–20 record sample** through the exact workflow and config, then ask the user to approve the full enrollment with **both** the record count and the credit estimate in the question. Approval of the sample is explicitly not approval of the full run.

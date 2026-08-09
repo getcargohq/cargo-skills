@@ -34,6 +34,7 @@ const SKILL_DIRS = [
   "cargo-analytics",
   "cargo-billing",
   "cargo-diagnostics",
+  "cargo-observability",
   "cargo-hosting",
   "cargo-workspace-management",
 ];
@@ -56,6 +57,7 @@ const KNOWN_CLI_DOMAINS = new Set([
   "expression",
   "hosting",
   "init",
+  "observability",
   "orchestration",
   "revenue-organization",
   "segmentation",
