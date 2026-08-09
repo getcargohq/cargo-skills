@@ -21,7 +21,7 @@ Works with Claude Code, Cursor, Windsurf, GitHub Copilot, and any agent that sup
 
 ### Agent plugin (alternative channel — Claude Code, Codex, Cursor)
 
-The repo also installs as a native **agent plugin**: one source, three targets, sharing the same fifteen skills plus three things `skills add` can't deliver:
+The repo also installs as a native **agent plugin**: one source, three targets, sharing the same sixteen skills plus three things `skills add` can't deliver:
 
 - **An approval hook** ([`hooks/approve-cli.sh`](hooks/approve-cli.sh)) that auto-approves safe `cargo-ai` calls (reads, queries, run/batch operations) while credentials (`login`), token minting, report egress, `cdk deploy`/`destroy`, and any `remove`/`delete` always still prompt. Allow-only — it can never override a deny rule. Wired per target: `PreToolUse` (Claude Code), `PermissionRequest` (Codex), `beforeShellExecution` (Cursor).
 - **Session-lifecycle hooks** (Claude Code only): plugin-bundled `SessionStart`/`Stop`/`SessionEnd` scripts keep the CLI at the bundle's pinned version and log the session to `workspace_management.sessions` — no installer needed. They defer automatically when the installer's copies exist under `~/.claude/hooks/`, so running both never double-registers a session. Unlike the installer's, the plugin's `SessionStart` does **not** run `skills add` (the plugin owns the skills).
@@ -109,7 +109,7 @@ Then bump the `version:` field in each changed `SKILL.md` (semver, e.g. `1.0.0` 
 
 ## What this skill teaches
 
-**Cargo** connects your data models (companies, contacts, deals) to external integrations (CRMs, enrichment providers, AI agents) and runs them as automated workflows. The repo ships fifteen skills at the root — one **router skill** (`cargo`, the overview / front door for any Cargo CLI task), one **onboarding skill** (`cargo-quickstart`, the guided first-run demo), one **outcome skill** (`cargo-gtm`, the front door for any GTM task), and twelve **capability skills** (one per CLI domain, plus the cross-domain `cargo-diagnostics`). Most capability skills wrap the **imperative** CLI (one-off `cargo-ai <domain>` operations); `cargo-cdk` is the **declarative** one — define a whole workspace in code and deploy it — and `cargo-diagnostics` sequences the run/SQL/billing surfaces into forensic runbooks (trace a run, sweep a batch for errors, profile credit spend).
+**Cargo** connects your data models (companies, contacts, deals) to external integrations (CRMs, enrichment providers, AI agents) and runs them as automated workflows. The repo ships sixteen skills at the root — one **router skill** (`cargo`, the overview / front door for any Cargo CLI task), one **onboarding skill** (`cargo-quickstart`, the guided first-run demo), one **outcome skill** (`cargo-gtm`, the front door for any GTM task), and thirteen **capability skills** (one per CLI domain, plus the cross-domain `cargo-diagnostics`). Most capability skills wrap the **imperative** CLI (one-off `cargo-ai <domain>` operations); `cargo-cdk` is the **declarative** one — define a whole workspace in code and deploy it — and `cargo-diagnostics` sequences the run/SQL/billing surfaces into forensic runbooks (trace a run, sweep a batch for errors, profile credit spend).
 
 ### Router — `cargo`
 
@@ -156,6 +156,7 @@ The standard library. Load when you need the syntax for a specific CLI domain �
 | **Context**       | Browse, read, write, and edit the workspace's git-backed context repo (markdown/MDX GTM knowledge base); run shell commands in its runtime sandbox; inspect the knowledge graph |
 | **Analytics**     | Download run results and outputs, export segment data, monitor error rates and success metrics                                                                     |
 | **Billing**       | Track credit consumption per workflow or connector, check subscription status, view invoices                                                                       |
+| **Observability** | Create and manage **alerts** — scheduled threshold checks on workflow telemetry (spans/runs/records), a model's health, or a SQL query — that fire actions (connector/tool/agent runs) on breach; preview, list, and inspect their firing history |
 | **Hosting**       | Scaffold, deploy, and promote hosted apps (Vite SPAs on `*.cargo.app`) and edge workers (serverless HTTP handlers), and manage their deployments                   |
 | **Workspace**     | Invite users, create and rotate API tokens, organize resources into folders, manage roles                                                                          |
 | **CDK** *(declarative)* | Define an entire workspace in code (`define*` builders) and deploy it with `cargo-ai cdk` (init → types → plan → deploy → destroy). Spans every resource type; use for workspace-as-code / reproducible / version-controlled setups |
@@ -221,6 +222,12 @@ The agent browses, reads, and edits the git-backed context repo (personas, plays
 The agent pulls error counts and success metrics for a workflow and flags anything outside normal range.
 
 > "Show me the error rate for the CRM sync play over the last 7 days."
+
+### Get alerted when something breaks
+
+The agent creates a scheduled **alert** — an error-rate spike, a credit ceiling, a slow node, a stalled sync, or a workflow that stopped running — that fires a notification (or any action) on breach, without you having to look.
+
+> "Alert me when the CRM sync's error rate goes above 10%, and page the on-call agent."
 
 ### Export segment data
 
