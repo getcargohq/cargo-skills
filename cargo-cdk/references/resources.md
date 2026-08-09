@@ -29,6 +29,7 @@ per-call options).
 | `defineTerritory(slug, spec)` | Revenue-org territory | `model`, `members`, `color?`, `description?`, `fallbackMember?` | `model`, `members` | `uuid` |
 | `defineWorker(slug, spec)` | Hosted worker (built bundle) | `path`, `description?`, `folder?` | `folder` | `uuid`, `url` |
 | `defineApp(slug, spec)` | Hosted Vite SPA | `path`, `description?`, `folder?` | `folder` | `uuid`, `url` |
+| `defineAlert(slug, spec)` | Scheduled threshold alert (observability) | `schedule`, `scope`, `threshold`, `actions`, `name?`, `description?`, `enabled?`, `folder?` | scope: `workflow`/`connector`/`tool`/`agent`/`model`; each action's `ref`; `folder` | `uuid` |
 
 `defineWorkflow(slug, { input, output, uses? }, build)` is re-exported from
 `@cargo-ai/cdk` for `defineTool`/`definePlay` bodies — see
@@ -68,3 +69,24 @@ export const leads = defineModel("leads", {
   files/dirs, typically via `new URL("./x", import.meta.url).pathname`. File content
   is hashed at define time, so edits show as drift. Worker `path` must be a **built**
   bundle dir (`index.js` + `manifest.json` + `package.json` + `package-lock.json`).
+- **`defineAlert` `scope` + `threshold`** are a **matched pair** — TS narrows the
+  threshold menu by `scope.kind`: `spans`/`runs`/`records` take the telemetry metrics
+  (`errorRate`, `duration`+`aggregation`, `credits`+`aggregation`, `count`), `model`
+  takes `recordsCount`/`recordsShare`/`freshness`/`syncDuration`, and
+  `orchestrationQuery`/`storageQuery` take `{ operator, value }` (the query computes
+  the value, so no metric). The scope wires the watched resource **by handle**
+  (`workflow:` a `definePlay`/`defineTool` handle or `workflowRef`, plus `connector`/
+  `tool`/`agent`/`model`), so the reconciler deploys the producer first and injects
+  its uuid.
+- **`defineAlert` `actions`** fire as runs on breach. Each is a `{ ref, config }`
+  wrapper (`config` required — an alert fires unattended, so a missing input is a type
+  error, not a silent `{}`). Prefer the typed helpers `alertConnectorAction({ ref:
+  slack.actions.postMessage, config })` / `alertToolAction({ ref: enrich, config })` —
+  `config` is checked against the action/tool input schema (connector schemas need
+  `cargo-ai cdk types` to have run) — or a bare `{ ref: agent, config, release?,
+  waitUntilFinished? }`. Every `config` leaf accepts a `{{ … }}` template
+  (`{{event.value}}`, `{{alert.name}}`, `{{alert.url}}`, …) interpolated against the
+  firing context. Like a play, an alert has **no author-set wire slug** — its identity
+  on redeploy is the state uuid, so committing `cargo.state.json` is what keeps it
+  addressable. Scope/threshold matrix, metric units, and firing semantics:
+  [`../../cargo-observability/SKILL.md`](../../cargo-observability/SKILL.md).

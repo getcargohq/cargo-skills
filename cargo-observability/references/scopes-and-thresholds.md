@@ -114,7 +114,7 @@ Watches a storage model's records and its sync health:
 | Metric | Extra field | Value means | Empty window |
 | --- | --- | --- | --- |
 | `errorRate` | — | `failed × 100 / finished` (**percent**). `total` on the event is the finished denominator. | Nothing *finished* → `empty` (healthy, no fire). |
-| `duration` | `aggregation`: `avg`\|`p50`\|`p95`\|`p99` | The chosen aggregate of duration over the window. Preview to see its units and current level before setting `value`. | No rows → `empty`. |
+| `duration` | `aggregation`: `avg`\|`p50`\|`p95`\|`p99` | The chosen aggregate of duration **in seconds**, over finished rows only. Preview to see the current level before setting `value`. | No rows → `empty`. |
 | `credits` | `aggregation`: `sum`\|`avg`\|`p95` | Credit spend aggregated over the window. | No rows → `empty`. |
 | `count` | — | Number of rows **started** in the window (running ones included) — "did work happen". | A real **`0`**, *not* `empty` — so `count lte 0` is a dead-man's switch. |
 
