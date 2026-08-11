@@ -10,6 +10,11 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### Repository — brand domain is `getcargo.ai`
+
+- **`owner.url` / `author.url` → `https://getcargo.ai`** in `.claude-plugin/marketplace.json`, `.cursor-plugin/marketplace.json` and the root `plugin.json`. These three were the only places still pointing the *brand* link at `getcargo.io`; `README.md` already used `getcargo.ai`, as does `docs.getcargo.ai`.
+- **`app.getcargo.io` and `api.getcargo.io` deliberately left alone.** `app.getcargo.ai` and `api.getcargo.ai` do not resolve (`Could not resolve host`), while `app.getcargo.io` serves 200 and `api.getcargo.io` is the live API host the CLI targets. Rewriting those would turn every UI link the skills surface into a dead link and break the `curl https://api.getcargo.io/install.sh` bootstrap.
+
 ### Repository — marketplace listing prerequisites
 
 - **`LICENSE` (MIT)** — the Cursor marketplace requires every listed plugin to be open source, and a public repo with no license file is legally all-rights-reserved. This unblocks review.

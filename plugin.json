@@ -5,7 +5,7 @@
   "description": "Cargo GTM agent skills — sourcing, enrichment, orchestration, workspace-as-code (CDK), diagnostics, and analytics via the cargo-ai CLI.",
   "author": {
     "name": "Cargo",
-    "url": "https://getcargo.io"
+    "url": "https://getcargo.ai"
   },
   "homepage": "https://github.com/getcargohq/cargo-skills",
   "repository": "https://github.com/getcargohq/cargo-skills",
