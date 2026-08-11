@@ -1,8 +1,8 @@
 ---
 name: cargo-hosting
 description: Build, deploy, and manage Cargo Hosting apps and workers with the Cargo CLI — Vite SPAs served on *.cargo.app and serverless edge HTTP handlers, plus the deployments that ship and promote them. Use when the user wants to scaffold, deploy, promote, or manage a hosted app or worker on Cargo.
-version: "1.0.0"
-compatibility: Requires @cargo-ai/cli (npm) and a Cargo account (browser sign-in via --oauth, or an API token)
+version: "1.0.1"
+compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
   author: getcargo

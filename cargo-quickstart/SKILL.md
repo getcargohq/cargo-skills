@@ -1,8 +1,8 @@
 ---
 name: cargo-quickstart
 description: "Guided first-run demo for the Cargo CLI — from a fresh workspace to a real deliverable (25 leads matching the user's buyer persona, with a cost receipt) in under two minutes, ending by saving the demo as a recurring play. Use when the user is new to Cargo, asks for a demo/tour/quickstart, or has an empty workspace and wants to see what the CLI can do. For real GTM work beyond the demo, route to cargo-gtm."
-version: "1.0.0"
-compatibility: Requires @cargo-ai/cli (npm) and a Cargo account (browser sign-in via --oauth, or an API token)
+version: "1.0.1"
+compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
   author: getcargo

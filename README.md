@@ -251,12 +251,19 @@ The agent queries billing metrics broken down by workflow, connector, or date ra
 
 ```bash
 npm install -g @cargo-ai/cli
-cargo-ai login --oauth                          # browser sign-in (recommended)
-# or: cargo-ai login --token <your-api-token>   # workspace-scoped API token
+
+# Recommended: emailed code, no browser. Creates the account on first use.
+cargo-ai login --email you@company.com          # sends the code, then exits
+cargo-ai login --email you@company.com --code 123456
+
+# or: cargo-ai login --oauth                    # browser sign-in (OAuth device flow)
+# or: cargo-ai login --token <your-api-token>   # workspace-scoped API token (CI)
 cargo-ai whoami
 ```
 
-`--oauth` runs the OAuth 2.0 Device Authorization Flow against the Cargo OAuth provider — no setup required. For non-interactive environments (CI, scripts), use `--token` with a workspace-scoped API token from **Settings > API**. Token values are shown only once — store immediately in a secrets manager.
+`--email` mails a one-time code and creates the account and a workspace on first use, so there is no separate sign-up step and no browser at any point. It is the right channel for an **agent or sandbox shell**: where there is no terminal to prompt at, the first call sends the code and exits, so you re-run with `--code`. Pass the code on stdin to keep it out of shell history: `echo 123456 | cargo-ai login --email you@company.com --code -`.
+
+`--oauth` runs the OAuth 2.0 Device Authorization Flow against the Cargo OAuth provider — no setup required, but it needs a human at the verification URL. For non-interactive environments (CI, scripts), use `--token` with a workspace-scoped API token from **Settings > API**. Token values are shown only once — store immediately in a secrets manager.
 
 ## Links
 
