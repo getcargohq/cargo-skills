@@ -1,8 +1,8 @@
 ---
 name: cargo
 description: Router and overview for the Cargo CLI agent skills. Explains the sixteen skills (this router + one onboarding skill cargo-quickstart + one outcome skill cargo-gtm + thirteen capability skills, including cargo-cdk for declarative workspace-as-code, cargo-diagnostics for run/batch/cost forensics, and cargo-observability for scheduled threshold alerts), when to use the declarative CDK vs the imperative CLI, the UUID flow between them, async polling, end-to-end use cases (enrich one record, enrich and sync to CRM, AI lead scoring, custom workflow, error monitoring, fresh-workspace bootstrap, segment export, GTM context authoring), and common gotchas (`conjonction` spelling, run vs batch, model-uuid vs segment-uuid). Load first whenever working with the Cargo CLI, when unsure which sub-skill applies, when stitching multiple sub-skills together, when bootstrapping a workspace, or when the user asks about Cargo skills in general.
-version: "1.17.0"
-compatibility: Requires @cargo-ai/cli (npm) and a Cargo account (browser sign-in via --oauth, or an API token)
+version: "1.17.1"
+compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
   author: getcargo
@@ -45,13 +45,26 @@ This repository contains 16 skills at the repo root: this **router** (`cargo`), 
 
 ```bash
 npm install -g @cargo-ai/cli
-cargo-ai login --oauth                                   # browser sign-in (recommended)
-# or: cargo-ai login --token <your-api-token>            # use an existing workspace-scoped API token
-# Optional: pin a default workspace at login
-cargo-ai login --oauth --workspace-uuid <uuid>
+
+# Recommended: emailed code, no browser at any point.
+# Creates the account and a workspace on first use — there is no separate sign-up step.
+cargo-ai login --email you@company.com            # sends the code, then exits
+cargo-ai login --email you@company.com --code 123456
+
+# Alternatives
+cargo-ai login --oauth                            # browser sign-in (OAuth device flow)
+cargo-ai login --token <your-api-token>           # existing workspace-scoped API token (CI)
+
+# Optional: pick the workspace at login instead of being prompted
+cargo-ai login --email you@company.com --workspace-name "Acme GTM"
+
 # Verify
 cargo-ai whoami
 ```
+
+`--email` is the one to reach for in an **agent or sandbox shell**: it never opens a browser, and where there is no terminal to prompt at, the first call sends the code and exits so you re-run with `--code`. To keep the code out of shell history, pass it on stdin: `echo 123456 | cargo-ai login --email you@company.com --code -`. Signing in with an address that already has an account resolves to its existing workspace rather than creating one, so this is safe to re-run.
+
+`--oauth` runs the same OAuth 2.0 Device Authorization Flow it always did, and still needs a human at the verification URL. Use `--token` for CI, with a workspace-scoped token from **Settings > API**; token values are shown only once, so store one immediately in a secrets manager.
 
 Without a global install, prefix every command with `npx @cargo-ai/cli` instead of `cargo-ai`.
 
