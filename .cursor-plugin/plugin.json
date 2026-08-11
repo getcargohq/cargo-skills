@@ -4,6 +4,7 @@
   "version": "1.17.1",
   "author": { "name": "getcargo" },
   "homepage": "https://github.com/getcargohq/cargo-skills",
+  "logo": "assets/logo.svg",
   "skills": ["./"],
   "hooks": "./hooks/cursor-hooks.json"
 }

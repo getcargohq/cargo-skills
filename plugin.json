@@ -1,0 +1,14 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "cargo",
+  "version": "1.17.1",
+  "description": "Cargo GTM agent skills — sourcing, enrichment, orchestration, workspace-as-code (CDK), diagnostics, and analytics via the cargo-ai CLI.",
+  "author": {
+    "name": "Cargo",
+    "url": "https://getcargo.io"
+  },
+  "homepage": "https://github.com/getcargohq/cargo-skills",
+  "repository": "https://github.com/getcargohq/cargo-skills",
+  "license": "MIT",
+  "keywords": ["cargo", "gtm", "revenue", "enrichment", "orchestration", "cli"]
+}
