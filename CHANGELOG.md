@@ -14,6 +14,7 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 - **`LICENSE` (MIT)** — the Cursor marketplace requires every listed plugin to be open source, and a public repo with no license file is legally all-rights-reserved. This unblocks review.
 - **`assets/logo.svg`** — the official Cargo mark on brand black (`#111111`), sized as a 256×256 square marketplace icon. Referenced from `.cursor-plugin/plugin.json` via the `logo` field, per Cursor's "logo committed to the repo and referenced by relative path" checklist item.
+- **`displayName: "Cargo"`** on both Claude manifests (`plugin.json` and the `marketplace.json` entry) — renders "Cargo" in the `/plugin` picker instead of the bare `cargo` slug, disambiguating from Rust's build tool without touching the slug. Requires Claude Code ≥ v2.1.143 (the README already requires ≥ v2.1.154). Deliberately **not** added to `.cursor-plugin/plugin.json` (Cursor's manifest has no such field) or the root `plugin.json` (Agent Plugins is a closed schema — `additionalProperties: false`); `.codex-plugin` and `.agents` already carry it as `interface.displayName`.
 - **Root `plugin.json`** — an [Agent Plugins 1.0.0](https://agent-plugins.org/specification) portable manifest (`$schema` + `name` required; closed ten-field schema). Cursor's checklist requires Agent Plugins to conform to the published schemas. Note that the spec discovers skills from a `skills/` directory, which this repo does not use — see the PR for why that move is deferred.
 
 ### New skill — `cargo-observability` → 1.0.0
