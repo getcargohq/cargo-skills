@@ -1,6 +1,6 @@
 {
   "name": "cargo",
-  "owner": { "name": "Cargo", "url": "https://getcargo.io" },
+  "owner": { "name": "Cargo", "url": "https://getcargo.ai" },
   "metadata": { "description": "Official Cargo plugin for Claude Code" },
   "plugins": [
     {
