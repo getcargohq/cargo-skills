@@ -10,6 +10,12 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### Repository — marketplace listing prerequisites
+
+- **`LICENSE` (MIT)** — the Cursor marketplace requires every listed plugin to be open source, and a public repo with no license file is legally all-rights-reserved. This unblocks review.
+- **`assets/logo.svg`** — the official Cargo mark on brand black (`#111111`), sized as a 256×256 square marketplace icon. Referenced from `.cursor-plugin/plugin.json` via the `logo` field, per Cursor's "logo committed to the repo and referenced by relative path" checklist item.
+- **Root `plugin.json`** — an [Agent Plugins 1.0.0](https://agent-plugins.org/specification) portable manifest (`$schema` + `name` required; closed ten-field schema). Cursor's checklist requires Agent Plugins to conform to the published schemas. Note that the spec discovers skills from a `skills/` directory, which this repo does not use — see the PR for why that move is deferred.
+
 ### New skill — `cargo-observability` → 1.0.0
 
 - **New capability skill for the `observability` CLI domain** (`cargo-ai observability alert …` / `event …`), covering the alerts feature just shipped in the backend/api. An alert is a scheduled threshold check: it measures a **scope** (`spans` / `runs` / `records` / `orchestrationQuery` / `storageQuery` / `model`), compares it to a **threshold** (`metric` + `gte`/`lte` + `value`), and on breach fires **actions** (the shared orchestration `Action[]`) each as its own run, recording an **event**.
