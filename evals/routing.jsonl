@@ -116,3 +116,5 @@
 {"prompt":"Rotate the key we gave to the CI pipeline","expect":"cargo-workspace-management","tier":"hard"}
 {"prompt": "How many free credits do I get to start with?", "expect": "cargo-billing", "why": "Free-tier questions are a first-session trigger; the fact lives in billing."}
 {"prompt": "What do I get for free before I have to pay?", "expect": "cargo-billing"}
+{"prompt":"Expose our CRM tools as an MCP server so I can call them from Claude Desktop","expect":"cargo-ai","why":"The publish direction of MCP. Was previously reachable from no description at all."}
+{"prompt":"How do I use Cargo from ChatGPT?","expect":"cargo-ai","why":"An agent that does not speak skills.sh reaches Cargo through a published MCP server plus the cargo-ai mcp bridge.","tier":"hard"}
