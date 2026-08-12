@@ -1,6 +1,6 @@
 ---
 name: cargo-cdk
-description: "Define an entire Cargo workspace in code — connectors, models, plays, tools, agents, MCP servers, context, capacities, territories, segments, folders, files, workers, apps — and deploy it declaratively with `cargo-ai cdk` (init → types → plan → deploy), the way you'd manage cloud infra with Pulumi or the AWS CDK. Use when the user wants to manage Cargo resources as code: reproducibly, version-controlled, in git, from a template, or across environments. Routes to authoring/deploy/typing guides (Level 2), recipes (Level 2.5), and references. For one-off imperative operations (create one connector, read a model, run a workflow), use the matching capability skill instead."
+description: "Manage a whole Cargo workspace as code — declare connectors, models, plays, tools, agents, MCP servers, segments, context, folders, files, workers, and apps in TypeScript, then reconcile them with `cargo-ai cdk` (init → types → plan → deploy), the way you would run Pulumi or the AWS CDK. Triggers: \"as code\", \"in git\", \"version-controlled\", \"reproducible\", \"Terraform for Cargo\", \"set up a whole workspace\", \"staging and production\", \"deploy from CI\", \"review this in a PR\", \"cargo.state.json\", \"scaffold from a template\". Scaffoldable outcome templates live in cargo-cookbooks. Skip when: it is a one-off operation, a read, or an ad-hoc query — use the matching capability skill."
 version: "1.2.1"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
@@ -26,6 +26,22 @@ It is the **declarative** counterpart to the imperative capability skills: inste
 of running one CLI command per resource, you write the whole graph once and deploy
 it repeatably, with a committed `cargo.state.json` linking your code to what Cargo
 created.
+
+## Bootstrap
+
+Already signed in (`cargo-ai whoami` returns a workspace)? Skip to the next section.
+
+```bash
+npm install -g @cargo-ai/cli            # no global install? prefix every command with `npx @cargo-ai/cli`
+cargo-ai login --email you@company.com  # emailed code, no browser; creates the account on first use
+                                        # alternatives: --oauth (browser) · --token <api-token> (CI)
+cargo-ai whoami                         # confirm the active workspace before any write
+cargo-ai cdk --help                     # `unknown command` = CLI too old; reinstall @cargo-ai/cli@latest
+```
+
+Two CDK-specific extras: the project needs **`@cargo-ai/cdk` as a dependency** for the `define*` builders you import (`cargo-ai cdk init` scaffolds a `package.json` with it — then `npm install`), and the `cargo-ai cdk` domain ships with the CLI itself.
+
+Every command prints JSON to stdout; failures exit non-zero with `{"errorMessage": "..."}`. Anything that creates a run or a batch is async — pass `--wait-until-finished` or poll the matching `get`. When the full skill bundle is installed, [`../cargo/references/prerequisites.md`](../cargo/references/prerequisites.md) adds the CLI version pin, token scopes, and the admin-only surface.
 
 ## 1) What this skill governs
 
@@ -211,20 +227,6 @@ deploying.
   `🔒 CDK Agents`). Keep names short (long labels truncate in the folder tree); the
   lock emoji is the "don't touch" cue. See
   [`guides/authoring-resources.md`](guides/authoring-resources.md).
-
-## Prerequisites
-
-Standard Cargo CLI setup (install, login, output conventions) is shared across all
-skills — see [`../cargo/references/prerequisites.md`](../cargo/references/prerequisites.md).
-
-Two CDK-specific extras:
-
-- **The project needs `@cargo-ai/cdk` as a dependency** (for the `define*`
-  builders you import). `cargo-ai cdk init` scaffolds a `package.json` with it —
-  then run `npm install`.
-- **The `cargo-ai cdk` domain ships with the CLI.** Confirm with
-  `cargo-ai cdk --help`; an `unknown command` means the CLI is too old —
-  `npm install -g @cargo-ai/cli@latest`.
 
 ## Help
 

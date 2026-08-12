@@ -1,6 +1,6 @@
 ---
 name: cargo-hosting
-description: Build, deploy, and manage Cargo Hosting apps and workers with the Cargo CLI — Vite SPAs served on *.cargo.app and serverless edge HTTP handlers, plus the deployments that ship and promote them. Use when the user wants to scaffold, deploy, promote, or manage a hosted app or worker on Cargo.
+description: "Put something on the internet from Cargo — Vite single-page apps served at https://<slug>.cargo.app and serverless edge workers that answer HTTP requests, plus the deployments that build and promote them. Triggers: \"build me a dashboard for this\", \"host this app\", \"give me a URL to share\", \"deploy this\", \"I need a webhook endpoint\", \"make it live\", \"promote to production\", \"put it on cargo.app\", \"ship a UI for my team\". Skip when: the app or worker should be declared as committed workspace code — use cargo-cdk."
 version: "1.0.1"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
@@ -32,9 +32,18 @@ metadata:
 > See `references/response-shapes.md` for JSON response structures.
 > See `references/troubleshooting.md` for common errors and how to fix them.
 
-## Prerequisites
+## Bootstrap
 
-See [`../cargo/references/prerequisites.md`](../cargo/references/prerequisites.md) for install, login (`--oauth` / `--token`), JSON output conventions, and error shapes. Verify the session with `cargo-ai whoami` before running any command below.
+Already signed in (`cargo-ai whoami` returns a workspace)? Skip to the next section.
+
+```bash
+npm install -g @cargo-ai/cli            # no global install? prefix every command with `npx @cargo-ai/cli`
+cargo-ai login --email you@company.com  # emailed code, no browser; creates the account on first use
+                                        # alternatives: --oauth (browser) · --token <api-token> (CI)
+cargo-ai whoami                         # confirm the active workspace before any write
+```
+
+Every command prints JSON to stdout; failures exit non-zero with `{"errorMessage": "..."}`. Anything that creates a run or a batch is async — pass `--wait-until-finished` or poll the matching `get`. When the full skill bundle is installed, [`../cargo/references/prerequisites.md`](../cargo/references/prerequisites.md) adds the CLI version pin, token scopes, and the admin-only surface.
 
 ## The lifecycle
 

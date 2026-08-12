@@ -1,6 +1,6 @@
 ---
 name: cargo-ai
-description: Create and configure AI agents, attach knowledge for RAG, manage MCP servers, and handle agent memories using the Cargo CLI. Use when the user wants to create or update agents, configure agent releases, connect MCP tool servers, or manage agent memories. To upload knowledge files or build knowledge libraries, use the cargo-content skill. For sending messages to agents, use the cargo-orchestration skill instead.
+description: "Build and configure AI agents inside Cargo — create an agent, choose its model and temperature, write its prompt, attach knowledge for retrieval (RAG), connect MCP tool servers, manage memories, and deploy releases. Triggers: \"create an agent\", \"make an agent that\", \"give the agent our docs\", \"attach this knowledge base\", \"connect an MCP server\", \"change the agent model\", \"what does the agent remember\", \"deploy the agent\", \"the agent is answering wrong\". Skip when: uploading the knowledge files themselves — use cargo-content; sending the agent a message or running it over records — use cargo-orchestration."
 version: "2.2.1"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
@@ -31,9 +31,18 @@ Agent resource management: creating and configuring agents, attaching knowledge 
 > See `references/examples/agents.md` for agent CRUD and configuration examples.
 > See `references/examples/mcp-servers.md` for MCP server creation and management examples.
 
-## Prerequisites
+## Bootstrap
 
-See [`../cargo/references/prerequisites.md`](../cargo/references/prerequisites.md) for install, login (`--oauth` / `--token`), JSON output conventions, and error shapes. Verify the session with `cargo-ai whoami` before running any of the commands below.
+Already signed in (`cargo-ai whoami` returns a workspace)? Skip to the next section.
+
+```bash
+npm install -g @cargo-ai/cli            # no global install? prefix every command with `npx @cargo-ai/cli`
+cargo-ai login --email you@company.com  # emailed code, no browser; creates the account on first use
+                                        # alternatives: --oauth (browser) · --token <api-token> (CI)
+cargo-ai whoami                         # confirm the active workspace before any write
+```
+
+Every command prints JSON to stdout; failures exit non-zero with `{"errorMessage": "..."}`. Anything that creates a run or a batch is async — pass `--wait-until-finished` or poll the matching `get`. When the full skill bundle is installed, [`../cargo/references/prerequisites.md`](../cargo/references/prerequisites.md) adds the CLI version pin, token scopes, and the admin-only surface.
 
 ## Discover resources first
 

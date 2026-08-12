@@ -1,0 +1,972 @@
+{
+  "generatedFrom": "cargo-ai connection integration list",
+  "count": 138,
+  "integrations": [
+    {
+      "slug": "6sense",
+      "name": "6sense",
+      "category": "enrichment",
+      "actions": 1,
+      "credits": false
+    },
+    {
+      "slug": "adyntel",
+      "name": "Adyntel",
+      "category": "enrichment",
+      "actions": 3,
+      "credits": false
+    },
+    {
+      "slug": "aiArk",
+      "name": "AI Ark",
+      "category": "enrichment",
+      "actions": 9,
+      "credits": true
+    },
+    {
+      "slug": "airscale",
+      "name": "Airscale",
+      "category": "enrichment",
+      "actions": 5,
+      "credits": false
+    },
+    {
+      "slug": "albacross",
+      "name": "Albacross",
+      "category": "enrichment",
+      "actions": 1,
+      "credits": false
+    },
+    {
+      "slug": "amplemarket",
+      "name": "Amplemarket",
+      "category": "sales",
+      "actions": 1,
+      "credits": false
+    },
+    {
+      "slug": "amplitude",
+      "name": "Amplitude",
+      "category": "analytics",
+      "actions": 0,
+      "credits": false
+    },
+    {
+      "slug": "anthropic",
+      "name": "Anthropic",
+      "category": "freeform",
+      "actions": 1,
+      "credits": true
+    },
+    {
+      "slug": "anymailFinder",
+      "name": "Anymail Finder",
+      "category": "enrichment",
+      "actions": 4,
+      "credits": false
+    },
+    {
+      "slug": "apify",
+      "name": "Apify",
+      "category": "enrichment",
+      "actions": 2,
+      "credits": false
+    },
+    {
+      "slug": "apolloio",
+      "name": "Apollo.io",
+      "category": "enrichment",
+      "actions": 11,
+      "credits": true
+    },
+    {
+      "slug": "appfigures",
+      "name": "Appfigures",
+      "category": "enrichment",
+      "actions": 2,
+      "credits": false
+    },
+    {
+      "slug": "attio",
+      "name": "Attio",
+      "category": "sales",
+      "actions": 11,
+      "credits": false
+    },
+    {
+      "slug": "azureOpenAi",
+      "name": "Azure OpenAI",
+      "category": "freeform",
+      "actions": 1,
+      "credits": false
+    },
+    {
+      "slug": "bettercontact",
+      "name": "BetterContact",
+      "category": "enrichment",
+      "actions": 2,
+      "credits": false
+    },
+    {
+      "slug": "bigQuery",
+      "name": "BigQuery",
+      "category": "storage",
+      "actions": 5,
+      "credits": false
+    },
+    {
+      "slug": "bouncer",
+      "name": "Bouncer",
+      "category": "enrichment",
+      "actions": 1,
+      "credits": true
+    },
+    {
+      "slug": "brightData",
+      "name": "Bright Data",
+      "category": "enrichment",
+      "actions": 6,
+      "credits": true
+    },
+    {
+      "slug": "builtwith",
+      "name": "BuiltWith",
+      "category": "enrichment",
+      "actions": 3,
+      "credits": true
+    },
+    {
+      "slug": "calendly",
+      "name": "Calendly",
+      "category": "sales",
+      "actions": 0,
+      "credits": false
+    },
+    {
+      "slug": "captainData",
+      "name": "Captain Data",
+      "category": "enrichment",
+      "actions": 4,
+      "credits": false
+    },
+    {
+      "slug": "cargo",
+      "name": "Cargo",
+      "category": "enrichment",
+      "actions": 23,
+      "credits": true
+    },
+    {
+      "slug": "clearbit",
+      "name": "Clearbit",
+      "category": "enrichment",
+      "actions": 2,
+      "credits": false
+    },
+    {
+      "slug": "clearoutPhone",
+      "name": "ClearoutPhone",
+      "category": "enrichment",
+      "actions": 1,
+      "credits": false
+    },
+    {
+      "slug": "cleon1",
+      "name": "Cleon1",
+      "category": "enrichment",
+      "actions": 2,
+      "credits": true
+    },
+    {
+      "slug": "closecom",
+      "name": "Close",
+      "category": "sales",
+      "actions": 10,
+      "credits": false
+    },
+    {
+      "slug": "cognism",
+      "name": "Cognism",
+      "category": "enrichment",
+      "actions": 4,
+      "credits": false
+    },
+    {
+      "slug": "companyEnrich",
+      "name": "CompanyEnrich",
+      "category": "enrichment",
+      "actions": 4,
+      "credits": true
+    },
+    {
+      "slug": "contactOut",
+      "name": "ContactOut",
+      "category": "enrichment",
+      "actions": 2,
+      "credits": true
+    },
+    {
+      "slug": "contrast",
+      "name": "Contrast",
+      "category": "marketing",
+      "actions": 4,
+      "credits": false
+    },
+    {
+      "slug": "coresignal",
+      "name": "Coresignal",
+      "category": "enrichment",
+      "actions": 3,
+      "credits": false
+    },
+    {
+      "slug": "csv",
+      "name": "CSV",
+      "category": "storage",
+      "actions": 0,
+      "credits": false
+    },
+    {
+      "slug": "customerio",
+      "name": "Customer.io",
+      "category": "marketing",
+      "actions": 6,
+      "credits": false
+    },
+    {
+      "slug": "datachimp",
+      "name": "Datachimp",
+      "category": "enrichment",
+      "actions": 0,
+      "credits": true
+    },
+    {
+      "slug": "datagma",
+      "name": "Datagma",
+      "category": "enrichment",
+      "actions": 3,
+      "credits": true
+    },
+    {
+      "slug": "dbt",
+      "name": "DBT",
+      "category": "storage",
+      "actions": 0,
+      "credits": false
+    },
+    {
+      "slug": "deepSeek",
+      "name": "DeepSeek",
+      "category": "freeform",
+      "actions": 1,
+      "credits": false
+    },
+    {
+      "slug": "devin",
+      "name": "Devin",
+      "category": "freeform",
+      "actions": 1,
+      "credits": false
+    },
+    {
+      "slug": "dropcontact",
+      "name": "Dropcontact",
+      "category": "enrichment",
+      "actions": 1,
+      "credits": true
+    },
+    {
+      "slug": "emailBison",
+      "name": "Email Bison",
+      "category": "sales",
+      "actions": 4,
+      "credits": false
+    },
+    {
+      "slug": "enrichCrm",
+      "name": "EnrichCRM",
+      "category": "enrichment",
+      "actions": 4,
+      "credits": true
+    },
+    {
+      "slug": "enrichley",
+      "name": "Enrichley",
+      "category": "enrichment",
+      "actions": 1,
+      "credits": true
+    },
+    {
+      "slug": "enrowio",
+      "name": "Enrowio",
+      "category": "enrichment",
+      "actions": 2,
+      "credits": true
+    },
+    {
+      "slug": "exa",
+      "name": "Exa",
+      "category": "enrichment",
+      "actions": 1,
+      "credits": true
+    },
+    {
+      "slug": "expandi",
+      "name": "Expandi.io",
+      "category": "marketing",
+      "actions": 1,
+      "credits": false
+    },
+    {
+      "slug": "findyMail",
+      "name": "FindyMail",
+      "category": "enrichment",
+      "actions": 3,
+      "credits": true
+    },
+    {
+      "slug": "firecrawl",
+      "name": "Firecrawl",
+      "category": "enrichment",
+      "actions": 3,
+      "credits": true
+    },
+    {
+      "slug": "forager",
+      "name": "Forager",
+      "category": "enrichment",
+      "actions": 3,
+      "credits": true
+    },
+    {
+      "slug": "FullEnrich",
+      "name": "FullEnrich",
+      "category": "enrichment",
+      "actions": 4,
+      "credits": true
+    },
+    {
+      "slug": "g2",
+      "name": "G2",
+      "category": "enrichment",
+      "actions": 1,
+      "credits": true
+    },
+    {
+      "slug": "gemini",
+      "name": "Google Gemini",
+      "category": "freeform",
+      "actions": 1,
+      "credits": true
+    },
+    {
+      "slug": "github",
+      "name": "GitHub",
+      "category": "enrichment",
+      "actions": 2,
+      "credits": false
+    },
+    {
+      "slug": "googleAds",
+      "name": "Google Ads",
+      "category": "marketing",
+      "actions": 4,
+      "credits": false
+    },
+    {
+      "slug": "googleSheets",
+      "name": "Google sheets",
+      "category": "storage",
+      "actions": 3,
+      "credits": false
+    },
+    {
+      "slug": "heyReach",
+      "name": "HeyReach",
+      "category": "sales",
+      "actions": 3,
+      "credits": false
+    },
+    {
+      "slug": "http",
+      "name": "HTTP",
+      "category": "freeform",
+      "actions": 2,
+      "credits": false
+    },
+    {
+      "slug": "hubspot",
+      "name": "Hubspot",
+      "category": "sales",
+      "actions": 17,
+      "credits": false
+    },
+    {
+      "slug": "hubspotMcp",
+      "name": "HubSpot MCP",
+      "category": "sales",
+      "actions": 0,
+      "credits": false
+    },
+    {
+      "slug": "hunter",
+      "name": "Hunter",
+      "category": "enrichment",
+      "actions": 4,
+      "credits": true
+    },
+    {
+      "slug": "icypeas",
+      "name": "Icypeas",
+      "category": "enrichment",
+      "actions": 5,
+      "credits": true
+    },
+    {
+      "slug": "instantly",
+      "name": "Instantly (deprecated)",
+      "category": "sales",
+      "actions": 2,
+      "credits": false
+    },
+    {
+      "slug": "instantlyV2",
+      "name": "Instantly",
+      "category": "sales",
+      "actions": 4,
+      "credits": false
+    },
+    {
+      "slug": "intercom",
+      "name": "Intercom",
+      "category": "support",
+      "actions": 4,
+      "credits": false
+    },
+    {
+      "slug": "jira",
+      "name": "Jira",
+      "category": "support",
+      "actions": 2,
+      "credits": false
+    },
+    {
+      "slug": "kaspr",
+      "name": "Kaspr",
+      "category": "enrichment",
+      "actions": 1,
+      "credits": false
+    },
+    {
+      "slug": "kitt",
+      "name": "Kitt",
+      "category": "sales",
+      "actions": 1,
+      "credits": true
+    },
+    {
+      "slug": "leadMagic",
+      "name": "LeadMagic",
+      "category": "enrichment",
+      "actions": 2,
+      "credits": true
+    },
+    {
+      "slug": "lemlist",
+      "name": "Lemlist",
+      "category": "sales",
+      "actions": 23,
+      "credits": false
+    },
+    {
+      "slug": "lgm",
+      "name": "LaGrowthMachine",
+      "category": "sales",
+      "actions": 4,
+      "credits": false
+    },
+    {
+      "slug": "linkedin",
+      "name": "LinkedIn",
+      "category": "enrichment",
+      "actions": 29,
+      "credits": true
+    },
+    {
+      "slug": "linkedinAds",
+      "name": "LinkedIn Ads",
+      "category": "analytics",
+      "actions": 0,
+      "credits": false
+    },
+    {
+      "slug": "linkedinMatchedAudience",
+      "name": "LinkedIn Matched Audiences",
+      "category": "marketing",
+      "actions": 5,
+      "credits": false
+    },
+    {
+      "slug": "linkup",
+      "name": "Linkup",
+      "category": "enrichment",
+      "actions": 2,
+      "credits": true
+    },
+    {
+      "slug": "livestorm",
+      "name": "Livestorm",
+      "category": "marketing",
+      "actions": 0,
+      "credits": false
+    },
+    {
+      "slug": "lusha",
+      "name": "Lusha",
+      "category": "enrichment",
+      "actions": 2,
+      "credits": false
+    },
+    {
+      "slug": "manus",
+      "name": "Manus",
+      "category": "marketing",
+      "actions": 1,
+      "credits": false
+    },
+    {
+      "slug": "marketo",
+      "name": "Marketo",
+      "category": "marketing",
+      "actions": 6,
+      "credits": false
+    },
+    {
+      "slug": "metabase",
+      "name": "Metabase",
+      "category": "analytics",
+      "actions": 3,
+      "credits": false
+    },
+    {
+      "slug": "microsoftTeams",
+      "name": "Microsoft Teams",
+      "category": "freeform",
+      "actions": 2,
+      "credits": false
+    },
+    {
+      "slug": "mixpanel",
+      "name": "Mixpanel",
+      "category": "analytics",
+      "actions": 0,
+      "credits": false
+    },
+    {
+      "slug": "mixrank",
+      "name": "Mixrank",
+      "category": "enrichment",
+      "actions": 2,
+      "credits": true
+    },
+    {
+      "slug": "netsuite",
+      "name": "Netsuite",
+      "category": "finance",
+      "actions": 5,
+      "credits": false
+    },
+    {
+      "slug": "netsuiteSoap",
+      "name": "Netsuite (SOAP)",
+      "category": "finance",
+      "actions": 1,
+      "credits": false
+    },
+    {
+      "slug": "neverBounce",
+      "name": "NeverBounce",
+      "category": "enrichment",
+      "actions": 1,
+      "credits": true
+    },
+    {
+      "slug": "notionMcp",
+      "name": "Notion MCP",
+      "category": "freeform",
+      "actions": 0,
+      "credits": false
+    },
+    {
+      "slug": "oceanio",
+      "name": "Ocean.io",
+      "category": "enrichment",
+      "actions": 4,
+      "credits": true
+    },
+    {
+      "slug": "octave",
+      "name": "Octave",
+      "category": "sales",
+      "actions": 8,
+      "credits": false
+    },
+    {
+      "slug": "onesignal",
+      "name": "OneSignal",
+      "category": "marketing",
+      "actions": 1,
+      "credits": false
+    },
+    {
+      "slug": "openAi",
+      "name": "OpenAI",
+      "category": "freeform",
+      "actions": 1,
+      "credits": true
+    },
+    {
+      "slug": "openRouter",
+      "name": "OpenRouter",
+      "category": "freeform",
+      "actions": 0,
+      "credits": true
+    },
+    {
+      "slug": "outreach",
+      "name": "Outreach",
+      "category": "sales",
+      "actions": 8,
+      "credits": false
+    },
+    {
+      "slug": "parallel",
+      "name": "Parallel",
+      "category": "enrichment",
+      "actions": 3,
+      "credits": true
+    },
+    {
+      "slug": "peopleDataLabs",
+      "name": "People Data Labs",
+      "category": "enrichment",
+      "actions": 6,
+      "credits": true
+    },
+    {
+      "slug": "perplexity",
+      "name": "Perplexity",
+      "category": "freeform",
+      "actions": 1,
+      "credits": true
+    },
+    {
+      "slug": "phantombuster",
+      "name": "Phantombuster",
+      "category": "enrichment",
+      "actions": 1,
+      "credits": false
+    },
+    {
+      "slug": "piloterr",
+      "name": "Piloterr",
+      "category": "enrichment",
+      "actions": 1,
+      "credits": true
+    },
+    {
+      "slug": "pipedrive",
+      "name": "Pipedrive",
+      "category": "sales",
+      "actions": 6,
+      "credits": false
+    },
+    {
+      "slug": "postgresql",
+      "name": "PostgreSQL",
+      "category": "storage",
+      "actions": 4,
+      "credits": false
+    },
+    {
+      "slug": "predictLeads",
+      "name": "PredictLeads",
+      "category": "enrichment",
+      "actions": 8,
+      "credits": false
+    },
+    {
+      "slug": "promptLayer",
+      "name": "PromptLayer",
+      "category": "freeform",
+      "actions": 1,
+      "credits": false
+    },
+    {
+      "slug": "prospeo",
+      "name": "Prospeo",
+      "category": "enrichment",
+      "actions": 4,
+      "credits": true
+    },
+    {
+      "slug": "proxycurl",
+      "name": "ProxyCurl",
+      "category": "enrichment",
+      "actions": 2,
+      "credits": true
+    },
+    {
+      "slug": "rb2b",
+      "name": "RB2B",
+      "category": "enrichment",
+      "actions": 0,
+      "credits": false
+    },
+    {
+      "slug": "redshift",
+      "name": "Redshift",
+      "category": "storage",
+      "actions": 4,
+      "credits": false
+    },
+    {
+      "slug": "replicas",
+      "name": "Replicas",
+      "category": "freeform",
+      "actions": 1,
+      "credits": false
+    },
+    {
+      "slug": "resend",
+      "name": "Resend",
+      "category": "marketing",
+      "actions": 1,
+      "credits": false
+    },
+    {
+      "slug": "reverseContact",
+      "name": "Reverse Contact",
+      "category": "enrichment",
+      "actions": 4,
+      "credits": false
+    },
+    {
+      "slug": "rift",
+      "name": "Rift",
+      "category": "sales",
+      "actions": 1,
+      "credits": false
+    },
+    {
+      "slug": "rocketreach",
+      "name": "RocketReach",
+      "category": "enrichment",
+      "actions": 1,
+      "credits": true
+    },
+    {
+      "slug": "rssFeed",
+      "name": "RSS Feed",
+      "category": "freeform",
+      "actions": 0,
+      "credits": false
+    },
+    {
+      "slug": "salesforce",
+      "name": "Salesforce",
+      "category": "sales",
+      "actions": 14,
+      "credits": false
+    },
+    {
+      "slug": "salesforceMcp",
+      "name": "Salesforce MCP",
+      "category": "sales",
+      "actions": 0,
+      "credits": false
+    },
+    {
+      "slug": "salesIntel",
+      "name": "SalesIntel",
+      "category": "enrichment",
+      "actions": 1,
+      "credits": false
+    },
+    {
+      "slug": "salesloft",
+      "name": "Salesloft",
+      "category": "sales",
+      "actions": 11,
+      "credits": false
+    },
+    {
+      "slug": "salesNavigator",
+      "name": "Sales Navigator",
+      "category": "enrichment",
+      "actions": 11,
+      "credits": true
+    },
+    {
+      "slug": "scrubby",
+      "name": "Scrubby",
+      "category": "enrichment",
+      "actions": 1,
+      "credits": false
+    },
+    {
+      "slug": "Sendgrid",
+      "name": "Sendgrid",
+      "category": "marketing",
+      "actions": 1,
+      "credits": false
+    },
+    {
+      "slug": "serper",
+      "name": "Serper",
+      "category": "enrichment",
+      "actions": 2,
+      "credits": true
+    },
+    {
+      "slug": "sillage",
+      "name": "Sillage",
+      "category": "sales",
+      "actions": 1,
+      "credits": true
+    },
+    {
+      "slug": "slack",
+      "name": "Slack",
+      "category": "freeform",
+      "actions": 1,
+      "credits": false
+    },
+    {
+      "slug": "smartlead",
+      "name": "Smartlead.ai",
+      "category": "sales",
+      "actions": 4,
+      "credits": false
+    },
+    {
+      "slug": "snitcher",
+      "name": "Snitcher",
+      "category": "enrichment",
+      "actions": 1,
+      "credits": true
+    },
+    {
+      "slug": "snov",
+      "name": "Snov",
+      "category": "enrichment",
+      "actions": 4,
+      "credits": false
+    },
+    {
+      "slug": "snowflake",
+      "name": "Snowflake",
+      "category": "storage",
+      "actions": 5,
+      "credits": false
+    },
+    {
+      "slug": "societeInfo",
+      "name": "Societe Info",
+      "category": "enrichment",
+      "actions": 2,
+      "credits": false
+    },
+    {
+      "slug": "sql",
+      "name": "SQL",
+      "category": "storage",
+      "actions": 5,
+      "credits": false
+    },
+    {
+      "slug": "storeleads",
+      "name": "Store Leads",
+      "category": "enrichment",
+      "actions": 1,
+      "credits": false
+    },
+    {
+      "slug": "stripe",
+      "name": "Stripe",
+      "category": "finance",
+      "actions": 13,
+      "credits": false
+    },
+    {
+      "slug": "sumble",
+      "name": "Sumble",
+      "category": "enrichment",
+      "actions": 4,
+      "credits": false
+    },
+    {
+      "slug": "surfe",
+      "name": "Surfe",
+      "category": "enrichment",
+      "actions": 4,
+      "credits": false
+    },
+    {
+      "slug": "theirStack",
+      "name": "Their Stack",
+      "category": "enrichment",
+      "actions": 3,
+      "credits": true
+    },
+    {
+      "slug": "theneo",
+      "name": "Theneo",
+      "category": "enrichment",
+      "actions": 1,
+      "credits": false
+    },
+    {
+      "slug": "theSwarm",
+      "name": "The Swarm",
+      "category": "enrichment",
+      "actions": 2,
+      "credits": true
+    },
+    {
+      "slug": "waterfall",
+      "name": "Waterfall.io",
+      "category": "enrichment",
+      "actions": 6,
+      "credits": true
+    },
+    {
+      "slug": "wiza",
+      "name": "Wiza",
+      "category": "enrichment",
+      "actions": 1,
+      "credits": false
+    },
+    {
+      "slug": "x",
+      "name": "X",
+      "category": "enrichment",
+      "actions": 14,
+      "credits": true
+    },
+    {
+      "slug": "zeroBounce",
+      "name": "ZeroBounce",
+      "category": "enrichment",
+      "actions": 1,
+      "credits": true
+    },
+    {
+      "slug": "zoominfo",
+      "name": "Zoominfo",
+      "category": "enrichment",
+      "actions": 7,
+      "credits": false
+    }
+  ]
+}

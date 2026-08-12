@@ -6,7 +6,7 @@ last-reviewed: 2026-07-09
 
 # apolloio (Apollo.io)
 
-Apollo-anchored person and organization enrichment. Only **two of its eleven actions are credits-based** — `enrichPerson` (1, or 3 with phone reveal) and `enrichOrganization` (1); everything else (searches, contact CRUD, sequences) runs **only on your own Apollo API key** connector. Use the credits pair as an ENRICH alternative when Apollo's coverage is stronger for the niche ([`../references/alternatives.md`](../references/alternatives.md)) — e.g. its investor coverage in [`../recipes/portfolio-prospecting.md`](../recipes/portfolio-prospecting.md). Don't route generic enrichment here first: the priority stack (`cargo` native → `waterfall`) leads.
+Apollo-anchored person and organization enrichment. Only **two of its eleven actions are credits-based** — `enrichPerson` (1, or 3 with phone reveal) and `enrichOrganization` (1); everything else (searches, contact CRUD, sequences) runs **only on your own Apollo API key** connector. That credits pair is **in the priority stack** ([`../SKILL.md`](../SKILL.md) §5) as the **niche-coverage ENRICH rung** — promoted per-batch when a pilot shows Apollo hits where `cargo` (2) and `waterfall` (2) miss, its investor coverage in [`../recipes/portfolio-prospecting.md`](../recipes/portfolio-prospecting.md) being the standing example. Stack membership is not a licence to route generic enrichment here first: `cargo` native → `waterfall` still leads the default chain, and Apollo runs on the residue.
 
 ## Credits-based actions
 

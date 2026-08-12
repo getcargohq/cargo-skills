@@ -15,6 +15,8 @@ The right step-1 provider depends on which filter is primary:
 | Primary filter | Provider | Cost (credits) | Notes |
 |---|---|---|---|
 | Industry / size / geo | `salesNavigator.searchAccounts` | 0.05 | LinkedIn-anchored. Default at-scale. |
+| Industry / size / geo, budget-first | `aiArk.searchCompanies` | 0.01 | **Cheapest per record in the catalog** (5× under salesNavigator). Billed per *returned* row, `limit` max 100 — paginate for large pulls. |
+| "Companies like these customers" | `aiArk.searchCompanies` (with `lookalikeDomains`) | 0.01 | Up to 5 seed domains / LinkedIn URLs. Cheaper than `oceanio` / `companyEnrich` lookalikes. |
 | Funding stage / investor / round size | `peopleDataLabs.queryCompanies` | 3 | PDL **SQL** string. Required for array-membership filters like `summary.investors LIKE %X%`. |
 | Tech stack | `theirStack.searchCompanies` (with techFields) | 0.5 | Tech-stack-driven sourcing. |
 | Hiring for role X | `theirStack.searchJobs` | 0.5 | Hiring-intent signal. |
@@ -31,6 +33,7 @@ For combined filters (e.g. fintech in US AND running Snowflake AND hiring data e
 | 500 companies | salesNavigator.searchAccounts | ~25 |
 | 1,000 companies | salesNavigator.searchAccounts | ~50 |
 | 5,000 companies | salesNavigator.searchAccounts (paginate) | ~250 |
+| 5,000 companies, budget-first | aiArk.searchCompanies (paginate, 100/call) | ~50 |
 | 10,000 companies | peopleDataLabs.queryCompanies (high-quality, structured) | ~30,000 (3/company) |
 
 The [sample → approval → full-run gate](../references/cost-discipline.md) applies at every volume: **10–20 rows first** (1–3 only proves the filter is syntactically right, not that the list is any good), receipt, then approval stating how many companies the full pull enrolls and what they cost, reconciled against the balance. For 5,000+ companies, widen the sample to **50 rows** — data-quality problems invisible at 3 rows show up at 50, and the 50-row cost is still noise next to the full pull. Size the pool free first: search actions bill on *returned* rows, so a `limit: 1` probe reads the provider's total match count for the price of one row.
@@ -48,7 +51,7 @@ If anything is missing, ask the user **once** before sourcing.
 
 ### Step 1 — Source companies
 
-Cheapest at scale (≥ 100 companies): `salesNavigator.searchAccounts` (0.05 cred/company).
+Cheapest at scale (≥ 100 companies): `aiArk.searchCompanies` (0.01 cred/company, `limit` max 100 per call) when price leads, or `salesNavigator.searchAccounts` (0.05 cred/company) when you want LinkedIn-native filters and larger pages. Both bill per *returned* row — size the pool with a `limit: 1` probe first. The salesNavigator form:
 
 ```bash
 cargo-ai orchestration action execute \

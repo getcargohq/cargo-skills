@@ -15,11 +15,14 @@ For sourcing-only / TAM list builds, see [`build-tam.md`](build-tam.md). For inv
 ```
 1. SOURCE    → salesNavigator.searchLeads / searchAccounts            (0.02–0.05/record)
 2. DEDUPE    → cargo.matchProspect / cargo.matchBusiness              (0.5/record)
-3. ENRICH    → cargo.enrichProspectDetails + …Firmographics
+3. ENRICH    → LinkedIn URL in hand? aiArk.enrichPerson (0.1) FIRST — profile + verified email
+               cargo.enrichProspectDetails + …Firmographics
                + waterfall.enrichContact / enrichCompany              (0.5–2/record)
+               + apolloio.enrichPerson / enrichOrganization on the residue (1/record)
 4. SIGNAL    → cargo.enrichBusinessFundingAndAcquisitions
                + theirStack.searchJobs                                (0.5/record)
-5. CONTACT   → FullEnrich.findEmail (fallback peopleDataLabs)         (1–3/record)
+5. CONTACT   → FullEnrich.findEmail on rows step 3 left without an email
+               (fallback peopleDataLabs)                              (1–3/record)
 6. VERIFY    → waterfall.verifyEmail                                  (0.1/record)
 7. WRITEBACK → segment write / CRM upsert / CSV export                (free)
 ```
@@ -41,6 +44,10 @@ for slug in salesNavigator FullEnrich waterfall theirStack cargo peopleDataLabs;
     && echo "✓ $slug" \
     || echo "✗ $slug (NOT CONNECTED — recipe will fall back)"
 done
+# aiArk and apolloio (the other two priority providers) are deliberately not in
+# this loop: their credits-based actions run on cargo's managed connection, so an
+# empty `connector list` doesn't mean unavailable. apolloio's other nine actions
+# (searches, contact CRUD, sequences) DO need your own Apollo API key connector.
 
 # 3. Find the target model (Companies / Contacts) for write-back
 cargo-ai storage model list

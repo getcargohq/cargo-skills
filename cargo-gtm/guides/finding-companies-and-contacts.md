@@ -8,7 +8,8 @@ How to source accounts and people on Cargo. Covers the full sourcing decision tr
 Goal → which sourcing path?
 
 Looking for COMPANIES matching ICP criteria (industry, size, geo, …)?
-  ├─ Cheapest at scale (0.05 cred/record):    salesNavigator.searchAccounts
+  ├─ Cheapest at scale (0.01 cred/record):    aiArk.searchCompanies — also lookalikes from ≤5 seed domains
+  ├─ LinkedIn-native filters (0.05 cred):     salesNavigator.searchAccounts
   ├─ Need rich filters / structured query:    peopleDataLabs.queryCompanies (3 cred)
   ├─ Tech-stack or hiring intent:             theirStack.searchCompanies / searchTechnologies / searchJobs (0.5 cred)
   ├─ Local / SMB / storefront (Maps-style):   serper.searchPlaces (1 cred)
@@ -17,6 +18,7 @@ Looking for COMPANIES matching ICP criteria (industry, size, geo, …)?
 
 Looking for PEOPLE at companies?
   ├─ Cheapest at scale (0.02 cred/record):    salesNavigator.searchLeads
+  ├─ Filters SN can't express (0.05 cred):    aiArk.searchPeople — education, skills, tenure, past company
   ├─ Rich filters / large database:           peopleDataLabs.searchPeople / queryPeople (3 cred)
   ├─ LinkedIn-anchored:                       linkedin.findProfileUrl + linkedin.enrichProfile (0.25 cred)
   ├─ "Find people I know who can intro":      theSwarm.searchWarmIntrosToCompany / Person (2 cred)
@@ -40,6 +42,7 @@ When the user asks for "contacts at companies matching X," **always** discover t
 | Provider | Best for | Cost (credits) |
 |---|---|---|
 | **salesNavigator** | At-scale lead/account search, LinkedIn-native filters | 0.02 (lead) / 0.05 (account) |
+| **aiArk** | Cheapest company search + lookalike seeds; people filters on education / skills / tenure / past company | 0.01 (company) / 0.05 (person) |
 | **peopleDataLabs** | Structured queries (`queryPeople` / `queryCompanies`), heavy filtering, backfill when other sources miss | 3 (flat) |
 | **theirStack** | Tech-stack signals, jobs-posted signals, "everyone hiring for role X" | 0.5 |
 | **cargo** native | `matchBusiness` / `matchProspect` for dedup; `fetchProspects` / `fetchBusinesses` for catalog browsing | 0.5 |

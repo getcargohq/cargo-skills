@@ -9,16 +9,19 @@ Goal → which provider chain?
 
 Firmographics on a known company (industry, size, geo, revenue, …)?
   ├─ cargo.matchBusiness (0.5) → cargo.enrichBusinessFirmographics (0.5)
-  ├─ Fallback for unmatched: waterfall.enrichCompany (1)
+  ├─ Fallback for unmatched: waterfall.enrichCompany (1) / apolloio.enrichOrganization (1)
   └─ Heavy backfill: peopleDataLabs.enrichCompany (3)
 
 Contact details on a known person (title, location, social, …)?
+  ├─ LinkedIn URL in hand: aiArk.enrichPerson (0.1) — profile + verified email, bills 0 on no-email
   ├─ cargo.matchProspect (0.5) → cargo.enrichProspectDetails (2)
   ├─ Fallback: waterfall.enrichContact (2)
+  ├─ Niche coverage (investor-backed, portfolio): apolloio.enrichPerson (1)
   └─ Heavy backfill: peopleDataLabs.enrichPerson (3)
 
-Find an email from name + company?
-  ├─ FullEnrich.findEmail (1)               ← default
+Find an email?
+  ├─ LinkedIn URL in hand: aiArk.enrichPerson (0.1) — email comes with the profile
+  ├─ From name + company: FullEnrich.findEmail (1)   ← default
   ├─ Cheap fallback: hunter.findEmail (0.5) / icypeas.findEmail (0.1)
   └─ Last resort: peopleDataLabs.enrichPerson (3, includes email)
 
@@ -27,8 +30,9 @@ Verify an email?
   └─ Alt: zeroBounce.verifyEmail (0.1) / icypeas.verifyEmail (0.01)
 
 Find a phone number?
+  ├─ aiArk.findMobilePhone (0.5)            ← first rung; mobile-only, bills 0 on a miss
+  ├─ Landline/DID fallback: prospeo.findPhone (3)
   ├─ FullEnrich.findPhone (6)               ← higher quality
-  ├─ Cheap fallback: prospeo.findPhone (3)
   └─ Combined: FullEnrich.findPhoneAndEmail (7) when both are needed
 
 Resolve a LinkedIn URL from name + company?
@@ -48,7 +52,8 @@ Job change detection?
   └─ waterfall.detectJobChange (3) — only credits-based action of this kind in catalog
 
 Reverse-email lookup (email → person + company)?
-  └─ FullEnrich.reverseEmailLookup (2)
+  ├─ aiArk.reverseLookup (0.05) — email *or* phone → full profile
+  └─ FullEnrich.reverseEmailLookup (2) — email → LinkedIn URL
 ```
 
 ## Waterfall enrichment pattern
@@ -77,7 +82,7 @@ cargo-ai orchestration action execute-batch \
 # Step 4 — coalesce all three into a single enriched dataset
 ```
 
-Same shape applies for person enrichment (`cargo.enrichProspectDetails` → `waterfall.enrichContact` → `peopleDataLabs.enrichPerson`) and for email lookup (`FullEnrich.findEmail` → `hunter.findEmail` → `peopleDataLabs.enrichPerson`).
+Same shape applies for person enrichment (`aiArk.enrichPerson` where a LinkedIn URL exists → `cargo.enrichProspectDetails` → `waterfall.enrichContact` → `apolloio.enrichPerson` → `peopleDataLabs.enrichPerson`) and for email lookup (`FullEnrich.findEmail` → `hunter.findEmail` → `peopleDataLabs.enrichPerson`).
 
 ## Coalesce pattern (multi-pass enrichment)
 
@@ -85,11 +90,11 @@ When enriching the same record across multiple providers, merge results column-b
 
 | Column | Prefer |
 |---|---|
-| Firmographics (industry, size, hq) | cargo > peopleDataLabs > waterfall |
+| Firmographics (industry, size, hq) | cargo > peopleDataLabs > waterfall > apolloio |
 | Funding / financials | cargo.enrichBusinessFundingAndAcquisitions > enrichCrm.getFunding |
 | Technographics | cargo.enrichBusinessTechnographics > theirStack > peopleDataLabs |
-| Email | FullEnrich > hunter > peopleDataLabs |
-| Phone | FullEnrich > prospeo > waterfall |
+| Email | aiArk.enrichPerson > FullEnrich > hunter > peopleDataLabs |
+| Phone | aiArk.findMobilePhone (mobile) > FullEnrich > prospeo > waterfall |
 | LinkedIn URL | linkedin.findProfileUrl > FullEnrich.reverseEmailLookup |
 | Job change signal | waterfall.detectJobChange (only source) |
 

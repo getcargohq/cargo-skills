@@ -1,6 +1,6 @@
 ---
 name: cargo-observability
-description: Create and manage Cargo alerts — scheduled threshold checks that watch workflow telemetry (spans, runs, records), a storage model's health, or an arbitrary SQL query, and fire actions (a connector, tool, or agent run) when a metric breaches. Use when the user wants to be notified about error-rate spikes, cost blowouts, slow nodes, stalled syncs, stale or empty models, a workflow that stopped running (dead-man's switch), or any "alert me when <metric> crosses <value>" monitoring; and to list, preview, update, or inspect the firing history of those alerts.
+description: "Watch a Cargo workspace and get told when something breaks — scheduled threshold alerts over workflow telemetry (spans, runs, records), a storage model freshness or row count, or any SQL query, firing a connector, tool, or agent when a metric breaches. Triggers: \"alert me when\", \"notify me if\", \"let me know when the error rate\", \"monitor this workflow\", \"tell me if the sync stops\", \"warn me before I run out of credits\", \"dead man’s switch\", \"is this still running\", \"set up monitoring\", plus listing, previewing, editing, and reviewing an alert firing history. Skip when: diagnosing something that already went wrong — use cargo-diagnostics."
 version: "1.0.1"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
@@ -28,6 +28,19 @@ Everything lives under one CLI domain:
 cargo-ai observability alert   …   # the alert CRUD + preview surface
 cargo-ai observability event   …   # an alert's firing history
 ```
+
+## Bootstrap
+
+Already signed in (`cargo-ai whoami` returns a workspace)? Skip to the next section.
+
+```bash
+npm install -g @cargo-ai/cli            # no global install? prefix every command with `npx @cargo-ai/cli`
+cargo-ai login --email you@company.com  # emailed code, no browser; creates the account on first use
+                                        # alternatives: --oauth (browser) · --token <api-token> (CI)
+cargo-ai whoami                         # confirm the active workspace before any write
+```
+
+Every command prints JSON to stdout; failures exit non-zero with `{"errorMessage": "..."}`. Anything that creates a run or a batch is async — pass `--wait-until-finished` or poll the matching `get`. Alerts are guarded by `observability:read` / `observability:write` permissions. If a create/update/remove returns a permission error, the token lacks `observability:write` — use an admin token or have one granted ([`../cargo-workspace-management/SKILL.md`](../cargo-workspace-management/SKILL.md)). When the full skill bundle is installed, [`../cargo/references/prerequisites.md`](../cargo/references/prerequisites.md) adds the CLI version pin, token scopes, and the admin-only surface.
 
 ## The three moving parts of every alert
 
@@ -60,7 +73,7 @@ cargo-ai observability alert preview \
 
 ## Commands
 
-All commands output JSON. Reads need a token with `observability:read`; create/update/remove need `observability:write` (an admin token has both; a plain member token may not — see Prerequisites).
+All commands output JSON. Reads need a token with `observability:read`; create/update/remove need `observability:write` (an admin token has both; a plain member token may not — see Bootstrap above).
 
 ### Create an alert
 
@@ -123,12 +136,6 @@ An alert's **actions fire as real runs** — if an action calls a paid connector
 
 - **Preview to size the threshold** so it fires on genuine anomalies, not normal variance.
 - If an action node calls a **credits-based provider action**, treat it like any scheduled paid workflow: read that provider's playbook (esp. its *Recurring use* section) in `../cargo-gtm/provider-playbooks/`, and apply the spend rules in [`../cargo-gtm/references/cost-discipline.md`](../cargo-gtm/references/cost-discipline.md). Prefer cheap notification actions (an agent that posts to Slack, a connector notification) over anything that fans out.
-
-## Prerequisites
-
-See [`../cargo/references/prerequisites.md`](../cargo/references/prerequisites.md) for install, login (`--oauth` / `--token`), JSON conventions, and error shapes. Verify with `cargo-ai whoami` first.
-
-Alerts are guarded by `observability:read` / `observability:write` permissions. If a create/update/remove returns a permission error, the token lacks `observability:write` — use an admin token or have one granted (`cargo-workspace-management`).
 
 ## When the CLI surprises you
 

@@ -6,7 +6,7 @@ last-reviewed: 2026-07-09
 
 # oceanio (Ocean.io)
 
-Mid-tier company/people search and enrichment — four actions, all 1 credit. Its edge is **lookalike sourcing** (`searchCompanies` with `lookalikeDomains`: "companies like these three customers") plus technographic / web-traffic / e-commerce filters, and **cross-filtered search** (people filters and company filters combined in one call). Not in the priority stack: `salesNavigator` (0.02–0.05) stays the sourcing default; come here when the filter is lookalike- or technographic-shaped, before escalating to `peopleDataLabs` (3). See [`../references/stage-action-map.md`](../references/stage-action-map.md) (mid-tier rows).
+Mid-tier company/people search and enrichment — four actions, all 1 credit. Its edge is **lookalike sourcing** (`searchCompanies` with `lookalikeDomains`: "companies like these three customers") plus technographic / web-traffic / e-commerce filters, and **cross-filtered search** (people filters and company filters combined in one call). Not in the priority stack: `salesNavigator` (0.02–0.05) stays the sourcing default and `aiArk.searchCompanies` (0.01) is the cheap lookalike path; come here when the filter is technographic / web-traffic / e-commerce-shaped or needs cross-filtered people+company search, before escalating to `peopleDataLabs` (3). See [`../references/stage-action-map.md`](../references/stage-action-map.md) (mid-tier rows).
 
 ## Credits-based actions
 
@@ -85,7 +85,7 @@ cargo-ai orchestration action execute-batch \
 
 ## Position in the waterfall
 
-- **SOURCE — mid-tier rung** (both searches at 1): after `salesNavigator` / `icypeas` (0.02–0.05), before `peopleDataLabs` / `waterfall.searchProspects` (3). Promote it when the filter is lookalike- or technographic-first.
+- **SOURCE — mid-tier rung** (both searches at 1): after `aiArk` (0.01–0.05) / `salesNavigator` / `icypeas` (0.02–0.05), before `peopleDataLabs` / `waterfall.searchProspects` (3). Promote it when the filter is technographic-first or needs people+company cross-filtering.
 - **ENRICH — mid-tier rung** (both enriches at 1): peer of `waterfall.enrichCompany` (1) and `apolloio.enrichOrganization` (1); pilot 10 rows to pick by coverage.
 - Sourced people flow on to CONTACT (`FullEnrich.findEmail`, 1) and VERIFY (`waterfall.verifyEmail`, 0.1) as usual.
 

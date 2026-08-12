@@ -94,7 +94,7 @@ Size the pool before paying for it:
 ## 5) Provider-billing rules
 
 - **Prefer pay-on-success actions** when coverage is uncertain. If a provider bills per attempt, prove quality on the pilot before scaling.
-- **Phone is the guarded lever** — 3–7 credits/record, ~10× email. Never include phone lookup in a default chain; it enters a plan only on explicit user request, on qualified leads only.
+- **Phone is the guarded lever** — the escalation tier runs 3–7 credits/record, ~10× email. `aiArk.findMobilePhone` (0.5, mobile-only, LinkedIn-URL or domain+name anchored) is the cheap first rung and bills 0 on a miss, but the rule is unchanged: never include phone lookup in a default chain; it enters a plan only on explicit user request, on qualified leads only.
 - Cheap-but-low-hit-rate providers are not savings: total spend is dominated by misses, not per-call price (see [`alternatives.md`](alternatives.md)).
 
 ## 6) Context discipline

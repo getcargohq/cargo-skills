@@ -2,7 +2,7 @@
 
 Canonical reference for picking the cheapest credits-based action per GTM stage across the full 120-integration cargo catalog. Use this when the priority-stack default doesn't have what you need.
 
-Prices are credits/record. "Priority?" marks providers in the priority stack (salesNavigator / cargo / waterfall / FullEnrich / theirStack / peopleDataLabs).
+Prices are credits/record. "Priority?" marks providers in the priority stack (salesNavigator / cargo / aiArk / waterfall / FullEnrich / apolloio / theirStack / peopleDataLabs).
 
 ## Sourcing — Search people
 
@@ -10,7 +10,7 @@ Prices are credits/record. "Priority?" marks providers in the priority stack (sa
 |---|---|---|---|---|
 | salesNavigator | searchLeads | 0.02 | ✅ | LinkedIn-anchored. Default at-scale. |
 | icypeas | findPeople | 0.02 |   | Cheapest non-LinkedIn source. |
-| aiArk | searchPeople | 0.05 |   | Rich filters (education, skills, tenure, seniority, past company). Per returned record. |
+| aiArk | searchPeople | 0.05 | ✅ | Rich filters (education, skills, tenure, seniority, past company). Per returned record. |
 | firecrawl | search | 0.05 |   | Web search; use when no structured provider has the data. |
 | linkup | search | 0.5 |   | Web search with structured answers. |
 | contactOut | search | 1 |   | Mid-tier when other sources miss. |
@@ -22,7 +22,7 @@ Prices are credits/record. "Priority?" marks providers in the priority stack (sa
 
 | Provider | Action | Cost | Priority? | Notes |
 |---|---|---|---|---|
-| aiArk | searchCompanies | 0.01 |   | **Cheapest in catalog.** Per returned record; supports `lookalikeDomains` (≤5 seeds). |
+| aiArk | searchCompanies | 0.01 | ✅ | **Cheapest in catalog.** Per returned record; supports `lookalikeDomains` (≤5 seeds). |
 | icypeas | findCompanies | 0.02 |   | Cheapest non-lookalike. |
 | salesNavigator | searchAccounts | 0.05 | ✅ | LinkedIn-anchored. Default at-scale. |
 | theirStack | searchCompanies | 0.5 | ✅ | Tech-stack + hiring-intent filter. |
@@ -40,11 +40,12 @@ Prices are credits/record. "Priority?" marks providers in the priority stack (sa
 
 | Provider | Action | Cost | Priority? | Notes |
 |---|---|---|---|---|
-| aiArk | enrichPerson | 0.1 |   | LinkedIn URL → full profile **+ verified email**; bills 0 on no-email. Cheapest URL-anchored enrich that also returns an email. |
+| aiArk | enrichPerson | 0.1 | ✅ | **Default in priority stack when a LinkedIn URL is in hand.** LinkedIn URL → full profile **+ verified email**; bills 0 on no-email. Cheapest URL-anchored enrich that also returns an email. |
 | contactOut | enrich | 0–3 |   | Variable cost depending on data returned. |
 | linkedin | enrichProfile | 0.25 |   | LinkedIn-anchored (no email). |
 | prospeo | enrichLinkedin | 0.5 |   | Cheapest LinkedIn URL → details. |
 | linkedin | enrichProfileFromName | 0.5 |   | Name+company → LinkedIn details. |
+| apolloio | enrichPerson | 1 (**3** with `revealPhoneNumber`) | ✅ | Niche-coverage rung — promote per-batch only when a pilot shows Apollo hits where cargo/waterfall miss. |
 | cargo | enrichProspectDetails | 2 | ✅ | After matchProspect. Default in priority stack. |
 | waterfall | enrichContact | 2 | ✅ | Multi-source contact enrichment. |
 | peopleDataLabs | enrichPerson | 3 | ✅ | Heavyweight backfill. |
@@ -57,7 +58,7 @@ Prices are credits/record. "Priority?" marks providers in the priority stack (sa
 | linkedin | enrichCompany | 0.25 |   | LinkedIn ID-based. |
 | linkedin | enrichCompanyFromDomain | 0.5 |   | Domain → LinkedIn-anchored details. |
 | cargo | enrichBusinessFirmographics | 0.5 | ✅ | After matchBusiness. Default in priority stack. |
-| apolloio | enrichOrganization | 1 |   | Apollo-anchored. |
+| apolloio | enrichOrganization | 1 | ✅ | Apollo-anchored; the niche-coverage rung when cargo's match misses. |
 | oceanio | enrichCompany | 1 |   | Mid-tier. |
 | reverseContact | enrichCompanyFromLinkedin | 1 |   | Niche: LinkedIn URL → company. |
 | waterfall | enrichCompany | 1 | ✅ | Multi-source. |
@@ -77,6 +78,8 @@ Prices are credits/record. "Priority?" marks providers in the priority stack (sa
 | datagma | findEmail | 1 |   | Alt mid-tier. |
 | enrichCrm | findEmail | 1 |   | CRM-friendly fallback. |
 | enrowio | findEmail | 1 |   | Alt mid-tier. |
+
+> **Check step 3 before paying here.** `aiArk.enrichPerson` (0.1, Enrich — Person above) already returns a verified email from a LinkedIn URL and bills 0 when it finds none — run this stage on the residue it left empty, not on the whole list.
 
 ## Verify email
 
@@ -98,8 +101,9 @@ Prices are credits/record. "Priority?" marks providers in the priority stack (sa
 
 | Provider | Action | Cost | Priority? | Notes |
 |---|---|---|---|---|
-| aiArk | findMobilePhone | 0.5 |   | **Cheapest.** Mobile-only; needs a LinkedIn URL or domain+name. Bills 0 on miss. First stop with a URL in hand. |
+| aiArk | findMobilePhone | 0.5 | ✅ | **Cheapest.** Mobile-only; needs a LinkedIn URL or domain+name. Bills 0 on miss. First stop with a URL in hand. |
 | prospeo | findPhone | 3 |   | Cheapest landline/DID; escalate from aiArk on a mobile miss. |
+| apolloio | enrichPerson (`revealPhoneNumber: true`) | 3 | ✅ | Phone bundled into the person enrich (1 → 3) — only worth it when you were enriching with Apollo anyway. |
 | forager | findPhone | 5 |   | Mid-tier. |
 | findyMail | findPhone | 5 |   | Mid-tier. |
 | FullEnrich | findPhone | 6 | ✅ | Better hit rate; escalate from prospeo. |
@@ -177,4 +181,4 @@ Prices are credits/record. "Priority?" marks providers in the priority stack (sa
 
 - All 145 credits-based actions documented. Free CRUD actions (sequencer / CRM upserts, list/get/delete) not shown — they don't consume credits.
 - Costs are per-record at the cheapest config. Some actions have variable cost by config (e.g., `contactOut.enrich` returns 0/1/2/3 credits depending on data returned).
-- Priority stack: see `../SKILL.md` for the canonical 6-provider priority list and `../provider-playbooks/` for per-provider deep dives.
+- Priority stack: see `../SKILL.md` for the canonical 8-provider priority list and `../provider-playbooks/` for per-provider deep dives.

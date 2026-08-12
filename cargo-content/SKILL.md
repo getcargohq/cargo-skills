@@ -1,6 +1,6 @@
 ---
 name: cargo-content
-description: Manage workspace knowledge files and libraries in the Cargo content domain — upload, list, rename, move, and remove files (PDFs, CSVs, text), and create or sync native and connector-backed libraries for retrieval-augmented generation (RAG). Use when the user wants to upload or organize knowledge files, build a knowledge library, or sync an external knowledge source. To attach these to an agent, use the cargo-ai skill.
+description: "Manage the knowledge a Cargo workspace holds — upload files (PDF, CSV, text), rename and organize them, and build native or connector-backed libraries that sync from an external source, so agents can retrieve them (RAG). Triggers: \"upload this PDF\", \"add these docs as knowledge\", \"build a knowledge base\", \"sync our help center into Cargo\", \"what files are in the workspace\", \"index this folder\", \"attach our pricing sheet\". Skip when: wiring the file or library into an agent — use cargo-ai; uploading a CSV that drives a batch run — that is a workspace-management file upload."
 version: "1.0.1"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
@@ -32,9 +32,18 @@ Workspace **knowledge** management: upload and organize **files** (PDFs, CSVs, t
 > See `references/response-shapes.md` for full JSON response structures.
 > See `references/troubleshooting.md` for common errors and how to fix them.
 
-## Prerequisites
+## Bootstrap
 
-See [`../cargo/references/prerequisites.md`](../cargo/references/prerequisites.md) for install, login (`--oauth` / `--token`), JSON output conventions, and error shapes. Verify the session with `cargo-ai whoami` before running any of the commands below.
+Already signed in (`cargo-ai whoami` returns a workspace)? Skip to the next section.
+
+```bash
+npm install -g @cargo-ai/cli            # no global install? prefix every command with `npx @cargo-ai/cli`
+cargo-ai login --email you@company.com  # emailed code, no browser; creates the account on first use
+                                        # alternatives: --oauth (browser) · --token <api-token> (CI)
+cargo-ai whoami                         # confirm the active workspace before any write
+```
+
+Every command prints JSON to stdout; failures exit non-zero with `{"errorMessage": "..."}`. Anything that creates a run or a batch is async — pass `--wait-until-finished` or poll the matching `get`. When the full skill bundle is installed, [`../cargo/references/prerequisites.md`](../cargo/references/prerequisites.md) adds the CLI version pin, token scopes, and the admin-only surface.
 
 ## Discover resources first
 

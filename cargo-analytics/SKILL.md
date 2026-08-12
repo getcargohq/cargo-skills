@@ -1,6 +1,6 @@
 ---
 name: cargo-analytics
-description: Download workflow run results, export segment data, and monitor run metrics using the Cargo CLI. Use when the user wants run metrics, error rates, data export, or download results for their Cargo workspace. For billing and credit usage, use the cargo-billing skill instead. For explaining WHY a run failed or a batch has errors, use the cargo-diagnostics skill instead.
+description: "Get data out of Cargo and measure what ran — download a run output, export a segment or model to CSV or JSON, and pull run and batch success and error counts. Triggers: \"download the results\", \"export this to CSV\", \"give me the file\", \"how many succeeded\", \"what is my error rate\", \"send me the enriched list\", \"get the output of that run\", \"how many records did it write\". Skip when: asking why something failed or where credits went — use cargo-diagnostics; asking about credits, plans, or invoices — use cargo-billing."
 version: "1.4.3"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
@@ -28,6 +28,19 @@ Measurement and export: monitoring run metrics, downloading run and batch result
 > See `references/examples/exports.md` for data export and download examples.
 > For billing, usage metrics, and subscription: use the `cargo-billing` skill.
 
+## Bootstrap
+
+Already signed in (`cargo-ai whoami` returns a workspace)? Skip to the next section.
+
+```bash
+npm install -g @cargo-ai/cli            # no global install? prefix every command with `npx @cargo-ai/cli`
+cargo-ai login --email you@company.com  # emailed code, no browser; creates the account on first use
+                                        # alternatives: --oauth (browser) · --token <api-token> (CI)
+cargo-ai whoami                         # confirm the active workspace before any write
+```
+
+Every command prints JSON to stdout; failures exit non-zero with `{"errorMessage": "..."}`. Anything that creates a run or a batch is async — pass `--wait-until-finished` or poll the matching `get`. When the full skill bundle is installed, [`../cargo/references/prerequisites.md`](../cargo/references/prerequisites.md) adds the CLI version pin, token scopes, and the admin-only surface.
+
 ## Scope — measure and export, not explain
 
 This skill answers **"what happened"** and **"give me the data"**: metrics, counts, downloads, exports. The moment the question becomes **"why"** — why did this run fail, why is the output wrong or empty, which root cause explains these errors, why is this play so expensive — switch to the `cargo-diagnostics` skill; its runbooks sequence the raw surfaces into a diagnosis.
@@ -40,10 +53,6 @@ This skill answers **"what happened"** and **"give me the data"**: metrics, coun
 | "Why is this play so expensive? Where do the credits go?" | `cargo-diagnostics` → `references/play-optimize-credits.md` |
 
 The two skills chain naturally: analytics **detects** (error rate spiked, batch reports failures), diagnostics **explains** (18 of 20 failures share one root cause), then analytics **retrieves** the clean results once the cause is fixed and the runs re-executed.
-
-## Prerequisites
-
-See [`../cargo/references/prerequisites.md`](../cargo/references/prerequisites.md) for install, login (`--oauth` / `--token`), JSON output conventions, and error shapes. Verify the session with `cargo-ai whoami` before running any of the commands below.
 
 ## Discover resources first
 

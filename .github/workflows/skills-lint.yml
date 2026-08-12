@@ -51,3 +51,21 @@ jobs:
 
       - name: Check llms.txt is in sync with the skill tree
         run: node .github/scripts/generate-llms-txt.ts --check
+
+      - name: Check integration/provider names in descriptions are in sync
+        run: node .github/scripts/sync-trigger-slugs.ts --check
+
+  routing-evals:
+    name: Route prompts to the right skill
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      # The `description` field is the only text an agent sees before deciding
+      # whether to load a skill. This is the regression test for it.
+      - name: Run routing evals
+        run: node .github/scripts/routing-eval.ts

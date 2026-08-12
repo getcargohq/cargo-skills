@@ -1,7 +1,7 @@
 ---
 name: cargo
-description: Router and overview for the Cargo CLI agent skills. Explains the sixteen skills (this router + one onboarding skill cargo-quickstart + one outcome skill cargo-gtm + thirteen capability skills, including cargo-cdk for declarative workspace-as-code, cargo-diagnostics for run/batch/cost forensics, and cargo-observability for scheduled threshold alerts), when to use the declarative CDK vs the imperative CLI, the UUID flow between them, async polling, end-to-end use cases (enrich one record, enrich and sync to CRM, AI lead scoring, custom workflow, error monitoring, fresh-workspace bootstrap, segment export, GTM context authoring), and common gotchas (`conjonction` spelling, run vs batch, model-uuid vs segment-uuid). Load first whenever working with the Cargo CLI, when unsure which sub-skill applies, when stitching multiple sub-skills together, when bootstrapping a workspace, or when the user asks about Cargo skills in general.
-version: "1.17.1"
+description: "Router for the Cargo CLI skill bundle — load first for anything Cargo, and whenever a task spans two Cargo domains. Explains what each skill owns, declarative workspace-as-code (cargo-cdk) vs the imperative CLI, the UUID and slug flow between skills, async polling of runs and batches, end-to-end use cases, and the gotchas that fail silently (`conjonction` spelling, run vs batch, model-uuid vs segment-uuid). Triggers: \"set up Cargo\", \"what can Cargo do\", \"which Cargo skill\", \"bootstrap my workspace\", \"I have a Cargo account\", \"cargo-ai …\", or any `cargo-ai` command whose domain you are unsure of. Skip when: the task obviously belongs to one skill — load that skill directly."
+version: "1.18.0"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -28,11 +28,11 @@ metadata:
 
 # Cargo CLI — Skills Overview
 
-This repository contains 16 skills at the repo root: this **router** (`cargo`), one **onboarding skill** (`cargo-quickstart`), one **outcome skill** (`cargo-gtm`), and thirteen **capability skills**.
+This repository contains 17 skills at the repo root: this **router** (`cargo`), one **onboarding skill** (`cargo-quickstart`), one **outcome skill** (`cargo-gtm`), and fourteen **capability skills**.
 
 - **`cargo-quickstart`** — guided first-run demo. Fresh workspace → real deliverable (25 leads for the user's persona, with a cost receipt) in under two minutes, ending by saving the demo as a recurring play. Load for new users, demo/tour requests, or empty workspaces.
 - **`cargo-gtm`** — application library. The front door for any GTM task ("build a TAM list", "find 5 fintech CTOs", "monitor job changes"). Routes via internal recipes (`../cargo-gtm/recipes/*.md`) and provider playbooks (`../cargo-gtm/provider-playbooks/*.md`).
-- **Capability skills** — standard library. One per CLI domain (orchestration, storage, connection, AI, content, context, analytics, billing, observability, hosting, cdk, workspace management), plus `cargo-diagnostics` (cross-domain forensics over runs, batches, and credit spend). Loaded by `cargo-gtm`, or directly when you need a specific CLI domain.
+- **Capability skills** — standard library. One per CLI domain (orchestration, storage, segmentation, connection, AI, content, context, analytics, billing, observability, hosting, cdk, workspace management), plus `cargo-diagnostics` (cross-domain forensics over runs, batches, and credit spend). Loaded by `cargo-gtm`, or directly when you need a specific CLI domain.
 - **`cargo-cdk`** — the declarative one. Where the other capability skills wrap **imperative** one-off `cargo-ai <domain>` calls, `cargo-cdk` defines the whole workspace as code (`define*` builders + `cargo-ai cdk deploy`) and reconciles it. It spans every resource type — see "Declarative vs imperative" below to route between it and the imperative skills.
 
 `cargo-gtm` delegates to capability skills; capability skills never reference `cargo-gtm` (one-way dependency).
@@ -203,6 +203,7 @@ Load for a specific CLI domain. The first link in each row jumps to the actual S
 | [`cargo-diagnostics`](../cargo-diagnostics/SKILL.md) ([recap](#cargo-diagnostics))                          | Diagnose after the fact: trace why one run misbehaved, sweep a batch/play for errors grouped by root cause, profile where a play's credits go |
 | [`cargo-observability`](../cargo-observability/SKILL.md) ([recap](#cargo-observability))                    | Create and manage **alerts** — scheduled threshold checks on spans/runs/records, a model's health, or a SQL query — that fire actions (connector/tool/agent runs) on breach. Proactive counterpart to diagnostics |
 | [`cargo-storage`](../cargo-storage/SKILL.md) ([recap](#cargo-storage))                                      | Inspect or modify data models, columns, datasets, and relationships; query workspace storage with SQL |
+| [`cargo-segmentation`](../cargo-segmentation/SKILL.md) ([recap](#cargo-segmentation))                       | Build and manage segments — the saved filters that name the audience for a batch, a play trigger, or an export — and read their change (delta) feed |
 | [`cargo-connection`](../cargo-connection/SKILL.md) ([recap](#cargo-connection))                             | Manage connector authentication, discover available integrations and their actions                 |
 | [`cargo-ai`](../cargo-ai/SKILL.md) ([recap](#cargo-ai))                                                     | Create and configure agents, configure releases, attach knowledge for RAG, manage MCP servers and memories |
 | [`cargo-content`](../cargo-content/SKILL.md) ([recap](#cargo-content))                                      | Upload and organize knowledge files, build native/connector-backed knowledge libraries for RAG (the `content` domain) |
@@ -213,13 +214,34 @@ Load for a specific CLI domain. The first link in each row jumps to the actual S
 
 > **Agent knowledge for RAG:** **files** + **libraries** live in the `content` domain → [`cargo-content`](../cargo-content/SKILL.md); how they attach to an agent → [`cargo-ai`](../cargo-ai/SKILL.md). (Files/libraries moved out of the old `ai file …` path in CLI ≥ 1.0.19.)
 
+### These skills vs a workspace MCP server
+
+There is no first-party "Cargo MCP server". What Cargo offers is the ability to **build one**: a workspace picks the actions and resources it wants to expose (`cargo-ai ai mcp-server create --actions … --resources …`, see [`../cargo-ai/SKILL.md`](../cargo-ai/SKILL.md)), and the CLI can serve that curated set to any stdio MCP client:
+
+```bash
+cargo-ai ai mcp-server list                       # find the server UUID
+claude mcp add cargo -- cargo-ai mcp --server <uuid>   # Claude Code, Cursor, Claude Desktop…
+```
+
+`cargo-ai mcp` bridges over stdio using the CLI's own credentials — no token to paste into client config. With no `--server`, it uses `CARGO_MCP_SERVER_UUID` or the workspace's only MCP server.
+
+Route between the two surfaces by shape of the request:
+
+| | **These skills (CLI)** | **A workspace MCP server** |
+|---|---|---|
+| What it is | The whole CLI surface, every domain | Only the actions/resources this workspace chose to expose |
+| Best for | Anything at scale or with a cost gate: batches, workflows, plays, schema changes, CDK deploys, diagnostics, exports | The curated in-conversation set: look this record up, run this one approved tool |
+| Cost control | Full pilot → approval → receipt discipline ([`../cargo-gtm/references/cost-discipline.md`](../cargo-gtm/references/cost-discipline.md)) | Per-call, and bounded by what the workspace exposed |
+| Reproducible | Yes — commands, plays, and CDK files are artifacts | No — a tool call leaves no artifact behind |
+
+Rule of thumb: **anything touching more than a handful of records, or that the user will want to re-run, belongs in the CLI.** Never fan an MCP tool out record-by-record over a list — that is what `orchestration action execute-batch` exists for, and it is cheaper and observable. Conversely, when the workspace has already curated a tool for a job, calling it beats hand-assembling the same thing from raw actions.
+
 ### CLI domains without a dedicated skill yet
 
 The CLI exposes several domains that no capability skill wraps yet. Reach for them directly (`cargo-ai <domain> --help`) when a task needs them, and file a `workspaceManagement report` if the surface is unclear:
 
 | CLI domain | Covers |
 | --- | --- |
-| `segmentation` | Segments and changes (`segment list/get/create/fetch/download`, `change`). Some of this is already used from `cargo-orchestration`/`cargo-analytics`. |
 | `expression` | Recipes and expression evaluation (`eval`, `recipe`) — generate/evaluate the template expressions used in node graphs. |
 | `system-of-record` | System-of-record, client, and log operations. |
 | `revenue-organization` | Allocations, capacities, members, territories (revenue/territory planning). |
@@ -312,16 +334,17 @@ The CLI exposes several domains that no capability skill wraps yet. Reach for th
 
 ---
 
-## Skill details
+## Per-skill critical rules
+
+The non-obvious rules for each skill — the things that fail silently or cost money if you guess. Each skill's own SKILL.md carries the full surface; these are the ones worth knowing *before* you pick.
 
 ### cargo-gtm
-
-**The outcome skill — front door for any GTM task.** Bundles routing (`SKILL.md`), phase guides (`guides/`), scenario recipes (`recipes/`), per-provider playbooks (`provider-playbooks/`), references (`references/`), and a sub-agent (`agents/`).
 
 **Recipes shipped:**
 
 | Recipe | Use when… |
 |---|---|
+| `recipes/source-planning.md` | Decide the source before spending: probe candidates, cost per hit. |
 | `recipes/prospecting.md` | End-to-end find → enrich → verify → sync (P1/P2/P3 variants). |
 | `recipes/build-tam.md` | Build a Total Addressable Market list at scale (100–10,000 companies). |
 | `recipes/linkedin-url-lookup.md` | Resolve LinkedIn URL from name + company with strict validation. |
@@ -331,11 +354,13 @@ The CLI exposes several domains that no capability skill wraps yet. Reach for th
 | `recipes/tech-intent.md` | Find companies by tech-stack or hiring-intent signals. |
 | `recipes/icp-discovery.md` | Diff Closed-Won vs Closed-Lost segments, surface ICP signals. |
 | `recipes/outreach-activation.md` | Turn a signal segment into send-ready outreach (enrich → verify → personalize → sequencer handoff). |
+| `recipes/ads-audience-activation.md` | Push a segment to Google Ads Customer Match / LinkedIn Matched Audiences. |
+| `recipes/review-and-iterate.md` | Human review loop for judgment output; corrections become permanent rules. |
 | `recipes/re-engagement.md` | Wake up stale contacts only when a fresh signal fires (job change, funding, tech intent). |
 | `recipes/lost-deal-revival.md` | Revive Closed-Lost CRM deals by branching on `lost_reason` (champion left, budget, timing). |
 | `recipes/account-expansion.md` | Multi-thread customer accounts — net-new buyers, deduped against the Contacts model. |
 
-**Priority provider stack** (recipes lead with these): salesNavigator (sourcing), cargo native (firmographics + signals), waterfall (multi-source enrichment + email verify + job-change), FullEnrich (premium contact lookup), theirStack (tech-stack + hiring intent), peopleDataLabs (heavyweight backfill). **Already have LinkedIn URLs (or an event URL)?** Don't source — go straight to `linkedin` (`enrichProfile`/`enrichCompany` 0.25, `extractEventAttendees`); it's the cheapest URL-anchored enrich and easy to miss because the stack above is sourcing-first.
+**Priority provider stack** (recipes lead with these): salesNavigator (sourcing), cargo native (firmographics + signals), aiArk (LinkedIn-anchored enrich + cheapest search), waterfall (multi-source enrichment + email verify + job-change), FullEnrich (premium contact lookup), apolloio (1-credit niche-coverage enrich), theirStack (tech-stack + hiring intent), peopleDataLabs (heavyweight backfill). **Already have LinkedIn URLs (or an event URL)?** Don't source — go straight to `aiArk.enrichPerson` (0.1, profile **+ verified email**, bills 0 on no-email), or `linkedin` (`enrichProfile`/`enrichCompany` 0.25, `extractEventAttendees`) when you don't need the email; these are the cheapest URL-anchored enriches and easy to miss because the stack above is sourcing-first.
 
 **Critical rules:**
 - All recipes use credits-based actions (`cargo-ai connection integration list` → 145 credits-based actions across 120 integrations).
@@ -343,13 +368,7 @@ The CLI exposes several domains that no capability skill wraps yet. Reach for th
 - Output retrieval: `cargo-ai orchestration run download-outputs --output-node-slug <slug>` (NOT `run download`).
 - peopleDataLabs filter shape: `searchX` uses cargo's `{conjonction, groups, conditions}` shape; `queryX` takes a PDL **SQL string** — never Elasticsearch.
 
-**References:** `../cargo-gtm/SKILL.md`
-
----
-
 ### cargo-orchestration
-
-**The execution hub.** Execute actions, run workflows, chat with AI agents, query orchestration runtime tables (`runs`/`batches`/`spans`/`records`) with SQL, and fetch segment records.
 
 **Critical rules:**
 
@@ -362,13 +381,7 @@ The CLI exposes several domains that no capability skill wraps yet. Reach for th
 - For SQL against workspace storage (Companies, Contacts, …), use `cargo-ai storage query execute "<sql>"` — documented in `cargo-storage`.
 - All operations are async — poll or pass `--wait-until-finished`. See [Async polling](#async-polling).
 
-**References:** `../cargo-orchestration/SKILL.md`
-
----
-
 ### cargo-analytics
-
-**Measurement and export.** Download run results, export segment data, and monitor error rates and success metrics.
 
 **Critical rules:**
 
@@ -377,13 +390,7 @@ The CLI exposes several domains that no capability skill wraps yet. Reach for th
 - For billing and credit usage, use `cargo-billing` instead.
 - Analytics answers "what happened" (metrics, counts, exports). When the question is **why** — a failing run, a batch full of errors, surprising cost — hand off to `cargo-diagnostics`; its sweep runbook picks up exactly where analytics' error counts leave off.
 
-**References:** `../cargo-analytics/SKILL.md`
-
----
-
 ### cargo-billing
-
-**Cost and credit management.** Track credit consumption per workflow, connector, or agent; check subscription status; view invoices.
 
 **Critical rules:**
 
@@ -391,13 +398,7 @@ The CLI exposes several domains that no capability skill wraps yet. Reach for th
 - Invoice amounts are in cents — divide by 100 for dollars.
 - `subscriptionAvailableCreditsCount - subscriptionCreditsUsedCount` from `subscription get` = remaining credits.
 
-**References:** `../cargo-billing/SKILL.md`
-
----
-
 ### cargo-diagnostics
-
-**Forensics over runs, batches, and spend.** Three runbooks that sequence existing surfaces (`run get`, `orchestration query execute`, `billing usage get-metrics`) into diagnoses: `references/run-trace.md` (explain one run end-to-end — executions, `runContext`, branch routing, per-node credits), `references/batch-error-sweep.md` (group a batch/play's failures by root cause, hand back exemplar run UUIDs), `references/play-optimize-credits.md` (attribute spend to workflows → nodes → providers, then apply cost levers in priority order).
 
 **Critical rules:**
 
@@ -408,13 +409,7 @@ The CLI exposes several domains that no capability skill wraps yet. Reach for th
 - Diagnostics explains; it doesn't export. For bulk retrieval after the diagnosis (`run download-outputs`, `batch download`, `segment download`) go back to `cargo-analytics`.
 - Present conclusions first, evidence as compact tables — per `references/interaction.md` (in the `cargo` router skill).
 
-**References:** `../cargo-diagnostics/SKILL.md`
-
----
-
 ### cargo-observability
-
-**Alerts — proactive monitoring.** Where `cargo-diagnostics` explains a problem after you notice it, an alert *tells you* the moment a metric crosses a line. An alert is a scheduled (`--cron`) threshold check: it measures a **scope** (`spans` / `runs` / `records` / `orchestrationQuery` / `storageQuery` / `model`), compares it to a **threshold** (`--threshold` JSON: a `metric` + `gte`/`lte` + `value`), and on breach fires **actions** (`--actions`, the shared orchestration `Action[]`) each as its own run, recording an **event**. Commands: `observability alert list/get/create/update/remove/preview` and `observability event list <alertUuid>`.
 
 **Critical rules:**
 
@@ -425,40 +420,33 @@ The CLI exposes several domains that no capability skill wraps yet. Reach for th
 - **`--enabled` is strict** (`true`/`false` only); model-scope `filter` uses the segmentation shape spelled **`conjonction`**.
 - Permissions are `observability:read` / `observability:write` (not admin-only). The declarative equivalent is CDK's `defineAlert` — see `cargo-cdk`.
 
-**References:** `../cargo-observability/SKILL.md`
-
----
-
 ### cargo-storage
-
-**Data schema management and SQL queries.** Inspect models, create or update columns, navigate datasets, understand workspace data structure, and run SQL against workspace storage.
 
 **Critical rules:**
 
 - Query via `cargo-ai storage query execute "<sql>"` (or `storage query download --query "<sql>"` for full exports) using `<datasetSlug>.<modelSlug>` table names (e.g. `default.companies`). `model get-ddl` is optional — useful for column types and SQL dialect.
 - For SQL against orchestration runtime tables (`runs`/`batches`/`spans`/`records`), use `cargo-ai orchestration query execute "<sql>"` — documented in `cargo-orchestration`.
-- For advanced record queries (filtering, sorting, pagination), use `segmentation segment fetch` from `cargo-orchestration`.
+- For advanced record queries (filtering, sorting, pagination), use `segmentation segment fetch` — documented in `cargo-segmentation`.
 
-**References:** `../cargo-storage/SKILL.md`
+### cargo-segmentation
 
----
+**Critical rules:**
+
+- Filter JSON uses `conjonction` (not `conjunction`). A misspelling is **not** an error — the filter silently matches nothing.
+- **Size before you spend.** `segment fetch --limit 1` counts an inline filter for free; a saved segment's `recordsCount` is the authoritative size. Quote it before proposing any paid run over the audience.
+- `segment download` takes `--model-uuid` **plus the filter**, never `--segment-uuid`.
+- `change list` needs `--segment-uuid`; `change fetch` needs the **change** UUID plus `--kinds` (`added`/`updated`/`removed`/`unchanged`).
+- `updatedRecordsCount` stays `0` unless the segment was created with `--tracking-column-slugs` — those columns define what "updated" means.
+- Segments named `GENERATED_PLAY_SEGMENT` (`fromPlay: true`) are owned by a play. Never edit or remove them by hand.
 
 ### cargo-connection
-
-**Connector and integration management.** Authenticate external services, discover supported actions, get the `connectorUuid` and `actionSlug` values needed for workflow node graphs.
 
 **Key concepts:**
 
 - **Integration** = external service type (HubSpot, Clearbit, Salesforce, …)
 - **Connector** = authenticated instance of an integration (referenced by `connectorUuid` in nodes)
 
-**References:** `../cargo-connection/SKILL.md`
-
----
-
 ### cargo-ai
-
-**Agent resource management.** Create and configure agents, configure releases, attach knowledge for retrieval-augmented generation (RAG), connect MCP servers, manage memories.
 
 **Critical rules:**
 
@@ -469,13 +457,7 @@ The CLI exposes several domains that no capability skill wraps yet. Reach for th
 
 See `../cargo-ai/SKILL.md` for model and temperature guidance by use case.
 
-**References:** `../cargo-ai/SKILL.md`
-
----
-
 ### cargo-content
-
-**Workspace knowledge files & libraries.** Upload, list, rename, move, and remove **files** (PDFs, CSVs, text); create and sync **libraries** — `native` (workspace-managed) or `connector`-backed (synced from an external source via an unstructured-data extractor). These are the RAG knowledge resources agents reference.
 
 **Critical rules:**
 
@@ -484,13 +466,7 @@ See `../cargo-ai/SKILL.md` for model and temperature guidance by use case.
 - Uploaded content files are also readable (read-only) under `.files/` in the `cargo-context` runtime sandbox.
 - For batch-run **input** files (CSVs that drive a batch), use `cargo-ai workspaceManagement file upload` (a different surface) — see `cargo-workspace-management`.
 
-**References:** `../cargo-content/SKILL.md`
-
----
-
 ### cargo-context
-
-**GTM context repository.** Browse, read, write, and edit the workspace's git-backed knowledge base of typed markdown/MDX files — personas, plays, proof, objections, signals, ICPs, etc. — via the runtime sandbox. Inspect cross-references with the knowledge graph.
 
 **Key concepts:**
 
@@ -511,13 +487,7 @@ See `../cargo-ai/SKILL.md` for model and temperature guidance by use case.
 - For bootstrapping a fresh workspace's context from a domain (ICP, personas, proof, signals — idempotent, skips already-seeded domains), see [`../cargo-context/references/examples/bootstrap-from-domain.md`](../cargo-context/references/examples/bootstrap-from-domain.md).
 - For the full bootstrap + ongoing call-driven refresh playbook (Phase 1 + Phase 2 + cadence), see [`../cargo-context/references/examples/lifecycle.md`](../cargo-context/references/examples/lifecycle.md).
 
-**References:** `../cargo-context/SKILL.md`
-
----
-
 ### cargo-hosting
-
-**Cargo Hosting.** Scaffold, deploy, and manage hosted **apps** (Vite SPAs on `https://<slug>.cargo.app`, built on `@cargo-ai/app-sdk`) and **workers** (serverless edge `fetch(request, env)` handlers on `@cargo-ai/worker-sdk`), plus the **deployments** that ship and promote them.
 
 **Lifecycle:** `init` (local scaffold) → `create` (slot + globally-unique slug) → `deployment create` (build+upload) → `deployment promote` (go live).
 
@@ -530,13 +500,8 @@ See `../cargo-ai/SKILL.md` for model and temperature guidance by use case.
 - `--app-uuid` / `--worker-uuid` are mutually exclusive on deployment commands; `remove` cascades to deployments.
 - Folders come from [`cargo-workspace-management`](#cargo-workspace-management); `--folder-uuid null` moves to root.
 
-**References:** `../cargo-hosting/SKILL.md`
-
----
-
 ### cargo-cdk
 
-**Declarative workspace-as-code — the imperative skills' counterpart.** Define an
 entire Cargo workspace in TypeScript (`defineConnector`/`defineModel`/`defineAgent`/
 `definePlay`/`defineTool`/`defineMcpServer`/`defineContext`/`defineSegment`/
 `defineFolder`/`defineFile`/`defineWorker`/`defineApp`/`defineAlert`) and reconcile
@@ -573,13 +538,7 @@ contact sourcing, account scoring, AI SDR, …) live in
 before authoring a common GTM outcome from scratch; see the Cookbooks section of
 `../cargo-cdk/SKILL.md` for the routing rule and caveats.
 
-**References:** `../cargo-cdk/SKILL.md`
-
----
-
 ### cargo-workspace-management
-
-**Workspace administration.** Invite users, create and rotate API tokens, organize plays/tools/agents into folders, manage roles, and **submit reports to workspace management when the CLI fails or is being misused**.
 
 **Critical rules:**
 
@@ -587,10 +546,6 @@ before authoring a common GTM outcome from scratch; see the Cookbooks section of
 - `workspaceManagement token create` requires `--name` (the legacy `--from-user` flag was removed). Pick a name that makes the token's purpose obvious in `token list` later.
 - Token values are only shown **once** at creation — store immediately in a secrets manager (GitHub Secrets, AWS Secrets Manager, etc.).
 - **Always send a `workspaceManagement report create`** when the CLI errors, is being used incorrectly, or you (user or agent) are struggling to make progress on a CLI task — see the section at the top of this file and `../cargo-workspace-management/references/examples/reports.md`.
-
-**References:** `../cargo-workspace-management/SKILL.md`
-
----
 
 ## Async polling
 

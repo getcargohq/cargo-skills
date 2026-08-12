@@ -1,6 +1,6 @@
 ---
 name: cargo-connection
-description: Manage connectors and integrations using the Cargo CLI. Use when the user wants to list, create, update, or remove connectors, discover available integrations, or understand what connector actions are available for use in workflows.
+description: "Connect Cargo to an external system and find out what it can do — authenticate connectors, browse the integration catalog, and resolve the `connectorUuid` and `actionSlug` a workflow node needs. Triggers: \"connect my HubSpot\", \"is Salesforce connected\", \"what integrations do you support\", \"can Cargo talk to <tool>\", \"what actions does <provider> have\", \"I need the connector UUID\", \"set up the API key for\", \"it is asking for credentials again\", \"why is this connector failing auth\", \"list my connectors\". Integrations: amplemarket, amplitude, attio, bigQuery, calendly, closecom, contrast, csv, customerio, dbt, emailBison, expandi, googleAds, googleSheets, heyReach, http, hubspot, hubspotMcp, instantly, instantlyV2, intercom, jira, kitt, lemlist, lgm, linkedinAds, linkedinMatchedAudience, livestorm, manus, marketo, metabase, microsoftTeams, mixpanel, netsuite, netsuiteSoap, notionMcp, octave, onesignal, outreach, pipedrive, postgresql, redshift, resend, rift, salesforce, salesforceMcp, salesloft, Sendgrid, sillage, slack, smartlead, snowflake, sql, stripe, and 84 more. Skip when: choosing between enrichment providers for a GTM job — use cargo-gtm and its provider playbooks."
 version: "1.2.1"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
@@ -28,15 +28,24 @@ Connector and integration management: listing connectors, discovering available 
 > See `references/examples/integrations.md` for listing available integrations and OAuth flows.
 > For third-party connector rate limit handling and retry config in workflows, see `cargo-orchestration/references/polling.md` and `cargo-orchestration/references/troubleshooting.md`. Native integrations do not have rate limits.
 
+## Bootstrap
+
+Already signed in (`cargo-ai whoami` returns a workspace)? Skip to the next section.
+
+```bash
+npm install -g @cargo-ai/cli            # no global install? prefix every command with `npx @cargo-ai/cli`
+cargo-ai login --email you@company.com  # emailed code, no browser; creates the account on first use
+                                        # alternatives: --oauth (browser) · --token <api-token> (CI)
+cargo-ai whoami                         # confirm the active workspace before any write
+```
+
+Every command prints JSON to stdout; failures exit non-zero with `{"errorMessage": "..."}`. Anything that creates a run or a batch is async — pass `--wait-until-finished` or poll the matching `get`. When the full skill bundle is installed, [`../cargo/references/prerequisites.md`](../cargo/references/prerequisites.md) adds the CLI version pin, token scopes, and the admin-only surface.
+
 ## Key concepts
 
 **Integration:** The external service type (e.g. HubSpot, Clearbit, Salesforce). Integrations define what actions are available.
 
 **Connector:** An authenticated instance of an integration. One integration can have multiple connectors (e.g. two different HubSpot accounts). Connectors are what you reference in workflow node graphs.
-
-## Prerequisites
-
-See [`../cargo/references/prerequisites.md`](../cargo/references/prerequisites.md) for install, login (`--oauth` / `--token`), JSON output conventions, and error shapes. Verify the session with `cargo-ai whoami` before running any of the commands below.
 
 ## Discover resources first
 

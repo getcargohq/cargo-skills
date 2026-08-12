@@ -1,3 +1,9 @@
+# Cargo Agent Skills — GTM engineering for AI coding agents
+
+Seventeen agent skills that turn Claude Code, Codex, Cursor, and any [skills.sh](https://skills.sh)-compatible agent into a go-to-market engineering workstation: **build lead lists, find and verify emails and phone numbers, enrich companies and contacts through provider waterfalls, score and qualify leads, write outreach, sync to your CRM, and monitor buying signals** (job changes, funding rounds, tech-stack and hiring intent) — then make any of it a scheduled, always-on workflow.
+
+They run on the [Cargo CLI](https://www.npmjs.com/package/@cargo-ai/cli) against [Cargo](https://getcargo.ai), the AI-native revenue infrastructure: **138 integrations** (HubSpot, Salesforce, Attio, Pipedrive, Outreach, Salesloft, Lemlist, Smartlead, Instantly, Snowflake, BigQuery, Slack, Google Ads, Meta and LinkedIn audiences, and more), **50 credits-based data providers** with per-action costs documented up front, models and SQL over workspace storage, AI agents with RAG, alerting, hosted apps, and a full workspace-as-code CDK.
+
 ```
 ██████    ████    █████    ██████   ██████
 ██    ░  ██  ██░  ██  ██   ██    ░  ██  ██░
@@ -7,9 +13,14 @@
  ░░░░░░   ░░  ░░   ░░  ░░   ░░░░░░   ░░░░░░
 ```
 
-# Cargo Agent Skills
+Tell your agent what you want and it picks the skill:
 
-Agent skill for [Cargo](https://getcargo.ai) — the AI-native revenue infrastructure. Teaches AI coding agents how to use the [Cargo CLI](https://www.npmjs.com/package/@cargo-ai/cli) to build, run, and manage revenue automation workflows programmatically.
+> *"Find me 50 VPs of Sales at Series B fintechs and verify their emails."*
+> *"Enrich this CSV with company size, funding stage, and tech stack."*
+> *"Alert me when my enrichment error rate goes above 5%."*
+> *"Set up our whole workspace as code so I can review it in a PR."*
+
+Machine-readable index for agents and crawlers: [`llms.txt`](llms.txt).
 
 ## Install
 
@@ -33,7 +44,7 @@ Works with Claude Code, Cursor, Windsurf, GitHub Copilot, and any agent that sup
 
 ### Agent plugin (alternative channel — Claude Code, Codex, Cursor)
 
-The repo also installs as a native **agent plugin**: one source, three targets, sharing the same sixteen skills plus three things `skills add` can't deliver:
+The repo also installs as a native **agent plugin**: one source, three targets, sharing the same seventeen skills plus three things `skills add` can't deliver:
 
 - **An approval hook** ([`hooks/approve-cli.sh`](hooks/approve-cli.sh)) that auto-approves safe `cargo-ai` calls (reads, queries, run/batch operations) while credentials (`login`), token minting, report egress, `cdk deploy`/`destroy`, and any `remove`/`delete` always still prompt. Allow-only — it can never override a deny rule. Wired per target: `PreToolUse` (Claude Code), `PermissionRequest` (Codex), `beforeShellExecution` (Cursor).
 - **Session-lifecycle hooks** (Claude Code only): plugin-bundled `SessionStart`/`Stop`/`SessionEnd` scripts keep the CLI at the bundle's pinned version and log the session to `workspace_management.sessions` — no installer needed. They defer automatically when the installer's copies exist under `~/.claude/hooks/`, so running both never double-registers a session. Unlike the installer's, the plugin's `SessionStart` does **not** run `skills add` (the plugin owns the skills).
@@ -126,7 +137,7 @@ Then bump the `version:` field in each changed `SKILL.md` (semver, e.g. `1.0.0` 
 
 ## What this skill teaches
 
-**Cargo** connects your data models (companies, contacts, deals) to external integrations (CRMs, enrichment providers, AI agents) and runs them as automated workflows. The repo ships sixteen skills at the root — one **router skill** (`cargo`, the overview / front door for any Cargo CLI task), one **onboarding skill** (`cargo-quickstart`, the guided first-run demo), one **outcome skill** (`cargo-gtm`, the front door for any GTM task), and thirteen **capability skills** (one per CLI domain, plus the cross-domain `cargo-diagnostics`). Most capability skills wrap the **imperative** CLI (one-off `cargo-ai <domain>` operations); `cargo-cdk` is the **declarative** one — define a whole workspace in code and deploy it — and `cargo-diagnostics` sequences the run/SQL/billing surfaces into forensic runbooks (trace a run, sweep a batch for errors, profile credit spend).
+**Cargo** connects your data models (companies, contacts, deals) to external integrations (CRMs, enrichment providers, AI agents) and runs them as automated workflows. The repo ships seventeen skills at the root — one **router skill** (`cargo`, the overview / front door for any Cargo CLI task), one **onboarding skill** (`cargo-quickstart`, the guided first-run demo), one **outcome skill** (`cargo-gtm`, the front door for any GTM task), and fourteen **capability skills** (one per CLI domain, plus the cross-domain `cargo-diagnostics`). Most capability skills wrap the **imperative** CLI (one-off `cargo-ai <domain>` operations); `cargo-cdk` is the **declarative** one — define a whole workspace in code and deploy it — and `cargo-diagnostics` sequences the run/SQL/billing surfaces into forensic runbooks (trace a run, sweep a batch for errors, profile credit spend).
 
 ### Router — `cargo`
 
@@ -144,6 +155,7 @@ Built-in recipes:
 
 | Recipe | Use when… |
 |---|---|
+| `source-planning.md` | **Read first when the source isn't obvious.** Probe candidate sources on 5–10 rows and cost them per *hit* before any fan-out. |
 | `prospecting.md` | Find people matching a description, enrich, verify, sync. End-to-end flagship. |
 | `build-tam.md` | Build a Total Addressable Market list at scale (100–10,000 companies). |
 | `linkedin-url-lookup.md` | Resolve a person's LinkedIn URL from name + company with strict identity validation. |
@@ -153,6 +165,8 @@ Built-in recipes:
 | `tech-intent.md` | Find companies by tech-stack or hiring intent (theirStack-driven). |
 | `icp-discovery.md` | Diff Closed-Won vs Closed-Lost segments, surface differentiating ICP signals. |
 | `outreach-activation.md` | Turn a signal segment into send-ready outreach (enrich → verify → personalize → sequencer handoff). |
+| `ads-audience-activation.md` | Push a segment to paid media — Google Ads Customer Match / LinkedIn Matched Audiences — and read the match rate. |
+| `review-and-iterate.md` | Human review loop for judgment output: sheet handoff, grouped corrections, permanent fixes, kept as an eval set. |
 | `re-engagement.md` | Wake up stale contacts only when a fresh signal fires (job change, funding, tech intent). |
 | `lost-deal-revival.md` | Revive Closed-Lost CRM deals by branching on `lost_reason` (champion left, budget, timing). |
 | `account-expansion.md` | Multi-thread existing customer accounts — net-new buyers, deduped against the Contacts model. |
@@ -167,6 +181,7 @@ The standard library. Load when you need the syntax for a specific CLI domain �
 | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | **Orchestration** | Execute single actions, chain actions into workflows, trigger batches across segments, poll async operations, query orchestration runtime tables (`runs`/`batches`/`spans`/`records`) with SQL, fetch segment data |
 | **Storage**       | Inspect models and their DDL, create columns, navigate datasets, set relationships between models, query workspace storage with SQL                              |
+| **Segmentation**  | Build and manage segments — the saved filters that name the audience for a batch, a play trigger, or an export — size an audience before spending on it, and read the change (delta) feed |
 | **Connection**    | Authenticate connectors, discover integration actions and their slugs across 120+ integrations                                                                     |
 | **AI**            | Create and configure agents, configure releases, attach knowledge for RAG, connect MCP servers, inspect agent memories                                             |
 | **Content**       | Upload and organize knowledge files; build `native` and `connector`-backed knowledge libraries for RAG (the `content` domain)                                       |
