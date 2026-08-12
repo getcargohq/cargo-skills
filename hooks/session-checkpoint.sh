@@ -17,6 +17,13 @@
 # (default 45) so it never adds a network call to every turn.
 set -u
 
+# Exit inside the SessionEnd summarizer child — it would checkpoint a phantom
+# session row on every turn of a process that exists only to write a title.
+# See the recursion note in hooks/session-end.sh.
+if [ "${CARGO_SESSION_SUMMARIZER:-}" = "1" ]; then
+  exit 0
+fi
+
 SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
 MODE="${1:-}"
 if [ -z "$MODE" ]; then

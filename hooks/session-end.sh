@@ -14,6 +14,21 @@
 # instead of failing silently.
 set -u
 
+# Re-entrancy guard. The refinement step below summarizes the transcript by
+# shelling out to `claude -p`, and that subprocess is itself a full Claude Code
+# session: when it exits it fires SessionEnd, which runs this hook again, which
+# spawns another summarizer. The chain only ends when some child's transcript
+# happens to be missing — observed in the wild as 264 headless sessions against
+# 8 real ones (~16.5M tokens) on one machine in a day.
+#
+# The marker is exported across the `claude -p` call and propagates to the
+# child's own hooks through the environment. Every Cargo lifecycle hook checks
+# it and exits immediately, so a summarizer child registers no session row,
+# refreshes no CLI, and spawns no second summarizer.
+if [ "${CARGO_SESSION_SUMMARIZER:-}" = "1" ]; then
+  exit 0
+fi
+
 SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
 MODE="${1:-}"
 if [ -z "$MODE" ]; then
@@ -119,12 +134,33 @@ refine() {
     return 0
   fi
 
+  # Spawn budget — a mechanism-independent backstop for the recursion guarded at
+  # the top of this file. The environment marker is the real fix; this bounds the
+  # damage if it is ever lost (a hook runner that re-execs with a scrubbed
+  # environment, a wrapper that resets PATH and env together). At most
+  # CARGO_SUMMARIZER_MAX (default 20) summarizer spawns per rolling hour on this
+  # machine: real sessions end far below that rate, a runaway chain blows through
+  # it in about a minute. Exhausting the budget costs a refined title, nothing
+  # more — the row is already finalized with the placeholder above.
+  BUDGET="${TMPDIR:-/tmp}/cargo-summarizer-spawns"
+  MAX="${CARGO_SUMMARIZER_MAX:-20}"
+  CUTOFF=$(( $(date +%s) - 3600 ))
+  RECENT="$(awk -v c="$CUTOFF" '$1 > c' "$BUDGET" 2>/dev/null || true)"
+  SPAWNS="$(printf '%s' "$RECENT" | grep -c . 2>/dev/null || true)"
+  if [ "${SPAWNS:-0}" -ge "$MAX" ]; then
+    log "summarizer budget exhausted (${SPAWNS}/${MAX} in the last hour); keeping placeholder for $SESSION_ID"
+    return 0
+  fi
+  { printf '%s\n' "$RECENT"; date +%s; } | grep . >"$BUDGET" 2>/dev/null || true
+
   PROMPT='Read the Claude Code transcript on stdin and reply with a single JSON object: {"title":"<5-8 word title>","summary":"<1-2 sentence summary>"}. JSON only, no markdown fences.'
+  # CARGO_SESSION_SUMMARIZER marks the child as ours: its own SessionStart/Stop/
+  # SessionEnd hooks see it and exit, which is what stops the chain.
   # Guard against a hung summarizer when `timeout` is available.
   if command -v timeout >/dev/null 2>&1; then
-    RESPONSE="$(printf '%s' "$TAIL" | timeout 120 "$CLAUDE_BIN" -p "$PROMPT" 2>>"$LOG" || true)"
+    RESPONSE="$(printf '%s' "$TAIL" | CARGO_SESSION_SUMMARIZER=1 timeout 120 "$CLAUDE_BIN" -p "$PROMPT" 2>>"$LOG" || true)"
   else
-    RESPONSE="$(printf '%s' "$TAIL" | "$CLAUDE_BIN" -p "$PROMPT" 2>>"$LOG" || true)"
+    RESPONSE="$(printf '%s' "$TAIL" | CARGO_SESSION_SUMMARIZER=1 "$CLAUDE_BIN" -p "$PROMPT" 2>>"$LOG" || true)"
   fi
   if [ -z "$RESPONSE" ]; then
     log "claude -p produced no output for $SESSION_ID (see stderr above); keeping placeholder"
