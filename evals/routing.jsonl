@@ -108,7 +108,8 @@
 {"prompt":"Am I going to run out of budget before the end of the quarter?","expect":"cargo-billing","tier":"hard"}
 {"prompt":"Only the accounts in EMEA above 500 headcount should get this treatment","expect":"cargo-segmentation","tier":"hard"}
 {"prompt":"The Attio sync is asking for credentials again","expect":"cargo-connection","tier":"hard"}
-{"prompt":"Give the assistant access to our sales collateral so it stops making things up","expect":"cargo-ai","tier":"hard"}
+{"prompt":"Give the assistant access to our sales collateral so it stops making things up","expect":"cargo-content","why":"Corrected after the model tier disagreed and was right: as written, the first step is getting the collateral into the workspace, which is content. Wiring an existing library onto an agent release is cargo-ai — see the next case.","tier":"hard"}
+{"prompt":"Attach the knowledge library we already uploaded to the qualification agent","expect":"cargo-ai","why":"The other side of the content/ai boundary: the library exists, so this is release wiring."}
 {"prompt":"Where should I write down what we learned about why deals stall?","expect":"cargo-context","tier":"hard"}
 {"prompt":"Fire this off across every row in the model","expect":"cargo-orchestration","tier":"hard"}
 {"prompt":"Put the onboarding PDFs somewhere the assistant can read them","expect":"cargo-content","tier":"hard"}

@@ -56,7 +56,8 @@ jobs:
             echo "ANTHROPIC_API_KEY is not available to this run — skipping the model tier." >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
-          # No --llm-min floor yet: the first runs establish the baseline. Once
-          # it is stable, add --llm-min=<n> so a description edit that tanks
-          # real routing fails here instead of shipping.
-          node .github/scripts/routing-eval.ts --llm
+          # Baseline on 2026-08-12 was 98% (92/94: core 79/79, hard 13/15).
+          # The floor sits below it, not at it — a model tier that fails on one
+          # non-deterministic flip trains people to ignore it. Raise the floor
+          # when the baseline moves up and holds.
+          node .github/scripts/routing-eval.ts --llm --llm-min=93
