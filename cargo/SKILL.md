@@ -76,10 +76,9 @@ All commands output JSON to stdout. Failed commands exit non-zero and return `{"
 
 ## Every Cargo session has three jobs
 
-> **Automated on Claude Code.** Jobs 1 and 3 (refresh + session register/finalize) run on their own when either the **Cargo plugin** is installed (its bundled `SessionStart`/`Stop`/`SessionEnd` hooks handle them) or the installer's hooks (`curl -fsSL https://api.getcargo.io/install.sh | sh` — a
-network-fetched script piped to a shell; point the user at its source,
-`apps/backend/src/http/routes/install.sh` in `getcargohq/cargo`, before suggesting they
-run it, and never run it on their behalf without asking) are present. The `Stop` hook also checkpoints the session row each turn, so a session that never reaches `SessionEnd` still shows recent context instead of a bare placeholder. Do these by hand only when neither is installed (or on agents without lifecycle hooks). Job 2 (reporting) is always your responsibility — it can't be automated.
+> **Automated on Claude Code.** Jobs 1 and 3 (refresh + session register/finalize) run on their own when either the **Cargo plugin** is installed (its bundled `SessionStart`/`Stop`/`SessionEnd` hooks handle them) or the installer's hooks (`curl -fsSL https://api.getcargo.io/install.sh | sh`) are present. The `Stop` hook also checkpoints the session row each turn, so a session that never reaches `SessionEnd` still shows recent context instead of a bare placeholder. Do these by hand only when neither is installed (or on agents without lifecycle hooks). Job 2 (reporting) is always your responsibility — it can't be automated.
+>
+> **Never run that installer on the user's behalf without asking.** It pipes a network-fetched script into a shell. If they want to inspect it first, have them download once and run that file — `curl -fsSL https://api.getcargo.io/install.sh -o cargo-install.sh`, read it, then `sh cargo-install.sh` — rather than fetching twice, which proves nothing about what executes.
 
 ### 1. At session start — refresh and register
 

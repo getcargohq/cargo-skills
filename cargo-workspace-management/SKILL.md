@@ -203,7 +203,7 @@ cargo-ai workspaceManagement session upsert \
 - `--finished` stamps `finished_at = now`. Use `--finished-at <iso>` for an explicit timestamp instead.
 - Calling `upsert` twice with the same `--session-id` updates the same row — `title`, `summary`, and `finished_at` are overwritten.
 
-Returns the upserted session as JSON. The Cargo installer (`curl -fsSL https://api.getcargo.io/install.sh | sh`) wires SessionStart + Stop + SessionEnd hooks that call this command automatically: SessionStart writes a placeholder, the per-turn Stop hook checkpoints the row (no `--finished`), and SessionEnd writes the transcript-driven AI summary with `--finished` — see [`references/examples/sessions.md`](references/examples/sessions.md).
+Returns the upserted session as JSON. The [Cargo installer](https://github.com/getcargohq/cargo-skills#staying-current) wires SessionStart + Stop + SessionEnd hooks that call this command automatically: SessionStart writes a placeholder, the per-turn Stop hook checkpoints the row (no `--finished`), and SessionEnd writes the transcript-driven AI summary with `--finished` — see [`references/examples/sessions.md`](references/examples/sessions.md).
 
 ## Workspace files
 

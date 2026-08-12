@@ -82,8 +82,8 @@ Worked recipes showing which skills to load and the command sequence for common 
 value is shown — hand it to the user for a secrets manager (GitHub Secrets, AWS Secrets
 Manager) rather than echoing it into a file, a commit, or the transcript. Scope it to
 what the job needs: most of this bootstrap requires **admin**, but the token that later
-runs plays or batches does not. Steps 3 and 9 change who can see and touch workspace
-data, so confirm the invite list and the roles with the user before running them.
+runs plays or batches does not. Steps 1 and 3 change who can see and touch workspace
+data, so confirm the token's scope and the invite list with the user before running them.
 
 ## 7. Export and analyze segment data
 
