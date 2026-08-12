@@ -12,6 +12,11 @@
  *                                                     (needs ANTHROPIC_API_KEY)
  *   node .github/scripts/routing-eval.ts --llm --llm-min=90   # gate on a floor
  *
+ * Grade a different skill set — any directory of `<name>/SKILL.md`, with its
+ * cases at `<root>/evals/routing.jsonl` unless `--cases` says otherwise:
+ *
+ *   node .github/scripts/routing-eval.ts --skills-root ../gtm-skills
+ *
  * Three tiers:
  *
  *  1. STRUCTURAL — every description obeys the four-part template documented in
@@ -39,10 +44,22 @@ import { join, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
-const casesPath = join(repoRoot, "evals/routing.jsonl");
 const verbose = process.argv.includes("--verbose");
 const withLlm = process.argv.includes("--llm");
 const strict = process.argv.includes("--strict");
+
+function argValue(flag: string): string | undefined {
+  const i = process.argv.indexOf(flag);
+  return i !== -1 ? process.argv[i + 1] : undefined;
+}
+
+/**
+ * Which skill set to grade. Defaults to this repo, but any directory of
+ * `<name>/SKILL.md` works — the standalone gtm-skills repo competes for the
+ * same prompts from the same descriptions, and deserves the same test.
+ */
+const skillsRoot = resolve(argValue("--skills-root") ?? repoRoot);
+const casesPath = resolve(argValue("--cases") ?? join(skillsRoot, "evals/routing.jsonl"));
 
 /** Cheapest capable model — this is a routing judgement, not a reasoning task. */
 const LLM_MODEL = process.env.ROUTING_EVAL_MODEL ?? "claude-haiku-4-5-20251001";
@@ -100,9 +117,9 @@ function tokenize(text: string): string[] {
 
 function loadSkills(): Skill[] {
   const skills: Skill[] = [];
-  for (const entry of readdirSync(repoRoot)) {
-    const skillMd = join(repoRoot, entry, "SKILL.md");
-    if (!statSync(join(repoRoot, entry), { throwIfNoEntry: false })?.isDirectory()) continue;
+  for (const entry of readdirSync(skillsRoot)) {
+    const skillMd = join(skillsRoot, entry, "SKILL.md");
+    if (!statSync(join(skillsRoot, entry), { throwIfNoEntry: false })?.isDirectory()) continue;
     if (!existsSync(skillMd)) continue;
     const lines = readFileSync(skillMd, "utf8").split("\n");
     let name = "";
@@ -188,7 +205,7 @@ function loadCases(): Case[] {
       try {
         return JSON.parse(l) as Case;
       } catch (e) {
-        throw new Error(`evals/routing.jsonl line ${i + 1} is not valid JSON: ${(e as Error).message}`);
+        throw new Error(`${casesPath} line ${i + 1} is not valid JSON: ${(e as Error).message}`);
       }
     });
 }
