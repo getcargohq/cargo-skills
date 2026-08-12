@@ -76,7 +76,7 @@ OPEN QUESTIONS:
 
 When choosing between providers for a stage, the agent applies these rules in order:
 
-1. **Match the priority stack first.** If salesNavigator / cargo / waterfall / FullEnrich / theirStack / peopleDataLabs can express the user's filter, use them.
+1. **Match the priority stack first.** If salesNavigator / cargo / aiArk / waterfall / FullEnrich / apolloio / theirStack / peopleDataLabs can express the user's filter, use them. With a **LinkedIn URL** in hand, `aiArk.enrichPerson` (0.1, profile + verified email) is the cheapest enrich rung in the stack; `apolloio` (1) is the niche-coverage rung, planned on the residue, not the full list.
 2. **Pick by stage-action-map.** If the priority stack misses, consult [`../references/stage-action-map.md`](../references/stage-action-map.md) for the cheapest credible alternative.
 3. **Consider rate limits & coverage**. Some providers have low rate limits (~10 RPS); for large batches > 1000 records, prefer providers with higher throughput.
 4. **Confirm authentication.** Run `cargo-ai connection connector list --integration-slug <slug>` to confirm the provider is authenticated before locking it into the plan. If not, surface to the user.

@@ -138,7 +138,7 @@ After each batch step, use `cargo-ai orchestration run download-outputs --workfl
 
 If `peopleDataLabs.queryCompanies` doesn't recognize the investor name (e.g. very small fund, regional accelerator), fall back to:
 
-- `apolloio` if its investor coverage is stronger for the niche.
+- `apolloio.enrichOrganization` / `enrichPerson` (1) — the priority stack's niche-coverage rung, and the standing example of it: Apollo's investor coverage is often stronger here than the generalist chain.
 - `firecrawl.scrape` on the investor's portfolio page (if public) → LLM extract via `anthropic.instruct`.
 - File a `cargo-ai workspaceManagement report create` if neither works — surfaces the gap to the cargo team.
 

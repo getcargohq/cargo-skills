@@ -1,0 +1,120 @@
+// Routing evals — prompts an agent might see, and the skill that should win.
+// Run: node .github/scripts/routing-eval.ts
+// Add a case whenever you change a description, so the intended behavior is pinned.
+// `why` explains what the case is guarding against; it is printed on failure.
+{"prompt": "Find me 50 VPs of Sales at Series B fintech companies and verify their emails", "expect": "cargo-gtm", "why": "The flagship prospecting request; must not be captured by storage or segmentation."}
+{"prompt": "Build a TAM list of seed-stage SaaS companies in Europe", "expect": "cargo-gtm"}
+{"prompt": "Enrich this CSV with company size and funding stage", "expect": "cargo-gtm"}
+{"prompt": "Who just raised a Series A in healthtech?", "expect": "cargo-gtm", "why": "Funding-signal phrasing with no Cargo vocabulary at all."}
+{"prompt": "Show me companies hiring data engineers that also run Snowflake", "expect": "cargo-gtm"}
+{"prompt": "Find the buying committee at these twelve accounts", "expect": "cargo-gtm"}
+{"prompt": "Which of our contacts changed jobs recently?", "expect": "cargo-gtm"}
+{"prompt": "Enrich these leads with FullEnrich and verify with ZeroBounce", "expect": "cargo-gtm", "why": "Provider proper nouns must route to GTM, not to connection."}
+{"prompt": "Use theirStack to find companies using Segment", "expect": "cargo-gtm"}
+{"prompt": "Write cold emails for these prospects based on their recent funding", "expect": "cargo-gtm"}
+{"prompt": "Score these leads against our ICP", "expect": "cargo-gtm"}
+{"prompt": "Find portfolio companies of Accel and get me the Head of Growth at each", "expect": "cargo-gtm"}
+
+{"prompt": "Run this workflow on all my contacts", "expect": "cargo-orchestration"}
+{"prompt": "Kick off a batch over the enterprise accounts", "expect": "cargo-orchestration"}
+{"prompt": "Execute the enrichBusinessFirmographics action for this one company", "expect": "cargo-orchestration"}
+{"prompt": "Schedule a play that runs every morning at 8am", "expect": "cargo-orchestration"}
+{"prompt": "Add a branch step to the node graph after the enrichment node", "expect": "cargo-orchestration"}
+{"prompt": "What is the output schema for this action?", "expect": "cargo-orchestration"}
+
+{"prompt": "What models do I have in this workspace?", "expect": "cargo-storage"}
+{"prompt": "Add a column for annual revenue on the Companies model", "expect": "cargo-storage"}
+{"prompt": "Run a SQL query joining contacts to companies", "expect": "cargo-storage"}
+{"prompt": "Show me the DDL for the deals table", "expect": "cargo-storage"}
+{"prompt": "Set up a webhook-fed model for inbound signups", "expect": "cargo-storage"}
+
+{"prompt": "Build a segment of contacts where the title contains VP", "expect": "cargo-segmentation"}
+{"prompt": "How many companies match this criteria?", "expect": "cargo-segmentation"}
+{"prompt": "Save this filtered list as a reusable audience", "expect": "cargo-segmentation"}
+{"prompt": "What entered the Closed-Won segment this week?", "expect": "cargo-segmentation", "why": "Change/delta feed belongs to segmentation, not analytics."}
+{"prompt": "Narrow this down to accounts in France with more than 200 employees", "expect": "cargo-segmentation"}
+
+{"prompt": "Connect my HubSpot account to Cargo", "expect": "cargo-connection"}
+{"prompt": "Is Salesforce connected in this workspace?", "expect": "cargo-connection"}
+{"prompt": "What integrations do you support?", "expect": "cargo-connection"}
+{"prompt": "I need the connector UUID for Snowflake", "expect": "cargo-connection"}
+{"prompt": "Set up the API key for Smartlead", "expect": "cargo-connection"}
+
+{"prompt": "Create an agent that qualifies inbound leads", "expect": "cargo-ai"}
+{"prompt": "Change the agent's model to something cheaper", "expect": "cargo-ai"}
+{"prompt": "Connect an MCP server so the agent can call our internal tools", "expect": "cargo-ai"}
+{"prompt": "Deploy the agent release", "expect": "cargo-ai"}
+{"prompt": "What does the agent remember about this account?", "expect": "cargo-ai"}
+
+{"prompt": "Upload this pricing PDF as knowledge", "expect": "cargo-content"}
+{"prompt": "Build a knowledge library synced from our help center", "expect": "cargo-content"}
+{"prompt": "What files are in the workspace?", "expect": "cargo-content"}
+
+{"prompt": "Document our ICP in the context repo", "expect": "cargo-context"}
+{"prompt": "Write up the RevOps buyer persona", "expect": "cargo-context"}
+{"prompt": "Add a battlecard for this objection", "expect": "cargo-context"}
+{"prompt": "What is our positioning for mid-market?", "expect": "cargo-context"}
+
+{"prompt": "Download the results of that run", "expect": "cargo-analytics"}
+{"prompt": "Export this to CSV and give me the file", "expect": "cargo-analytics"}
+{"prompt": "How many records did the batch write successfully?", "expect": "cargo-analytics"}
+
+{"prompt": "How many credits do I have left?", "expect": "cargo-billing"}
+{"prompt": "Why is my bill so high this month?", "expect": "cargo-billing"}
+{"prompt": "Show me my invoices", "expect": "cargo-billing"}
+{"prompt": "What plan am I on?", "expect": "cargo-billing"}
+
+{"prompt": "Why did this run fail?", "expect": "cargo-diagnostics"}
+{"prompt": "It succeeded but half my rows are empty", "expect": "cargo-diagnostics", "why": "The 'succeeded but wrong' case must not fall through to analytics."}
+{"prompt": "Which node is burning all the credits in this play?", "expect": "cargo-diagnostics"}
+{"prompt": "What broke in this batch? It worked yesterday", "expect": "cargo-diagnostics"}
+
+{"prompt": "Alert me when the error rate goes above 5 percent", "expect": "cargo-observability"}
+{"prompt": "Notify me if the CRM sync stops running", "expect": "cargo-observability"}
+{"prompt": "Set up monitoring on this workflow", "expect": "cargo-observability"}
+{"prompt": "Warn me before I run out of credits", "expect": "cargo-observability", "why": "Credit threshold alerting is observability; the balance question itself is billing."}
+
+{"prompt": "Build me a dashboard for this data and give me a URL to share", "expect": "cargo-hosting"}
+{"prompt": "Deploy this app and promote it to production", "expect": "cargo-hosting"}
+{"prompt": "I need a webhook endpoint that receives form submissions", "expect": "cargo-hosting"}
+
+{"prompt": "Set up our whole workspace as code so I can review it in a PR", "expect": "cargo-cdk"}
+{"prompt": "I want this version-controlled and reproducible across staging and production", "expect": "cargo-cdk"}
+{"prompt": "Deploy the workspace definition from CI", "expect": "cargo-cdk"}
+{"prompt": "Is there something like Terraform for Cargo?", "expect": "cargo-cdk"}
+
+{"prompt": "Invite my teammate to the workspace", "expect": "cargo-workspace-management"}
+{"prompt": "Create an API token for CI", "expect": "cargo-workspace-management"}
+{"prompt": "Organize these plays into folders", "expect": "cargo-workspace-management"}
+{"prompt": "Report this bug to the Cargo team", "expect": "cargo-workspace-management", "why": "Feedback vocabulary was previously unreachable — it lived only in the skill body."}
+{"prompt": "Send feedback about this CLI command being broken", "expect": "cargo-workspace-management"}
+
+{"prompt": "Show me what Cargo can do", "expect": "cargo-quickstart"}
+{"prompt": "I just installed Cargo, give me a demo", "expect": "cargo-quickstart"}
+{"prompt": "My workspace is empty, where do I start?", "expect": "cargo-quickstart"}
+
+{"prompt": "Which Cargo skill should I use for this?", "expect": "cargo"}
+{"prompt": "What is the UUID flow between the Cargo skills?", "expect": "cargo"}
+
+// Harder cases — deliberately avoid the literal trigger phrasing, so these test
+// the description's vocabulary rather than its quoted examples.
+{"prompt":"I have a spreadsheet of 400 domains and need a decision-maker with a working email address at each one","expect":"cargo-gtm","why":"Pure job description, zero Cargo or trigger vocabulary.","tier":"hard"}
+{"prompt":"Our outbound is going to the wrong people — help me figure out who actually buys from us","expect":"cargo-gtm","tier":"hard"}
+{"prompt":"Something in the nightly pipeline produced garbage last night and I need to know what","expect":"cargo-diagnostics","why":"Paraphrase of 'why did this fail' with no shared words.","tier":"hard"}
+{"prompt":"I want a Slack ping the moment our data freshness slips","expect":"cargo-observability","tier":"hard"}
+{"prompt":"Can I keep the definition of all this in version control?","expect":"cargo-cdk","tier":"hard"}
+{"prompt":"Give my teammates a link where they can see these numbers","expect":"cargo-hosting","tier":"hard"}
+{"prompt":"Pull the finished rows down so I can hand them to the SDR team","expect":"cargo-analytics","tier":"hard"}
+{"prompt":"Am I going to run out of budget before the end of the quarter?","expect":"cargo-billing","tier":"hard"}
+{"prompt":"Only the accounts in EMEA above 500 headcount should get this treatment","expect":"cargo-segmentation","tier":"hard"}
+{"prompt":"The Attio sync is asking for credentials again","expect":"cargo-connection","tier":"hard"}
+{"prompt":"Give the assistant access to our sales collateral so it stops making things up","expect":"cargo-content","why":"Corrected after the model tier disagreed and was right: as written, the first step is getting the collateral into the workspace, which is content. Wiring an existing library onto an agent release is cargo-ai — see the next case.","tier":"hard"}
+{"prompt":"Attach the knowledge library we already uploaded to the qualification agent","expect":"cargo-ai","why":"The other side of the content/ai boundary: the library exists, so this is release wiring."}
+{"prompt":"Where should I write down what we learned about why deals stall?","expect":"cargo-context","tier":"hard"}
+{"prompt":"Fire this off across every row in the model","expect":"cargo-orchestration","tier":"hard"}
+{"prompt":"Put the onboarding PDFs somewhere the assistant can read them","expect":"cargo-content","tier":"hard"}
+{"prompt":"Rotate the key we gave to the CI pipeline","expect":"cargo-workspace-management","tier":"hard"}
+{"prompt": "How many free credits do I get to start with?", "expect": "cargo-billing", "why": "Free-tier questions are a first-session trigger; the fact lives in billing."}
+{"prompt": "What do I get for free before I have to pay?", "expect": "cargo-billing"}
+{"prompt":"Expose our CRM tools as an MCP server so I can call them from Claude Desktop","expect":"cargo-ai","why":"The publish direction of MCP. Was previously reachable from no description at all."}
+{"prompt":"How do I use Cargo from ChatGPT?","expect":"cargo-ai","why":"An agent that does not speak skills.sh reaches Cargo through a published MCP server plus the cargo-ai mcp bridge.","tier":"hard"}

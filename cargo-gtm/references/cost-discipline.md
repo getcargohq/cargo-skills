@@ -75,6 +75,11 @@ cargo-ai billing usage get-metrics --workflow-uuid <uuid>
 
 A receipt is not optional bookkeeping — it is what makes the next-step suggestion and the next approval trustworthy.
 
+**On a new account, frame the balance against the free tier.** A new workspace starts with **100 free credits, no card** — so "12.4 spent, 87.6 of your 100 free credits left" is the receipt a first-time user can actually act on, where "87.6 remaining" is a number with no scale. Two consequences for how you spend them:
+
+- **Lead with the cheap rungs harder than usual.** 100 credits is ~5,000 sourced leads or ~50 fully enriched contacts — the same budget, two orders of magnitude apart depending on the chain. A first session that burns the tier on `findPhone` (6–7/lookup) leaves the user with nothing to try next.
+- **Say what's left in the tier when proposing the next step.** "With ~88 free credits left, verifying all 400 of these runs ~40" is a decision the user can make in one word; "that'll cost about 40 credits" is not.
+
 ## 3) Over-provision 1.4×N, then filter — never chase misses
 
 Provider coverage is a property of the target company, not something more retries can overcome. Contact search typically misses 15–20% of companies; email waterfalls miss another 5–10% of contacts.
@@ -94,7 +99,7 @@ Size the pool before paying for it:
 ## 5) Provider-billing rules
 
 - **Prefer pay-on-success actions** when coverage is uncertain. If a provider bills per attempt, prove quality on the pilot before scaling.
-- **Phone is the guarded lever** — 3–7 credits/record, ~10× email. Never include phone lookup in a default chain; it enters a plan only on explicit user request, on qualified leads only.
+- **Phone is the guarded lever** — the escalation tier runs 3–7 credits/record, ~10× email. `aiArk.findMobilePhone` (0.5, mobile-only, LinkedIn-URL or domain+name anchored) is the cheap first rung and bills 0 on a miss, but the rule is unchanged: never include phone lookup in a default chain; it enters a plan only on explicit user request, on qualified leads only.
 - Cheap-but-low-hit-rate providers are not savings: total spend is dominated by misses, not per-call price (see [`alternatives.md`](alternatives.md)).
 
 ## 6) Context discipline

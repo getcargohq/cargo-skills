@@ -241,7 +241,7 @@ The pattern of repeatedly calling `run get`, `batch get`, or `message get` until
 A role / title shape that's part of the ICP. Example personas: "Head of RevOps at a B2B SaaS", "Founder at a seed-stage fintech". Used as filters for `salesNavigator.searchLeads`, `peopleDataLabs.searchPeople`, etc. Captured as `persona/<slug>.md` in the context repo with role, KPIs, pains, motivations, preferred channels, and common objections.
 
 **priority stack**
-The 6 default credits-based providers used as the spine of every recipe in `cargo-gtm/`: **salesNavigator** (sourcing), **cargo** native (firmographic + signal intelligence), **waterfall** (multi-source enrichment + verification + job-change signal), **FullEnrich** (premium contact lookup), **theirStack** (tech-stack + hiring intent), **peopleDataLabs** (heavyweight backfill). See `cargo-gtm/SKILL.md` for the full stack reference and per-provider playbooks.
+The 8 default credits-based providers used as the spine of every recipe in `cargo-gtm/`: **salesNavigator** (sourcing), **cargo** native (firmographic + signal intelligence), **aiArk** (LinkedIn-anchored enrich + cheapest per-record search), **waterfall** (multi-source enrichment + verification + job-change signal), **FullEnrich** (premium contact lookup), **apolloio** (1-credit niche-coverage enrich), **theirStack** (tech-stack + hiring intent), **peopleDataLabs** (heavyweight backfill). See `cargo-gtm/SKILL.md` for the full stack reference and per-provider playbooks.
 
 **proof**
 An atomic proof point — one metric, quote, case fact, or benchmark — stored as `proof/<slug>.md` in the context repo. Cross-referenced from plays, objections, and decks. Keep proof entries atomic (one fact per file) so they can be filtered in the knowledge graph.

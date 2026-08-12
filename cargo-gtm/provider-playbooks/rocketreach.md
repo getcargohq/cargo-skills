@@ -6,7 +6,7 @@ last-reviewed: 2026-07-09
 
 # rocketreach (RocketReach)
 
-Single-action person lookup: `lookupPerson` (1 credit) resolves a person **and their company** from flexible identifiers — name + employer, LinkedIn URL, email, or a US healthcare **NPI number** — returning contact channels (`emails`, `phones`, `recommended_email`, `current_work_email`), profile data, and `job_history` in one call. It's a 1-credit ENRICH fallback beside `apolloio.enrichPerson`; the priority stack (`cargo` native → `waterfall`) still leads ([`../references/alternatives.md`](../references/alternatives.md)). The NPI input is its genuinely distinctive angle: healthcare-provider lookups the generalist stack doesn't key on.
+Single-action person lookup: `lookupPerson` (1 credit) resolves a person **and their company** from flexible identifiers — name + employer, LinkedIn URL, email, or a US healthcare **NPI number** — returning contact channels (`emails`, `phones`, `recommended_email`, `current_work_email`), profile data, and `job_history` in one call. It's a 1-credit ENRICH fallback beside the priority stack's `apolloio.enrichPerson` (1) — and outside the stack, so reach for it only when Apollo has also missed; `cargo` native → `waterfall` still leads the default chain ([`../references/alternatives.md`](../references/alternatives.md)). The NPI input is its genuinely distinctive angle: healthcare-provider lookups the generalist stack doesn't key on.
 
 ## Credits-based actions
 

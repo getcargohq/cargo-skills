@@ -69,9 +69,81 @@ function collectSkills(): Skill[] {
   return skills;
 }
 
+/**
+ * Recipes and provider playbooks are the job-named, addressable layer under the
+ * skills — "build-tam", "job-change-monitoring", "linkedin-url-lookup". Skill
+ * names alone are the wrong granularity for anyone (human or crawler) searching
+ * by the job they want done, so the index lists them too, with the one-line
+ * summary each file carries.
+ */
+interface Doc {
+  slug: string;
+  path: string;
+  summary: string;
+}
+
+/** First meaningful prose line of a markdown file, trimmed to one sentence. */
+function summarize(path: string, fallback: string): string {
+  const lines = readFileSync(path, "utf8").split("\n");
+  let inFrontmatter = false;
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (i === 0 && line === "---") {
+      inFrontmatter = true;
+      continue;
+    }
+    if (inFrontmatter) {
+      if (line === "---") inFrontmatter = false;
+      continue;
+    }
+    if (!line) continue;
+    if (line.startsWith("#")) continue;
+    if (line.startsWith(">") || line.startsWith("|") || line.startsWith("```")) continue;
+    // Strip markdown emphasis/links down to plain prose.
+    const plain = line
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+      .replace(/[*_`]/g, "")
+      .trim();
+    if (plain.length < 20) continue;
+    const sentence = plain.split(/(?<=\.)\s/)[0];
+    return sentence.length > 220 ? sentence.slice(0, 217).trimEnd() + "…" : sentence;
+  }
+  return fallback;
+}
+
+function collectDocs(skillDir: string, subdir: string, fallback: string): Doc[] {
+  const dir = join(repoRoot, skillDir, subdir);
+  if (!existsSync(dir)) return [];
+  return readdirSync(dir)
+    .filter((f) => f.endsWith(".md"))
+    .sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()))
+    .map((f) => ({
+      slug: f.replace(/\.md$/, ""),
+      path: `${skillDir}/${subdir}/${f}`,
+      summary: summarize(join(dir, f), fallback),
+    }));
+}
+
 function render(skills: Skill[]): string {
   const skillLines = skills
     .map((s) => `- [${s.name}](${repoUrl}/blob/main/${s.name}/SKILL.md): ${s.description}`)
+    .join("\n");
+
+  const recipes = [
+    ...collectDocs("cargo-gtm", "recipes", "A step-by-step GTM playbook."),
+    ...collectDocs("cargo-cdk", "recipes", "A step-by-step workspace-as-code playbook."),
+  ];
+  const recipeLines = recipes
+    .map((r) => `- [${r.slug}](${repoUrl}/blob/main/${r.path}): ${r.summary}`)
+    .join("\n");
+
+  const playbooks = collectDocs(
+    "cargo-gtm",
+    "provider-playbooks",
+    "Action slugs, config shapes, costs, and cost traps for this provider.",
+  );
+  const playbookLines = playbooks
+    .map((p) => `- [${p.slug}](${repoUrl}/blob/main/${p.path}): ${p.summary}`)
     .join("\n");
 
   return `# Cargo Agent Skills
@@ -91,12 +163,26 @@ Or manually:
 \`\`\`bash
 npx skills add getcargohq/cargo-skills
 npm install -g @cargo-ai/cli
-cargo-ai login --oauth
+cargo-ai login --email you@company.com   # emailed code, no browser; creates the account on first use
 \`\`\`
+
+A new account starts with **100 free credits, no card** — roughly 5,000 leads sourced or 1,000 verified-email enrichments. The two-minute quickstart demo spends about 0.5 of them, so an agent can install, sign the user up, and return a real deliverable in one turn.
 
 ## Skills
 
 ${skillLines}
+
+## Recipes
+
+Step-by-step playbooks for a specific job. An agent loads the parent skill, then follows the matching recipe as its execution plan.
+
+${recipeLines}
+
+## Provider playbooks
+
+Per-provider action slugs, config shapes, credit costs, cost traps, and recurring-use cadence. Read the playbook before calling a paid action from that provider.
+
+${playbookLines}
 
 ## Documentation
 

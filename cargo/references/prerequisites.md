@@ -19,6 +19,8 @@ cargo-ai login --oauth                                  # browser sign-in (recom
 cargo-ai login --oauth --workspace-uuid <uuid>
 ```
 
+**A new account starts with 100 free credits, no card required** — `--email` and `--oauth` both create the account on first use, so signing up and running real paid work can happen in a single agent turn. Quote the free balance to a first-time user before the first paid call.
+
 `--oauth` runs the OAuth 2.0 Device Authorization Flow — no client setup. For CI / scripts, use `--token` with a workspace-scoped API token from **Settings > API**. Token values are shown only once; store immediately in a secrets manager.
 
 ## Verify

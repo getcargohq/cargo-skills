@@ -6,7 +6,7 @@ last-reviewed: 2026-07-09
 
 # prospeo
 
-Contact-lookup specialist whose standout is **the cheapest phone finder in the priority stack** — `findPhone` (3) is the default first stop of the phone chain, ahead of `FullEnrich.findPhone` (6) and `waterfall.findPhone` (7). Its `findEmail` (0.5) is a mid-tier alternative to the `FullEnrich.findEmail` (1) default; prefer it only when budget-constrained or as a waterfall rung ([`../references/alternatives.md`](../references/alternatives.md)). Also carries cheap LinkedIn-profile and company enrichment at 0.5.
+Contact-lookup specialist whose standout is **the cheapest landline/DID phone finder in the priority stack** — `findPhone` (3) sits ahead of `FullEnrich.findPhone` (6) and `waterfall.findPhone` (7), behind the mobile-only `aiArk.findMobilePhone` (0.5), which is the first rung whenever a LinkedIn URL is in hand. Its `findEmail` (0.5) is a mid-tier alternative to the `FullEnrich.findEmail` (1) default; prefer it only when budget-constrained or as a waterfall rung ([`../references/alternatives.md`](../references/alternatives.md)). Also carries cheap LinkedIn-profile and company enrichment at 0.5.
 
 ## Credits-based actions
 

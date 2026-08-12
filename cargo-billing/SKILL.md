@@ -1,6 +1,6 @@
 ---
 name: cargo-billing
-description: Pull usage metrics, check subscription status, view invoices, and manage credits using the Cargo CLI. Use when the user wants billing analytics, usage reports, credit usage, cost analysis, subscription details, or invoice history for their Cargo workspace.
+description: "Understand what Cargo is costing — remaining credits, usage broken down by workflow, connector, or agent, subscription state, and invoice history. Triggers: \"how many credits do I have left\", \"what did that cost\", \"why is my bill so high\", \"am I about to run out\", \"will this fit in our budget\", \"show me my invoices\", \"how much have I spent this month\", \"what plan am I on\", \"what do I get for free\", \"how many free credits\", \"can I afford this run\". Needs a token with admin access. Skip when: attributing spend to specific nodes or cutting a play cost — use cargo-diagnostics."
 version: "1.0.3"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
@@ -26,11 +26,18 @@ Billing and credit management: pulling usage metrics, checking subscription stat
 > See `references/troubleshooting.md` for common errors and how to fix them.
 > See `references/examples/usage-metrics.md` for usage metric and subscription examples.
 
-## Prerequisites
+## Bootstrap
 
-See [`../cargo/references/prerequisites.md`](../cargo/references/prerequisites.md) for install, login (`--oauth` / `--token`), JSON output conventions, and error shapes. Verify the session with `cargo-ai whoami` before running any of the commands below.
+Already signed in (`cargo-ai whoami` returns a workspace)? Skip to the next section.
 
-**Admin-only:** every command in this skill requires a token with admin access on the workspace. Non-admin tokens return `{"errorMessage":"forbidden"}`.
+```bash
+npm install -g @cargo-ai/cli            # no global install? prefix every command with `npx @cargo-ai/cli`
+cargo-ai login --email you@company.com  # emailed code, no browser; creates the account on first use
+                                        # alternatives: --oauth (browser) · --token <api-token> (CI)
+cargo-ai whoami                         # confirm the active workspace before any write
+```
+
+Every command prints JSON to stdout; failures exit non-zero with `{"errorMessage": "..."}`. Anything that creates a run or a batch is async — pass `--wait-until-finished` or poll the matching `get`. **Admin-only:** every command in this skill requires a token with admin access on the workspace. Non-admin tokens return `{"errorMessage":"forbidden"}`. When the full skill bundle is installed, [`../cargo/references/prerequisites.md`](../cargo/references/prerequisites.md) adds the CLI version pin, token scopes, and the admin-only surface.
 
 ## Discover resources first
 
@@ -150,6 +157,22 @@ cargo-ai billing subscription create-portal-session   # Stripe portal URL for se
 Remaining credits = `subscriptionAvailableCreditsCount - subscriptionCreditsUsedCount` from `subscription get`.
 
 **Note:** Invoice amounts are returned in cents. Divide by 100 for the dollar value.
+
+### The free tier
+
+A new account starts with **100 free credits and no card on file**. When `subscription get` shows a fresh or near-fresh balance, answer cost questions against that budget rather than as an abstract number — "you've used 12 of your 100 free credits" is the useful answer to "how am I doing?", and it is also the honest one when the user is deciding whether to keep going.
+
+What 100 credits buys, as ballpark anchors (per-action costs in [`../cargo-gtm/references/credits-cost-table.md`](../cargo-gtm/references/credits-cost-table.md)):
+
+| Work | Cost | 100 credits ≈ |
+|---|---|---|
+| Source leads — `salesNavigator.searchLeads` | 0.02/record | ~5,000 leads |
+| Enrich from a LinkedIn URL + verified email — `aiArk.enrichPerson` | 0.1 | ~1,000 people |
+| Verify an email — `waterfall.verifyEmail` | 0.1 | ~1,000 checks |
+| Full contact enrichment — `waterfall.enrichContact` | 2 | ~50 contacts |
+| Find a phone — `FullEnrich.findPhone` | 6 | ~16 numbers |
+
+The [quickstart demo](../cargo-quickstart/SKILL.md) spends about **0.5**. Phone lookups are the fastest way to burn a free tier, so phone is the **guarded lever**: the escalation tier runs 3–7 credits/record, ~10× email, and never belongs in a default chain — it enters a plan only on explicit user request, on qualified leads only. Full spend rules in [`../cargo-gtm/references/cost-discipline.md`](../cargo-gtm/references/cost-discipline.md).
 
 ## Help
 

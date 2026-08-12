@@ -1,0 +1,63 @@
+name: routing-evals-llm
+
+# The real-model tier of the routing evals: a model is shown nothing but the
+# skill descriptions and asked to route each prompt in evals/routing.jsonl.
+#
+# Kept out of skills-lint.yml on purpose — it costs money and is
+# non-deterministic, so it must never be the thing standing between a typo fix
+# and a merge. It runs only when routing could actually have changed, plus
+# weekly and on demand.
+
+on:
+  pull_request:
+    paths:
+      - "*/SKILL.md"
+      - "evals/routing.jsonl"
+      - ".github/scripts/routing-eval.ts"
+      - ".github/workflows/routing-evals-llm.yml"
+  push:
+    branches: [main]
+    paths:
+      - "*/SKILL.md"
+      - "evals/routing.jsonl"
+      - ".github/scripts/routing-eval.ts"
+  schedule:
+    # Weekly, so model drift shows up even when nobody touches a description.
+    - cron: "17 6 * * 1"
+  workflow_dispatch:
+    inputs:
+      model:
+        description: "Model id to route with"
+        required: false
+        default: "claude-haiku-4-5-20251001"
+
+permissions:
+  contents: read
+
+jobs:
+  llm-routing:
+    name: Route prompts with a real model
+    runs-on: ubuntu-latest
+    # A missing key (forks, or before the secret is set) should skip, not fail.
+    if: github.event.pull_request.head.repo.full_name == github.repository || github.event_name != 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Route every eval prompt from descriptions alone
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          ROUTING_EVAL_MODEL: ${{ inputs.model || 'claude-haiku-4-5-20251001' }}
+        run: |
+          if [ -z "${ANTHROPIC_API_KEY}" ]; then
+            echo "ANTHROPIC_API_KEY is not available to this run — skipping the model tier." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          # Baseline on 2026-08-12 was 98% (92/94: core 79/79, hard 13/15).
+          # The floor sits below it, not at it — a model tier that fails on one
+          # non-deterministic flip trains people to ignore it. Raise the floor
+          # when the baseline moves up and holds.
+          node .github/scripts/routing-eval.ts --llm --llm-min=93

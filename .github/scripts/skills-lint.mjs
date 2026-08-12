@@ -27,6 +27,7 @@ const SKILL_DIRS = [
   "cargo-cdk",
   "cargo-orchestration",
   "cargo-storage",
+  "cargo-segmentation",
   "cargo-connection",
   "cargo-ai",
   "cargo-content",
@@ -51,6 +52,8 @@ const KNOWN_CLI_DOMAINS = new Set([
   "ai",
   "billing",
   "cdk",
+  "doctor",
+  "mcp",
   "connection",
   "content",
   "context",
@@ -371,6 +374,95 @@ function main() {
           `Playbook \`provider-playbooks/${f}\` exists on disk but is not referenced in cargo-gtm/SKILL.md — add it to the playbook catalog.`
         );
       }
+    }
+  }
+
+  // 3a. The skill count is stated in prose in several places and silently rots
+  //      every time a skill ships. Assert the numeral and the number word
+  //      against what is actually on disk.
+  const NUMBER_WORDS = [
+    "zero", "one", "two", "three", "four", "five", "six", "seven", "eight",
+    "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen",
+    "sixteen", "seventeen", "eighteen", "nineteen", "twenty",
+  ];
+  const skillCount = diskSkillDirs.length;
+  const expectedWord = NUMBER_WORDS[skillCount];
+  for (const rel of ["cargo/SKILL.md", "README.md", "AGENTS.md"]) {
+    const p = join(repoRoot, rel);
+    if (!existsSync(p)) continue;
+    const src = readFileSync(p, "utf8");
+    // Any "<n> skills" or "<word> skills" claim must agree with the tree.
+    const claims = [...src.matchAll(/\b([a-z]+|\d+)\s+skills\b/gi)]
+      .map((m) => m[1].toLowerCase())
+      .filter((c) => /^\d+$/.test(c) || NUMBER_WORDS.includes(c));
+    for (const claim of new Set(claims)) {
+      const asNumber = /^\d+$/.test(claim) ? Number(claim) : NUMBER_WORDS.indexOf(claim);
+      if (asNumber !== skillCount) {
+        err(
+          p,
+          0,
+          `States "${claim} skills" but ${skillCount} skill directories exist on disk — say "${skillCount}" / "${expectedWord}".`
+        );
+      }
+    }
+  }
+
+  // 3b. Every skill must be bootstrappable on its own. `skills add … --skill
+  //     <one>` is a supported install path and the registry lists each skill
+  //     separately, so a SKILL.md whose only install/login instructions are a
+  //     relative link to `../cargo/references/prerequisites.md` ships an agent a
+  //     skill it cannot start. Require the three self-contained commands.
+  const BOOTSTRAP_COMMANDS = [
+    { pattern: /npm install -g "?@cargo-ai\/cli/, label: "npm install -g @cargo-ai/cli" },
+    { pattern: /cargo-ai login\b/, label: "cargo-ai login" },
+    { pattern: /cargo-ai whoami\b/, label: "cargo-ai whoami" },
+  ];
+  for (const dir of SKILL_DIRS) {
+    const p = join(repoRoot, dir, "SKILL.md");
+    if (!existsSync(p)) continue;
+    const src = readFileSync(p, "utf8");
+    // Only look at fenced shell blocks — a prose mention is not a runnable
+    // bootstrap.
+    const shell = extractFencedBlocks(src)
+      .filter((b) => ["bash", "sh", "shell"].includes(b.lang))
+      .map((b) => b.content)
+      .join("\n");
+    const missing = BOOTSTRAP_COMMANDS.filter((c) => !c.pattern.test(shell)).map((c) => c.label);
+    if (missing.length) {
+      err(
+        p,
+        0,
+        `Missing self-contained bootstrap: no shell block runs ${missing.join(", ")}. A single-skill install has no \`../cargo/\` sibling — inline install, login, and whoami.`
+      );
+    }
+  }
+
+  // 3c. A spend rule may never live *only* behind a cross-skill link. The `../`
+  //     paths resolve because every install channel lays all skills down as
+  //     siblings — but nothing in the manifests guarantees that, and a dangling
+  //     Read fails silently: the agent proceeds without the rule instead of
+  //     erroring. Cheap links are fine everywhere; a rule that costs money when
+  //     skipped has to be stated where it applies. So any SKILL.md citing
+  //     cost-discipline.md must also carry an inline safeguard of its own.
+  const SPEND_SAFEGUARDS = [
+    /10\s*[–-]\s*20\s+record/i, // the sample gate
+    /credit estimate/i, // the approval quote
+    /record count/i,
+    /re-bills?\b/i, // recurring-spend warning (alerts, scheduled plays)
+    /(credit|demo)\s+cap/i, // a hard ceiling instead of a gate
+    /guarded[-\s]lever/i, // the phone-escalation rule (cost-discipline §5)
+  ];
+  for (const dir of SKILL_DIRS) {
+    const p = join(repoRoot, dir, "SKILL.md");
+    if (!existsSync(p)) continue;
+    const src = readFileSync(p, "utf8");
+    if (!/cost-discipline\.md/.test(src)) continue;
+    if (!SPEND_SAFEGUARDS.some((re) => re.test(src))) {
+      err(
+        p,
+        0,
+        "Links `../cargo-gtm/references/cost-discipline.md` but states no spend rule inline. A single-skill install has no `../cargo-gtm/` sibling and the Read fails silently — inline the gate (sample size + record count + credit estimate), keeping the link as the full reference."
+      );
     }
   }
 

@@ -6,7 +6,7 @@ last-reviewed: 2026-07-25
 
 # aiArk (AI Ark)
 
-LinkedIn-anchored people/company data with an unusually cheap enrich-and-email combo, a personality-analysis action nothing else in the catalog has, and per-record search that bills at the bottom of the catalog. **All six actions are credits-based and run on cargo's managed connection** — no own-key connector required (unlike `apolloio`, where only two are). Category `enrichment`, sub-category list-building. Reach for it when you hold **LinkedIn URLs** (cheapest profile+email at 0.1), need a **mobile phone** cheaply (0.5 vs the 3+ phone tier), want **lookalike-company** discovery (0.01/record), or need **personality/selling guidance** for personalization. It's a strong alternative to the sourcing-first stack, not a replacement for it — the priority stack (`salesNavigator` → `cargo` → `waterfall`) still leads generic recipes.
+LinkedIn-anchored people/company data with an unusually cheap enrich-and-email combo, a personality-analysis action nothing else in the catalog has, and per-record search that bills at the bottom of the catalog. **All six actions are credits-based and run on cargo's managed connection** — no own-key connector required (unlike `apolloio`, where only two are). Category `enrichment`, sub-category list-building. Reach for it when you hold **LinkedIn URLs** (cheapest profile+email at 0.1), need a **mobile phone** cheaply (0.5 vs the 3+ phone tier), want **lookalike-company** discovery (0.01/record), or need **personality/selling guidance** for personalization. **In the priority stack** ([`../SKILL.md`](../SKILL.md) §5) as the URL-anchored enrich rung and the cheapest per-record search — but it doesn't displace the sourcing-first spine: `salesNavigator` (0.02/lead) still leads plain at-scale people sourcing, and `cargo` native still owns match-verified firmographics.
 
 ## Credits-based actions
 
@@ -125,7 +125,7 @@ Conventions inside a group:
 
 - `enrichPerson` — **ENRICH + CONTACT (person)** for URL-in-hand rows: profile + verified email at 0.1, ahead of `linkedin.enrichProfile` (0.25, no email) and the pricier `waterfall.enrichContact` (2) / `FullEnrich.findEmail` (1) chain.
 - `findMobilePhone` — **new cheapest phone rung** (0.5) ahead of `prospeo.findPhone` (3); mobile-only, so keep the higher tiers for landline/DID fallback.
-- `searchCompanies` / `searchPeople` — **SOURCE** alternatives (0.01 / 0.05 per record) when you need lookalikes or filters the priority sourcing can't express.
+- `searchCompanies` / `searchPeople` — **SOURCE** (0.01 / 0.05 per record): `searchCompanies` is the cheapest account search in the stack and the lookalike path; `searchPeople` covers the filters `salesNavigator` can't express (education, skills, tenure, past company).
 - `reverseLookup` — **niche**: email/phone → profile, beside `FullEnrich.reverseEmailLookup` (2, email → LinkedIn URL).
 - `analyzePersonality` — **WRITE/personalization input**, outside the credits spine's find-and-verify path.
 
