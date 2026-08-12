@@ -49,10 +49,10 @@ Plays have names — workflows don't. Use the play to find the right workflow an
 cargo-ai orchestration play list
 # → Extract play.workflowUuid and play.modelUuid
 
-# 2. Create a batch over the play's model
+# 2. Create a batch over the play's model (empty filter = all rows)
 cargo-ai orchestration batch create \
   --workflow-uuid <play.workflowUuid> \
-  --data '{"kind":"filter","modelUuid":"<play.modelUuid>"}'
+  --data '{"kind":"filter","modelUuid":"<play.modelUuid>","filter":{"conjonction":"and","groups":[]}}'
 
 # 3. Poll until done
 cargo-ai orchestration batch get <batch-uuid>
@@ -60,12 +60,12 @@ cargo-ai orchestration batch get <batch-uuid>
 # Or block until finished — returns the final batch result without a separate poll step
 cargo-ai orchestration batch create \
   --workflow-uuid <play.workflowUuid> \
-  --data '{"kind":"filter","modelUuid":"<play.modelUuid>"}' \
+  --data '{"kind":"filter","modelUuid":"<play.modelUuid>","filter":{"conjonction":"and","groups":[]}}' \
   --wait-until-finished
 ```
 
-Omitting `filter` enrols every row in the model; add one to narrow it, using the
-same shape as `references/filter-syntax.md`.
+An empty filter (`{"conjonction":"and","groups":[]}`) enrols every row in the model;
+add conditions to narrow it — see `references/filter-syntax.md` for the full shape.
 
 > **Never pass `play.segmentUuid` to `{"kind":"segment"}`.** That UUID points at
 > the play's internally generated segment, whose record count is never
@@ -227,10 +227,10 @@ cargo-ai orchestration node validate --nodes '[
 cargo-ai orchestration play list
 # → Find "Lead Scoring", extract workflowUuid and modelUuid
 
-# Step 6 — Run the template nodes against the play's model
+# Step 6 — Run the template nodes against the play's model (empty filter = all rows)
 cargo-ai orchestration batch create \
   --workflow-uuid <play.workflowUuid> \
-  --data '{"kind":"filter","modelUuid":"<play.modelUuid>"}' \
+  --data '{"kind":"filter","modelUuid":"<play.modelUuid>","filter":{"conjonction":"and","groups":[]}}' \
   --nodes '[...validated nodes from step 4...]'
 # → Extract batch.uuid
 
@@ -241,7 +241,7 @@ cargo-ai orchestration batch get <batch-uuid>
 # Alternative to steps 6+7 — block until finished in one command
 cargo-ai orchestration batch create \
   --workflow-uuid <play.workflowUuid> \
-  --data '{"kind":"filter","modelUuid":"<play.modelUuid>"}' \
+  --data '{"kind":"filter","modelUuid":"<play.modelUuid>","filter":{"conjonction":"and","groups":[]}}' \
   --nodes '[...validated nodes from step 4...]' \
   --wait-until-finished
 ```

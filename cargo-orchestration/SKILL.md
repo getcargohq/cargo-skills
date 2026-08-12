@@ -130,7 +130,7 @@ cargo-ai orchestration action get-output-schema --action '{"kind":"connector","i
 # Workflows (chain multiple actions)
 cargo-ai orchestration run create --workflow-uuid <uuid> --data '{"company":"Acme","domain":"acme.com"}'
 cargo-ai orchestration run create --data '{"domain":"acme.com"}' --nodes '[...]'
-cargo-ai orchestration batch create --workflow-uuid <uuid> --data '{"kind":"filter","modelUuid":"..."}'
+cargo-ai orchestration batch create --workflow-uuid <uuid> --data '{"kind":"filter","modelUuid":"...","filter":{"conjonction":"and","groups":[]}}'
 
 # AI agents
 cargo-ai ai message create --chat-uuid <uuid> --parts '[{"type":"text","text":"..."}]'
@@ -294,10 +294,10 @@ accepts a **standalone** segment from `segmentation segment list`; passing the
 populated record count.
 
 ```bash
-# Play workflow — run over the play's model
+# Play workflow — run over the play's model (empty filter = all rows)
 cargo-ai orchestration batch create \
   --workflow-uuid <play.workflowUuid> \
-  --data '{"kind":"filter","modelUuid":"..."}'
+  --data '{"kind":"filter","modelUuid":"...","filter":{"conjonction":"and","groups":[]}}'
 
 # Tool workflow — run on a file
 cargo-ai orchestration batch create \
@@ -308,7 +308,7 @@ cargo-ai orchestration batch create \
 # Or wait synchronously — blocks until the batch reaches a terminal state and returns the final result
 cargo-ai orchestration batch create \
   --workflow-uuid <play.workflowUuid> \
-  --data '{"kind":"filter","modelUuid":"..."}' \
+  --data '{"kind":"filter","modelUuid":"...","filter":{"conjonction":"and","groups":[]}}' \
   --wait-until-finished
 ```
 

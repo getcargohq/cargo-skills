@@ -288,7 +288,7 @@ A checked-out, executable copy of the **context repository** that backs every `c
 A filtered, live view of records in a model. Defined by a filter condition. Used as the trigger population for plays and as a data source for batch runs. Listed via `segmentation segment list`.
 
 **segmentUuid**
-The UUID of a segment. Used in `batch create --data '{"kind":"segment","segmentUuid":"..."}'` — but only for a **standalone** segment from `segmentation segment list`. The `segmentUuid` returned by `play list` is the play's internally generated segment and is rejected by `batch create`; trigger a play with `{"kind":"filter","modelUuid":"<play.modelUuid>"}` instead. Note: `segment fetch` and `segment download` require `--model-uuid`, not `--segment-uuid`.
+The UUID of a segment. Used in `batch create --data '{"kind":"segment","segmentUuid":"..."}'` — but only for a **standalone** segment from `segmentation segment list`. The `segmentUuid` returned by `play list` is the play's internally generated segment and is rejected by `batch create`; trigger a play with `{"kind":"filter","modelUuid":"<play.modelUuid>","filter":{"conjonction":"and","groups":[]}}` instead. Note: `segment fetch` and `segment download` require `--model-uuid`, not `--segment-uuid`.
 
 **slug**
 A human-readable string identifier used throughout the platform. Node slugs identify nodes within a graph (e.g. `enrich_company`). Integration slugs identify integration types (e.g. `clearbit`). Column slugs identify model columns. Slugs use only `[a-zA-Z0-9_]`. In the **context repository**, slugs are kebab-case filenames without the `.md` extension and are referenced as `domain/slug`.
