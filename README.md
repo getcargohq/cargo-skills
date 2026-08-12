@@ -1,5 +1,9 @@
 # Cargo Agent Skills — GTM engineering for AI coding agents
 
+[![cargo-ai cli](https://img.shields.io/npm/v/@cargo-ai/cli?label=cargo-ai%20cli&color=black)](https://www.npmjs.com/package/@cargo-ai/cli)
+[![skills.sh](https://img.shields.io/badge/skills.sh-17%20skills-black)](https://www.skills.sh)
+[![License](https://img.shields.io/github/license/getcargohq/cargo-skills?color=black)](LICENSE)
+
 Seventeen agent skills that turn Claude Code, Codex, Cursor, and any [skills.sh](https://skills.sh)-compatible agent into a go-to-market engineering workstation: **build lead lists, find and verify emails and phone numbers, enrich companies and contacts through provider waterfalls, score and qualify leads, write outreach, sync to your CRM, and monitor buying signals** (job changes, funding rounds, tech-stack and hiring intent) — then make any of it a scheduled, always-on workflow.
 
 They run on the [Cargo CLI](https://www.npmjs.com/package/@cargo-ai/cli) against [Cargo](https://getcargo.ai), the AI-native revenue infrastructure: **138 integrations** (HubSpot, Salesforce, Attio, Pipedrive, Outreach, Salesloft, Lemlist, Smartlead, Instantly, Snowflake, BigQuery, Slack, Google Ads, Meta and LinkedIn audiences, and more), **50 credits-based data providers** with per-action costs documented up front, models and SQL over workspace storage, AI agents with RAG, alerting, hosted apps, and a full workspace-as-code CDK.
@@ -42,7 +46,7 @@ The agent runs the whole setup itself: installs the CLI at the bundle's pinned v
 npx skills add getcargohq/cargo-skills
 ```
 
-Works with Claude Code, Cursor, Windsurf, GitHub Copilot, and any agent that supports the [skills.sh](https://skills.sh) standard.
+Works with Claude Code, Cursor, Windsurf, GitHub Copilot, and any agent that supports the [skills.sh](https://skills.sh) standard. These skills have been installed **54,885 times** across the bundle on skills.sh (August 2026).
 
 ### Just one job — `gtm-skills`
 
