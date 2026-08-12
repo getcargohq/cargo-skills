@@ -46,7 +46,33 @@ The agent runs the whole setup itself: installs the CLI at the bundle's pinned v
 npx skills add getcargohq/cargo-skills
 ```
 
-Works with Claude Code, Cursor, Windsurf, GitHub Copilot, and any agent that supports the [skills.sh](https://skills.sh) standard. These skills have been installed **54,885 times** across the bundle on skills.sh (August 2026).
+Works with Claude Code, Codex, Cursor, Windsurf, GitHub Copilot, [Hermes Agent](#hermes-agent), and any agent that supports the [skills.sh](https://skills.sh) standard. These skills have been installed **54,885 times** across the bundle on skills.sh (August 2026).
+
+### Hermes Agent
+
+[Hermes](https://github.com/NousResearch/hermes-agent) reads the same `SKILL.md` standard, so all seventeen skills work there with no Cargo-side changes. Install them whichever way suits you:
+
+```bash
+# From inside Hermes, via the skills.sh source
+hermes skills install skills-sh/getcargohq/cargo-skills/cargo-gtm
+
+# Or straight from GitHub, one skill at a time
+hermes skills install getcargohq/cargo-skills/cargo-gtm
+
+# Or the whole bundle from outside Hermes
+npx skills add getcargohq/cargo-skills --agent hermes-agent
+```
+
+The last one writes all seventeen to `.hermes/skills/` (or `~/.hermes/skills/` with `-g`). Cross-skill references resolve because the skills land as siblings — the same layout every other channel uses.
+
+To subscribe to the whole repo as a [tap](https://hermes-agent.nousresearch.com/docs), add it and then point it at the repo root, since these skills live at the top level rather than under `skills/`:
+
+```bash
+hermes skills tap add getcargohq/cargo-skills
+# then set "path": "." for this entry in ~/.hermes/skills/.hub/taps.json
+```
+
+**Two things differ on Hermes.** The plugin channel below is Claude Code / Codex / Cursor only, so its approval hook doesn't apply — Hermes gates tool calls with its own approval policy, and its `pre_tool_call` hooks can only *block* a call, never pre-approve one. Expect `cargo-ai` commands to prompt. And with no bundled session-lifecycle hooks, [the session's three jobs](cargo/SKILL.md) (refresh, register, finalize) are the agent's to run by hand — the router skill already accounts for agents without lifecycle hooks.
 
 ### Just one job — `gtm-skills`
 
