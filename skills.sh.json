@@ -1,0 +1,47 @@
+{
+  "$schema": "https://skills.sh/schemas/skills.sh.schema.json",
+  "notGrouped": "bottom",
+  "groupings": [
+    {
+      "title": "Start here — router",
+      "description": "Load first for anything Cargo, and whenever a task spans two domains.",
+      "skills": ["cargo"]
+    },
+    {
+      "title": "Onboarding",
+      "description": "Guided first run: one persona question to 25 real leads with a cost receipt, in under two minutes.",
+      "skills": ["cargo-quickstart"]
+    },
+    {
+      "title": "Outcome — go-to-market",
+      "description": "The front door for any GTM job: sourcing, enrichment, verification, scoring, outreach, CRM sync, signal monitoring.",
+      "skills": ["cargo-gtm"]
+    },
+    {
+      "title": "Run and build",
+      "description": "Execute actions, workflows, and batches; watch them; explain them when they misbehave.",
+      "skills": [
+        "cargo-orchestration",
+        "cargo-diagnostics",
+        "cargo-observability",
+        "cargo-analytics",
+        "cargo-billing"
+      ]
+    },
+    {
+      "title": "Data",
+      "description": "Models, columns, records, SQL over workspace storage, and the saved filters that name an audience.",
+      "skills": ["cargo-storage", "cargo-segmentation", "cargo-connection"]
+    },
+    {
+      "title": "AI and knowledge",
+      "description": "Agents, retrieval, MCP servers, memories, and the workspace's git-backed GTM context.",
+      "skills": ["cargo-ai", "cargo-content", "cargo-context"]
+    },
+    {
+      "title": "Ship and administer",
+      "description": "Hosted apps and edge workers, workspace-as-code, members, tokens, and folders.",
+      "skills": ["cargo-hosting", "cargo-cdk", "cargo-workspace-management"]
+    }
+  ]
+}
