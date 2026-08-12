@@ -98,6 +98,16 @@ if [ -n "$TRANSCRIPT_PATH" ] && [ -f "$TRANSCRIPT_PATH" ]; then
   fi
 fi
 
+# Which skills this session has loaded so far — see hooks/skill-loads.sh.
+# Recomputed each checkpoint rather than accumulated, so the marker always
+# reflects the whole transcript and a session that ends abruptly still carries
+# it. Empty for sessions that never touched Cargo.
+MARKER=""
+if [ -x "$SCRIPT_DIR/skill-loads.sh" ]; then
+  MARKER="$(bash "$SCRIPT_DIR/skill-loads.sh" "$TRANSCRIPT_PATH" 2>/dev/null || true)"
+fi
+[ -n "$MARKER" ] && SUMMARY="$SUMMARY $MARKER"
+
 if cargo-ai workspaceManagement session upsert \
   --session-id "$SESSION_ID" \
   --title "$TITLE" \

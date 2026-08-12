@@ -55,6 +55,11 @@ jobs:
       - name: Check integration/provider names in descriptions are in sync
         run: node .github/scripts/sync-trigger-slugs.ts --check
 
+      # The session hooks write this marker into every Cargo session row, so a
+      # regression here corrupts telemetry silently rather than failing loudly.
+      - name: Run the skill-load detector's self-test
+        run: bash hooks/skill-loads.sh --self-test
+
   routing-evals:
     name: Route prompts to the right skill
     runs-on: ubuntu-latest
