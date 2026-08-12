@@ -22,6 +22,8 @@ metadata:
 
 One guided demo: pull ~25 fresh leads matching a buyer persona the user picks, show the cost receipt, then save the pull as a recurring play. The point is not the list — it's that in minute 3 the user owns a running system, not a one-off result.
 
+**A new account starts with 100 free credits — no card.** This demo spends about **0.5** of them. Say that out loud before the first paid call ("this costs about half a credit of your 100 free ones"): it converts the moment from *a purchase decision* into *a look around*, which is the whole job of a quickstart. Never let a new user think the demo is why they'd run out.
+
 ## Bootstrap
 
 Already signed in (`cargo-ai whoami` returns a workspace)? Skip to the next section.
@@ -91,7 +93,7 @@ Show the table (name · title · company · recently-hired), not the raw JSON. `
 
 The demo is itself the pilot from [`../cargo-gtm/references/cost-discipline.md`](../cargo-gtm/references/cost-discipline.md). Close it with a receipt:
 
-- Credits spent + balance remaining (`cargo-ai billing subscription get` — remaining = `subscriptionAvailableCreditsCount − subscriptionCreditsUsedCount`).
+- Credits spent + balance remaining (`cargo-ai billing subscription get` — remaining = `subscriptionAvailableCreditsCount − subscriptionCreditsUsedCount`). For a brand-new account, frame it against the **100 free starting credits** rather than as a bare number — "0.5 spent, 99.5 of your 100 free credits left" lands very differently from "99.5 credits remaining".
 - Hit-rate: "25 of 25 returned" (or what actually came back, and which rows look off).
 
 ## Minute 3 — save it as a play

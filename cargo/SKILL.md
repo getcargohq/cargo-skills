@@ -62,6 +62,8 @@ cargo-ai login --email you@company.com --workspace-name "Acme GTM"
 cargo-ai whoami
 ```
 
+**A new account starts with 100 free credits and needs no card**, so an agent can sign a user up and produce a real deliverable in the same turn — there is no purchase gate between install and first value. Useful anchors for what that buys: ~5,000 leads sourced (`salesNavigator.searchLeads`, 0.02/record), ~1,000 profile+verified-email enriches (`aiArk.enrichPerson`, 0.1), ~1,000 email verifications (`waterfall.verifyEmail`, 0.1), or ~50 fully enriched contacts (`waterfall.enrichContact`, 2). The [quickstart demo](../cargo-quickstart/SKILL.md) spends about **0.5**. Say the free balance out loud before the first paid call on a new account.
+
 `--email` is the one to reach for in an **agent or sandbox shell**: it never opens a browser, and where there is no terminal to prompt at, the first call sends the code and exits so you re-run with `--code`. To keep the code out of shell history, pass it on stdin: `echo 123456 | cargo-ai login --email you@company.com --code -`. Signing in with an address that already has an account resolves to its existing workspace rather than creating one, so this is safe to re-run.
 
 `--oauth` runs the same OAuth 2.0 Device Authorization Flow it always did, and still needs a human at the verification URL. Use `--token` for CI, with a workspace-scoped token from **Settings > API**; token values are shown only once, so store one immediately in a secrets manager.

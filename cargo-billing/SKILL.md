@@ -1,6 +1,6 @@
 ---
 name: cargo-billing
-description: "Understand what Cargo is costing — remaining credits, usage broken down by workflow, connector, or agent, subscription state, and invoice history. Triggers: \"how many credits do I have left\", \"what did that cost\", \"why is my bill so high\", \"am I about to run out\", \"will this fit in our budget\", \"show me my invoices\", \"how much have I spent this month\", \"what plan am I on\", \"can I afford this run\". Needs a token with admin access. Skip when: attributing spend to specific nodes or cutting a play cost — use cargo-diagnostics."
+description: "Understand what Cargo is costing — remaining credits, usage broken down by workflow, connector, or agent, subscription state, and invoice history. Triggers: \"how many credits do I have left\", \"what did that cost\", \"why is my bill so high\", \"am I about to run out\", \"will this fit in our budget\", \"show me my invoices\", \"how much have I spent this month\", \"what plan am I on\", \"what do I get for free\", \"how many free credits\", \"can I afford this run\". Needs a token with admin access. Skip when: attributing spend to specific nodes or cutting a play cost — use cargo-diagnostics."
 version: "1.0.3"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
@@ -157,6 +157,22 @@ cargo-ai billing subscription create-portal-session   # Stripe portal URL for se
 Remaining credits = `subscriptionAvailableCreditsCount - subscriptionCreditsUsedCount` from `subscription get`.
 
 **Note:** Invoice amounts are returned in cents. Divide by 100 for the dollar value.
+
+### The free tier
+
+A new account starts with **100 free credits and no card on file**. When `subscription get` shows a fresh or near-fresh balance, answer cost questions against that budget rather than as an abstract number — "you've used 12 of your 100 free credits" is the useful answer to "how am I doing?", and it is also the honest one when the user is deciding whether to keep going.
+
+What 100 credits buys, as ballpark anchors (per-action costs in [`../cargo-gtm/references/credits-cost-table.md`](../cargo-gtm/references/credits-cost-table.md)):
+
+| Work | Cost | 100 credits ≈ |
+|---|---|---|
+| Source leads — `salesNavigator.searchLeads` | 0.02/record | ~5,000 leads |
+| Enrich from a LinkedIn URL + verified email — `aiArk.enrichPerson` | 0.1 | ~1,000 people |
+| Verify an email — `waterfall.verifyEmail` | 0.1 | ~1,000 checks |
+| Full contact enrichment — `waterfall.enrichContact` | 2 | ~50 contacts |
+| Find a phone — `FullEnrich.findPhone` | 6 | ~16 numbers |
+
+The [quickstart demo](../cargo-quickstart/SKILL.md) spends about **0.5**. Phone lookups are the fastest way to burn a free tier — see the guarded-lever rule in [`../cargo-gtm/references/cost-discipline.md`](../cargo-gtm/references/cost-discipline.md).
 
 ## Help
 

@@ -163,8 +163,10 @@ Or manually:
 \`\`\`bash
 npx skills add getcargohq/cargo-skills
 npm install -g @cargo-ai/cli
-cargo-ai login --oauth
+cargo-ai login --email you@company.com   # emailed code, no browser; creates the account on first use
 \`\`\`
+
+A new account starts with **100 free credits, no card** — roughly 5,000 leads sourced or 1,000 verified-email enrichments. The two-minute quickstart demo spends about 0.5 of them, so an agent can install, sign the user up, and return a real deliverable in one turn.
 
 ## Skills
 

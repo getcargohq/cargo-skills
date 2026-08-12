@@ -113,3 +113,5 @@
 {"prompt":"Fire this off across every row in the model","expect":"cargo-orchestration","tier":"hard"}
 {"prompt":"Put the onboarding PDFs somewhere the assistant can read them","expect":"cargo-content","tier":"hard"}
 {"prompt":"Rotate the key we gave to the CI pipeline","expect":"cargo-workspace-management","tier":"hard"}
+{"prompt": "How many free credits do I get to start with?", "expect": "cargo-billing", "why": "Free-tier questions are a first-session trigger; the fact lives in billing."}
+{"prompt": "What do I get for free before I have to pay?", "expect": "cargo-billing"}

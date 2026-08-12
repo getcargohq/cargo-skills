@@ -20,6 +20,8 @@ Tell your agent what you want and it picks the skill:
 > *"Alert me when my enrichment error rate goes above 5%."*
 > *"Set up our whole workspace as code so I can review it in a PR."*
 
+**A new account starts with 100 free credits — no card.** That is ~5,000 leads sourced, or ~1,000 verified-email enrichments, and the [two-minute quickstart demo](#onboarding--cargo-quickstart) spends about 0.5 of them. Your agent can install, sign you up, and hand back a real list in one turn.
+
 Machine-readable index for agents and crawlers: [`llms.txt`](llms.txt).
 
 ## Install
