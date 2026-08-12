@@ -48,3 +48,6 @@ jobs:
             node "$script" --fixtures
             echo "::endgroup::"
           done
+
+      - name: Check llms.txt is in sync with the skill tree
+        run: node .github/scripts/generate-llms-txt.ts --check

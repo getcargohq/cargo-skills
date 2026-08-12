@@ -115,6 +115,32 @@ state) · `cargo-ai cdk rollback` (restore the pre-deploy state snapshot).
 | Exact command flags | [`references/commands.md`](references/commands.md) | Every `cargo-ai cdk` subcommand and its flags. |
 | A deploy error / footgun | [`references/troubleshooting.md`](references/troubleshooting.md) | The known failure modes and fixes. |
 
+### Cookbooks — check the menu before authoring a known outcome from scratch
+
+[`getcargohq/cargo-cookbooks`](https://github.com/getcargohq/cargo-cookbooks) is a
+library of ~20 composable cookbook folders of pre-written `define*` resources — one
+per GTM outcome (TAM building, list building, inbound qualification, contact
+sourcing, routing engine, account scoring, auto-enrichment, meeting prep, pipeline
+health, AI SDR, rep cockpit, …), all built on a shared `base-gtm` foundation
+(accounts/contacts models + core connectors). A cookbook scaffolds directly:
+
+```sh
+cargo-ai cdk init my-tam --from getcargohq/cargo-cookbooks/tam-building
+```
+
+`--from` pulls the cookbook plus its required siblings (`base-gtm`, transitively)
+with the folder layout intact, so cross-folder imports resolve.
+
+**Routing rule:** when the user asks for a common GTM outcome as code, read the
+cookbook menu (the repo README's table) **first**. A cookbook matches → scaffold
+it, edit the `PLACEHOLDER`-marked values (API keys via env, channel IDs, persona
+filters), then `plan` → `deploy`. No match → author from the recipes below.
+
+Caveats: cookbooks typecheck and their scaffold graph validates, but they are not
+yet deploy-verified against a live workspace — treat each cookbook README's "Done
+when" section as the acceptance test, and always review `cargo-ai cdk plan` before
+deploying.
+
 ### Recipes — follow step-by-step when one matches
 
 | Recipe | Use when… |

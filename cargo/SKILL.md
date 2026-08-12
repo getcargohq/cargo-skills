@@ -566,6 +566,13 @@ against the workspace) → author `define*` files → `cdk plan` (offline diff) 
 **Recipes shipped:** `recipes/scaffold-a-workspace.md`, `add-connector-and-model.md`,
 `build-an-agent.md`, `migrate-existing-workspace.md`, `deploy-from-ci.md`.
 
+**Cookbooks:** ~20 scaffoldable outcome templates (TAM building, inbound flow,
+contact sourcing, account scoring, AI SDR, …) live in
+[`getcargohq/cargo-cookbooks`](https://github.com/getcargohq/cargo-cookbooks) —
+`cargo-ai cdk init <dir> --from getcargohq/cargo-cookbooks/<name>`. Check that menu
+before authoring a common GTM outcome from scratch; see the Cookbooks section of
+`../cargo-cdk/SKILL.md` for the routing rule and caveats.
+
 **References:** `../cargo-cdk/SKILL.md`
 
 ---
