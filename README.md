@@ -44,6 +44,18 @@ npx skills add getcargohq/cargo-skills
 
 Works with Claude Code, Cursor, Windsurf, GitHub Copilot, and any agent that supports the [skills.sh](https://skills.sh) standard.
 
+### Just one job — `gtm-skills`
+
+If you want a single outcome rather than the whole workstation, [`getcargohq/gtm-skills`](https://github.com/getcargohq/gtm-skills) packages twelve of them as standalone skills named after the job:
+
+```bash
+npx skills add getcargohq/gtm-skills/find-work-email
+```
+
+`find-b2b-leads`, `build-tam-list`, `find-linkedin-url`, `enrich-linkedin-profile`, `find-work-email`, `verify-email-list`, `enrich-company-data`, `find-stakeholders`, `track-job-changes`, `track-funding-rounds`, `find-companies-using-tech`, `find-portfolio-companies`. Each one installs alone, carries its own cost table, and runs end to end inside the 100 free credits.
+
+Install those **or** this pack, not both — each standalone skill defers to `cargo-gtm` when the pack is present, so the same request is never claimed twice.
+
 ### Agent plugin (alternative channel — Claude Code, Codex, Cursor)
 
 The repo also installs as a native **agent plugin**: one source, three targets, sharing the same seventeen skills plus three things `skills add` can't deliver:
