@@ -17,6 +17,15 @@
 # lifecycle ever runs.
 set -u
 
+# Exit inside the SessionEnd summarizer child. That child is a `claude -p`
+# subprocess spawned by hooks/session-end.sh, and it fires the full lifecycle
+# just like a real session — registering a phantom session row and re-running
+# `skills add` / `npm install -g` for a process whose only job is to write a
+# title. See the recursion note in hooks/session-end.sh.
+if [ "${CARGO_SESSION_SUMMARIZER:-}" = "1" ]; then
+  exit 0
+fi
+
 SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
 MODE="${1:-}"
 if [ -z "$MODE" ]; then
