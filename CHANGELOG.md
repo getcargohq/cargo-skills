@@ -10,6 +10,16 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### `cargo` → 1.18.2 (router) — close the ClawHub security-audit gaps
+
+ClawHub's automated audit of the published bundle (SkillSpector, v1.18.1) returned **Review** with five findings. Three were real documentation gaps — not behavior changes, just places where the bundle assumed the reader had the whole thing in context. Fixed here.
+
+- **Bootstrap use-case now carries the credential warning.** [`references/use-cases.md`](cargo/references/use-cases.md) §6 opened on `workspaceManagement token create` as a bare numbered step. The "shown once → secrets manager" rule lived in ~10 other files but not this one, so an agent that loaded only the use-cases reference never saw it. Added a note covering token handling, least-privilege scoping (the bootstrap needs admin; the token that later runs plays does not), and confirming the token's scope and the invite list — steps 1 and 3, the two that actually grant access — before running them. The audit's "modifying shared state" finding.
+- **The `curl … install.sh | sh` bootstrap now says what it is** in [`README.md`](README.md) and [`cargo/SKILL.md`](cargo/SKILL.md) — a network-fetched script piped to a shell, with the by-hand equivalent and a download-once-then-run recipe for anyone who wants to read the exact bytes they execute. The router additionally tells the agent never to run it on the user's behalf without asking. Both files avoid pointing readers at the private `getcargohq/cargo` repo, and `cargo-workspace-management/SKILL.md` no longer inlines the pipe-to-shell command while describing what the installer wires up.
+- **The `cli-version` pin is now documented as a safety property, not only a coherence one.** The audit read job 1 as "encourages automatic remote updates", which is fair for a session-start step that installs a global npm package and rewrites the skills bundle on disk. The [pin](cargo/cli-version) is what makes it a reviewed constant rather than whatever `latest` resolved to that morning. `cargo/SKILL.md` now says so, tells the agent to surface the refresh the first time it runs rather than doing it silently, and marks the pin read-only — never bumped to work around a failing command.
+
+The two remaining findings need no change: "external transmission to `api.getcargo.io`" is the product's own API, and the 97%-confidence "External Script Fetching" match is the same installer covered above.
+
 ### Repository — agent discoverability pass
 
 The `description` field is the only text an agent weighs before deciding whether to load a skill; everything else in the bundle is invisible until that decision is already made. This pass rebuilds that layer and adds a test for it.
