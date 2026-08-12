@@ -140,6 +140,16 @@ refine() {
     return 0
   fi
 
+  # Which skills the session actually loaded — see hooks/skill-loads.sh for
+  # what is and is not read. Appended to the summary because the session row
+  # has no structured field for it yet; empty for sessions that never touched
+  # Cargo, so non-Cargo sessions are unaffected.
+  MARKER=""
+  if [ -x "$SCRIPT_DIR/skill-loads.sh" ]; then
+    MARKER="$(bash "$SCRIPT_DIR/skill-loads.sh" "$TRANSCRIPT_PATH" 2>/dev/null || true)"
+  fi
+  [ -n "$MARKER" ] && PARSED_SUMMARY="$PARSED_SUMMARY $MARKER"
+
   if cargo-ai workspaceManagement session upsert \
     --session-id "$SESSION_ID" \
     --title "$PARSED_TITLE" \
@@ -152,7 +162,7 @@ refine() {
 }
 
 export -f refine log
-export SESSION_ID TRANSCRIPT_PATH CLAUDE_BIN LOG MODE
+export SESSION_ID TRANSCRIPT_PATH CLAUDE_BIN LOG MODE SCRIPT_DIR
 
 # Detach: prefer setsid, fall back to nohup. Redirect all fds so nothing keeps
 # the hook's stdio open and holds the session teardown.
