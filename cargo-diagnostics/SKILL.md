@@ -77,7 +77,7 @@ Full query syntax, table columns, and caps: [`../cargo-orchestration/references/
 
 ## Presenting findings
 
-Follow [`../cargo/references/interaction.md`](../cargo/references/interaction.md): lead with the conclusion ("18 of 20 failures are one cause: the connector's token expired"), summarize evidence in a short table, never dump raw `run get` JSON or full query results into the conversation. Any fix that re-runs paid nodes goes through the pilot gate in [`../cargo-gtm/references/cost-discipline.md`](../cargo-gtm/references/cost-discipline.md).
+Follow [`../cargo/references/interaction.md`](../cargo/references/interaction.md): lead with the conclusion ("18 of 20 failures are one cause: the connector's token expired"), summarize evidence in a short table, never dump raw `run get` JSON or full query results into the conversation. Any fix that re-runs paid nodes goes through the pilot gate: re-run **10–20 records** first, report the observed cost and hit-rate, then ask the user to approve the rest quoting the **record count** and **credit estimate** — a diagnosis is not approval to re-bill the batch that produced it. Full spend rules in [`../cargo-gtm/references/cost-discipline.md`](../cargo-gtm/references/cost-discipline.md).
 
 ## When diagnosis dead-ends
 

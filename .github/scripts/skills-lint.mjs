@@ -437,6 +437,35 @@ function main() {
     }
   }
 
+  // 3c. A spend rule may never live *only* behind a cross-skill link. The `../`
+  //     paths resolve because every install channel lays all skills down as
+  //     siblings — but nothing in the manifests guarantees that, and a dangling
+  //     Read fails silently: the agent proceeds without the rule instead of
+  //     erroring. Cheap links are fine everywhere; a rule that costs money when
+  //     skipped has to be stated where it applies. So any SKILL.md citing
+  //     cost-discipline.md must also carry an inline safeguard of its own.
+  const SPEND_SAFEGUARDS = [
+    /10\s*[–-]\s*20\s+record/i, // the sample gate
+    /credit estimate/i, // the approval quote
+    /record count/i,
+    /re-bills?\b/i, // recurring-spend warning (alerts, scheduled plays)
+    /(credit|demo)\s+cap/i, // a hard ceiling instead of a gate
+    /guarded[-\s]lever/i, // the phone-escalation rule (cost-discipline §5)
+  ];
+  for (const dir of SKILL_DIRS) {
+    const p = join(repoRoot, dir, "SKILL.md");
+    if (!existsSync(p)) continue;
+    const src = readFileSync(p, "utf8");
+    if (!/cost-discipline\.md/.test(src)) continue;
+    if (!SPEND_SAFEGUARDS.some((re) => re.test(src))) {
+      err(
+        p,
+        0,
+        "Links `../cargo-gtm/references/cost-discipline.md` but states no spend rule inline. A single-skill install has no `../cargo-gtm/` sibling and the Read fails silently — inline the gate (sample size + record count + credit estimate), keeping the link as the full reference."
+      );
+    }
+  }
+
   // 4. The CLI pin: cargo/cli-version is the source of truth the SessionStart
   //    hook and install.sh consume. It must exist and be a bare semver line.
   //    The openclaw install blocks stay @latest on purpose (they only bootstrap

@@ -10,8 +10,9 @@
  *   node .github/scripts/routing-eval.ts --verbose  # per-case scores
  *   node .github/scripts/routing-eval.ts --llm      # + real model routing
  *                                                     (needs ANTHROPIC_API_KEY)
+ *   node .github/scripts/routing-eval.ts --llm --llm-min=90   # gate on a floor
  *
- * Two tiers:
+ * Three tiers:
  *
  *  1. STRUCTURAL — every description obeys the four-part template documented in
  *     CONTRIBUTING.md (job → literal triggers → proper nouns → skip-when), and
@@ -26,12 +27,14 @@
  *     territory, or a new skill that steals an existing one's prompts.
  *
  *  3. LLM (opt-in) — asks a real model to pick from the descriptions alone.
- *     Costs money and is non-deterministic, so it never gates CI.
+ *     Costs money and is non-deterministic, so it lives in its own workflow
+ *     (.github/workflows/routing-evals-llm.yml) and never gates skills-lint.
+ *     Pass --llm-min=<percent> to fail below a floor once a baseline exists.
  *
  * Requires Node >= 22.18 (run as .ts via native type-stripping).
  */
 
-import { readdirSync, readFileSync, existsSync, statSync } from "node:fs";
+import { readdirSync, readFileSync, existsSync, statSync, appendFileSync } from "node:fs";
 import { join, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -40,6 +43,9 @@ const casesPath = join(repoRoot, "evals/routing.jsonl");
 const verbose = process.argv.includes("--verbose");
 const withLlm = process.argv.includes("--llm");
 const strict = process.argv.includes("--strict");
+
+/** Cheapest capable model — this is a routing judgement, not a reasoning task. */
+const LLM_MODEL = process.env.ROUTING_EVAL_MODEL ?? "claude-haiku-4-5-20251001";
 
 interface Skill {
   name: string;
@@ -282,43 +288,152 @@ function runLexical(skills: Skill[], cases: Case[]): LexicalResult {
 
 // ----------------------------------------------------------------- llm (opt)
 
-async function runLlm(skills: Skill[], cases: Case[]): Promise<void> {
+/** Run `limit` promises at a time — 92 sequential API calls is a slow CI job. */
+async function mapConcurrent<T, R>(
+  items: T[],
+  limit: number,
+  fn: (item: T, index: number) => Promise<R>,
+): Promise<R[]> {
+  const out: R[] = new Array(items.length);
+  let next = 0;
+  const workers = Array.from({ length: Math.min(limit, items.length) }, async () => {
+    for (;;) {
+      const i = next++;
+      if (i >= items.length) return;
+      out[i] = await fn(items[i], i);
+    }
+  });
+  await Promise.all(workers);
+  return out;
+}
+
+interface LlmVerdict {
+  case: Case;
+  picked: string;
+  hit: boolean;
+}
+
+async function runLlm(skills: Skill[], cases: Case[]): Promise<boolean> {
   const key = process.env.ANTHROPIC_API_KEY;
   if (!key) {
     console.log("\n--llm: ANTHROPIC_API_KEY not set — skipping the model tier.");
-    return;
+    return true;
   }
+  // The model sees exactly what a real agent sees before it loads anything:
+  // the skill names and their descriptions, and nothing else.
   const catalog = skills.map((s) => `<skill name="${s.name}">${s.description}</skill>`).join("\n");
-  let correct = 0;
-  const misses: string[] = [];
+  const names = new Set(skills.map((s) => s.name));
+  let apiError = "";
 
-  for (const c of cases) {
-    const res = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        "x-api-key": key,
-        "anthropic-version": "2023-06-01",
-      },
-      body: JSON.stringify({
-        model: "claude-haiku-4-5-20251001",
-        max_tokens: 32,
-        system:
-          "You route a user request to exactly one agent skill, judging only by the skill descriptions given. Reply with the skill name and nothing else.",
-        messages: [{ role: "user", content: `${catalog}\n\nUser request: ${c.prompt}\n\nSkill name:` }],
-      }),
-    });
-    if (!res.ok) {
-      console.error(`--llm: API error ${res.status} — aborting the model tier.`);
-      return;
+  const verdicts = await mapConcurrent(cases, 6, async (c): Promise<LlmVerdict> => {
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-api-key": key,
+          "anthropic-version": "2023-06-01",
+        },
+        body: JSON.stringify({
+          model: LLM_MODEL,
+          max_tokens: 32,
+          system:
+            "You route a user request to exactly one agent skill, judging only by the skill descriptions given. Reply with the skill name and nothing else.",
+          messages: [
+            { role: "user", content: `${catalog}\n\nUser request: ${c.prompt}\n\nSkill name:` },
+          ],
+        }),
+      });
+      if (res.status === 429 || res.status >= 500) {
+        await new Promise((r) => setTimeout(r, 1000 * 2 ** attempt));
+        continue;
+      }
+      if (!res.ok) {
+        apiError ||= `API error ${res.status}: ${(await res.text()).slice(0, 200)}`;
+        return { case: c, picked: "", hit: false };
+      }
+      const body = (await res.json()) as { content: { text?: string }[] };
+      const raw = (body.content?.[0]?.text ?? "").trim();
+      // Accept the bare name, or the name embedded in a short sentence.
+      const picked =
+        [...names].find((n) => raw === n) ??
+        [...names].sort((a, b) => b.length - a.length).find((n) => raw.includes(n)) ??
+        "";
+      return { case: c, picked, hit: picked === c.expect };
     }
-    const body = (await res.json()) as { content: { text?: string }[] };
-    const picked = (body.content?.[0]?.text ?? "").trim().split(/\s/)[0].replace(/[^a-z-]/g, "");
-    if (picked === c.expect) correct++;
-    else misses.push(`  ${c.prompt}\n    expected ${c.expect}, model picked ${picked || "(nothing)"}`);
+    apiError ||= "rate limited after 3 attempts";
+    return { case: c, picked: "", hit: false };
+  });
+
+  if (apiError) {
+    console.error(`\n--llm: ${apiError}`);
+    return false;
   }
-  console.log(`\nLLM tier: ${correct}/${cases.length} routed correctly (${((correct / cases.length) * 100).toFixed(0)}%).`);
-  if (misses.length) console.log(misses.join("\n"));
+
+  const split = (tier: "core" | "hard") =>
+    verdicts.filter((v) => (v.case.tier === "hard") === (tier === "hard"));
+  const coreV = split("core");
+  const hardV = split("hard");
+  const pct = (n: number, d: number) => (d ? ((n / d) * 100).toFixed(0) : "—");
+  const coreHits = coreV.filter((v) => v.hit).length;
+  const hardHits = hardV.filter((v) => v.hit).length;
+  const allHits = coreHits + hardHits;
+
+  const lines = [
+    "",
+    `LLM tier (${LLM_MODEL}) — routing from descriptions alone:`,
+    `  overall  ${allHits}/${verdicts.length} (${pct(allHits, verdicts.length)}%)`,
+    `  core     ${coreHits}/${coreV.length} (${pct(coreHits, coreV.length)}%)`,
+    `  hard     ${hardHits}/${hardV.length} (${pct(hardHits, hardV.length)}%)  — deep paraphrases the offline ranker cannot judge`,
+  ];
+  const misses = verdicts.filter((v) => !v.hit);
+  if (misses.length) {
+    lines.push("", "  Misrouted:");
+    for (const m of misses) {
+      lines.push(
+        `    "${m.case.prompt}"`,
+        `      wanted ${m.case.expect}${m.case.tier === "hard" ? " (hard)" : ""}, model picked ${m.picked || "(unparseable)"}`,
+      );
+    }
+  }
+  const report = lines.join("\n");
+  console.log(report);
+
+  // Surface the number on the GitHub Actions run page, not just in the log.
+  const summaryPath = process.env.GITHUB_STEP_SUMMARY;
+  if (summaryPath) {
+    const rows = [
+      "## Routing evals — real-model tier",
+      "",
+      `Model: \`${LLM_MODEL}\` · judged from skill descriptions alone.`,
+      "",
+      "| Tier | Routed correctly |",
+      "|---|---|",
+      `| Overall | **${allHits}/${verdicts.length}** (${pct(allHits, verdicts.length)}%) |`,
+      `| Core | ${coreHits}/${coreV.length} (${pct(coreHits, coreV.length)}%) |`,
+      `| Hard (deep paraphrase) | ${hardHits}/${hardV.length} (${pct(hardHits, hardV.length)}%) |`,
+    ];
+    if (misses.length) {
+      rows.push("", "### Misrouted", "", "| Prompt | Wanted | Model picked |", "|---|---|---|");
+      for (const m of misses) {
+        rows.push(`| ${m.case.prompt} | \`${m.case.expect}\` | \`${m.picked || "?"}\` |`);
+      }
+    }
+    appendFileSync(summaryPath, rows.join("\n") + "\n");
+  }
+
+  // Optional floor, so a description edit that tanks real routing fails loudly.
+  const minArg = process.argv.find((a) => a.startsWith("--llm-min="));
+  if (minArg) {
+    const floor = Number(minArg.split("=")[1]);
+    const achieved = (allHits / verdicts.length) * 100;
+    if (achieved < floor) {
+      console.error(`\n--llm: ${achieved.toFixed(0)}% is below the --llm-min=${floor} floor.`);
+      return false;
+    }
+    console.log(`\n--llm: ${achieved.toFixed(0)}% clears the --llm-min=${floor} floor.`);
+  }
+  return true;
 }
 
 // ---------------------------------------------------------------------- main
@@ -351,9 +466,11 @@ if (failures.length) {
   for (const f of failures) console.error(`  ✗ ${f}\n`);
 }
 
-if (withLlm) await runLlm(skills, cases);
+let llmOk = true;
+if (withLlm) llmOk = await runLlm(skills, cases);
 
-const gatedFailures = failures.length + structural.length + (strict ? hard.total - hard.pass : 0);
+const gatedFailures =
+  failures.length + structural.length + (strict ? hard.total - hard.pass : 0) + (llmOk ? 0 : 1);
 if (gatedFailures) {
   console.error(
     `\n${gatedFailures} failure(s). Fix the description (CONTRIBUTING.md → "The description is the product") or, if the routing change is intended, update evals/routing.jsonl.`,

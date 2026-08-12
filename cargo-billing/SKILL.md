@@ -172,7 +172,7 @@ What 100 credits buys, as ballpark anchors (per-action costs in [`../cargo-gtm/r
 | Full contact enrichment — `waterfall.enrichContact` | 2 | ~50 contacts |
 | Find a phone — `FullEnrich.findPhone` | 6 | ~16 numbers |
 
-The [quickstart demo](../cargo-quickstart/SKILL.md) spends about **0.5**. Phone lookups are the fastest way to burn a free tier — see the guarded-lever rule in [`../cargo-gtm/references/cost-discipline.md`](../cargo-gtm/references/cost-discipline.md).
+The [quickstart demo](../cargo-quickstart/SKILL.md) spends about **0.5**. Phone lookups are the fastest way to burn a free tier, so phone is the **guarded lever**: the escalation tier runs 3–7 credits/record, ~10× email, and never belongs in a default chain — it enters a plan only on explicit user request, on qualified leads only. Full spend rules in [`../cargo-gtm/references/cost-discipline.md`](../cargo-gtm/references/cost-discipline.md).
 
 ## Help
 
