@@ -78,6 +78,13 @@ Worked recipes showing which skills to load and the command sequence for common 
 9. workspaceManagement folder create         → organize plays and tools into folders
 ```
 
+**Credentials in step 1:** the `token create` response is the **only** time the token
+value is shown — hand it to the user for a secrets manager (GitHub Secrets, AWS Secrets
+Manager) rather than echoing it into a file, a commit, or the transcript. Scope it to
+what the job needs: most of this bootstrap requires **admin**, but the token that later
+runs plays or batches does not. Steps 3 and 9 change who can see and touch workspace
+data, so confirm the invite list and the roles with the user before running them.
+
 ## 7. Export and analyze segment data
 
 **Skills needed:** `cargo-storage`, `cargo-analytics`

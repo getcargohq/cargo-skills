@@ -1,7 +1,7 @@
 {
   "name": "cargo",
   "description": "Build with Cargo in Codex — 17 skills over the cargo-ai CLI (lead lists, enrichment, email finding, CRM sync, signal monitoring, orchestration, storage, segments, CDK, diagnostics) plus prompt-free approval for safe cargo-ai calls.",
-  "version": "1.18.1",
+  "version": "1.18.2",
   "author": { "name": "getcargo" },
   "homepage": "https://github.com/getcargohq/cargo-skills",
   "skills": "./",
