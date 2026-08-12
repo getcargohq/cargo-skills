@@ -50,9 +50,13 @@ jobs:
           skipped=0
           failed=0
 
-          for dir in cargo cargo-quickstart cargo-gtm cargo-cdk cargo-orchestration cargo-storage \
-                     cargo-connection cargo-ai cargo-content cargo-context cargo-analytics \
-                     cargo-billing cargo-diagnostics cargo-hosting cargo-workspace-management; do
+          # Discovered from the tree rather than hand-listed. The previous list
+          # silently omitted cargo-segmentation and cargo-observability, so two
+          # shipped skills never reached the registry at all.
+          for dir in */; do
+            dir="${dir%/}"
+            [ -f "$dir/SKILL.md" ] || continue
+
             version=$(awk -F'"' '/^version:/ {print $2; exit}' "$dir/SKILL.md")
             if [ -z "$version" ]; then
               echo "::error::No version: in $dir/SKILL.md"
