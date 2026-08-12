@@ -32,10 +32,14 @@ emit_marker() {
   # Skills invoked through the Skill tool — both model-chosen and user-typed
   # (`/cargo-gtm`). Plugin installs namespace them as `cargo:cargo-gtm`, so
   # strip the prefix and dedupe, or the same skill counts twice by channel.
+  #
+  # IMPORTANT: preserve load order (first occurrence wins) so the first skill
+  # in a multi-skill session is the misroute candidate. `awk '!seen[$0]++'`
+  # dedupes while keeping order, unlike `sort -u`.
   skills="$(
     grep -o '"skill":"\(cargo:\)\?cargo[a-z-]*"' "$transcript" 2>/dev/null |
       sed 's/.*"skill":"//; s/"$//; s/^cargo://' |
-      sort -u | paste -sd, - 2>/dev/null || true
+      awk '!seen[$0]++' | paste -sd, - 2>/dev/null || true
   )"
 
   # Reference docs opened underneath a skill — the deeper signal, because it
@@ -145,6 +149,16 @@ self_test() {
   check "cap is declared" \
     "[cargo-skills: docs: r01,r02,r03,r04,r05,r06,r07,r08,r09,r10,r11,r12,+2 more]" \
     "$(emit_marker "$tmp/h.jsonl")"
+
+  # 10. Load order is preserved — the first skill is the misroute candidate.
+  #     `cargo-enrich` comes before `cargo-gtm` alphabetically but after in
+  #     transcript order; must stay in load order.
+  {
+    printf '%s\n' '{"name":"Skill","input":{"skill":"cargo-gtm"}}'
+    printf '%s\n' '{"name":"Skill","input":{"skill":"cargo-enrich"}}'
+    printf '%s\n' '{"name":"Skill","input":{"skill":"cargo-gtm"}}'
+  } >"$tmp/i.jsonl"
+  check "skills preserve load order" "[cargo-skills: cargo-gtm,cargo-enrich]" "$(emit_marker "$tmp/i.jsonl")"
 
   [ "$fail" -eq 0 ] && printf '\nskill-loads.sh: all checks passed\n'
   return "$fail"

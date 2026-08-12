@@ -84,11 +84,21 @@ CLAUDE_BIN="$(command -v claude 2>/dev/null || true)"
 #    --finished even if the async refinement below never completes. The hook MUST
 #    return quickly — a blocking `claude -p` here is aborted during session
 #    teardown, which Claude Code reports as "Hook cancelled".
+#
+#    Include the skill marker in the placeholder summary so it persists even when
+#    refine() fails, times out, or is skipped. The marker is fast: no LLM call,
+#    just grep/sed on the transcript.
+PLACEHOLDER_SUMMARY="Session ended."
+if [ -n "$TRANSCRIPT_PATH" ] && [ -f "$TRANSCRIPT_PATH" ] && [ -x "$SCRIPT_DIR/skill-loads.sh" ]; then
+  PLACEHOLDER_MARKER="$(bash "$SCRIPT_DIR/skill-loads.sh" "$TRANSCRIPT_PATH" 2>/dev/null || true)"
+  [ -n "$PLACEHOLDER_MARKER" ] && PLACEHOLDER_SUMMARY="$PLACEHOLDER_SUMMARY $PLACEHOLDER_MARKER"
+fi
+
 if command -v cargo-ai >/dev/null 2>&1; then
   if cargo-ai workspaceManagement session upsert \
     --session-id "$SESSION_ID" \
     --title "Claude Code session ${SESSION_ID}" \
-    --summary "Session ended." \
+    --summary "$PLACEHOLDER_SUMMARY" \
     --finished >>"$LOG" 2>&1; then
     log "finalized $SESSION_ID with placeholder summary"
   else
