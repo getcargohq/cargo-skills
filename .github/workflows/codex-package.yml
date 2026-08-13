@@ -7,20 +7,21 @@ name: Codex package
 #   - on a release: build the archive and attach it, so publishing is
 #     "download the asset, drop it in the portal" rather than "find whoever
 #     built the zip last time".
-#   - on a PR touching skills or the builder: run the same build, so a change
-#     that would fail OpenAI's validator fails here instead — months before
-#     someone spends a review cycle discovering it.
+#   - on every PR: run the same build, so a change that would fail OpenAI's
+#     validator fails here instead — months before someone spends a review
+#     cycle discovering it.
+#
+# Deliberately unfiltered. The builder copies whole skill trees, so a reference
+# file, a fixture, or a new symlink lands in the archive and can trip the entry
+# count, size, or symlink checks without touching any SKILL.md. Any `paths` list
+# would be a second, hand-maintained answer to "what goes in the package" — and
+# the one that drifts, since the builder discovers skills at runtime. The build
+# takes about a second; missing a rejection costs a review cycle.
 
 on:
   release:
     types: [published]
   pull_request:
-    paths:
-      - "*/SKILL.md"
-      - "assets/**"
-      - ".claude-plugin/plugin.json"
-      - ".github/scripts/build-codex-package.mjs"
-      - ".github/workflows/codex-package.yml"
   workflow_dispatch:
 
 permissions:
