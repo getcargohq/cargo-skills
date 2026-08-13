@@ -1,5 +1,6 @@
 {
   "name": "cargo",
   "version": "1.18.2",
-  "description": "GTM engineering for coding agents — build lead lists, find and verify emails and phone numbers, enrich companies and contacts, score leads, sync to your CRM, and monitor buying signals, over the Cargo CLI."
+  "description": "GTM engineering for coding agents — build lead lists, find and verify emails and phone numbers, enrich companies and contacts, score leads, sync to your CRM, and monitor buying signals, over the Cargo CLI.",
+  "skillsDir": "."
 }

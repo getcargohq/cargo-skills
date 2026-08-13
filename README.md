@@ -76,13 +76,13 @@ hermes skills tap add getcargohq/cargo-skills
 
 ### Gemini CLI
 
-The repo doubles as a [Gemini CLI extension](https://geminicli.com/docs/extensions/) — `gemini-extension.json` at the root, with the skills exposed under `skills/`:
+The repo doubles as a [Gemini CLI extension](https://geminicli.com/docs/extensions/) — `gemini-extension.json` at the root declares the extension and points skill discovery at the repo root via `"skillsDir": "."`:
 
 ```bash
 gemini extensions install https://github.com/getcargohq/cargo-skills
 ```
 
-`skills/` holds symlinks to the seventeen skill directories at the repo root rather than copies, so there is exactly one source of truth and nothing to keep in sync.
+Skills live at the repo root (alongside every other channel), so there is exactly one source of truth and nothing to keep in sync. The `skillsDir` manifest field avoids the need for a separate `skills/` directory or symlinks, which would break when downloaded as a zip or cloned on Windows without symlink support.
 
 ### Just one job — `gtm-skills`
 
