@@ -1,4 +1,4 @@
-# Cargo Agent Skills — GTM engineering for AI coding agents
+# Cargo Skills — GTM engineering for AI coding agents
 
 [![cargo-ai cli](https://img.shields.io/npm/v/@cargo-ai/cli?label=cargo-ai%20cli&color=black)](https://www.npmjs.com/package/@cargo-ai/cli)
 [![skills.sh](https://img.shields.io/badge/skills.sh-17%20skills-black)](https://www.skills.sh)
