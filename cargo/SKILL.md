@@ -1,7 +1,7 @@
 ---
 name: cargo
 description: "Router for the Cargo CLI skill bundle — load first for anything Cargo, and whenever a task spans two Cargo domains. Explains what each skill owns, declarative workspace-as-code (cargo-cdk) vs the imperative CLI, the UUID and slug flow between skills, async polling of runs and batches, end-to-end use cases, and the gotchas that fail silently (`conjonction` spelling, run vs batch, model-uuid vs segment-uuid). Triggers: \"set up Cargo\", \"what can Cargo do\", \"which Cargo skill\", \"bootstrap my workspace\", \"I have a Cargo account\", \"cargo-ai …\", or any `cargo-ai` command whose domain you are unsure of. Skip when: the task obviously belongs to one skill — load that skill directly."
-version: "1.18.2"
+version: "1.19.0"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -400,6 +400,7 @@ The non-obvious rules for each skill — the things that fail silently or cost m
 **Priority provider stack** (recipes lead with these): salesNavigator (sourcing), cargo native (firmographics + signals), aiArk (LinkedIn-anchored enrich + cheapest search), waterfall (multi-source enrichment + email verify + job-change), FullEnrich (premium contact lookup), apolloio (1-credit niche-coverage enrich), theirStack (tech-stack + hiring intent), peopleDataLabs (heavyweight backfill). **Already have LinkedIn URLs (or an event URL)?** Don't source — go straight to `aiArk.enrichPerson` (0.1, profile **+ verified email**, bills 0 on no-email), or `linkedin` (`enrichProfile`/`enrichCompany` 0.25, `extractEventAttendees`) when you don't need the email; these are the cheapest URL-anchored enriches and easy to miss because the stack above is sourcing-first.
 
 **Critical rules:**
+- **Acceptable use gates every step that touches a person** (`../cargo-gtm/references/acceptable-use.md`): B2B professional identities from licensed providers only, three free blocking checks before any outreach step (*basis*, *suppression*, *relevance*), and a refusal list — undifferentiated fan-out, consumer targeting, lists with no stated origin, contacting a suppressed record, filter or identity evasion, auto-dialing, batch-blasting LinkedIn engagement actions. The pack never sends: outreach stops at send-ready variables for the user's own sequencer.
 - All recipes use credits-based actions (`cargo-ai connection integration list` → 145 credits-based actions across 120 integrations).
 - Action shape: `{"kind":"connector","integrationSlug":"<slug>","actionSlug":"<slug>","config":{}}` — **no `connectorUuid` in `config`**.
 - Output retrieval: `cargo-ai orchestration run download-outputs --output-node-slug <slug>` (NOT `run download`).
