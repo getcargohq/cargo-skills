@@ -46,7 +46,7 @@ The agent runs the whole setup itself: installs the CLI at the bundle's pinned v
 npx skills add getcargohq/cargo-skills
 ```
 
-Works with Claude Code, Codex, Cursor, Windsurf, GitHub Copilot, [Hermes Agent](#hermes-agent), [Gemini CLI](#gemini-cli), and any agent that supports the [skills.sh](https://skills.sh) standard. These skills have been installed **54,885 times** across the bundle on skills.sh (August 2026).
+Works with Claude Code, Codex, Cursor, Windsurf, GitHub Copilot, [Hermes Agent](#hermes-agent), and any agent that supports the [skills.sh](https://skills.sh) standard. These skills have been installed **54,885 times** across the bundle on skills.sh (August 2026).
 
 ### Hermes Agent
 
@@ -73,16 +73,6 @@ hermes skills tap add getcargohq/cargo-skills
 ```
 
 **Two things differ on Hermes.** The plugin channel below is Claude Code / Codex / Cursor only, so its approval hook doesn't apply — Hermes gates tool calls with its own approval policy, and its `pre_tool_call` hooks can only *block* a call, never pre-approve one. Expect `cargo-ai` commands to prompt. And with no bundled session-lifecycle hooks, [the session's three jobs](cargo/SKILL.md) (refresh, register, finalize) are the agent's to run by hand — the router skill already accounts for agents without lifecycle hooks.
-
-### Gemini CLI
-
-The repo doubles as a [Gemini CLI extension](https://geminicli.com/docs/extensions/) — `gemini-extension.json` at the root declares the extension and points skill discovery at the repo root via `"skillsDir": "."`:
-
-```bash
-gemini extensions install https://github.com/getcargohq/cargo-skills
-```
-
-Skills live at the repo root (alongside every other channel), so there is exactly one source of truth and nothing to keep in sync. The `skillsDir` manifest field avoids the need for a separate `skills/` directory or symlinks, which would break when downloaded as a zip or cloned on Windows without symlink support.
 
 ### Just one job — `gtm-skills`
 
