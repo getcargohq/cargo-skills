@@ -10,6 +10,15 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### `cargo-gtm` → 1.13.0, `cargo` → 1.19.0 (router) — acceptable-use gates after the OpenAI spam rejection
+
+The OpenAI Plugins Directory rejected `cargo-gtm` under **Spam mass abuse**. The description was the whole case against it — *"find emails, phones and LinkedIn URLs"*, *"write cold emails"*, *"build me a list of"* — contact harvesting plus bulk cold mail, with nothing in 8,800 lines about consent, suppression, or volume. Opening the archive confirmed it: the outreach guide and the prompt library are cold-email prompts end to end. Rewording alone would have been dressing it up, so this is both halves.
+
+- **New [`cargo-gtm/references/acceptable-use.md`](cargo-gtm/references/acceptable-use.md)**, a peer of `cost-discipline.md` at the same mandatory tier: a refusal table (undifferentiated fan-out, consumer targeting, lists with no stated origin, contacting a suppressed record, filter or identity evasion, auto-dialing, batch-blasting LinkedIn engagement actions, scraping around a licensed provider action), three free blocking checks before any outreach step — *basis*, *suppression*, *relevance* — what drafted copy must carry, and the data-hygiene obligations that follow a person out of the workspace.
+- **Wired into the path an agent walks**, not filed beside it: a mandatory section in `cargo-gtm/SKILL.md` above Bootstrap, the outreach row of its routing table, a gate atop [`guides/writing-outreach.md`](cargo-gtm/guides/writing-outreach.md), a "before you start" block in [`recipes/outreach-activation.md`](cargo-gtm/recipes/outreach-activation.md) that subtracts suppression *before* enrichment (also cheaper), and the router's own `cargo-gtm` critical-rules block. The opener prompt now returns `NULL` when no signal justifies writing to that person.
+- **Descriptions rewritten to be accurate rather than spam-shaped** — B2B, licensed providers, the gates stated up front, and the fact that the pack sends nothing itself. Every routing-eval trigger survives except two rewordings (`"write cold emails"` → `"write a first-touch email"`, `"find emails for these"` → `"find work emails for these accounts"`), so `evals/routing.jsonl` line 14 is worth re-running before the next upload.
+- **`.claude-plugin/plugin.json` → 1.19.0.** The OpenAI directory is a submission-time snapshot — published skills do not update live — so a resubmission has to claim a new version.
+
 ### `cargo` → 1.18.2 (router) — close the ClawHub security-audit gaps
 
 ClawHub's automated audit of the published bundle (SkillSpector, v1.18.1) returned **Review** with five findings. Three were real documentation gaps — not behavior changes, just places where the bundle assumed the reader had the whole thing in context. Fixed here.
