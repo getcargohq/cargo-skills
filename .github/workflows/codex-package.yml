@@ -1,0 +1,84 @@
+name: Codex package
+
+# The OpenAI Plugins Directory has no submission API — the portal is the only
+# path and every version is human-reviewed, so the upload itself stays manual.
+# Everything before it does not have to be:
+#
+#   - on a release: build the archive and attach it, so publishing is
+#     "download the asset, drop it in the portal" rather than "find whoever
+#     built the zip last time".
+#   - on a PR touching skills or the builder: run the same build, so a change
+#     that would fail OpenAI's validator fails here instead — months before
+#     someone spends a review cycle discovering it.
+
+on:
+  release:
+    types: [published]
+  pull_request:
+    paths:
+      - "*/SKILL.md"
+      - "assets/**"
+      - ".claude-plugin/plugin.json"
+      - ".github/scripts/build-codex-package.mjs"
+      - ".github/workflows/codex-package.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      # The builder measures icons with `sips`, which is macOS-only. Everything
+      # else is portable, so shim it with ImageMagick on the runner rather than
+      # paying for a macOS runner to check two PNGs.
+      - name: Provide a sips shim
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq imagemagick
+          sudo tee /usr/local/bin/sips >/dev/null <<'SHIM'
+          #!/usr/bin/env bash
+          # Minimal stand-in for macOS sips: only -g pixelWidth/pixelHeight.
+          file="${@: -1}"
+          read -r w h < <(identify -format "%w %h" "$file[0]" 2>/dev/null)
+          [ -z "$w" ] && exit 1
+          echo "$file"
+          echo "  pixelWidth: $w"
+          echo "  pixelHeight: $h"
+          SHIM
+          sudo chmod +x /usr/local/bin/sips
+
+      - name: Build and validate the package
+        run: node .github/scripts/build-codex-package.mjs
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cargo-skills-codex
+          path: dist/cargo-skills-codex.zip
+          if-no-files-found: error
+
+  attach:
+    needs: build
+    if: github.event_name == 'release'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: cargo-skills-codex
+
+      - name: Attach to the release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload "${{ github.event.release.tag_name }}" \
+            cargo-skills-codex.zip --clobber \
+            --repo "${{ github.repository }}"
+          echo "::notice::Attached to ${{ github.event.release.tag_name }}. Upload it at https://platform.openai.com/plugins — the directory has no API."

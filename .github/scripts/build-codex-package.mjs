@@ -28,11 +28,9 @@
 // `hooks/codex-hooks.json` invokes `${CLAUDE_PLUGIN_ROOT}` — a Claude Code
 // variable — so bundling hooks here would ship an unverified path into review.
 //
-// Three rules the OpenAI validator enforces that no other channel does. All are
-// normalised here, so the repo keeps serving the channels that want the fuller
-// form:
+// Rules the OpenAI validator enforces that no other channel does, normalised
+// here so the repo keeps serving the channels that want the fuller form:
 //
-//   - `interface.shortDescription` on the plugin, 240 characters max.
 //   - Skill `description` capped at 1024 characters. Two of ours run longer
 //     because they enumerate every integration and provider — genuinely useful
 //     for routing elsewhere, too long here. See SHORT_DESCRIPTIONS: deliberate
@@ -40,6 +38,12 @@
 //   - No `metadata` in SKILL.md frontmatter. Ours carries OpenClaw install
 //     directives, which mean nothing to OpenAI, so the block is dropped from
 //     the packaged copy only.
+//   - `interface` needs displayName, shortDescription, and two square icons.
+//
+// The rest of the checks below exist because there is no submission API — the
+// portal is the only path, every version is human-reviewed, and a rejection
+// costs a whole review cycle. So every documented rule is asserted at build
+// time instead. Note LIMITS targets the stricter of the two published tiers.
 
 import { execFileSync } from "node:child_process";
 import {
@@ -49,6 +53,7 @@ import {
   readFileSync,
   readdirSync,
   rmSync,
+  statSync,
   writeFileSync,
 } from "node:fs";
 import { dirname, join, resolve } from "node:path";
@@ -56,8 +61,28 @@ import { fileURLToPath } from "node:url";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 
-const SKILL_DESCRIPTION_LIMIT = 1024;
-const SHORT_DESCRIPTION_LIMIT = 240;
+// Two tiers of validation exist and they disagree. The uploader enforces the
+// looser "package" limits; the final directory submission enforces much tighter
+// ones on the same fields. Building to the package limits gets you an accepted
+// archive that is rejected later, so everything here targets the STRICTER tier.
+// https://developers.openai.com/plugins/deploy/submission-errors
+const LIMITS = {
+  pluginName: 64,
+  pluginDescription: 1024,
+  authorName: 120,
+  displayName: 30, // package allows 80
+  shortDescription: 30, // package allows 240
+  skillDescription: 1024,
+  skillIdentity: 64, // "plugin-name:skill-name"
+  archiveEntries: 5000,
+  archiveBytes: 100 * 1024 * 1024,
+  iconMinPx: 48,
+  iconMaxPx: 4096,
+  iconBytes: 5 * 1024 * 1024,
+  pathSegments: 20,
+};
+
+const SKILL_DESCRIPTION_LIMIT = LIMITS.skillDescription;
 
 // Rewrites for skills whose repo description exceeds OpenAI's limit. Every
 // trigger phrase is kept — those are what routing actually matches on — and the
@@ -251,18 +276,65 @@ const manifest = {
   skills: "./skills/",
   interface: {
     displayName: "Cargo Skills",
-    shortDescription:
-      "Seventeen skills for go-to-market engineering over the Cargo CLI: build lead lists, find and verify emails and phone numbers, enrich contacts, score leads, sync to your CRM, and monitor buying signals.",
+    // 30 chars in the directory, not the 240 the uploader accepts.
+    shortDescription: "GTM engineering for agents",
     composerIcon: "./assets/icon.png",
     logo: "./assets/icon.png",
     capabilities: ["Read", "Write"],
   },
 };
 
-if (manifest.interface.shortDescription.length > SHORT_DESCRIPTION_LIMIT) {
-  die(
-    `interface.shortDescription is ${manifest.interface.shortDescription.length} chars, over the ${SHORT_DESCRIPTION_LIMIT} limit`,
+const manifestErrors = [];
+const check = (ok, message) => {
+  if (ok === false) manifestErrors.push(message);
+};
+
+check(
+  /^[A-Za-z0-9][A-Za-z0-9_-]*$/.test(manifest.name) &&
+    manifest.name.length <= LIMITS.pluginName,
+  `name "${manifest.name}" must be ASCII alphanumeric/_/- , start alphanumeric, and be <= ${LIMITS.pluginName} chars`,
+);
+check(
+  /^\d+\.\d+\.\d+$/.test(manifest.version),
+  `version "${manifest.version}" must be semver`,
+);
+check(
+  manifest.description.length > 0 &&
+    manifest.description.length <= LIMITS.pluginDescription,
+  `description is ${manifest.description.length} chars, limit ${LIMITS.pluginDescription}`,
+);
+check(
+  manifest.author.name.length <= LIMITS.authorName,
+  `author.name is ${manifest.author.name.length} chars, limit ${LIMITS.authorName}`,
+);
+for (const [field, limit] of [
+  ["displayName", LIMITS.displayName],
+  ["shortDescription", LIMITS.shortDescription],
+]) {
+  const value = manifest.interface[field];
+  check(
+    typeof value === "string" && value.length > 0 && value.length <= limit,
+    `interface.${field} is ${value?.length ?? 0} chars, directory limit ${limit}`,
   );
+  check(
+    /[\n\r]/.test(value ?? "") === false,
+    `interface.${field} must be a single line`,
+  );
+}
+for (const url of [manifest.homepage, manifest.repository]) {
+  check(url.startsWith("https://"), `${url} must be HTTPS`);
+}
+for (const name of skillDirs) {
+  const identity = `${manifest.name}:${name}`;
+  check(
+    identity.length <= LIMITS.skillIdentity,
+    `skill identity "${identity}" is ${identity.length} chars, limit ${LIMITS.skillIdentity}`,
+  );
+}
+
+if (manifestErrors.length > 0) {
+  for (const e of manifestErrors) console.error(`error: ${e}`);
+  process.exit(1);
 }
 
 writeFileSync(
@@ -323,11 +395,50 @@ for (const field of ["composerIcon", "logo"]) {
   );
   const width = Number(/pixelWidth:\s*(\d+)/.exec(dims)?.[1]);
   const height = Number(/pixelHeight:\s*(\d+)/.exec(dims)?.[1]);
+  const bytes = statSync(probe).size;
   rmSync(probe, { force: true });
   if (!width || !height) {
     problems.push(`interface.${field} (${ref}) is not a readable image`);
-  } else if (width !== height) {
+    continue;
+  }
+  if (width !== height) {
     problems.push(`interface.${field} (${ref}) is ${width}x${height}, must be square`);
+  }
+  if (width < LIMITS.iconMinPx || width > LIMITS.iconMaxPx) {
+    problems.push(
+      `interface.${field} (${ref}) is ${width}px, must be ${LIMITS.iconMinPx}-${LIMITS.iconMaxPx}px`,
+    );
+  }
+  if (bytes > LIMITS.iconBytes) {
+    problems.push(`interface.${field} (${ref}) is ${bytes} bytes, limit ${LIMITS.iconBytes}`);
+  }
+}
+
+// Archive shape. The uploader rejects the whole file for any of these, with no
+// indication of which entry was at fault.
+if (entries.length > LIMITS.archiveEntries) {
+  problems.push(`archive has ${entries.length} entries, limit ${LIMITS.archiveEntries}`);
+}
+const archiveBytes = statSync(zipPath).size;
+if (archiveBytes > LIMITS.archiveBytes) {
+  problems.push(`archive is ${archiveBytes} bytes, limit ${LIMITS.archiveBytes}`);
+}
+for (const entry of entries) {
+  if (entry.includes("\\")) {
+    problems.push(`${entry} uses backslashes; paths must use /`);
+  }
+  if (entry.split("/").some((s) => s === ".." || s.trim() !== s)) {
+    problems.push(`${entry} has a '..' or whitespace-padded segment`);
+  }
+  if (entry.split("/").filter(Boolean).length > LIMITS.pathSegments) {
+    problems.push(`${entry} exceeds ${LIMITS.pathSegments} path segments`);
+  }
+}
+// "Skill files directly under skills/ are ignored" — a skill must be a
+// subdirectory, so a stray file there silently drops a skill from the listing.
+for (const entry of entries) {
+  if (/^skills\/[^/]+$/.test(entry) && entry.endsWith("/") === false) {
+    problems.push(`${entry} sits directly under skills/ and would be ignored`);
   }
 }
 
