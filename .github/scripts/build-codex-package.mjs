@@ -27,6 +27,19 @@
 // Skills-only on purpose: the upload dialog asks for a skills-only plugin, and
 // `hooks/codex-hooks.json` invokes `${CLAUDE_PLUGIN_ROOT}` — a Claude Code
 // variable — so bundling hooks here would ship an unverified path into review.
+//
+// Three rules the OpenAI validator enforces that no other channel does. All are
+// normalised here, so the repo keeps serving the channels that want the fuller
+// form:
+//
+//   - `interface.shortDescription` on the plugin, 240 characters max.
+//   - Skill `description` capped at 1024 characters. Two of ours run longer
+//     because they enumerate every integration and provider — genuinely useful
+//     for routing elsewhere, too long here. See SHORT_DESCRIPTIONS: deliberate
+//     rewrites, not truncations, so no list is cut off mid-name.
+//   - No `metadata` in SKILL.md frontmatter. Ours carries OpenClaw install
+//     directives, which mean nothing to OpenAI, so the block is dropped from
+//     the packaged copy only.
 
 import { execFileSync } from "node:child_process";
 import {
@@ -42,6 +55,70 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
+
+const SKILL_DESCRIPTION_LIMIT = 1024;
+const SHORT_DESCRIPTION_LIMIT = 240;
+
+// Rewrites for skills whose repo description exceeds OpenAI's limit. Every
+// trigger phrase is kept — those are what routing actually matches on — and the
+// exhaustive integration/provider rosters are cut to a representative sample
+// plus a count. Anything over the limit without an entry here fails the build
+// rather than getting silently truncated into a rejected upload.
+const SHORT_DESCRIPTIONS = {
+  "cargo-connection":
+    'Connect Cargo to an external system and find out what it can do — authenticate connectors, browse the integration catalog, and resolve the `connectorUuid` and `actionSlug` a workflow node needs. Triggers: "connect my HubSpot", "is Salesforce connected", "what integrations do you support", "can Cargo talk to <tool>", "what actions does <provider> have", "I need the connector UUID", "set up the API key for", "it is asking for credentials again", "why is this connector failing auth", "list my connectors". 138 integrations including HubSpot, Salesforce, Attio, Pipedrive, Outreach, Salesloft, Slack, Snowflake, BigQuery, Postgres, Stripe, and Google/LinkedIn ad audiences. Skip when: choosing between enrichment providers for a GTM job — use cargo-gtm and its provider playbooks.',
+  "cargo-gtm":
+    'Do go-to-market work on Cargo — find companies and people, enrich and verify contacts, find emails, phones and LinkedIn URLs, score and qualify leads, write outreach, sync to CRM, and monitor buying signals. Triggers: "build me a list of", "find 50 <title> at <segment>", "who works at", "find emails for these", "enrich this CSV", "verify these emails", "build a TAM", "who fits our ICP", "who actually buys from us", "score these leads", "write cold emails", "push these to my CRM", "who changed jobs", "who just raised funding", "companies using <tech>", "who is hiring <role>", "find the buying committee", "portfolio companies of <investor>", "upload this audience to Google/Meta/LinkedIn ads". 50 data providers including salesNavigator, aiArk, waterfall, FullEnrich, apolloio, peopleDataLabs, theirStack, hunter and dropcontact. Reads phase guides, recipes, and per-provider playbooks before any paid call. Skip when: a run already happened and misbehaved — use cargo-diagnostics.',
+};
+
+// Frontmatter here is a flat map of top-level keys, some with indented blocks.
+// Rather than take a YAML dependency for two edits, walk it line by line: a
+// top-level key starts at column 0, and everything indented under it belongs to
+// that key. Returns the rebuilt document.
+const rewriteFrontmatter = (source, { drop = [], replace = {} }) => {
+  const match = /^---\n([\s\S]*?)\n---\n/.exec(source);
+  if (match === null) return null;
+
+  const lines = match[1].split("\n");
+  const blocks = [];
+  for (const line of lines) {
+    const key = /^([A-Za-z_-]+):/.exec(line);
+    if (key === null && blocks.length > 0) {
+      blocks[blocks.length - 1].lines.push(line);
+    } else if (key !== null) {
+      blocks.push({ key: key[1], lines: [line] });
+    }
+  }
+
+  const kept = [];
+  for (const block of blocks) {
+    if (drop.includes(block.key)) continue;
+    if (Object.hasOwn(replace, block.key)) {
+      kept.push(`${block.key}: ${JSON.stringify(replace[block.key])}`);
+      continue;
+    }
+    kept.push(...block.lines);
+  }
+
+  return `---\n${kept.join("\n")}\n---\n${source.slice(match[0].length)}`;
+};
+
+// The value as the validator counts it, with YAML quoting removed.
+const frontmatterDescription = (source) => {
+  const match = /^---\n([\s\S]*?)\n---\n/.exec(source);
+  if (match === null) return null;
+  const found = /^description:\s*([\s\S]*?)(?=\n[A-Za-z_-]+:|$)/m.exec(match[1]);
+  if (found === null) return null;
+  const raw = found[1].trim();
+  if (raw.startsWith('"')) {
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return raw.slice(1, -1);
+    }
+  }
+  return raw;
+};
 
 const outFlag = process.argv.indexOf("--out");
 const outDir = resolve(
@@ -83,12 +160,53 @@ rmSync(stageDir, { recursive: true, force: true });
 mkdirSync(join(stageDir, ".codex-plugin"), { recursive: true });
 mkdirSync(join(stageDir, "skills"), { recursive: true });
 
+const descriptionErrors = [];
+
 for (const name of skillDirs) {
   // dereference: true turns the repo's `skills/` symlinks into real files.
   cpSync(join(repoRoot, name), join(stageDir, "skills", name), {
     recursive: true,
     dereference: true,
   });
+
+  const skillMdPath = join(stageDir, "skills", name, "SKILL.md");
+  const source = readFileSync(skillMdPath, "utf8");
+  const replace = {};
+
+  const override = SHORT_DESCRIPTIONS[name];
+  const current = frontmatterDescription(source);
+  if (current === null) {
+    die(`${name}/SKILL.md has no readable description in its frontmatter`);
+  }
+
+  if (override !== undefined) {
+    if (override.length > SKILL_DESCRIPTION_LIMIT) {
+      descriptionErrors.push(
+        `SHORT_DESCRIPTIONS["${name}"] is ${override.length} chars, over the ${SKILL_DESCRIPTION_LIMIT} limit`,
+      );
+    }
+    replace.description = override;
+  } else if (current.length > SKILL_DESCRIPTION_LIMIT) {
+    descriptionErrors.push(
+      `${name}: description is ${current.length} chars, over OpenAI's ${SKILL_DESCRIPTION_LIMIT} limit. ` +
+        `Add a rewrite to SHORT_DESCRIPTIONS in this script — do not shorten the repo copy, other channels use it.`,
+    );
+  }
+
+  // OpenAI rejects any `metadata` in SKILL.md; ours is OpenClaw install config.
+  const rewritten = rewriteFrontmatter(source, {
+    drop: ["metadata"],
+    replace,
+  });
+  if (rewritten === null) {
+    die(`${name}/SKILL.md has no frontmatter block`);
+  }
+  writeFileSync(skillMdPath, rewritten, "utf8");
+}
+
+if (descriptionErrors.length > 0) {
+  for (const e of descriptionErrors) console.error(`error: ${e}`);
+  process.exit(1);
 }
 
 for (const file of ["README.md", "LICENSE"]) {
@@ -124,9 +242,17 @@ const manifest = {
   skills: "./skills/",
   interface: {
     displayName: "Cargo Skills",
+    shortDescription:
+      "Seventeen skills for go-to-market engineering over the Cargo CLI: build lead lists, find and verify emails and phone numbers, enrich contacts, score leads, sync to your CRM, and monitor buying signals.",
     capabilities: ["Read", "Write"],
   },
 };
+
+if (manifest.interface.shortDescription.length > SHORT_DESCRIPTION_LIMIT) {
+  die(
+    `interface.shortDescription is ${manifest.interface.shortDescription.length} chars, over the ${SHORT_DESCRIPTION_LIMIT} limit`,
+  );
+}
 
 writeFileSync(
   join(stageDir, ".codex-plugin/plugin.json"),
@@ -162,6 +288,29 @@ if (packagedSkills !== skillDirs.length) {
 const symlinks = execFileSync("unzip", ["-l", zipPath], { encoding: "utf8" });
 if (/ -> /.test(symlinks)) {
   problems.push("archive contains symlinks; they must be dereferenced");
+}
+
+// Re-read every packaged SKILL.md out of the archive and apply the validator's
+// own rules. Checking the staging copy would miss anything the zip step changed,
+// and a rejected upload costs a review cycle.
+for (const entry of entries.filter((e) =>
+  /^skills\/[^/]+\/SKILL\.md$/.test(e),
+)) {
+  const body = execFileSync("unzip", ["-p", zipPath, entry], {
+    encoding: "utf8",
+    maxBuffer: 16 * 1024 * 1024,
+  });
+  if (/^metadata:/m.test(body)) {
+    problems.push(`${entry} still carries a metadata block`);
+  }
+  const description = frontmatterDescription(body);
+  if (description === null) {
+    problems.push(`${entry} lost its description`);
+  } else if (description.length > SKILL_DESCRIPTION_LIMIT) {
+    problems.push(
+      `${entry} description is ${description.length} chars, over ${SKILL_DESCRIPTION_LIMIT}`,
+    );
+  }
 }
 
 rmSync(stageDir, { recursive: true, force: true });
