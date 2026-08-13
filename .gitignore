@@ -4,3 +4,4 @@
 .agents/*
 !.agents/plugins/
 skills-lock.json
+dist/
