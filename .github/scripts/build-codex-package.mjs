@@ -145,6 +145,21 @@ const frontmatterDescription = (source) => {
   return raw;
 };
 
+// A PNG's dimensions live in the IHDR chunk, which the spec fixes as the first
+// chunk: 8-byte signature, 4-byte length, the type, then width and height as
+// big-endian uint32s. Reading them here keeps the build on Node alone — the
+// previous `sips` call was macOS-only, so the documented rebuild command failed
+// on Linux and CI needed an ImageMagick shim to run at all. PNG is the only
+// format the manifest points at; anything else fails the readable-image check
+// rather than being measured wrong.
+const pngDimensions = (buffer) => {
+  const signature = Buffer.from("89504e470d0a1a0a", "hex");
+  if (buffer.length < 24) return null;
+  if (buffer.subarray(0, 8).equals(signature) === false) return null;
+  if (buffer.subarray(12, 16).toString("latin1") !== "IHDR") return null;
+  return { width: buffer.readUInt32BE(16), height: buffer.readUInt32BE(20) };
+};
+
 const outFlag = process.argv.indexOf("--out");
 const outDir = resolve(
   repoRoot,
@@ -402,24 +417,16 @@ for (const field of ["composerIcon", "logo"]) {
     problems.push(`interface.${field} points at ${ref}, absent from the archive`);
     continue;
   }
-  const probe = join(outDir, `.probe-${field}.png`);
-  writeFileSync(
-    probe,
-    execFileSync("unzip", ["-p", zipPath, entry], { maxBuffer: 32 * 1024 * 1024 }),
-  );
-  const dims = execFileSync(
-    "sips",
-    ["-g", "pixelWidth", "-g", "pixelHeight", probe],
-    { encoding: "utf8" },
-  );
-  const width = Number(/pixelWidth:\s*(\d+)/.exec(dims)?.[1]);
-  const height = Number(/pixelHeight:\s*(\d+)/.exec(dims)?.[1]);
-  const bytes = statSync(probe).size;
-  rmSync(probe, { force: true });
-  if (!width || !height) {
-    problems.push(`interface.${field} (${ref}) is not a readable image`);
+  const image = execFileSync("unzip", ["-p", zipPath, entry], {
+    maxBuffer: 32 * 1024 * 1024,
+  });
+  const dims = pngDimensions(image);
+  if (dims === null) {
+    problems.push(`interface.${field} (${ref}) is not a readable PNG`);
     continue;
   }
+  const { width, height } = dims;
+  const bytes = image.length;
   if (width !== height) {
     problems.push(`interface.${field} (${ref}) is ${width}x${height}, must be square`);
   }
