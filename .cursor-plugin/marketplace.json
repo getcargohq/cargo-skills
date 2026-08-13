@@ -1,12 +1,12 @@
 {
   "name": "cargo",
   "owner": { "name": "Cargo", "url": "https://getcargo.ai" },
-  "metadata": { "description": "Official Cargo plugin for Cursor" },
+  "metadata": { "description": "The Cargo pack for Cursor — 17 GTM skills, plus what a plain skills install doesn't carry: prompt-free approval for safe cargo-ai calls." },
   "plugins": [
     {
       "name": "cargo",
       "source": "./",
-      "description": "Cargo GTM agent skills — sourcing, enrichment, orchestration, workspace-as-code (CDK), diagnostics, and analytics via the cargo-ai CLI."
+      "description": "17 skills over the cargo-ai CLI — build target account and contact lists, enrich and verify them against licensed data providers, score and qualify leads, sync your CRM, monitor buying signals, run workflows, and manage the whole workspace as code."
     }
   ]
 }
