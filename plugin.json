@@ -2,7 +2,7 @@
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "cargo",
   "version": "1.17.1",
-  "description": "Cargo GTM agent skills — sourcing, enrichment, orchestration, workspace-as-code (CDK), diagnostics, and analytics via the cargo-ai CLI.",
+  "description": "17 skills over the cargo-ai CLI — build target account and contact lists, enrich and verify them against licensed data providers, score and qualify leads, sync your CRM, monitor buying signals, run workflows, and manage the whole workspace as code.",
   "author": {
     "name": "Cargo",
     "url": "https://getcargo.ai"
