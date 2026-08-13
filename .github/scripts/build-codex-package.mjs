@@ -215,6 +215,15 @@ for (const file of ["README.md", "LICENSE"]) {
   }
 }
 
+// interface.composerIcon and interface.logo are required and must both point at
+// a square image. assets/icon.png is the Cargo product mark at 512x512.
+const iconSource = join(repoRoot, "assets/icon.png");
+if (existsSync(iconSource) === false) {
+  die("assets/icon.png is missing — the manifest requires a square icon");
+}
+mkdirSync(join(stageDir, "assets"), { recursive: true });
+cpSync(iconSource, join(stageDir, "assets/icon.png"));
+
 // `name` is kebab-case and stable — it is the directory identity and cannot be
 // changed after first publish. `cargo` alone collides with Rust's package
 // manager in a catalog shared with ChatGPT, hence `cargo-skills`.
@@ -244,6 +253,8 @@ const manifest = {
     displayName: "Cargo Skills",
     shortDescription:
       "Seventeen skills for go-to-market engineering over the Cargo CLI: build lead lists, find and verify emails and phone numbers, enrich contacts, score leads, sync to your CRM, and monitor buying signals.",
+    composerIcon: "./assets/icon.png",
+    logo: "./assets/icon.png",
     capabilities: ["Read", "Write"],
   },
 };
@@ -288,6 +299,36 @@ if (packagedSkills !== skillDirs.length) {
 const symlinks = execFileSync("unzip", ["-l", zipPath], { encoding: "utf8" });
 if (/ -> /.test(symlinks)) {
   problems.push("archive contains symlinks; they must be dereferenced");
+}
+
+// Every interface asset path must resolve inside the archive, and the images
+// must be square — the validator rejects both a dangling path and a non-square
+// image, and neither is visible from the manifest alone.
+for (const field of ["composerIcon", "logo"]) {
+  const ref = manifest.interface[field];
+  const entry = ref.replace(/^\.\//, "");
+  if (entries.includes(entry) === false) {
+    problems.push(`interface.${field} points at ${ref}, absent from the archive`);
+    continue;
+  }
+  const probe = join(outDir, `.probe-${field}.png`);
+  writeFileSync(
+    probe,
+    execFileSync("unzip", ["-p", zipPath, entry], { maxBuffer: 32 * 1024 * 1024 }),
+  );
+  const dims = execFileSync(
+    "sips",
+    ["-g", "pixelWidth", "-g", "pixelHeight", probe],
+    { encoding: "utf8" },
+  );
+  const width = Number(/pixelWidth:\s*(\d+)/.exec(dims)?.[1]);
+  const height = Number(/pixelHeight:\s*(\d+)/.exec(dims)?.[1]);
+  rmSync(probe, { force: true });
+  if (!width || !height) {
+    problems.push(`interface.${field} (${ref}) is not a readable image`);
+  } else if (width !== height) {
+    problems.push(`interface.${field} (${ref}) is ${width}x${height}, must be square`);
+  }
 }
 
 // Re-read every packaged SKILL.md out of the archive and apply the validator's
