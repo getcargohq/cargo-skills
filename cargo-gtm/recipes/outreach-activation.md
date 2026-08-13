@@ -9,6 +9,16 @@ Use this recipe when the user has a signal-driven segment ready (recent fundrais
 - *"Build a sequence-ready list from job changes this week."*
 - *"Generate first lines for the tech-intent companies."*
 
+## Before you start — basis, suppression, relevance
+
+Blocking, and all three are free. Full spec: [`../references/acceptable-use.md`](../references/acceptable-use.md).
+
+1. **Ask which basis applies** — existing customers, opted-in contacts, event attendees, or a documented legitimate-interest case for this B2B role. A work email in the record is not itself a basis. Purchased lists and data taken from a platform in breach of its terms are a stop.
+2. **Subtract suppression before you enrich.** Filter the segment on the workspace's unsubscribe / do-not-contact / hard-bounce columns *first* — it protects the people who opted out and it stops you paying to enrich rows you can't use. No such column? Flag it as a real gap and offer to add one; don't proceed silently.
+3. **Name the per-recipient reason.** The signal that built the segment is usually it. If the honest answer is "they matched an industry filter", the list isn't ready — tighten it before spending.
+
+This recipe ends at send-ready variables. The user's sequencer sends, under its own limits, domains, and identities; the copy it sends needs an honest sender and subject, a working opt-out, and a postal address where required.
+
 ## Why this recipe exists
 
 Signal recipes (`funding-watch`, `job-change-monitoring`, `tech-intent`, `portfolio-prospecting`) all produce a segment. They stop at *"here's a list with a signal."* The next step — enrich, personalize, hand off — has the same shape regardless of the signal. This recipe captures that shape once.
@@ -103,7 +113,7 @@ jq '[.[] | select(.audit_action == "SEND")]' /tmp/audited.json > /tmp/deliverabl
 cargo-ai orchestration action execute-batch \
   --action '{"kind":"connector","integrationSlug":"anthropic","actionSlug":"instruct","config":{"model":"claude-3-5-haiku-latest","advancedSettings":{"temperature":0.3,"maxTokens":1024}}}' \
   --records "$(jq -c '[.[] | {
-    prompt: ("You are writing the opening line of a cold email. The recipient is " + .first_name + " " + .last_name + ", " + .title + " at " + .company_name + ". Signal triggering this outreach: " + .signal_summary + ". Write ONE sentence that references the signal naturally and ties it to a relevant business outcome. No greeting. No follow-up. ≤30 words.")
+    prompt: ("You are writing the opening line of a first-touch email. The recipient is " + .first_name + " " + .last_name + ", " + .title + " at " + .company_name + ". Signal triggering this outreach: " + .signal_summary + ". Write ONE sentence that references the signal naturally and ties it to a relevant business outcome. No greeting. No follow-up. ≤30 words.")
   }]' /tmp/deliverable.json)" \
   --wait-until-finished > /tmp/personalized.json
 ```

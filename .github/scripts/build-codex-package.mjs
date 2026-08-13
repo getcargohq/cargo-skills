@@ -93,7 +93,7 @@ const SHORT_DESCRIPTIONS = {
   "cargo-connection":
     'Connect Cargo to an external system and find out what it can do — authenticate connectors, browse the integration catalog, and resolve the `connectorUuid` and `actionSlug` a workflow node needs. Triggers: "connect my HubSpot", "is Salesforce connected", "what integrations do you support", "can Cargo talk to <tool>", "what actions does <provider> have", "I need the connector UUID", "set up the API key for", "it is asking for credentials again", "why is this connector failing auth", "list my connectors". 138 integrations including HubSpot, Salesforce, Attio, Pipedrive, Outreach, Salesloft, Slack, Snowflake, BigQuery, Postgres, Stripe, and Google/LinkedIn ad audiences. Skip when: choosing between enrichment providers for a GTM job — use cargo-gtm and its provider playbooks.',
   "cargo-gtm":
-    'Do go-to-market work on Cargo — find companies and people, enrich and verify contacts, find emails, phones and LinkedIn URLs, score and qualify leads, write outreach, sync to CRM, and monitor buying signals. Triggers: "build me a list of", "find 50 <title> at <segment>", "who works at", "find emails for these", "enrich this CSV", "verify these emails", "build a TAM", "who fits our ICP", "who actually buys from us", "score these leads", "write cold emails", "push these to my CRM", "who changed jobs", "who just raised funding", "companies using <tech>", "who is hiring <role>", "find the buying committee", "portfolio companies of <investor>", "upload this audience to Google/Meta/LinkedIn ads". 50 data providers including salesNavigator, aiArk, waterfall, FullEnrich, apolloio, peopleDataLabs, theirStack, hunter and dropcontact. Reads phase guides, recipes, and per-provider playbooks before any paid call. Skip when: a run already happened and misbehaved — use cargo-diagnostics.',
+    'Do business-to-business go-to-market work on Cargo — research accounts and buying committees, enrich and verify B2B contact records from licensed data providers, score and qualify leads, draft permission-based outreach for the user\'s own sequencer, sync to CRM, and monitor buying signals. Consent basis, suppression, and volume limits gate every step touching a person; bulk unsolicited messaging, purchased or scraped lists, and consumer targeting are refused. Triggers: "build me a list of", "find 50 <title> at <segment>", "who works at", "find work emails for these accounts", "enrich this CSV", "verify these emails", "build a TAM", "who fits our ICP", "score these leads", "write a first-touch email", "push these to my CRM", "who changed jobs", "who just raised funding", "companies using <tech>", "who is hiring <role>", "find the buying committee", "upload this audience to Google/LinkedIn ads". 50 licensed data providers. Skip when: a run already happened and misbehaved — use cargo-diagnostics.',
 };
 
 // Frontmatter here is a flat map of top-level keys, some with indented blocks.
@@ -256,7 +256,7 @@ const manifest = {
   name: "cargo-skills",
   version,
   description:
-    "GTM engineering for coding agents — 17 skills over the Cargo CLI: build lead lists, find and verify emails and phone numbers, enrich companies and contacts, score leads, sync to your CRM, monitor buying signals, and manage a whole workspace as code.",
+    "GTM engineering for coding agents — 17 skills over the Cargo CLI: research accounts, enrich and verify B2B contact records from licensed data providers, score and qualify leads, sync to your CRM, monitor buying signals, and manage a whole workspace as code. Consent and suppression gates apply to every step that touches a person; the pack sends no messages itself.",
   author: { name: "getcargo" },
   homepage: "https://getcargo.ai",
   repository: "https://github.com/getcargohq/cargo-skills",
@@ -267,7 +267,7 @@ const manifest = {
     "sales",
     "prospecting",
     "lead-enrichment",
-    "email-finder",
+    "b2b-data",
     "crm",
     "revops",
     "data-enrichment",
