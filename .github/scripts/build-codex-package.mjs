@@ -368,9 +368,28 @@ if (packagedSkills !== skillDirs.length) {
     `archive has ${packagedSkills} SKILL.md files, repo has ${skillDirs.length}`,
   );
 }
-const symlinks = execFileSync("unzip", ["-l", zipPath], { encoding: "utf8" });
-if (/ -> /.test(symlinks)) {
-  problems.push("archive contains symlinks; they must be dereferenced");
+// No zip listing prints symlink targets — `unzip -l` gives length, date, and
+// name, and the zipinfo formats do not print ` -> target` either. The file type
+// survives only in zipinfo's Unix mode column, where a symlink reads
+// `lrwxrwxrwx`. Every entry must yield a mode for this to mean anything, so an
+// unparseable listing is itself a failure rather than a silent pass.
+const modes = execFileSync("unzip", ["-Z", zipPath], { encoding: "utf8" })
+  .split("\n")
+  .map((line) => /^([-bcdlps])[-rwxsStT]{9}\s+\d+\.\d+\s+\S+\s/.exec(line))
+  .filter((match) => match !== null);
+
+if (modes.length !== entries.length) {
+  problems.push(
+    `zipinfo reported modes for ${modes.length} of ${entries.length} entries, so the archive cannot be shown symlink-free`,
+  );
+}
+const symlinked = modes
+  .filter((match) => match[1] === "l")
+  .map((match) => /\d\d:\d\d\s+(.*)$/.exec(match.input)?.[1] ?? match.input);
+if (symlinked.length > 0) {
+  problems.push(
+    `archive contains symlinks; they must be dereferenced: ${symlinked.join(", ")}`,
+  );
 }
 
 // Every interface asset path must resolve inside the archive, and the images
