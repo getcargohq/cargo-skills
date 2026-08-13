@@ -1,7 +1,7 @@
 ---
 name: cargo-billing
-description: "Understand what Cargo is costing — remaining credits, usage broken down by workflow, connector, or agent, subscription state, and invoice history. Triggers: \"how many credits do I have left\", \"what did that cost\", \"why is my bill so high\", \"am I about to run out\", \"will this fit in our budget\", \"show me my invoices\", \"how much have I spent this month\", \"what plan am I on\", \"what do I get for free\", \"how many free credits\", \"can I afford this run\". Needs a token with admin access. Skip when: attributing spend to specific nodes or cutting a play cost — use cargo-diagnostics."
-version: "1.0.3"
+description: "Understand what Cargo is costing — remaining credits, usage broken down by workflow, connector, or agent, subscription state, and invoice history. Triggers: \"how many credits do I have left\", \"what did that cost\", \"why is my bill so high\", \"am I about to run out\", \"will this fit in our budget\", \"show me my invoices\", \"how much have I spent this month\", \"what plan am I on\", \"what do I get for free\", \"how many free credits\", \"can I afford this run\", \"add a card\", \"update my payment method\", \"why was my card declined\". Needs a token with admin access. Skip when: attributing spend to specific nodes or cutting a play cost — use cargo-diagnostics."
+version: "1.1.0"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -58,6 +58,7 @@ cargo-ai billing usage get-metrics --from <YYYY-MM-DD> --to <YYYY-MM-DD>
 cargo-ai billing usage get-metrics --from <YYYY-MM-DD> --to <YYYY-MM-DD> --group-by workflow_uuid
 cargo-ai billing subscription get
 cargo-ai billing subscription get-invoices
+cargo-ai billing subscription update-payment-method --card-number <number> --card-exp <MM/YYYY> --card-cvc <cvc>
 cargo-ai billing subscription create-portal-session
 ```
 
@@ -151,6 +152,7 @@ Available filters: `--workflow-uuid`, `--model-uuid`, `--connector-uuid`, `--int
 cargo-ai billing subscription get                    # current plan, credits used/available, period dates
 cargo-ai billing subscription get-invoices            # invoice history (amounts in cents)
 cargo-ai billing subscription get-credit-card         # card on file
+cargo-ai billing subscription update-payment-method   # add or replace the card (see below)
 cargo-ai billing subscription create-portal-session   # Stripe portal URL for self-service billing
 ```
 
@@ -173,6 +175,39 @@ What 100 credits buys, as ballpark anchors (per-action costs in [`../cargo-gtm/r
 | Find a phone — `FullEnrich.findPhone` | 6 | ~16 numbers |
 
 The [quickstart demo](../cargo-quickstart/SKILL.md) spends about **0.5**. Phone lookups are the fastest way to burn a free tier, so phone is the **guarded lever**: the escalation tier runs 3–7 credits/record, ~10× email, and never belongs in a default chain — it enters a plan only on explicit user request, on qualified leads only. Full spend rules in [`../cargo-gtm/references/cost-discipline.md`](../cargo-gtm/references/cost-discipline.md).
+
+### Adding a card
+
+A workspace holds exactly one card. `update-payment-method` sets it, whether or not one is already on file, and takes the details three ways.
+
+```bash
+# Card details — no browser, nothing to hand off
+cargo-ai billing subscription update-payment-method \
+  --card-number 4242424242424242 --card-exp 12/2030 --card-cvc 123
+
+# Same, but keeps the number out of shell history and the process list
+echo '{"number":"4242424242424242","expMonth":12,"expYear":2030,"cvc":"123"}' \
+  | cargo-ai billing subscription update-payment-method --card-stdin
+
+# No card details — prints a Stripe-hosted form URL and waits for the card to land
+cargo-ai billing subscription update-payment-method
+```
+
+**Prefer `--card-stdin`.** Anything passed as a flag is visible in shell history and to any process that can read the process list. Card details go from your machine straight to Stripe in exchange for a token; they never reach the Cargo API, and no output prints them.
+
+**Never invent card details, and never reuse a number from elsewhere in the conversation.** Ask the user for them, or use the no-argument form and hand them the URL.
+
+The no-argument form is the fallback when you have no details to submit: it prints a URL that opens directly on the card form, then polls until the card changes (`--timeout`, `--poll-interval`, `--no-open`). Relay that URL to the user — it works over SSH and in sandboxes.
+
+Either way the card is verified against the issuer before it becomes the default, so a card that cannot be charged fails here rather than silently at the next renewal.
+
+| Failure | What it means | What to do |
+|---|---|---|
+| `cardDeclined` + `declineCode` | The issuer refused the verification | Read `declineCode`. On a spend-limited virtual card, `insufficient_funds` or a limit code means the budget or merchant restrictions rule us out — ask the cardholder to raise it |
+| `authenticationRequired` | The card wants 3-D Secure, which needs the cardholder present | Re-run with no arguments and hand the user the hosted-form URL |
+| `paymentMethodNotFound` | The details did not resolve to a usable card | Re-check the number and expiry with the user |
+
+Card updates are rate-limited to **10 per hour per workspace** (shared with setup intents). Retrying a declined card burns that budget — fix the cause rather than looping.
 
 ## Help
 
