@@ -377,6 +377,11 @@
       "title": "Recipe — Find companies by tech-stack or hiring intent"
     },
     {
+      "path": "references/acceptable-use.md",
+      "kind": "reference",
+      "title": "Acceptable use — basis, suppression, and volume gates"
+    },
+    {
       "path": "references/alternatives.md",
       "kind": "reference",
       "title": "Alternative provider chains"
@@ -483,5 +488,5 @@
       "kind": "script"
     }
   ],
-  "contentHash": "9a0b9829a09d45c148729e7dd28c8b1d8a4176bb24a122893ab8508846bf7280"
+  "contentHash": "cb57a89edff50d19543571cd0b233a9136a1bd637c19730ec77d82b7f0572a86"
 }

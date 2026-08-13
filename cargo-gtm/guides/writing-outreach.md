@@ -2,6 +2,8 @@
 
 How to use Cargo's LLM providers and AI agent surface to score, qualify, and personalize outreach. Covers provider routing, prompt patterns, and integration with sequencers.
 
+> **Gate — run before any prompt on this page.** [`../references/acceptable-use.md`](../references/acceptable-use.md) §3: *basis* (which permission covers this audience), *suppression* (unsubscribe / DNC / hard-bounce filtered out first), *relevance* (why this message, for this recipient). All three are free; any failure is stop-and-ask. Nothing here sends — the output is variables for the user's own sequencer, under its limits and identities. Drafted copy carries an honest sender and subject, a working opt-out, and a postal address where required (§4).
+
 ## LLM provider routing
 
 Cargo exposes five LLM providers as `kind: "connector"` actions with credits-based pricing. All expose a single `instruct` action that takes a prompt + model and returns text.
@@ -43,9 +45,11 @@ Use anthropic Haiku with `output: {"type": "jsonSchema", "jsonSchema": {...}}` t
 ### Personalization (one-paragraph opener)
 
 ```
-Write a single short paragraph (≤ 60 words) opening a cold email to {first_name},
-{title} at {company}. Reference the most relevant signal from the company profile
-below. Sound like a peer, not a vendor. No "I hope this finds you well."
+Write a single short paragraph (≤ 60 words) opening a first-touch email to
+{first_name}, {title} at {company}. Reference the most relevant signal from the
+company profile below — if none of the signals give a reason to write to this
+person specifically, output exactly: NULL. Sound like a peer, not a vendor.
+No "I hope this finds you well."
 
 Company profile: {firmographics}
 Recent signals: {signals}
