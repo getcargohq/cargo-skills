@@ -19,6 +19,18 @@ The OpenAI Plugins Directory rejected `cargo-gtm` under **Spam mass abuse**. The
 - **Descriptions rewritten to be accurate rather than spam-shaped** — B2B, licensed providers, the gates stated up front, and the fact that the pack sends nothing itself. Every routing-eval trigger survives except two rewordings (`"write cold emails"` → `"write a first-touch email"`, `"find emails for these"` → `"find work emails for these accounts"`), so `evals/routing.jsonl` line 14 is worth re-running before the next upload.
 - **`.claude-plugin/plugin.json` → 1.19.0.** The OpenAI directory is a submission-time snapshot — published skills do not update live — so a resubmission has to claim a new version.
 
+### `cargo-billing` → 1.1.0 — adding a card without a human
+
+An agent that hit the free-tier ceiling had nothing to do about it: the skill documented how to read the balance and nothing about how to pay. `cargo-ai billing subscription update-payment-method` now takes card details directly (`--card-number`/`--card-exp`/`--card-cvc`, or `--card-stdin`), tokenizes them against Stripe from the caller's machine, and sets the result — no browser anywhere in the loop. Passing no arguments keeps the old behavior: a hosted-form URL to hand to a human, polled until the card lands.
+
+- **New "Adding a card" section** in [`cargo-billing/SKILL.md`](cargo-billing/SKILL.md) covering the three input modes, why `--card-stdin` is preferred over the flags (a card number passed as an argument is visible in shell history and to anything reading the process list), and an instruction never to invent card details or reuse a number from earlier in the conversation.
+- **Decline handling is documented as a normal outcome, not an error path.** The card is verified against the issuer before it becomes the default, so `cardDeclined` arrives with the issuer's `declineCode`. On the spend-limited virtual cards agents are increasingly issued, that is the difference between "ask the cardholder to raise the budget" and "wrong card" — the agent can only tell them apart if it reads the code. `authenticationRequired` means 3-D Secure and has exactly one remedy: fall back to the hosted form.
+- **Rate limit surfaced** — 10 card updates per hour per workspace, shared with setup intents — with a note that retrying a declined card is what exhausts it.
+- **New response shapes and troubleshooting rows** in [`references/response-shapes.md`](cargo-billing/references/response-shapes.md) and [`references/troubleshooting.md`](cargo-billing/references/troubleshooting.md), including `get-credit-card` returning `undefined` for a free-tier workspace with no card.
+- **Routing triggers added** for "add a card", "update my payment method", and "why was my card declined".
+
+Requires `@cargo-ai/cli` ≥ 1.0.51. The bundle pin in [`cargo/cli-version`](cargo/cli-version) is 1.0.47, so this must not publish before the pin moves — otherwise the documented flags do not exist in the CLI an agent installs.
+
 ### `cargo` → 1.18.2 (router) — close the ClawHub security-audit gaps
 
 ClawHub's automated audit of the published bundle (SkillSpector, v1.18.1) returned **Review** with five findings. Three were real documentation gaps — not behavior changes, just places where the bundle assumed the reader had the whole thing in context. Fixed here.

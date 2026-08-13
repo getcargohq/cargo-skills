@@ -102,3 +102,37 @@ Remaining credits = `subscriptionAvailableCreditsCount - subscriptionCreditsUsed
 ```
 
 Open `portalSession.url` in a browser to access the Stripe self-service billing portal.
+
+## cargo-ai billing subscription update-payment-method
+
+```json
+{
+  "ok": true,
+  "status": "updated",
+  "creditCard": {
+    "brand": "visa",
+    "last4": "4242",
+    "expMonth": 12,
+    "expYear": 2030
+  }
+}
+```
+
+**Key fields:** `creditCard` describes the card now on file — the only card data ever returned. `creditCard` is absent if the card could not be read back straight after the update; the update still succeeded.
+
+On failure the command exits non-zero with `{"errorMessage": "..."}` plus a `reason` of `cardDeclined`, `authenticationRequired`, or `paymentMethodNotFound`. A `cardDeclined` carries the issuer's `declineCode` — see [`troubleshooting.md`](troubleshooting.md).
+
+## cargo-ai billing subscription get-credit-card
+
+```json
+{
+  "creditCard": {
+    "brand": "visa",
+    "last4": "4242",
+    "expMonth": 12,
+    "expYear": 2030
+  }
+}
+```
+
+`creditCard` is `undefined` when no card is on file — the normal state for a workspace still on the free tier.
