@@ -71,7 +71,7 @@ cargo-ai storage model list                # all models (uuid, name, slug)
 
 ```bash
 cargo-ai orchestration run get-metrics --workflow-uuid <uuid>
-cargo-ai orchestration run download --workflow-uuid <uuid> --statuses success,error
+cargo-ai orchestration run download --workflow-uuid <uuid> --is-finished
 cargo-ai orchestration run count --workflow-uuid <uuid> --statuses error
 cargo-ai orchestration query execute "SELECT status, count() FROM runs GROUP BY status"
 cargo-ai segmentation segment download --model-uuid <uuid> --filter '{"conjonction":"and","groups":[]}'
@@ -105,12 +105,12 @@ Count runs matching specific criteria — useful for monitoring.
 
 ```bash
 cargo-ai orchestration run count --workflow-uuid <uuid> --statuses error
-cargo-ai orchestration run count --workflow-uuid <uuid> --statuses success,error \
+cargo-ai orchestration run count --workflow-uuid <uuid> --is-finished \
   --created-after <start-date> --created-before <end-date>
 cargo-ai orchestration run count --workflow-uuid <uuid> --batch-uuid <uuid>
 ```
 
-Supports: `--statuses`, `--batch-uuid`, `--release-uuid`, `--created-after`, `--created-before`, `--record-id`, `--record-title`.
+Supports: `--statuses`, `--batch-uuid`, `--release-uuid`, `--is-finished`, `--created-after`, `--created-before`, `--record-id`, `--record-title`.
 
 For cross-workflow analytics or shapes that `run count` doesn't expose (per-node failure breakdowns, p95 durations, error rate over time), use `orchestration query execute` — see the [Ad-hoc execution analytics](#ad-hoc-execution-analytics-orchestration-query) section.
 
@@ -159,6 +159,11 @@ cargo-ai orchestration run download --workflow-uuid <uuid> \
 # Specific statuses (run statuses: idle, pending, running, success, error,
 # cancelling, cancelled, skipped — NOT "finished"/"failed")
 cargo-ai orchestration run download --workflow-uuid <uuid> --statuses success,error
+
+# Every run that reached a terminal state. `--is-finished` is `finished_at IS
+# NOT NULL`, which is wider than success+error: cancelled and skipped runs
+# stamp finishedAt too, so don't substitute one for the other.
+cargo-ai orchestration run download --workflow-uuid <uuid> --is-finished
 
 # From a specific batch
 cargo-ai orchestration run download --workflow-uuid <uuid> --batch-uuid <uuid>

@@ -5,7 +5,7 @@
 ```bash
 cargo-ai orchestration run download \
   --workflow-uuid <uuid> \
-  --statuses success,error
+  --is-finished
 ```
 
 ## Download runs by status

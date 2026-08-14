@@ -85,12 +85,12 @@ cargo-ai orchestration run count \
 ```bash
 cargo-ai orchestration run count \
   --workflow-uuid <uuid> \
-  --statuses success,error
+  --is-finished
 
 # In a date range
 cargo-ai orchestration run count \
   --workflow-uuid <uuid> \
-  --statuses success,error \
+  --is-finished \
   --created-after 2025-01-01 \
   --created-before 2025-01-31
 ```
