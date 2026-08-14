@@ -17,8 +17,8 @@ cargo-ai connection integration list --category enrichment
 # By name search
 cargo-ai connection integration list --search "hubspot"
 
-# By exact slug
-cargo-ai connection integration list --slug clearbit
+# By exact slug(s)
+cargo-ai connection integration list --slugs clearbit
 
 # Only those with actions (usable in workflow nodes)
 cargo-ai connection integration list --has-actions true

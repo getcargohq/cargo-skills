@@ -10,6 +10,10 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### `cargo-connection` → 1.3.0 — `integration list --slugs`
+
+`cargo-ai connection integration list` now filters with `--slugs` (replaces `--slug`). Documented in the skill, the integrations examples, and the list response-shape filters.
+
 ### `cargo-gtm` → 1.13.0, `cargo` → 1.19.0 (router) — acceptable-use gates after the OpenAI spam rejection
 
 The OpenAI Plugins Directory rejected `cargo-gtm` under **Spam mass abuse**. The description was the whole case against it — *"find emails, phones and LinkedIn URLs"*, *"write cold emails"*, *"build me a list of"* — contact harvesting plus bulk cold mail, with nothing in 8,800 lines about consent, suppression, or volume. Opening the archive confirmed it: the outreach guide and the prompt library are cold-email prompts end to end. Rewording alone would have been dressing it up, so this is both halves.

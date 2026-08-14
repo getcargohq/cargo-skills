@@ -1,7 +1,7 @@
 ---
 name: cargo-connection
 description: "Connect Cargo to an external system and find out what it can do — authenticate connectors, browse the integration catalog, and resolve the `connectorUuid` and `actionSlug` a workflow node needs. Triggers: \"connect my HubSpot\", \"is Salesforce connected\", \"what integrations do you support\", \"can Cargo talk to <tool>\", \"what actions does <provider> have\", \"I need the connector UUID\", \"set up the API key for\", \"it is asking for credentials again\", \"why is this connector failing auth\", \"list my connectors\". Integrations: amplemarket, amplitude, attio, bigQuery, calendly, closecom, contrast, csv, customerio, dbt, emailBison, expandi, googleAds, googleSheets, heyReach, http, hubspot, hubspotMcp, instantly, instantlyV2, intercom, jira, kitt, lemlist, lgm, linkedinAds, linkedinMatchedAudience, livestorm, manus, marketo, metabase, microsoftTeams, mixpanel, netsuite, netsuiteSoap, notionMcp, octave, onesignal, outreach, pipedrive, postgresql, redshift, resend, rift, salesforce, salesforceMcp, salesloft, Sendgrid, sillage, slack, smartlead, snowflake, sql, stripe, and 84 more. Skip when: choosing between enrichment providers for a GTM job — use cargo-gtm and its provider playbooks."
-version: "1.2.1"
+version: "1.3.0"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -123,8 +123,8 @@ cargo-ai connection integration list --category enrichment
 # Search by name
 cargo-ai connection integration list --search "hubspot"
 
-# Find by exact slug
-cargo-ai connection integration list --slug clearbit
+# Find by exact slug(s)
+cargo-ai connection integration list --slugs clearbit
 
 # Only integrations that have actions (usable in workflow nodes)
 cargo-ai connection integration list --has-actions true

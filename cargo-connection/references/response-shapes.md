@@ -88,7 +88,7 @@ Each integration in the list is a full integration object (same shape as `integr
 
 **Key fields:** `slug` (used when creating connectors and filtering), `name`, `category`, `actions`, `extractors`.
 
-Supports `--category`, `--slug`, `--search`, `--has-actions`, `--has-extractors` to filter results.
+Supports `--category`, `--slugs`, `--search`, `--has-actions`, `--has-extractors` to filter results.
 
 **Integration categories:** `engagement`, `marketing`, `sales`, `finance`, `analytics`, `freeform`, `success`, `support`, `enrichment`, `storage`, `custom`.
 
