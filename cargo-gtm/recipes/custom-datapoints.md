@@ -52,9 +52,11 @@ cargo-ai orchestration action execute \
 # Sourced answers for anything the site does not state (funding, category, named competitors)
 cargo-ai orchestration action execute \
   --action '{"kind":"connector","integrationSlug":"linkup","actionSlug":"instruct","config":{}}' \
-  --data '{"prompt":"Who does <seller> sell to, and who do they compete with? Cite sources."}' \
+  --data '{"q":"Who does <seller> sell to, and who do they compete with?","depth":"standard","outputType":"sourcedAnswer"}' \
   --wait-until-finished
 ```
+
+`instruct` takes `q` (a natural-language question) and a required `depth` — there is no implicit default, and `prompt` is not a field it accepts. See [`../provider-playbooks/linkup.md`](../provider-playbooks/linkup.md).
 
 Read for the four things that actually generate attribute candidates — the homepage generates none of them:
 
@@ -185,14 +187,22 @@ Turn each cadence into a play — [`save-as-play.md`](save-as-play.md). Before d
 ```bash
 cargo-ai segmentation segment create --name "ICP — signal watch" \
   --model-uuid <companies-model-uuid> \
-  --filter '{"conjonction":"and","groups":[],"conditions":[...]}' \
+  --filter '{"conjonction":"and","groups":[{"conjonction":"and","conditions":[
+    {"kind":"string","columnSlug":"icp_tier","operator":"is","values":["tier-1","tier-2"]}
+  ]}]}' \
   --tracking-column-slugs "eng_headcount_est,ai_tool_state,soc2_status"
 
 cargo-ai segmentation change list --segment-uuid <segment-uuid>
-cargo-ai segmentation change fetch --change-uuid <change-uuid> --kinds updated
+cargo-ai segmentation change fetch --uuid <change-uuid> --kinds updated
 ```
 
-`updatedRecordsCount` stays `0` unless `--tracking-column-slugs` was set **at creation** — the single most common way this whole motion silently produces nothing. And the filter spelling is `conjonction`; misspelled, it matches nothing without erroring.
+Three flag traps in those four lines, each of which fails quietly or with a bare 400:
+
+- **Conditions live inside `groups`, never beside them.** `{"conjonction":"and","groups":[]}` is the match-everything filter, so a top-level `conditions` array is ignored and the segment silently becomes the whole model — with the tracking and refresh spend that implies.
+- **The spelling is `conjonction`.** Misspelled, it matches nothing without erroring.
+- **`change fetch` takes `--uuid`** — the *change* UUID from `change list`, not the segment UUID — plus a required `--kinds`. See [`../../cargo-segmentation/SKILL.md`](../../cargo-segmentation/SKILL.md).
+
+And `updatedRecordsCount` stays `0` unless `--tracking-column-slugs` was set **at creation** — the single most common way this whole motion silently produces nothing.
 
 For volume-level watching ("tell me when more than 5 accounts pick up the signal this week"), add a model-scoped alert with a filter — [`../../cargo-observability/SKILL.md`](../../cargo-observability/SKILL.md). Preview it before creating it.
 
@@ -206,7 +216,7 @@ These are not stylistic. Each one prevents a specific wrong answer that scores w
 
 A single job posting establishes `individual_usage` at best — and a tool listed under "nice to have" establishes nothing at all. Use [`../references/prompt-library/data-extraction.md`](../references/prompt-library/data-extraction.md) → `technology-adoption-state` to classify the evidence rather than eyeballing it.
 
-**Confidence is a band, and `Unknown` is a valid answer.** Confirmed (explicit, current, authoritative source) · Inferred (several consistent indirect sources, no contradiction) · Estimated (calculated from partial public data) · Unknown (insufficient or contradictory). Below the Inferred bar, return `Unknown` — an unsupported assertion in a scoring column is a decision made on noise, and it is invisible once the value is written.
+**Confidence is a band, and `Unknown` is a valid answer.** Confirmed (explicit, current, authoritative source) · Inferred (several consistent indirect sources, no contradiction) · Estimated (calculated from partial public data — numeric fields only) · Unknown (insufficient or contradictory). The first three are all storable, tagged with the band that produced them; anything that reaches none of them returns `Unknown` rather than a value — an unsupported assertion in a scoring column is a decision made on noise, and it is invisible once the value is written. `Estimated` means arithmetic on figures you actually have, not a plausible-sounding number.
 
 **Store the evidence with the value** for anything above trivial cost. A quoted phrase and its URL in the companion column is what makes the value auditable six months later, and it is the difference between a rep trusting the field and ignoring it.
 
