@@ -82,8 +82,6 @@ cargo-ai orchestration run count \
 
 ## Count finished runs
 
-`--is-finished` currently returns `400 unrecognized_keys: isFinished` on every run command — count the terminal statuses instead.
-
 ```bash
 cargo-ai orchestration run count \
   --workflow-uuid <uuid> \

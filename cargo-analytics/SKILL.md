@@ -110,7 +110,7 @@ cargo-ai orchestration run count --workflow-uuid <uuid> --statuses success,error
 cargo-ai orchestration run count --workflow-uuid <uuid> --batch-uuid <uuid>
 ```
 
-Supports: `--statuses`, `--batch-uuid`, `--release-uuid`, `--created-after`, `--created-before`, `--record-id`, `--record-title`. `--is-finished` exists on the command but is rejected by the API (see the note under [Downloading run results](#downloading-run-results)) — use `--statuses success,error` for "finished".
+Supports: `--statuses`, `--batch-uuid`, `--release-uuid`, `--created-after`, `--created-before`, `--record-id`, `--record-title`.
 
 For cross-workflow analytics or shapes that `run count` doesn't expose (per-node failure breakdowns, p95 durations, error rate over time), use `orchestration query execute` — see the [Ad-hoc execution analytics](#ad-hoc-execution-analytics-orchestration-query) section.
 
@@ -189,8 +189,6 @@ To find the `output-node-slug`: `cargo-ai orchestration release get <release-uui
 You can't, in one call. The full per-node context is a **per-run S3 object**, and `orchestration run get <run-uuid>` is the only command that hydrates it — one run at a time. The two exports above are projections: `download` gives you node *titles* across many runs, `download-outputs` gives you first-node input + one node's output across many runs. For everything in between, loop `run get` over the UUIDs from the discovery ladder in [`../cargo-diagnostics/references/run-trace.md`](../cargo-diagnostics/references/run-trace.md) § 0.
 
 Orchestration SQL is not an alternative here: `runs` and `spans` carry status, timing, and credits, but no node input/output columns.
-
-> **`--is-finished` currently fails.** The CLI accepts the flag on `run list`, `run count`, `run download`, and `run download-outputs`, but the API rejects the key (`400 unrecognized_keys: isFinished`). Omit it and filter with `--statuses` instead. Fix in flight; this note goes away when the bundle's `cli-version` pin moves past it.
 
 ## Downloading batch results
 

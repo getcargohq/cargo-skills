@@ -2,8 +2,6 @@
 
 ## Download all finished runs
 
-`--is-finished` currently returns `400 unrecognized_keys: isFinished` — filter on the terminal statuses instead.
-
 ```bash
 cargo-ai orchestration run download \
   --workflow-uuid <uuid> \
