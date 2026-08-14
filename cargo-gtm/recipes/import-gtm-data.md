@@ -15,6 +15,8 @@ Use this recipe when the user arrives with GTM data built elsewhere — spreadsh
 
 Every GTM tool exports CSV; prefer it over API scraping. Get one CSV per logical entity (companies, contacts, deals). Ask the user to include **all** columns — enriched values (emails, titles, firmographics) come along free and mean less re-enrichment spend later.
 
+**If the source tool can also export its table or workflow *schema*, get that too, and get it first.** The CSV is the output; the schema is the configuration, and only the schema says which provider filled a column, in what order, and under which run condition. None of that is recoverable from the results, so a rebuild in step 5 that starts from the CSV alone is inference rather than migration. For Clay tables the schema export exists and the Clay-specific path is its own recipe: [`clay-to-cargo.md`](clay-to-cargo.md).
+
 ## Step 2 — Map columns to a Cargo model
 
 ```bash
@@ -63,7 +65,7 @@ Report the SEND/VERIFY/REVIEW/REMOVE counts — then **write the verdicts back t
 
 For each recurring enrichment/workflow in the source tool, decide with the user: **retire, keep manual, or rebuild**. For rebuilds:
 
-1. Identify what each source column *did* (find email, enrich firmographics, score, personalize). If the source tool can export its table/workflow **schema as JSON**, use that as the mapping input instead of eyeballing the UI — e.g. for Clay tables, [ClayMate Lite](https://github.com/GTM-Base/claymate-lite) (MIT Chrome extension) exports column structures as portable JSON. *Third-party code: review it before loading — it runs on your logged-in session.*
+1. Identify what each source column *did* (find email, enrich firmographics, score, personalize), from the schema you pulled in step 1 rather than by eyeballing the UI. For Clay, [`clay-to-cargo.md`](clay-to-cargo.md) carries the extraction paths and the column-family → action map; for everything else, work from the column's behaviour rather than its label.
 2. Map it to the cheapest Cargo action for that stage — [`../references/stage-action-map.md`](../references/stage-action-map.md), then the provider's playbook (§11 gate applies).
 3. LLM prompt columns: check [`../references/prompt-library/index.md`](../references/prompt-library/index.md) for a proven equivalent before porting the prompt text.
 4. Compose the chain per the recipe spine and save it as a play — [`save-as-play.md`](save-as-play.md).
@@ -79,3 +81,5 @@ Import itself is ~free (storage writes). Spend concentrates in: dedupe matching 
 ## What this recipe deliberately doesn't do
 
 No per-tool extraction scripts or action-name mappings — source tools change their internals without notice, and CSV export is universal. If a source tool's export is too limited, its API (with the user's own key) via the generic HTTP patterns in `cargo-orchestration` is the fallback.
+
+**Clay is the one argued exception**, in [`clay-to-cargo.md`](clay-to-cargo.md): it is the incumbent this product most often replaces, "what is the equivalent of this Clay column" is asked often enough to be worth maintaining an answer to, and the universal advice actively costs accuracy there because a CSV export destroys exactly the per-row cost, waterfall order and run conditions the rebuild depends on. That recipe's action slugs and prices carry the same rule as everywhere else: they must agree with the provider playbooks, and the playbook wins.
