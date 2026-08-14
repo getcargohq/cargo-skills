@@ -118,11 +118,10 @@ node marked** — the user has to see the fork to agree the run went down the wr
 side of it:
 
 ```bash
-cargo-ai orchestration run get <run-uuid> \
-  | node <cargo-orchestration-skill-dir>/scripts/workflow-to-mermaid.ts --highlight branch_1
+cargo-ai orchestration node diagram --run-uuid <run-uuid> --highlight branch_1 --raw
 ```
 
-That works for an ad-hoc `action execute` run, which carries its `nodes`. A run
-from a deployed tool or play carries `releaseUuid` and no graph — pipe
-`release get <releaseUuid>` instead (the script says so if you get it wrong).
-Mapping rules and flags: [`../../cargo-orchestration/references/node-diagram.md`](../../cargo-orchestration/references/node-diagram.md).
+Free, runs nothing, and it works for either run shape — an ad-hoc `action execute`
+run carries its own `nodes`, a run of a deployed tool or play carries only a
+`releaseUuid`, and `--run-uuid` follows whichever it has. Flags and mapping rules:
+[`../../cargo-orchestration/references/node-diagram.md`](../../cargo-orchestration/references/node-diagram.md).

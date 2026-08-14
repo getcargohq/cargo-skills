@@ -5,12 +5,17 @@ directed graph with routing, fallbacks, and paid steps in it — prose flattens 
 three. Render it as a Mermaid `flowchart` instead: it costs nothing, and it renders
 in Claude Code, on GitHub, and in the Cargo docs.
 
+`cargo-ai orchestration node diagram` does it (**CLI ≥ 1.0.54**; `unknown command`
+means the pin hasn't moved yet — bump per [`../../cargo/SKILL.md`](../../cargo/SKILL.md)
+§ "At session start"). Free, runs nothing, no credits — same family as
+`node validate`.
+
 ## When to draw one
 
 - **At the plan gate**, before `draft-release deploy` / `cdk deploy` — the diagram
   *is* the "nodes and data flow" half of the plan ([`../../cargo/references/interaction.md`](../../cargo/references/interaction.md) §1).
 - **When explaining an existing workflow, tool, or play** — "what does this play
-  do?" is answered by `release get-deployed` piped through the script below.
+  do?" is one command against its `workflowUuid`.
 - **When reporting a trace** — the graph with the failing node marked red, next to
   the error ([`../../cargo-diagnostics/references/run-trace.md`](../../cargo-diagnostics/references/run-trace.md)).
 
@@ -20,43 +25,45 @@ changed in a sentence instead. A diagram of `start → enrich → end` is ceremo
 ## Generate it
 
 ```bash
-# An existing workflow, tool, or play (get the workflowUuid from `tool list` / `play list`)
-cargo-ai orchestration release get-deployed --workflow-uuid <uuid> \
-  | node <skill-dir>/scripts/workflow-to-mermaid.ts --title "<workflow name>"
+# An existing workflow, tool, or play (workflowUuid from `tool list` / `play list`)
+cargo-ai orchestration node diagram --workflow-uuid <uuid> --raw
 
 # The draft you are about to deploy — the plan-gate case
-cargo-ai orchestration release get-draft --workflow-uuid <uuid> \
-  | node <skill-dir>/scripts/workflow-to-mermaid.ts
+cargo-ai orchestration node diagram --workflow-uuid <uuid> --draft --raw
 
-# A graph you are authoring locally, before it exists server-side
-node <skill-dir>/scripts/workflow-to-mermaid.ts --file nodes.json
+# A graph you are authoring, before it exists server-side
+cargo-ai orchestration node diagram --nodes '[...]' --raw
 
-# The graph a specific run executed
-cargo-ai orchestration run get <run-uuid> \
-  | node <skill-dir>/scripts/workflow-to-mermaid.ts --highlight <failing-node-slug>
+# The graph a run executed, with the failing node marked
+cargo-ai orchestration node diagram --run-uuid <uuid> --highlight <node-slug> --raw
 ```
 
-**Two kinds of run payload.** A run from `action execute` carries its inline
-`nodes` and has no `releaseUuid` — diagram it directly. A run from a deployed
-tool or play is the other way round: `releaseUuid`, no `nodes`, because the graph
-lives on the release. The script detects that case and prints the `release get`
-command to run instead of drawing an empty diagram.
+Pass exactly one source: `--nodes` (or `-` to read stdin), `--file <path>`,
+`--workflow-uuid` (deployed, `--draft` for the draft), `--release-uuid`, or
+`--run-uuid`.
 
 | Flag | Effect |
 | --- | --- |
-| `--file <path>` | Read a file instead of stdin. Accepts `release get`, `release get-draft`, `template get`, an ad-hoc `run get`, or a bare `nodes` array. |
-| `--title <text>` | Title above the diagram. |
+| `--title <text>` | Title rendered above the diagram. |
 | `--direction TD\|LR` | Flow direction (default `TD`; `LR` reads better for long linear graphs). |
-| `--paid <slugs>` | Mark credits-billing nodes with 💳. |
-| `--highlight <slugs>` | Mark nodes red — the failing node in a trace. |
+| `--paid <slugs>` | Comma-separated node slugs/uuids that bill credits — marked 💳. |
+| `--highlight <slugs>` | Comma-separated slugs/uuids to mark red — the failing node in a trace. |
+| `--raw` | Print the fenced Mermaid block instead of JSON. |
 
-The script needs Node ≥ 22.18 and has no dependencies. Prefer it over
-transcribing by hand: it reads the graph by `uuid`, so it survives the duplicate
-slugs and dangling children that real releases contain (see below). If it isn't
-available, hand-write the diagram using the mapping table, and check the
-[correctness rules](#rules-that-make-the-diagram-true) yourself.
+Without `--raw` it returns `{"diagram": "...", "format": "mermaid", "warnings": [...]}`
+like every other command. **Read the `warnings`** — they carry the structural
+problems a tidy drawing would otherwise hide (nodes unreachable from `start`,
+dangling `childrenUuids`) and belong in what you tell the user.
+
+`--run-uuid` handles both run shapes: a run from `action execute` carries its own
+`nodes`, a run of a deployed tool or play carries only a `releaseUuid`, and the
+command follows whichever it has.
 
 ## What maps to what
+
+You rarely need this table — the command emits it — but it is what to check when
+reading a diagram someone else produced, or hand-writing one for a graph that
+isn't in Cargo yet.
 
 | Node | Mermaid | Rendered as |
 | --- | --- | --- |
@@ -80,30 +87,30 @@ Edges come from `childrenUuids`, in order, labelled by what the routing node mea
 | `fallbackChildUuid` → a *different* node | a **dashed** `-. on failure .->` edge — the waterfall pattern |
 | `fallbackChildUuid` → the node's own next step | a `↷` on the label, not a second arrow: a failure here doesn't stop the run |
 
-Label each node with its `name` when it has one and its action underneath — users
-recognise "LinkedIn URL found?", not `branch_3`.
-
 ## Rules that make the diagram true
 
-These are the ways a hand-drawn diagram lies. Each was hit against a live
-workspace, not imagined:
+Why to run the command rather than transcribe a graph by hand. Each of these was
+hit against a live workspace, not imagined:
 
-- **Key nodes by `uuid`, never by `slug`.** Slugs repeat within a single release —
-  a shipped waterfall has **six** nodes with slug `variables`, and a play has an
-  `agent` node and a `variables` node both called `classify`. A slug-keyed diagram
-  silently collapses them into one node and reroutes every edge that touched them.
+- **Nodes are keyed by `uuid`, never by `slug`.** Slugs repeat within a single
+  release — a shipped waterfall has **six** nodes slugged `variables`, and a play
+  has an `agent` node and a `variables` node both slugged `classify`. A slug-keyed
+  diagram silently collapses them into one node and reroutes every edge that
+  touched them. (Same trap downstream: `{{nodes.<slug>...}}` and
+  `runContext.<slug>` are ambiguous for a repeated slug, so give any node you
+  reference later a distinct slug.)
 - **`childrenUuids` order carries meaning.** Index 0 of a `branch` is the matched
   path. Swapping the labels inverts what the workflow appears to do.
-- **Draw `fallbackChildUuid` edges.** In waterfall graphs they *are* the mechanism —
-  each provider falls through to the next on failure. A diagram without them shows
-  a chain of unrelated enrichments.
+- **Fallback edges are the mechanism, not decoration.** In waterfall graphs each
+  provider falls through to the next on failure; a diagram without those edges
+  shows a chain of unrelated enrichments.
 - **A `null` in `childrenUuids`, or a node unreachable from `start`, is a finding.**
-  The script emits both as `%%` comments. Say so out loud rather than drawing a tidy
-  graph over a broken one — an orphaned node never runs.
-- **`tool` and `agent` nodes carry `toolUuid` / `agentUuid` at the top level** of the
-  node (not inside `config`), and no `actionSlug`. Resolve the name with
-  `orchestration tool get` / `ai agent get` before showing the diagram, or the box
-  reads `tool e487d28e` and tells the user nothing.
+  It arrives in `warnings`. Say it out loud rather than drawing a tidy graph over a
+  broken one — an orphaned node never runs.
+- **`tool` and `agent` nodes are drawn from `toolUuid` / `agentUuid`** (top-level
+  node fields; these nodes have no `actionSlug`), so the box reads `tool e487d28e`.
+  Resolve the real name with `orchestration tool get` / `ai agent get` when it
+  matters to the reader.
 - **Mark the paid nodes.** Which action bills is not in the release — check the
   provider playbook (`../../cargo-gtm/provider-playbooks/<slug>.md`) or
   `connection integration list`, then pass those slugs to `--paid`. This is the
@@ -113,9 +120,8 @@ workspace, not imagined:
 ## Worked example
 
 ```bash
-cargo-ai orchestration release get-draft --workflow-uuid b338e04b-… \
-  | node <skill-dir>/scripts/workflow-to-mermaid.ts \
-      --title "Classify and score accounts" --paid enrich
+cargo-ai orchestration node diagram --workflow-uuid b338e04b-… --draft \
+  --title "Classify and score accounts" --paid enrich --raw
 ```
 
 ```mermaid

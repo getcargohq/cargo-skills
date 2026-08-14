@@ -59,11 +59,11 @@ Need to run something?
 > See **`references/node-selection.md`**.
 
 > **Show the graph, don't describe it.** Before deploying a draft, and whenever
-> the user asks what a workflow or play does, render the node graph as a Mermaid
-> flowchart — `release get-deployed` (or `get-draft`) piped through
-> `scripts/workflow-to-mermaid.ts`. Routing, fallback edges, and which steps bill
-> are what the user is actually approving, and prose flattens all three. Mapping
-> rules, cost marking, and the duplicate-slug footgun: **`references/node-diagram.md`**.
+> the user asks what a workflow or play does, draw it:
+> `cargo-ai orchestration node diagram --workflow-uuid <uuid> --raw` (free, runs
+> nothing, CLI ≥ 1.0.54). Routing, fallback edges, and which steps bill are what
+> the user is actually approving, and prose flattens all three. Sources, cost
+> marking, and the duplicate-slug footgun: **`references/node-diagram.md`**.
 
 **References:**
 
@@ -75,7 +75,7 @@ Need to run something?
 > `references/examples/queries.md` — `orchestration query execute` (ClickHouse: runs/batches/spans/records) SQL examples. For `storage query` (workspace storage), see the `cargo-storage` skill.
 > `references/examples/segments.md` — segment fetch and filter examples
 > `references/nodes.md` — full node creation guide (kinds, native actions, expressions, validation, routing)
-> `references/node-diagram.md` — **render a node graph as a Mermaid flowchart** (`scripts/workflow-to-mermaid.ts`): shape and edge mapping, marking paid nodes, highlighting a failing node, and why diagrams must key on `uuid` rather than `slug`
+> `references/node-diagram.md` — **draw a node graph as a Mermaid flowchart** (`node diagram`): every source (workflow / draft / release / run / raw nodes), marking paid nodes, highlighting a failing node, and why diagrams key on `uuid` rather than `slug`
 > `references/node-selection.md` — **how to pick the right node and avoid unnecessary `python` nodes** (decision table, native LLM `agent` node, template-expression limits, the silent-undefined footgun, inspecting node data via `runContext`, Pyodide sandbox limits, what survives a `delay`, group result access)
 > `references/filter-syntax.md` — complete filter condition reference
 > `references/polling.md` — async polling patterns, error handling, retry strategies
@@ -425,6 +425,17 @@ Always validate custom node graphs before running them.
 cargo-ai orchestration node validate --nodes '[...]'
 # → { "outcome": "valid" } or { "outcome": "notValid", "invalidNodes": [...] }
 ```
+
+Then **show it before deploying it** — `validate` proves the graph is well-formed,
+not that it does what the user asked for:
+
+```bash
+cargo-ai orchestration node diagram --nodes '[...]' --raw   # free, runs nothing
+```
+
+Same command draws a deployed workflow (`--workflow-uuid`), a draft (`--draft`), a
+release (`--release-uuid`), or the graph a run executed (`--run-uuid`). See
+`references/node-diagram.md`.
 
 For debugging, use `node compute` (dry-run expressions) or `node execute` (live test of one node **of an existing workflow** — needs `--workflow-uuid` + `--release-uuid` + `--computed-config`, and costs credits; for anything that isn't node-level debugging, use `action execute` instead). For runs that complete with `status: success` but produce wrong output (wrong branch taken, empty downstream values), use `run.executions[].title` from `run get` only as a quick summary — it may be truncated — and read `runContext.<nodeSlug>` (returned at the top level of the same `run get <run-uuid>` response) to verify field-level data. See `references/troubleshooting.md` → "Debugging a workflow run" and `references/nodes.md` for the full node creation guide, validation error codes, and examples.
 

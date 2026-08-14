@@ -38,9 +38,9 @@ jobs:
         run: |
           set -euo pipefail
           shopt -s nullglob
-          scripts=(cargo-*/scripts/*.ts)
+          scripts=(cargo-gtm/scripts/*.ts)
           if [ ${#scripts[@]} -eq 0 ]; then
-            echo "no QA scripts found — expected cargo-*/scripts/*.ts" >&2
+            echo "no QA scripts found — expected cargo-gtm/scripts/*.ts" >&2
             exit 1
           fi
           for script in "${scripts[@]}"; do

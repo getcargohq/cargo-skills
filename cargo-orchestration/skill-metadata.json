@@ -77,15 +77,7 @@
       "path": "references/troubleshooting.md",
       "kind": "reference",
       "title": "Troubleshooting"
-    },
-    {
-      "path": "scripts/fixtures_workflow_mermaid.json",
-      "kind": "fixture"
-    },
-    {
-      "path": "scripts/workflow-to-mermaid.ts",
-      "kind": "script"
     }
   ],
-  "contentHash": "505fbcfc1a4b40f402c37f2257a105e9b22fe85a52734da9555bdc76d65eda69"
+  "contentHash": "ab207905a638ef5e112c5fdd0f17332a075d676bad73e215525dd39ccda09c62"
 }
