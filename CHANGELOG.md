@@ -10,6 +10,16 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### `cargo-gtm` → 1.14.0, `cargo` → 1.19.2 (router) — designing custom datapoints, not just filling them
+
+Every recipe in the pack assumed the field was already named: `source-planning.md` sources one field you asked for, `icp-discovery.md` needs closed deals to mine. Nothing covered the blank page — *"what should we even be collecting?"* — which is where the GTM conversation actually starts, and which an LLM will happily answer with ten plausible attributes, four of which have no obtainable source at any price.
+
+- **New [`cargo-gtm/recipes/custom-datapoints.md`](cargo-gtm/recipes/custom-datapoints.md).** Research the seller from fetched pages (not model recall) → draft candidates against the discriminator test → **gate each one on a real catalog action, its credit cost, and a probed hit rate** → present a costed shortlist with the cut list and the full-fan-out arithmetic → columns, scoring, segment, refresh cadence. The gate is the point: a candidate with no action slug is a research note, and saying so is more useful than padding the list to ten.
+- **Attribute vs signal, mechanically.** In Cargo a live signal is a *tracked column diff* — the recipe ends by putting the signal-bearing attributes into `--tracking-column-slugs` at segment creation and reading the delta feed, the step whose omission makes `updatedRecordsCount` sit at `0` forever.
+- **Two prompts in [`references/prompt-library/data-extraction.md`](cargo-gtm/references/prompt-library/data-extraction.md)**: `custom-attribute-extraction` (one defined attribute from page text, with a confidence band and a verbatim evidence quote — `Unknown` is a first-class answer, because an unsupported value in a scoring column is a decision made on noise) and `technology-adoption-state` (mixed evidence → `individual_usage` … `company_standard`, with a hard rule that one job posting never establishes company-wide adoption).
+- First-party fields — product usage, activation, billing, visitor sessions (`snitcher.searchSessions`) — are called out as structurally unavailable for net-new accounts and routed to `account-expansion.md` instead of quietly ranking customers above prospects.
+- Routed from the router table, the `cargo-gtm` recipe table, the README, and `llms.txt`, with `"what data points should we collect on accounts"` added to the `cargo-gtm` triggers. The three plugin manifests follow the router to 1.19.2.
+
 ### `cargo-analytics` → 1.5.0, `cargo-orchestration` → 1.6.3 — what the run exports actually contain
 
 Chasing the run-discovery report one layer down — "can I get the run context for more than one run at a time?" — turned up that the export commands were documented as something they are not. `run download` was described as returning "each run as a JSON object with status, timing, executions, and `runContext.<nodeSlug>` containing per-node outputs". It returns a signed URL to a **gzipped CSV** with one column per node slug holding that execution's `title` — the truncated summary the diagnostics runbooks call "never evidence". No `runContext`, no `executions[]`, not JSON. An agent following this skill to debug a batch got titles and believed it had outputs.

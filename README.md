@@ -222,6 +222,7 @@ Built-in recipes:
 | `funding-watch.md` | Track companies that recently raised funding for outbound timing. |
 | `tech-intent.md` | Find companies by tech-stack or hiring intent (theirStack-driven). |
 | `icp-discovery.md` | Diff Closed-Won vs Closed-Lost segments, surface differentiating ICP signals. |
+| `custom-datapoints.md` | Design which custom attributes and live signals to collect for an ICP — each gated on a real catalog source, cost, and probed coverage. |
 | `outreach-activation.md` | Turn a signal segment into send-ready outreach (enrich → verify → personalize → sequencer handoff). |
 | `ads-audience-activation.md` | Push a segment to paid media — Google Ads Customer Match / LinkedIn Matched Audiences — and read the match rate. |
 | `review-and-iterate.md` | Human review loop for judgment output: sheet handoff, grouped corrections, permanent fixes, kept as an eval set. |
@@ -264,6 +265,7 @@ Prompts that route through `cargo-gtm`:
 - *"Find every company backed by Sequoia and prospect into the portfolio."* → `recipes/portfolio-prospecting.md`
 - *"Show me everyone hiring data engineers AND running Snowflake."* → `recipes/tech-intent.md`
 - *"What ICP signals differentiate our Closed-Won deals?"* → `recipes/icp-discovery.md`
+- *"What custom data points should we be collecting on our accounts?"* → `recipes/custom-datapoints.md`
 
 For ad-hoc CLI work (modify a model, list connectors, query storage, edit the GTM context repo), load the matching capability skill directly.
 

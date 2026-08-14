@@ -51,5 +51,7 @@ Shards: [company-research.md](company-research.md) · [lead-scoring.md](lead-sco
 | industry-taxonomy-slotting | data-extraction.md | Company → one verbatim slot of a supplied taxonomy | company_description, taxonomy_list |
 | contact-details-extraction | data-extraction.md | Emails/phones/socials from footer or signature text, verbatim only | page_text |
 | job-posting-fields-extraction | data-extraction.md | Job posting → title/seniority/location/salary/tech JSON | job_posting_text |
+| custom-attribute-extraction | data-extraction.md | One defined attribute from page text + confidence band + evidence quote | attribute_name, attribute_definition, allowed_values, page_text |
+| technology-adoption-state | data-extraction.md | Mixed evidence → how widely a tech is used (individual → company standard) | technology, evidence_items |
 
 Conventions shared by every prompt: explicit output contract (parse-ready for downstream nodes), a hallucination guard ("if the text doesn't state X, output null — do not guess"), and ≤200 words. When a prompt underperforms, tune the variables before the prose — and if it's genuinely broken, file a `workspaceManagement report create` so the library gets fixed for everyone.

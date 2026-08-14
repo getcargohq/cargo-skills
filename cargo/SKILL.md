@@ -390,6 +390,7 @@ The non-obvious rules for each skill — the things that fail silently or cost m
 | `recipes/funding-watch.md` | Track companies that recently raised funding. |
 | `recipes/tech-intent.md` | Find companies by tech-stack or hiring-intent signals. |
 | `recipes/icp-discovery.md` | Diff Closed-Won vs Closed-Lost segments, surface ICP signals. |
+| `recipes/custom-datapoints.md` | Design which custom attributes + live signals to collect, gated on a real source and cost. |
 | `recipes/outreach-activation.md` | Turn a signal segment into send-ready outreach (enrich → verify → personalize → sequencer handoff). |
 | `recipes/ads-audience-activation.md` | Push a segment to Google Ads Customer Match / LinkedIn Matched Audiences. |
 | `recipes/review-and-iterate.md` | Human review loop for judgment output; corrections become permanent rules. |
