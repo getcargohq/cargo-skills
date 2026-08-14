@@ -1,0 +1,381 @@
+[
+  {
+    "name": "linear enrich",
+    "options": {
+      "title": "Enrich a company",
+      "paid": [
+        "enrich"
+      ]
+    },
+    "nodes": [
+      {
+        "uuid": "u-start",
+        "slug": "start",
+        "kind": "native",
+        "actionSlug": "start",
+        "childrenUuids": [
+          "u-enrich"
+        ]
+      },
+      {
+        "uuid": "u-enrich",
+        "slug": "enrich",
+        "name": "Enrich Company",
+        "kind": "connector",
+        "integrationSlug": "companyEnrich",
+        "actionSlug": "enrichByDomain",
+        "childrenUuids": [
+          "u-end"
+        ]
+      },
+      {
+        "uuid": "u-end",
+        "slug": "end",
+        "kind": "native",
+        "actionSlug": "end",
+        "childrenUuids": []
+      }
+    ],
+    "expected": "---\ntitle: Enrich a company\n---\nflowchart TD\n    n0([\"start\"])\n    n1[\"💳 Enrich Company<br/>companyEnrich.enrichByDomain\"]\n    n2([\"end\"])\n    n0 --> n1\n    n1 --> n2"
+  },
+  {
+    "name": "routing kinds",
+    "options": {
+      "direction": "LR"
+    },
+    "nodes": [
+      {
+        "uuid": "u-start",
+        "slug": "start",
+        "kind": "native",
+        "actionSlug": "start",
+        "childrenUuids": [
+          "u-filter"
+        ]
+      },
+      {
+        "uuid": "u-filter",
+        "slug": "gate",
+        "name": "Has a domain?",
+        "kind": "native",
+        "actionSlug": "filter",
+        "config": {
+          "filter": {
+            "expression": "{{nodes.start.domain}}"
+          }
+        },
+        "childrenUuids": [
+          "u-branch"
+        ]
+      },
+      {
+        "uuid": "u-branch",
+        "slug": "branch",
+        "name": "Enterprise?",
+        "kind": "native",
+        "actionSlug": "branch",
+        "childrenUuids": [
+          "u-switch",
+          "u-split"
+        ]
+      },
+      {
+        "uuid": "u-switch",
+        "slug": "route_region",
+        "kind": "native",
+        "actionSlug": "switch",
+        "config": {
+          "routes": [
+            {
+              "name": "EMEA"
+            },
+            {
+              "name": "AMER"
+            }
+          ]
+        },
+        "childrenUuids": [
+          "u-delay",
+          "u-end"
+        ]
+      },
+      {
+        "uuid": "u-split",
+        "slug": "ab",
+        "kind": "native",
+        "actionSlug": "split",
+        "config": {
+          "percentage": 30
+        },
+        "childrenUuids": [
+          "u-delay",
+          "u-end"
+        ]
+      },
+      {
+        "uuid": "u-delay",
+        "slug": "wait",
+        "kind": "native",
+        "actionSlug": "delay",
+        "config": {
+          "minutes": 60
+        },
+        "childrenUuids": [
+          "u-end"
+        ]
+      },
+      {
+        "uuid": "u-end",
+        "slug": "end",
+        "kind": "native",
+        "actionSlug": "end",
+        "childrenUuids": []
+      }
+    ],
+    "expected": "flowchart LR\n    n0([\"start\"])\n    n1{\"Has a domain?<br/>filter\"}\n    n2{\"Enterprise?<br/>branch\"}\n    n3{\"route_region<br/>switch\"}\n    n4{\"ab<br/>split\"}\n    n5(\"wait<br/>delay 60m\")\n    n6([\"end\"])\n    n0 --> n1\n    n1 -->|if true| n2\n    n2 -->|yes| n3\n    n2 -->|no| n4\n    n3 -->|EMEA| n5\n    n3 -->|AMER| n6\n    n4 -->|A 30%| n5\n    n4 -->|B 70%| n6\n    n5 --> n6"
+  },
+  {
+    "name": "group subgraph",
+    "nodes": [
+      {
+        "uuid": "u-start",
+        "slug": "start",
+        "kind": "native",
+        "actionSlug": "start",
+        "childrenUuids": [
+          "u-group"
+        ]
+      },
+      {
+        "uuid": "u-group",
+        "slug": "each_contact",
+        "name": "For each contact",
+        "kind": "native",
+        "actionSlug": "group",
+        "childrenUuids": [
+          "u-end"
+        ],
+        "config": {
+          "items": "{{nodes.start.contacts}}",
+          "_nodes": [
+            {
+              "uuid": "g-start",
+              "slug": "start",
+              "kind": "native",
+              "actionSlug": "start",
+              "childrenUuids": [
+                "g-verify"
+              ]
+            },
+            {
+              "uuid": "g-verify",
+              "slug": "verify",
+              "kind": "connector",
+              "integrationSlug": "waterfall",
+              "actionSlug": "verifyEmail",
+              "childrenUuids": [
+                "g-end"
+              ]
+            },
+            {
+              "uuid": "g-end",
+              "slug": "end",
+              "kind": "native",
+              "actionSlug": "end",
+              "childrenUuids": []
+            }
+          ]
+        }
+      },
+      {
+        "uuid": "u-end",
+        "slug": "end",
+        "kind": "native",
+        "actionSlug": "end",
+        "childrenUuids": []
+      }
+    ],
+    "expected": "flowchart TD\n    n0([\"start\"])\n    n1[\"For each contact<br/>group\"]\n    subgraph n1_sub[\"per item\"]\n    direction TD\n        n1s0([\"start\"])\n        n1s1[\"verify<br/>waterfall.verifyEmail\"]\n        n1s2([\"end\"])\n        n1s0 --> n1s1\n        n1s1 --> n1s2\n    end\n    n1 --> n1_sub\n    n2([\"end\"])\n    n0 --> n1\n    n1 --> n2"
+  },
+  {
+    "name": "agent tool and code nodes",
+    "options": {
+      "highlight": [
+        "score"
+      ]
+    },
+    "nodes": [
+      {
+        "uuid": "u-start",
+        "slug": "start",
+        "kind": "native",
+        "actionSlug": "start",
+        "childrenUuids": [
+          "u-tool"
+        ]
+      },
+      {
+        "uuid": "u-tool",
+        "slug": "tool",
+        "kind": "tool",
+        "toolUuid": "e487d28e-2f68-4116-881e-2c9ba6fbb5fa",
+        "childrenUuids": [
+          "u-agent"
+        ]
+      },
+      {
+        "uuid": "u-agent",
+        "slug": "agent",
+        "kind": "agent",
+        "agentUuid": "bba1380e-996a-4867-bf39-15af8a4ae6f7",
+        "childrenUuids": [
+          "u-inline"
+        ]
+      },
+      {
+        "uuid": "u-inline",
+        "slug": "classify",
+        "name": "Apply the taxonomy",
+        "kind": "native",
+        "actionSlug": "agent",
+        "childrenUuids": [
+          "u-score"
+        ]
+      },
+      {
+        "uuid": "u-score",
+        "slug": "score",
+        "name": "Score and band (deterministic)",
+        "kind": "native",
+        "actionSlug": "script",
+        "childrenUuids": [
+          "u-end"
+        ]
+      },
+      {
+        "uuid": "u-end",
+        "slug": "end",
+        "kind": "native",
+        "actionSlug": "end",
+        "childrenUuids": []
+      }
+    ],
+    "expected": "flowchart TD\n    n0([\"start\"])\n    n1[[\"tool<br/>tool e487d28e\"]]\n    n2{{\"agent<br/>agent bba1380e\"}}\n    n3{{\"Apply the taxonomy<br/>agent\"}}\n    n4[/\"Score and band (deterministic)<br/>script\"/]\n    n5([\"end\"])\n    n0 --> n1\n    n1 --> n2\n    n2 --> n3\n    n3 --> n4\n    n4 --> n5\n    classDef failing fill:#fee,stroke:#c00,stroke-width:2px\n    class n4 failing"
+  },
+  {
+    "name": "broken graph: duplicate slugs, null child, orphan, unsafe label",
+    "nodes": [
+      {
+        "uuid": "u-start",
+        "slug": "start",
+        "kind": "native",
+        "actionSlug": "start",
+        "childrenUuids": [
+          "u-a"
+        ]
+      },
+      {
+        "uuid": "u-a",
+        "slug": "variables",
+        "name": "Set \"linkedin_url\" [primary]\nfrom the enrichment",
+        "kind": "native",
+        "actionSlug": "variables",
+        "childrenUuids": [
+          "u-b"
+        ]
+      },
+      {
+        "uuid": "u-b",
+        "slug": "variables",
+        "kind": "native",
+        "actionSlug": "variables",
+        "childrenUuids": [
+          null
+        ]
+      },
+      {
+        "uuid": "u-orphan",
+        "slug": "dropcontact",
+        "kind": "connector",
+        "integrationSlug": "dropcontact",
+        "actionSlug": "findEmail",
+        "childrenUuids": [
+          "u-end"
+        ]
+      },
+      {
+        "uuid": "u-end",
+        "slug": "end",
+        "kind": "native",
+        "actionSlug": "end",
+        "childrenUuids": []
+      }
+    ],
+    "expected": "flowchart TD\n    n0([\"start\"])\n    n1(\"Set #quot;linkedin_url#quot; [primary] from the enrichment<br/>variables\")\n    n2(\"variables\")\n    n3[\"dropcontact<br/>dropcontact.findEmail\"]\n    n4([\"end\"])\n    n0 --> n1\n    n1 --> n2\n    n3 --> n4\n%% unreachable from start: dropcontact, end\n%% dangling childrenUuids (null or missing) on: variables"
+  },
+  {
+    "name": "fallback edges: waterfall vs continue-on-failure",
+    "nodes": [
+      {
+        "uuid": "u-start",
+        "slug": "start",
+        "kind": "native",
+        "actionSlug": "start",
+        "childrenUuids": [
+          "u-p1"
+        ]
+      },
+      {
+        "uuid": "u-p1",
+        "slug": "primary",
+        "kind": "connector",
+        "integrationSlug": "companyEnrich",
+        "actionSlug": "enrichByDomain",
+        "childrenUuids": [
+          "u-check"
+        ],
+        "fallbackChildUuid": "u-p2"
+      },
+      {
+        "uuid": "u-check",
+        "slug": "found",
+        "name": "LinkedIn URL found?",
+        "kind": "native",
+        "actionSlug": "branch",
+        "childrenUuids": [
+          "u-sync",
+          "u-p2"
+        ]
+      },
+      {
+        "uuid": "u-p2",
+        "slug": "backup",
+        "kind": "connector",
+        "integrationSlug": "waterfall",
+        "actionSlug": "enrichCompany",
+        "childrenUuids": [
+          "u-sync"
+        ]
+      },
+      {
+        "uuid": "u-sync",
+        "slug": "sync",
+        "kind": "connector",
+        "integrationSlug": "hubspot",
+        "actionSlug": "upsertRecords",
+        "childrenUuids": [
+          "u-end"
+        ],
+        "fallbackChildUuid": "u-end"
+      },
+      {
+        "uuid": "u-end",
+        "slug": "end",
+        "kind": "native",
+        "actionSlug": "end",
+        "childrenUuids": []
+      }
+    ],
+    "expected": "flowchart TD\n    n0([\"start\"])\n    n1[\"primary<br/>companyEnrich.enrichByDomain\"]\n    n2{\"LinkedIn URL found?<br/>branch\"}\n    n3[\"backup<br/>waterfall.enrichCompany\"]\n    n4[\"sync<br/>hubspot.upsertRecords ↷\"]\n    n5([\"end\"])\n    n0 --> n1\n    n1 --> n2\n    n1 -. on failure .-> n3\n    n2 -->|yes| n4\n    n2 -->|no| n3\n    n3 --> n4\n    n4 --> n5"
+  }
+]

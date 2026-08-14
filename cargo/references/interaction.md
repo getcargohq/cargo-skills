@@ -9,7 +9,7 @@ They exist because Cargo work is collaborative and (often) paid: building a play
 Before creating or editing a node graph, deploying a release, or launching anything beyond a trivial single-node change, present the plan and **wait for approval**:
 
 - **Trigger** — how the play/workflow is launched (manual/CLI run, batch over a segment, schedule, segment change). Ask if it isn't stated; it shapes the whole graph (input shape, volume, where outputs land).
-- **Nodes and data flow** — what each node does and what feeds it, in human-readable names.
+- **Nodes and data flow** — what each node does and what feeds it, in human-readable names. Past three nodes, draw it: a [Mermaid flowchart](../../cargo-orchestration/references/node-diagram.md) of the graph, with the paid steps marked, is the artifact the user approves.
 - **Cost shape** — which nodes are paid, rough per-record estimate.
 
 Treat this as a hard gate: don't start building from an unconfirmed plan. It complements the **cost gate** in [`../../cargo-gtm/references/cost-discipline.md`](../../cargo-gtm/references/cost-discipline.md), which stays authoritative for spend (sample → approval → full run): the plan gate approves the *design*, the sample gate approves the *spend*. A trivial change (fix one expression, rename a node) doesn't need the ceremony — say what you changed and why.
@@ -41,7 +41,7 @@ FullEnrich premium (~1 cr/row, better coverage on small companies)?
 - **Narrate meaningful steps.** One or two sentences before a change (what and why) and after it (what happened). Refer to nodes, actions, and plays by name.
 - **Summarize, don't dump.** Raw JSON, full SQL results, or CSV contents are never the primary answer — turn them into a short table, a count, or a one-line takeaway, and keep large exports out of the conversation entirely (context discipline: [`../../cargo-gtm/references/cost-discipline.md`](../../cargo-gtm/references/cost-discipline.md) §6). Show raw output only when the user asks.
 - **Lead with the conclusion.** State what happened or what you found first; evidence after.
-- **Show the structure at checkpoints.** After building or editing a graph, after a pilot, and when reporting a run: a compact node-flow sketch or table beats prose.
+- **Show the structure at checkpoints.** After building or editing a graph, after a pilot, and when reporting a run: a picture beats prose. For a node graph that means a **Mermaid flowchart**, generated from the graph rather than transcribed — routing, fallback edges, and which nodes bill all survive the trip. Rules and the generator: [`../../cargo-orchestration/references/node-diagram.md`](../../cargo-orchestration/references/node-diagram.md). For anything else structural (a schema, a segment breakdown), a compact table.
 - **Always surface the URL.** Every created or touched resource gets its `app.getcargo.io` link (URL patterns: [`uuid-flow.md`](uuid-flow.md)) so the user can open it in the Cargo app.
 - **Receipts after paid actions** are their own convention — format in [`cost-discipline.md`](../../cargo-gtm/references/cost-discipline.md) §2.
 

@@ -10,6 +10,21 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### `cargo-orchestration` → 1.7.0, `cargo` → 1.20.0 (router), `cargo-diagnostics` → 1.2.0, `cargo-cdk` → 1.2.2 — draw the workflow
+
+Nothing in the bundle told an agent to show a node graph as a picture. The only nudge was one line in `interaction.md` — "a compact node-flow sketch or table beats prose" — which left the format to the model, so the plan gate asked users to approve a graph they had to reconstruct from prose. Meanwhile every surface these skills print into (Claude Code, GitHub, the Cargo docs) renders Mermaid.
+
+- **New reference [`cargo-orchestration/references/node-diagram.md`](cargo-orchestration/references/node-diagram.md)** — when to draw one (plan gate, "what does this play do", trace reporting) and when not to (≤ 3 linear nodes), the shape/edge mapping for every node kind, marking paid nodes, and the correctness rules that separate a true diagram from a plausible one.
+- **New script [`cargo-orchestration/scripts/workflow-to-mermaid.ts`](cargo-orchestration/scripts/workflow-to-mermaid.ts)** (Node ≥ 22.18, zero deps, 6 fixture cases in CI) — pipe `release get` / `release get-draft` / an ad-hoc `run get` / a raw node array into it and get a `flowchart`. Flags: `--title`, `--direction`, `--paid` (💳 on billing nodes), `--highlight` (red on the failing node in a trace).
+- **`slug` is not a key — two live footguns.** A shipped waterfall carries **six** nodes slugged `variables`; a play carries an `agent` and a `variables` node both slugged `classify`. A slug-keyed diagram silently merges them and reroutes every edge that touched them, so the script keys on `uuid`. Recorded as a router gotcha and in `response-shapes.md`, with the knock-on for `{{nodes.<slug>…}}` and `runContext.<slug>` ambiguity.
+- **`run get` returns `nodes` **or** `releaseUuid`, never both** — inline graph for an `action execute` run, `releaseUuid` and no graph for a run from a deployed tool/play. Documented in `response-shapes.md` and as a gotcha; the script detects the second case and prints the `release get` command instead of emitting an empty diagram.
+- **`release get`'s documented response was a summary of the real one** — it showed `nodes[]` as `{uuid, slug, name}`. Live releases return the whole graph (`kind`, `actionSlug`, `integrationSlug`, `config`, `childrenUuids`, `fallbackChildUuid`, `position`), which is why one call is enough to draw the workflow. Corrected, including that `tool`/`agent` nodes carry `toolUuid`/`agentUuid` as **top-level** fields and have no `actionSlug`.
+- **Fallback edges are drawn two different ways** because they mean two different things: `fallbackChildUuid` pointing at a *different* node is the waterfall mechanism (dashed `-. on failure .->` edge); pointing at the node's own next step just means a failure doesn't stop the run (a `↷` on the label, not a second arrow that clutters the graph).
+- **Call sites wired** — the plan gate and presenting defaults in [`cargo/references/interaction.md`](cargo/references/interaction.md), the router's orchestration rules, the "validate, diagram, ask, deploy" sequence in `nodes.md`, trace presentation in [`cargo-diagnostics/references/run-trace.md`](cargo-diagnostics/references/run-trace.md), and `cdk plan` (which shows which resources change, never what a play *does*).
+- **CI** now runs the fixture suite for every `cargo-*/scripts/*.ts`, not only `cargo-gtm`'s.
+
+Verified against CLI 1.0.52 and a live workspace: every diagram in the reference is script output from a real release, and each one parses under mermaid 11.
+
 ### `cargo-gtm` → 1.14.0, `cargo` → 1.19.2 (router) — designing custom datapoints, not just filling them
 
 Every recipe in the pack assumed the field was already named: `source-planning.md` sources one field you asked for, `icp-discovery.md` needs closed deals to mine. Nothing covered the blank page — *"what should we even be collecting?"* — which is where the GTM conversation actually starts, and which an LLM will happily answer with ten plausible attributes, four of which have no obtainable source at any price.

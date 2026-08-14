@@ -112,3 +112,17 @@ The run "succeeded" but the branch took the no-path: the condition reads
 Fix: change the condition to {{nodes.qualify.answer.qualified}} and re-run
 record <id> to confirm (1 record ≈ <n> credits).
 ```
+
+**For a wrong-branch or wrong-path diagnosis, add the graph with the offending
+node marked** — the user has to see the fork to agree the run went down the wrong
+side of it:
+
+```bash
+cargo-ai orchestration run get <run-uuid> \
+  | node <cargo-orchestration-skill-dir>/scripts/workflow-to-mermaid.ts --highlight branch_1
+```
+
+That works for an ad-hoc `action execute` run, which carries its `nodes`. A run
+from a deployed tool or play carries `releaseUuid` and no graph — pipe
+`release get <releaseUuid>` instead (the script says so if you get it wrong).
+Mapping rules and flags: [`../../cargo-orchestration/references/node-diagram.md`](../../cargo-orchestration/references/node-diagram.md).
