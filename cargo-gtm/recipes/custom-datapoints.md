@@ -95,8 +95,8 @@ Every surviving candidate gets an action slug and a price, or it gets cut. "Like
 
 | What you want to know | Cheapest catalog path | Credits/account | Coverage to expect |
 |---|---|---|---|
-| Function headcount, seniority mix, SDR:AE ratio, eng-as-share-of-total | `salesNavigator.findEmployeesDistribution` | 0.25 | High where a LinkedIn company page exists |
-| Headcount growth or decline | `salesNavigator.findCompanyMetrics` (0.25), or `cargo.enrichBusinessWorkforceTrends` (1) | 0.25–1 | Medium–High |
+| Function headcount, seniority mix, SDR:AE ratio, eng-as-share-of-total | `salesNavigator.findEmployeesDistribution` | 0.25 **+ 0.05 ID** | High where a LinkedIn company page exists |
+| Headcount growth or decline | `salesNavigator.findCompanyMetrics` (0.25 **+ 0.05 ID**), or `cargo.enrichBusinessWorkforceTrends` (1) | 0.25–1 | Medium–High |
 | Tech stack | `cargo.enrichBusinessTechnographics` (1) or `theirStack.searchTechnologies` (0.5) | 0.5–1 | Medium — detection favors client-side and vendor-declared tech; back-office tools are near-invisible |
 | Hiring intent — which roles, how many, how recent | `theirStack.searchJobs` (0.5) or `linkedin.searchJobs` (0.5) | 0.5 | Medium–High |
 | Funding, M&A | `cargo.enrichBusinessFundingAndAcquisitions` | 0.5 | High for VC-backed, structurally absent for bootstrapped |
@@ -109,10 +109,11 @@ Every surviving candidate gets an action slug and a price, or it gets cut. "Like
 
 The `firecrawl.scrape` → `anthropic.instruct` row is the workhorse of this recipe: it is how a company-specific attribute nobody sells — *does this company publish a SOC 2 badge? how many store locations does the locator list? which currencies does checkout accept?* — becomes a real column for about a quarter of a credit. Use [`../references/prompt-library/data-extraction.md`](../references/prompt-library/data-extraction.md) → `custom-attribute-extraction` for the extract step rather than writing the prompt fresh.
 
-Two cost mechanics that change the arithmetic:
+Three cost mechanics that change the arithmetic. The first two are **ID prerequisites** — a per-account entry fee before the attribute's own price, and the most common reason a shortlist under-quotes:
 
 - Every `cargo.enrichBusiness*` action needs a `business_id` from `cargo.matchBusiness` (0.5) first. That is **once per account**, amortized across every cargo enrichment you run — so batch the cargo-native attributes together or the match cost lands on each one separately.
-- Search-shaped actions (`theirStack.searchJobs`, `salesNavigator.*`) bill per returned row. Keep `limit` strict; see [`../references/cost-discipline.md`](../references/cost-discipline.md) §4.
+- Every `salesNavigator.find*` action (`findEmployeesDistribution`, `findCompanyMetrics`, `findEmployeesCount`, `findCompanyInsights`) keys on a LinkedIn **`companyId`**, not a domain. Accounts sourced through `salesNavigator.searchAccounts` already carry it; a list that arrived from a CRM export or a domain column does not, and resolving it costs 0.05/account through `searchAccounts`. Same shape as the `matchBusiness` fee, amortized the same way across every `find*` attribute — but easy to miss, because these actions look self-contained.
+- **Search-shaped actions bill per returned row; the `find*` actions do not.** `theirStack.searchJobs`, `salesNavigator.searchAccounts` / `searchLeads` / `extract*` charge for every record they return, so keep `limit` strict and size the pool with `limit: 1` first ([`../references/cost-discipline.md`](../references/cost-discipline.md) §4). The `salesNavigator.find*` calls above are flat per account regardless of what comes back — don't budget them per row.
 
 Anything left with no row here is a research note, not a datapoint. Say that plainly in the deliverable — "valuable, no obtainable source" is a legitimate and useful line item, and it is the honest version of what the exercise usually pads with.
 
@@ -132,19 +133,24 @@ The deliverable is a costed table, not an essay. Present it and stay in AWAIT_AP
 >
 > | # | Field | Type | Source | Cost/acct | Probe hit | Refresh | Decision it changes |
 > |---|---|---|---|---:|---:|---|---|
+> | — | *LinkedIn `companyId`* | *prereq* | `salesNavigator.searchAccounts` — needed once for #1–#2 | 0.05 | 9/10 | Once | — |
+> | — | *cargo `business_id`* | *prereq* | `cargo.matchBusiness` — needed once for #4 and #6 | 0.50 | 9/10 | Once | — |
 > | 1 | `eng_headcount_est` | number | `salesNavigator.findEmployeesDistribution` | 0.25 | 9/10 | Monthly | Tier + seat-count estimate |
 > | 2 | `has_platform_team` | boolean | same call, title parse | 0.00 | 9/10 | Monthly | Routes to the technical persona |
 > | 3 | `soc2_status` | enum | `firecrawl.scrape` /security + extract | 0.25 | 6/10 | Quarterly | Kills or unlocks enterprise motion |
 > | 4 | `ai_tool_state` | enum | `cargo.enrichBusinessTechnographics` | 1.00 | 4/10 | Quarterly | Displacement vs greenfield play |
-> | … | | | | | | | |
+> | 5 | `eng_hiring_velocity` | number | `theirStack.searchJobs` | 0.50 | 7/10 | Weekly | Timing — expansion in progress |
+> | 6 | `workforce_trend_12mo` | enum | `cargo.enrichBusinessWorkforceTrends` | 1.00 | 6/10 | Monthly | Growing vs contracting account |
 >
 > **Cut, with reason:** exact competitor spend (no source at any price) · contract renewal date (not public) · "is growing" (not discriminating) · industry (already a column).
 >
-> **Full-list arithmetic:** 6 attributes × 4,100 accounts = **~7,400 credits** at the probed rates. Balance is 12,000.
-> **Cheaper cut:** drop #4 and #6 (the two 1-credit cargo enrichments) → ~3,200 credits, keeps 80% of the scoring signal.
-> **Narrower cut:** run all 6 on the 900 accounts already in the Tier-1 segment → ~1,600 credits.
+> **Full-list arithmetic:** 3.55 credits/account (2 prereqs + 6 attributes) × 4,100 accounts = **~14,600 credits**. Balance is 12,000 — the full fan-out does not fit, which is the point of quoting it before running it.
+> **Cheaper cut (recommended):** drop #4 and #6, the two 1-credit cargo enrichments → **~4,300 credits** (1.05/account), keeps 80% of the scoring signal. Dropping them also drops the 0.50 `matchBusiness` prereq, since nothing else needs a `business_id` — 2.50/account saved, not 2.00.
+> **Narrower cut:** run all 6 on the 900 accounts already in the Tier-1 segment → **~3,200 credits**.
 
 Three shaped options, a default, the reconciled balance — the standard approval shape from [`../references/cost-discipline.md`](../references/cost-discipline.md).
+
+Note what the cheaper cut does to the prereq line. Cutting an attribute can cut its ID fee too, so the saving is larger than the attribute's own price — and conversely, keeping one 1-credit cargo enrichment keeps the whole 0.50 match for the entire list. Recompute the prereqs for each option rather than subtracting attribute prices from the total; that subtraction is where these estimates usually stop reconciling.
 
 That arithmetic is the whole reason the feasibility gate exists. Designing ten attributes is free. Filling ten attributes across a TAM is a four-figure credit line, and the user should see it before agreeing rather than after.
 
@@ -180,7 +186,11 @@ Stale custom data is worse than none: it looks authoritative and is wrong. Set t
 | Tech stack, certifications, entity counts | Quarterly | Scheduled play |
 | Funding, M&A, market entry | Event-driven | `cargo.fetchBusinessEvents` on a weekly sweep |
 
-Turn each cadence into a play — [`save-as-play.md`](save-as-play.md). Before deploying, read the **Recurring use** section of the playbook for every paid node: a play re-bills its full node graph on every scheduled run, so a monthly refresh of 4,100 accounts at 1.75 credits is ~7,200 credits **per month**, not once.
+Turn each cadence into a play — [`save-as-play.md`](save-as-play.md). Before deploying, read the **Recurring use** section of the playbook for every paid node: a play re-bills its full node graph on every scheduled run.
+
+Scope each play to the fields whose cadence is actually due. In the Step 6 schema the monthly-cadence fields are #1, #2, and #6 — 1.25 credits/account, so **~5,100 credits every month** across 4,100 accounts, not once.
+
+Putting all six on one monthly play instead costs ~12,300/month and is wrong in both directions: #5 is a weekly field that a monthly sweep lets go stale, while #3 and #4 are quarterly ones it re-bills three times more often than they can change. One play per cadence, not one play per schema. The two ID prereqs are the one thing no refresh re-pays — once `companyId` and `business_id` are columns, every later run skips them, which is why the refresh rate (3.00/account) is below the first-fill rate (3.55).
 
 **In Cargo, a live signal is a tracked column diff.** That is the mechanical link between Step 3's signal list and something that fires. Create the segment with the signal-bearing attributes as tracking columns, then read its delta feed:
 
@@ -224,7 +234,11 @@ A single job posting establishes `individual_usage` at best — and a tool liste
 
 ## First-party datapoints: separate list, separate model
 
-Product usage, activation, billing history, renewal risk, and website-visitor data (`snitcher.searchSessions`, 0 credits) are **unavailable for net-new accounts by definition** — a prospect has never logged in. Keep them out of the net-new schema entirely, and list them separately if they come up: they are excellent inputs to an *expansion* or *health* score over accounts that already exist ([`account-expansion.md`](account-expansion.md)), and mixing them into a prospecting score silently ranks customers above prospects.
+Product usage, activation, billing history, and renewal risk are **unavailable for net-new accounts by definition** — a prospect has never logged in. Keep them out of the net-new schema entirely, and list them separately if they come up: they are excellent inputs to an *expansion* or *health* score over accounts that already exist ([`account-expansion.md`](account-expansion.md)), and mixing them into a prospecting score silently ranks customers above prospects.
+
+**Website-visitor identification is not in that group.** `snitcher` de-anonymizes the companies browsing the seller's site, and most of them are cold — [`../provider-playbooks/snitcher.md`](../provider-playbooks/snitcher.md) calls identified visitors "the warmest cold segment there is" and files them in the SIGNAL stage beside job-change and funding. It belongs in a net-new schema. What it *isn't* is a sourceable attribute: you cannot fill it across a 4,100-account TAM, because it only exists for accounts that already visited. So it fails Step 4's gate on a different axis than the fields above — not "no source at any price" but **arrival-driven**, and only if the seller runs Snitcher's tracking script on their own site.
+
+Treat it accordingly: a `last_seen` / `pages_viewed` column populated by the extractors, scored as a timing signal on the accounts that have it, and neutral (never negative) on the ones that don't — the same `Unknown`-scores-neutral rule as everywhere else, and the reason it can coexist with a sourced schema instead of skewing it. Watch the cost shape too: `searchSessions` is free, but the `fetchOrganisations` extractor bills **3 credits per identified company on every sync**, which is the most expensive line in this recipe if it is switched on for a high-traffic site without sizing the traffic first.
 
 ## Deliverable
 
