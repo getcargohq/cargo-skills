@@ -4,19 +4,58 @@ Use this when you have (or can find) a single run UUID and need to answer "what 
 
 > Field-by-field semantics for everything used here live in [`../../cargo-orchestration/references/troubleshooting.md`](../../cargo-orchestration/references/troubleshooting.md) ("Debugging a workflow run"). This runbook is the ordered procedure.
 
-## 0. Find the run if you only have a record or a symptom
+## 0. Find the run
+
+Every step below needs a run UUID. Work down this ladder and stop at the first rung that matches what the user actually gave you — most of the time it's a symptom and a company name, not a UUID.
+
+> **`run list` cannot answer "the last run".** `cargo-ai orchestration run list` **requires** `--workflow-uuid`; there is no unfiltered form, and a play's UUID is not a workflow UUID. Orchestration SQL has no such requirement, so it — not `run list` — is the entry point whenever you don't already know the workflow. Concluding "the run data isn't accessible" because `run list` refused is a wrong answer: `runs` is queryable with no filter at all.
+
+**"Look at the last run" / "what just ran"** — no UUID, no workflow, nothing:
 
 ```bash
-# Recent runs for a workflow (most recent first)
+cargo-ai orchestration query execute \
+  "SELECT uuid, workflow_uuid, record_title, status, created_at
+   FROM runs
+   ORDER BY created_at DESC
+   LIMIT 10"
+```
+
+**A company, domain, or record the user names** ("the run for acme.com") — `record_title` carries the record's title, or for record-less runs the input payload, so a substring match finds it:
+
+```bash
+cargo-ai orchestration query execute \
+  "SELECT uuid, workflow_uuid, record_title, status, created_at
+   FROM runs
+   WHERE record_title ILIKE '%acme.com%'
+   ORDER BY created_at DESC
+   LIMIT 10"
+```
+
+**A play or workflow by name** — resolve to a `workflowUuid` first, then filter. `runs` has no play column, so this hop is mandatory:
+
+```bash
+cargo-ai orchestration play list        # → find the play, take play.workflowUuid
+
 cargo-ai orchestration query execute \
   "SELECT uuid, status, created_at, credits_used_count
    FROM runs
-   WHERE workflow_uuid = '<workflow-uuid>'
+   WHERE workflow_uuid = '<play.workflowUuid>'
    ORDER BY created_at DESC
    LIMIT 20"
 ```
 
-If you're coming from a batch sweep, you already have exemplar UUIDs — skip ahead.
+Play anatomy and the rest of the play surface: [`../../cargo-orchestration/references/examples/plays.md`](../../cargo-orchestration/references/examples/plays.md).
+
+**Coming from a batch sweep** — you already have exemplar UUIDs; skip ahead.
+
+### When the discovery query itself errors
+
+| Error | Cause and fix |
+| --- | --- |
+| `Limit for number of columns to read exceeded. Requested: 51, maximum: 50.` | You ran `SELECT *`. `runs` is wider than the 50-column read cap — name the columns you need, as every query above does. |
+| `Unknown expression identifier '<col>'` | That column doesn't exist. `runs` has no `play_uuid`, no `name`, and no trigger-source column; the ones used here (`uuid`, `workflow_uuid`, `release_uuid`, `batch_uuid`, `record_id`, `record_title`, `status`, `created_at`, `credits_used_count`) are confirmed present. |
+
+Where a run was triggered from — the CLI, a scheduled play, or a click in the UI editor — is not supposed to change where it lands: all of them write to `runs` and are readable with `run get`. So a run the user can see in the UI but that none of these queries return is a real bug, not a boundary you should work around or explain away. Say so and file a report (skill § "When diagnosis dead-ends"), quoting the queries you ran.
 
 ## 1. Pull the trace
 
