@@ -1,7 +1,7 @@
 ---
 name: cargo-diagnostics
 description: "Explain what a Cargo run or batch actually did, after the fact — trace one run node by node, sweep a batch or play for errors grouped by root cause, and attribute credit spend down to the node and the provider. Triggers: \"why did this fail\", \"it succeeded but the output is wrong\", \"half my rows are empty\", \"why is this column blank\", \"what broke in this batch\", \"why did that cost so much\", \"which node is burning credits\", \"it worked yesterday\", \"these results look wrong\". Skip when: setting up an alert for next time — use cargo-observability; just downloading the data — use cargo-analytics."
-version: "1.0.2"
+version: "1.1.0"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -55,13 +55,15 @@ What are you diagnosing?
 
 Rule of thumb: start with the **sweep** when you don't yet know which run to look at — it ends by handing you exemplar run UUIDs to feed into the **trace**.
 
+**No run UUID at all** ("look at the last run", "the run for acme.com", "what did my play do in the editor")? That's [`references/run-trace.md`](references/run-trace.md) § 0, which resolves a symptom to a UUID. Note that `orchestration run list` **requires** `--workflow-uuid` and cannot answer it — orchestration SQL over `runs` takes no filter and can. Never conclude that run inputs and outputs are inaccessible because `run list` refused.
+
 **Boundary with `cargo-analytics`:** analytics *measures and exports* ("what's the error rate?", "download the batch results", "export this segment"); this skill *explains* ("why is the error rate up?", "why is this record's output empty?"). A diagnosis often starts from an analytics signal (error count spiked, batch reports `failedRunsCount > 0`) and ends back in analytics — once the cause is fixed and runs re-executed, bulk retrieval goes through `run download-outputs` / `batch download` / `segment download`, all documented in `../cargo-analytics/SKILL.md`. This skill's evidence surfaces (`run get`, orchestration SQL, billing metrics) are for diagnosis, not bulk export.
 
 ## References
 
 | Doc | What it covers |
 | --- | --- |
-| [`references/run-trace.md`](references/run-trace.md) | Walk one run end-to-end: per-node executions, `runContext` outputs, branch routing, per-node credits and timing. |
+| [`references/run-trace.md`](references/run-trace.md) | Find a run from a symptom when you have no UUID (§ 0), then walk it end-to-end: per-node executions, `runContext` outputs, branch routing, per-node credits and timing. |
 | [`references/batch-error-sweep.md`](references/batch-error-sweep.md) | Find errored runs across a batch/play/workspace, group failures by root cause, pick exemplars, decide fix vs report. |
 | [`references/play-optimize-credits.md`](references/play-optimize-credits.md) | Attribute credit spend to workflows and nodes, then apply the cost levers in priority order. |
 

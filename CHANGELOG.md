@@ -10,6 +10,18 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### `cargo-diagnostics` → 1.1.0, `cargo-orchestration` → 1.6.2, `cargo` → 1.19.1 (router) — find the run when all you have is a symptom
+
+A user testing a play in the UI editor reported twice that Claude Code "can't find the input and output of the nodes" of the run, and assumed the editor was the cause. It wasn't. `cargo-ai orchestration run list` **requires** `--workflow-uuid` and has no "most recent run" form, and `run-trace.md` § 0 — the one place that told an agent how to find a run — already assumed a `workflow_uuid` in hand. Asked to "look at the last run", an agent had nothing to call, and reported the data as inaccessible. It isn't: orchestration SQL over `runs` takes no filter at all.
+
+- **`run-trace.md` § 0 rewritten as a discovery ladder**, ordered by what the user actually hands you rather than by what the CLI wants: no UUID at all (unfiltered `runs`, newest first), a company or domain (`record_title ILIKE '%…%'` — the column holds the record title, or the input payload for record-less runs), a play or workflow by name (`play list` → `play.workflowUuid` → filter, since `runs` has no play column). Batch-sweep exemplars still skip ahead.
+- **An explicit instruction not to give up at `run list`** in both the runbook and the diagnostics routing section. This is the failure the report describes: a refusal from one command read as an absent capability.
+- **Two error rows for the discovery step itself**, both hit while verifying against CLI 1.0.52: `SELECT * FROM runs` fails with `Limit for number of columns to read exceeded. Requested: 51, maximum: 50` (the obvious first probe returns an error that reads like the table is missing), and `Unknown expression identifier` for the columns agents guess at — `runs` has no `play_uuid`, `name`, or trigger-source column. The confirmed column set is listed.
+- **A statement of what the editor does *not* change:** CLI, scheduled play, and UI-triggered runs all land in `runs` and are readable with `run get`. A run visible in the UI that these queries don't return is a bug to report, not a boundary to explain away.
+- **Same fix at the other two doors an agent arrives through** — the `run list` caveat plus a pointer to the ladder in `cargo-orchestration/references/troubleshooting.md` § "Debugging a workflow run", and two rows in the router's [`cargo/references/gotchas.md`](cargo/references/gotchas.md) (`run list` can't find "the last run"; `SELECT *` fails on `runs`).
+
+No CLI change is needed for any of this — the surfaces already existed, they just weren't reachable from the question a user asks.
+
 ### `cargo-connection` → 1.3.0 — `integration list --slugs`
 
 `cargo-ai connection integration list` now filters with `--slugs` (replaces `--slug`). Documented in the skill, the integrations examples, and the list response-shape filters.

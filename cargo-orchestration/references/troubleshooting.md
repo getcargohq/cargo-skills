@@ -55,6 +55,8 @@ A run can finish with `status: "success"` and still be wrong — wrong branch ta
 cargo-ai orchestration run get <run-uuid>
 ```
 
+Don't have the UUID? `run list` won't help — it **requires** `--workflow-uuid` and has no "most recent run" form. Query the runtime table instead, which needs no filter: `cargo-ai orchestration query execute "SELECT uuid, workflow_uuid, record_title, status, created_at FROM runs ORDER BY created_at DESC LIMIT 10"`. The full discovery ladder (by symptom, by company/domain via `record_title`, by play name) is [`../../cargo-diagnostics/references/run-trace.md`](../../cargo-diagnostics/references/run-trace.md) § 0.
+
 The response has three top-level fields:
 
 | Field                | What it gives you                                                                                |
