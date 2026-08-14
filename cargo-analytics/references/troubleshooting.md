@@ -22,7 +22,8 @@ Common errors and recovery steps for `cargo-analytics` commands.
 
 | Symptom | Cause | Fix |
 |---------|-------|-----|
-| `run download` returns empty | No runs match the filters | Loosen filters; try `--is-finished` without date or status constraints |
+| `run download` returns empty | No runs match the filters | Loosen filters — drop the date and status constraints and pass `--workflow-uuid` alone. Don't reach for `--is-finished`: it returns `400 unrecognized_keys: isFinished` |
+| `run download` returns `500 Internal Server Error` | The workflow resolves to zero active nodes (all archived, or the UUID doesn't exist in this workspace) — the export query is built per node slug | Confirm the UUID with `workflow list` / `play list`. Nothing to loosen; the export can't succeed for that workflow until the fix ships |
 | `batch download` fails with "node not found" | Wrong `--output-node-slug` | Re-run `release get <release-uuid>` and check `nodes[].slug` for the correct value |
 | `segment download` returns empty | Wrong model UUID or over-filtered | Verify `--model-uuid` (not `--segment-uuid`); try empty filter `{"conjonction":"and","groups":[]}` first |
 | Parse error on filter JSON | Malformed JSON or wrong spelling | Check: it's `conjonction` (not `conjunction`); validate JSON syntax; see the `cargo-orchestration` skill's `references/filter-syntax.md` |

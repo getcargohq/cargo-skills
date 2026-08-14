@@ -10,6 +10,20 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### `cargo-analytics` → 1.5.0, `cargo-orchestration` → 1.6.3 — what the run exports actually contain
+
+Chasing the run-discovery report one layer down — "can I get the run context for more than one run at a time?" — turned up that the export commands were documented as something they are not. `run download` was described as returning "each run as a JSON object with status, timing, executions, and `runContext.<nodeSlug>` containing per-node outputs". It returns a signed URL to a **gzipped CSV** with one column per node slug holding that execution's `title` — the truncated summary the diagnostics runbooks call "never evidence". No `runContext`, no `executions[]`, not JSON. An agent following this skill to debug a batch got titles and believed it had outputs.
+
+- **The `run download` section rewritten** around the real columns, with an explicit warning to treat it as a status board across many runs rather than evidence of what a node produced.
+- **`run download-outputs` corrected**: `--output-node-slug` is optional (it falls back to the last executed node), not required as documented, and each row carries `input` (the first node's resolved config) + `output`. Also notes that without `--limit` the file covers every matching run of the workflow.
+- **New "Getting the full `runContext` for several runs" section** answering the question directly: you can't in one call — the context is a per-run S3 object and `run get` is the only command that hydrates it. The two exports are projections; loop `run get` over the UUIDs from the discovery ladder for anything in between. Orchestration SQL is ruled out explicitly (`runs`/`spans` have no input/output columns).
+- **`--is-finished` marked as broken wherever it appeared** — six snippets across `SKILL.md`, `exports.md`, `run-analytics.md`, and `troubleshooting.md` taught a flag that returns `400 unrecognized_keys: isFinished` on all four run commands. Replaced with `--statuses success,error`, with a note that the caveat lifts once the `cli-version` pin moves past the fix.
+- **The partial-retry pattern in `cargo-orchestration/references/polling.md` fixed.** It piped `run download` stdout into `jq '.recordId'`, which cannot work against a signed URL to a gzipped CSV whose column is `_record_id`. Now uses `run list` (`runs[].recordId`) under 100 rows and orchestration SQL past it, plus the pilot gate before re-enrolling a failed set.
+- **`response-shapes.md` gains real entries** for `run download` and `run download-outputs`, and corrects `batch download` — also a `{"url": …}`, not "streamed to stdout".
+- **A `500` row added to analytics troubleshooting**: `run download` fails outright for a workflow that resolves to zero active nodes, which is not something the caller can loosen their way out of.
+
+Verified against CLI 1.0.52 and the backend source. The underlying defects are fixed in `getcargohq/cargo#5579`; these docs describe the behavior an agent meets today.
+
 ### `cargo-diagnostics` → 1.1.0, `cargo-orchestration` → 1.6.2, `cargo` → 1.19.1 (router) — find the run when all you have is a symptom
 
 A user testing a play in the UI editor reported twice that Claude Code "can't find the input and output of the nodes" of the run, and assumed the editor was the cause. It wasn't. `cargo-ai orchestration run list` **requires** `--workflow-uuid` and has no "most recent run" form, and `run-trace.md` § 0 — the one place that told an agent how to find a run — already assumed a `workflow_uuid` in hand. Asked to "look at the last run", an agent had nothing to call, and reported the data as inaccessible. It isn't: orchestration SQL over `runs` takes no filter at all.

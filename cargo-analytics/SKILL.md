@@ -1,7 +1,7 @@
 ---
 name: cargo-analytics
 description: "Get data out of Cargo and measure what ran — download a run output, export a segment or model to CSV or JSON, and pull run and batch success and error counts. Triggers: \"download the results\", \"export this to CSV\", \"give me the file\", \"how many succeeded\", \"what is my error rate\", \"send me the enriched list\", \"get the output of that run\", \"how many records did it write\". Skip when: asking why something failed or where credits went — use cargo-diagnostics; asking about credits, plans, or invoices — use cargo-billing."
-version: "1.4.3"
+version: "1.5.0"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -71,7 +71,7 @@ cargo-ai storage model list                # all models (uuid, name, slug)
 
 ```bash
 cargo-ai orchestration run get-metrics --workflow-uuid <uuid>
-cargo-ai orchestration run download --workflow-uuid <uuid> --is-finished
+cargo-ai orchestration run download --workflow-uuid <uuid> --statuses success,error
 cargo-ai orchestration run count --workflow-uuid <uuid> --statuses error
 cargo-ai orchestration query execute "SELECT status, count() FROM runs GROUP BY status"
 cargo-ai segmentation segment download --model-uuid <uuid> --filter '{"conjonction":"and","groups":[]}'
@@ -105,12 +105,12 @@ Count runs matching specific criteria — useful for monitoring.
 
 ```bash
 cargo-ai orchestration run count --workflow-uuid <uuid> --statuses error
-cargo-ai orchestration run count --workflow-uuid <uuid> --is-finished \
+cargo-ai orchestration run count --workflow-uuid <uuid> --statuses success,error \
   --created-after <start-date> --created-before <end-date>
 cargo-ai orchestration run count --workflow-uuid <uuid> --batch-uuid <uuid>
 ```
 
-Supports: `--statuses`, `--batch-uuid`, `--release-uuid`, `--is-finished`, `--created-after`, `--created-before`, `--record-id`, `--record-title`.
+Supports: `--statuses`, `--batch-uuid`, `--release-uuid`, `--created-after`, `--created-before`, `--record-id`, `--record-title`. `--is-finished` exists on the command but is rejected by the API (see the note under [Downloading run results](#downloading-run-results)) — use `--statuses success,error` for "finished".
 
 For cross-workflow analytics or shapes that `run count` doesn't expose (per-node failure breakdowns, p95 durations, error rate over time), use `orchestration query execute` — see the [Ad-hoc execution analytics](#ad-hoc-execution-analytics-orchestration-query) section.
 
@@ -142,46 +142,55 @@ Read-only and capped: 30s execution time, 10 000 result rows, 10 000 000 rows sc
 
 Two distinct commands — pick the right one for the job.
 
-### `run download` — full run records (metadata + per-node `runContext`)
+### `run download` — one row per run, one column per node (gzipped CSV)
 
-Returns each run as a JSON object with status, timing, executions, and `runContext.<nodeSlug>` containing per-node outputs. Best for debugging or when you need the full execution history.
+Returns `{"url": "..."}` — a signed URL to a **gzipped CSV**. Each row is a run: `_uuid`, `_workspace_uuid`, `_workflow_uuid`, `_record_id`, `_record_title`, `_created_at`, `_finished_at`, `_status`, `_error_message`, followed by **one column per node slug**.
+
+**Each node column holds that execution's `title` — a truncated human-readable summary, not the node's output.** There is no `runContext` and no `executions[]` in this file. Treat it as a status board across many runs (which node errored, on which record), never as evidence of what a node produced — the same rule `cargo-diagnostics` applies to `title` everywhere else.
 
 ```bash
-# All finished runs
-cargo-ai orchestration run download --workflow-uuid <uuid> --is-finished
+# Every run of a workflow
+cargo-ai orchestration run download --workflow-uuid <uuid>
 
 # Date range
 cargo-ai orchestration run download --workflow-uuid <uuid> \
   --created-after <start-date> --created-before <end-date>
 
-# Specific statuses
+# Specific statuses (run statuses: idle, pending, running, success, error,
+# cancelling, cancelled, skipped — NOT "finished"/"failed")
 cargo-ai orchestration run download --workflow-uuid <uuid> --statuses success,error
 
 # From a specific batch
 cargo-ai orchestration run download --workflow-uuid <uuid> --batch-uuid <uuid>
 ```
 
-### `run download-outputs` — output of a specific node (CSV/JSON via signed URL)
+### `run download-outputs` — per-run input + output (CSV/JSON via signed URL)
 
-**This is the canonical way to get action results out of the platform.** Maps to API `POST /v1/orchestration/runs/download-outputs`. Returns `{"url": "..."}` — a signed URL to a CSV (default) or JSON file containing only the output node's data with input/output context. Faster and cheaper than downloading whole run records when you only need the result.
+**This is the canonical way to get action results out of the platform.** Maps to API `POST /v1/orchestration/runs/download-outputs`. Returns `{"url": "..."}` — a signed URL to a CSV (default) or JSON file. One row per run: the same `_`-prefixed run metadata, plus `input` (the first node's resolved config) and `output` (the chosen node's context, defaulting to the **last executed node** when `--output-node-slug` is omitted).
 
 ```bash
-# Required: --workflow-uuid + --output-node-slug
+# --workflow-uuid is the only required flag
 cargo-ai orchestration run download-outputs \
   --workflow-uuid <uuid> \
-  --output-node-slug <slug> \
   --format json \
-  --is-finished
+  --limit 20
 
-# Filter by batch + status
+# Pin the output node explicitly, and filter by batch
 cargo-ai orchestration run download-outputs \
   --workflow-uuid <uuid> \
   --output-node-slug <slug> \
-  --batch-uuid <uuid> \
-  --statuses finished
+  --batch-uuid <uuid>
 ```
 
-To find the `output-node-slug`: `cargo-ai orchestration release get <release-uuid>` → look at `nodes[].slug`. The terminal output node is typically named `output` or `end`.
+To find the `output-node-slug`: `cargo-ai orchestration release get <release-uuid>` → look at `nodes[].slug`. The terminal output node is typically named `output` or `end`. Without `--limit`, the file covers **every** matching run of the workflow, so pass one when you only need a sample.
+
+### Getting the full `runContext` for several runs
+
+You can't, in one call. The full per-node context is a **per-run S3 object**, and `orchestration run get <run-uuid>` is the only command that hydrates it — one run at a time. The two exports above are projections: `download` gives you node *titles* across many runs, `download-outputs` gives you first-node input + one node's output across many runs. For everything in between, loop `run get` over the UUIDs from the discovery ladder in [`../cargo-diagnostics/references/run-trace.md`](../cargo-diagnostics/references/run-trace.md) § 0.
+
+Orchestration SQL is not an alternative here: `runs` and `spans` carry status, timing, and credits, but no node input/output columns.
+
+> **`--is-finished` currently fails.** The CLI accepts the flag on `run list`, `run count`, `run download`, and `run download-outputs`, but the API rejects the key (`400 unrecognized_keys: isFinished`). Omit it and filter with `--statuses` instead. Fix in flight; this note goes away when the bundle's `cli-version` pin moves past it.
 
 ## Downloading batch results
 
