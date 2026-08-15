@@ -63,4 +63,12 @@ Returns raw data as a downloadable payload (typically CSV or JSON depending on t
 
 ## cargo-ai orchestration batch download
 
-Returns the output data for the specified node as a downloadable payload. The response is streamed to stdout.
+Returns `{"url": "..."}` — a signed URL to a file, **not** the data on stdout. Each row is a batch record joined to its run's output for the chosen node (defaulting to the last executed node), so a record whose run errored comes back with its input fields and no output.
+
+## cargo-ai orchestration run download
+
+Returns `{"url": "..."}` — a signed URL to a **gzipped CSV**. One row per run: `_uuid`, `_workspace_uuid`, `_workflow_uuid`, `_record_id`, `_record_title`, `_created_at`, `_finished_at`, `_status`, `_error_message`, then one column per node slug holding that execution's `title` (a truncated summary, not the node's output). No `runContext`, no `executions[]`.
+
+## cargo-ai orchestration run download-outputs
+
+Returns `{"url": "..."}` — a signed URL to CSV (default) or JSON. One row per run: the `_`-prefixed run metadata above, plus `input` (first node's resolved config) and `output` (chosen node's context, defaulting to the last executed node).

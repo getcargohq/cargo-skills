@@ -98,30 +98,29 @@ cargo-ai orchestration batch get <batch-uuid>
 
 **Partial retry pattern** — re-run only the failed records:
 
-`run download` outputs each run object on its own line (newline-delimited JSON) or as a JSON array depending on CLI version. Each run object has a `recordId` field at the top level (see `cargo-analytics/references/response-shapes.md` → `run list`).
+Get the failed records' IDs from `run list` (JSON on stdout, `runs[].recordId`) or, past its 100-row page, from orchestration SQL. **Not** from `run download` — that returns a signed URL to a gzipped CSV whose column is `_record_id`, so piping its stdout into `jq '.recordId'` yields nothing.
 
 ```bash
-# 1. Download failed runs and save to a file
-cargo-ai orchestration run download \
+# 1a. Up to 100 failed records — straight from run list
+RECORD_IDS=$(cargo-ai orchestration run list \
   --workflow-uuid <uuid> \
   --batch-uuid <batch-uuid> \
-  --statuses error > failed_runs.json
+  --statuses error \
+  --limit 100 | jq -c '[.runs[].recordId]')
 
-# 2. Inspect the output shape first
-head -n 5 failed_runs.json
-# → If it starts with '[', it's a JSON array  → use: jq '[.[].recordId]'
-# → If each line is a JSON object             → use: jq -s '[.[].recordId]'
+# 1b. More than that — SQL, which has no page cap
+RECORD_IDS=$(cargo-ai orchestration query execute \
+  "SELECT record_id FROM runs
+   WHERE batch_uuid = '<batch-uuid>' AND status = 'error'" \
+  | jq -c '[.rows[].record_id]')
 
-# 3. Extract record IDs (adjust jq filter to match actual shape)
-RECORD_IDS=$(jq '[.[].recordId]' failed_runs.json)
-
-# 4. Re-trigger with only those record IDs
+# 2. Re-trigger with only those record IDs
 cargo-ai orchestration batch create \
   --workflow-uuid <uuid> \
   --data "{\"kind\":\"recordIds\",\"recordIds\":$RECORD_IDS}"
 ```
 
-Each run object contains `"recordId": "<id>"` — look for this field if inspecting manually.
+Re-running bills the paid nodes again — apply the pilot gate in [`../../cargo-gtm/references/cost-discipline.md`](../../cargo-gtm/references/cost-discipline.md) before enrolling the whole failed set.
 
 ### Agent message returns `status: "error"`
 
