@@ -27,7 +27,15 @@ jobs:
         with:
           plugin_dir: "."
           mode: scan
+          format: markdown
+          output: scanner-report.md
           min_score: 80
           fail_on_severity: high
           # No `pull-requests: write` above, so the comment would fail anyway.
           pr_comment: off
+
+      # The action's own summary step is skipped when the scan exits non-zero,
+      # which is exactly when the findings matter. Publish it ourselves.
+      - name: Publish scanner report
+        if: always()
+        run: cat scanner-report.md >> "$GITHUB_STEP_SUMMARY" || true
