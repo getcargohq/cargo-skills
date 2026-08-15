@@ -21,6 +21,12 @@ Also works with `batch create --nodes`. Cannot be combined with `--release-uuid`
 cargo-ai orchestration node validate --nodes '[...]'
 ```
 
+**Then show it before you deploy it.** `node validate` proves the graph is
+well-formed, not that it does what the user wanted. Render it as a Mermaid
+flowchart — [`node-diagram.md`](node-diagram.md) — and let them check the routing
+and the paid steps against their intent. The two go together: validate, diagram,
+ask, deploy.
+
 ## Node shape
 
 Every node in the `--nodes` JSON array has these fields:

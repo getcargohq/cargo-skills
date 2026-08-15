@@ -262,6 +262,13 @@ With `--wait-until-finished`, returns the terminal batch state (same shape as `b
 }
 ```
 
+**`releaseUuid` or `nodes`, never both.** A run created from a deployed tool or
+play looks like the shape above — `releaseUuid` set, no graph, because the nodes
+live on the release. A run from `action execute` (or `run create --nodes`) is the
+mirror image: a full `run.nodes` array and no `releaseUuid`. Anything that needs
+the graph — [diagramming it](node-diagram.md), reading a node's config — reads
+`run.nodes` when present and falls back to `release get <releaseUuid>`.
+
 **Key fields for debugging:**
 
 - `run.executions[].title` — quick human-readable summary of each node's output; **may be truncated**, do not treat as the full output.
@@ -441,9 +448,19 @@ Supports `--workflow-uuid`, `--limit`, `--offset`.
     "version": "3",
     "description": "Added email step",
     "nodes": [
-      { "uuid": "node-uuid-1", "slug": "enrich_company", "name": "Enrich Company" },
-      { "uuid": "node-uuid-2", "slug": "send_email", "name": "Send Email" },
-      { "uuid": "node-uuid-3", "slug": "output", "name": "Output" }
+      {
+        "uuid": "node-uuid-1",
+        "slug": "enrich_company",
+        "name": "Enrich Company",
+        "kind": "connector",
+        "integrationSlug": "companyEnrich",
+        "actionSlug": "enrichByDomain",
+        "config": { "domain": { "kind": "templateExpression", "expression": "{{nodes.start.domain}}" } },
+        "childrenUuids": ["node-uuid-2"],
+        "fallbackChildUuid": "node-uuid-3",
+        "fallbackOnFailure": false,
+        "position": { "x": 0, "y": 0 }
+      }
     ],
     "createdAt": "2025-01-10T09:00:00Z"
   }
@@ -451,6 +468,14 @@ Supports `--workflow-uuid`, `--limit`, `--offset`.
 ```
 
 **Key field:** `nodes[].slug` — needed for `batch download --output-node-slug`.
+
+`nodes[]` is the complete graph, not a summary: every node carries its `config`,
+`childrenUuids`, and (where set) `fallbackChildUuid`, which is enough to
+[draw the workflow](node-diagram.md) without another call. Two traps when reading
+it: `name` is optional, and **`slug` is not unique** — one shipped release has six
+nodes slugged `variables`. Key anything graph-shaped by `uuid`. `tool` and `agent`
+nodes carry `toolUuid` / `agentUuid` as top-level fields alongside `kind`, and have
+no `actionSlug`.
 
 ## cargo-ai ai chat list
 

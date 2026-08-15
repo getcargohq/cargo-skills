@@ -1,7 +1,7 @@
 ---
 name: cargo-cdk
 description: "Manage a whole Cargo workspace as code — declare connectors, models, plays, tools, agents, MCP servers, segments, context, folders, files, workers, and apps in TypeScript, then reconcile them with `cargo-ai cdk` (init → types → plan → deploy), the way you would run Pulumi or the AWS CDK. Triggers: \"as code\", \"in git\", \"version-controlled\", \"reproducible\", \"Terraform for Cargo\", \"set up a whole workspace\", \"staging and production\", \"deploy from CI\", \"review this in a PR\", \"cargo.state.json\", \"scaffold from a template\". Scaffoldable outcome templates live in cargo-cookbooks. Skip when: it is a one-off operation, a read, or an ad-hoc query — use the matching capability skill."
-version: "1.2.1"
+version: "1.2.2"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -98,6 +98,14 @@ cargo-ai cdk deploy         create/update resources in dependency order, write s
         │
 cargo-ai cdk destroy        tear down resources recorded in state
 ```
+
+> **`cdk plan` says what resources change; it doesn't show what a play does.**
+> For a `definePlay` / `defineTool` graph past three nodes, present a Mermaid
+> flowchart of the node graph alongside the plan — routing, fallbacks, and which
+> nodes bill on every scheduled run are what the reviewer is approving. Generate it
+> from the deployed release after the first deploy, or from the node array while
+> authoring:
+> [`../cargo-orchestration/references/node-diagram.md`](../cargo-orchestration/references/node-diagram.md).
 
 Side branches: `cargo-ai cdk refresh` (read-only drift report) · `deploy --refresh`
 (re-apply code over out-of-band edits) · `deploy --prune` (delete resources removed

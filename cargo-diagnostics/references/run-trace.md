@@ -112,3 +112,16 @@ The run "succeeded" but the branch took the no-path: the condition reads
 Fix: change the condition to {{nodes.qualify.answer.qualified}} and re-run
 record <id> to confirm (1 record ≈ <n> credits).
 ```
+
+**For a wrong-branch or wrong-path diagnosis, add the graph with the offending
+node marked** — the user has to see the fork to agree the run went down the wrong
+side of it:
+
+```bash
+cargo-ai orchestration node diagram --run-uuid <run-uuid> --highlight branch_1 --raw
+```
+
+Free, runs nothing, and it works for either run shape — an ad-hoc `action execute`
+run carries its own `nodes`, a run of a deployed tool or play carries only a
+`releaseUuid`, and `--run-uuid` follows whichever it has. Flags and mapping rules:
+[`../../cargo-orchestration/references/node-diagram.md`](../../cargo-orchestration/references/node-diagram.md).
