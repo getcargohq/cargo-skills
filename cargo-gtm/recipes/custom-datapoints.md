@@ -91,14 +91,16 @@ Two standing rules on the attribute side:
 
 ## Step 4 — The feasibility gate
 
-Every surviving candidate gets an action slug and a price, or it gets cut. "Likely source: job postings" is not a source; `theirStack.searchJobs` at 0.5 credits is.
+Every surviving candidate gets an action slug and a price, or it gets cut. "Likely source: job postings" is not a source; `theirStack.searchJobs` at 0.5 credits per posting returned is.
+
+A price here means **credits per account**, which for a row-billed action is not the same as the action's unit cost — see the third mechanic below the table.
 
 | What you want to know | Cheapest catalog path | Credits/account | Coverage to expect |
 |---|---|---|---|
 | Function headcount, seniority mix, SDR:AE ratio, eng-as-share-of-total | `salesNavigator.findEmployeesDistribution` | 0.25 **+ 0.05 ID** | High where a LinkedIn company page exists |
 | Headcount growth or decline | `salesNavigator.findCompanyMetrics` (0.25 **+ 0.05 ID**), or `cargo.enrichBusinessWorkforceTrends` (1) | 0.25–1 | Medium–High |
-| Tech stack | `cargo.enrichBusinessTechnographics` (1) or `theirStack.searchTechnologies` (0.5) | 0.5–1 | Medium — detection favors client-side and vendor-declared tech; back-office tools are near-invisible |
-| Hiring intent — which roles, how many, how recent | `theirStack.searchJobs` (0.5) or `linkedin.searchJobs` (0.5) | 0.5 | Medium–High |
+| Tech stack | `cargo.enrichBusinessTechnographics` (1, flat) or `theirStack.searchTechnologies` (0.5/row) | 1 flat, or **0.5 × rows** — cap with `limit` | Medium — detection favors client-side and vendor-declared tech; back-office tools are near-invisible |
+| Hiring intent — which roles, how many, how recent | `theirStack.searchJobs` (0.5) or `linkedin.searchJobs` (0.5) | **0.5 × postings returned** — cap with `limit` | Medium–High |
 | Funding, M&A | `cargo.enrichBusinessFundingAndAcquisitions` | 0.5 | High for VC-backed, structurally absent for bootstrapped |
 | Business events — openings, launches, leadership moves | `cargo.fetchBusinessEvents` | 0.5 | Medium |
 | Positioning or website change | `cargo.enrichBusinessWebsiteChanges` (1), `enrichBusinessWebsiteKeywords` (0.5) | 0.5–1 | Medium |
@@ -115,15 +117,19 @@ Three cost mechanics that change the arithmetic. The first two are **ID prerequi
 - Every `salesNavigator.find*` action (`findEmployeesDistribution`, `findCompanyMetrics`, `findEmployeesCount`, `findCompanyInsights`) keys on a LinkedIn **`companyId`**, not a domain. Accounts sourced through `salesNavigator.searchAccounts` already carry it; a list that arrived from a CRM export or a domain column does not, and resolving it costs 0.05/account through `searchAccounts`. Same shape as the `matchBusiness` fee, amortized the same way across every `find*` attribute — but easy to miss, because these actions look self-contained.
 - **Search-shaped actions bill per returned row; the `find*` actions do not.** `theirStack.searchJobs`, `salesNavigator.searchAccounts` / `searchLeads` / `extract*` charge for every record they return, so keep `limit` strict and size the pool with `limit: 1` first ([`../references/cost-discipline.md`](../references/cost-discipline.md) §4). The `salesNavigator.find*` calls above are flat per account regardless of what comes back — don't budget them per row.
 
+That third mechanic is the one that breaks estimates quietly, because a row-billed action *looks* like a flat per-account price in a table. A hiring-velocity field over an account with 8 open postings costs 4 credits, not 0.5 — and the accounts with the most postings are exactly the high-growth ones the field exists to find, so the overrun concentrates on the rows you care about. `cost-discipline.md` uses this precise case as its worked example of an estimate missing by 2×. **Price a row-billed attribute as `unit cost × rows you will actually accept`, and set `limit` to that number** so the cap is enforced rather than hoped for. Step 5 is where you measure the multiplier.
+
+Doing that arithmetic can also flip which provider is cheaper. Tech stack is the clearest case: `theirStack.searchTechnologies` at 0.5/row undercuts `cargo.enrichBusinessTechnographics` at a flat 1 only while an account returns one technology. At three rows it is 1.5 — the flat action wins, and it wins by more on exactly the dense stacks worth scoring. Compare per-account totals, never unit prices.
+
 Anything left with no row here is a research note, not a datapoint. Say that plainly in the deliverable — "valuable, no obtainable source" is a legitimate and useful line item, and it is the honest version of what the exercise usually pads with.
 
 ## Step 5 — Probe before you promise
 
 Take 5–10 **representative** accounts (not the ten biggest — they are the best-covered and will flatter every candidate) and run each surviving candidate against them. Full mechanics in [`source-planning.md`](source-planning.md) §3.
 
-Record only: hit rate, **cost per hit** (cost per row ÷ hit rate), correctness on 3 spot-checks, freshness. Kill any candidate whose cost-per-hit exceeds what the decision it drives is worth. A 0.25-credit attribute at 20% coverage costs 1.25 per answer and leaves 80% of the list `Unknown` — which is a worse input to a score than not having the column, because a null reads as a low value in every naive scoring model.
+Record only: hit rate, **cost per hit** (cost per row ÷ hit rate), correctness on 3 spot-checks, freshness — plus, for any row-billed action, **rows returned per account**. That last number is the multiplier the shortlist needs; without it a per-row price gets copied into the table as if it were per-account, which is the single most common way this arithmetic goes wrong. Take the *median and the max* across the probe, not the mean: the max is what a runaway account costs, and it is what `limit` has to cap. Kill any candidate whose cost-per-hit exceeds what the decision it drives is worth. A 0.25-credit attribute at 20% coverage costs 1.25 per answer and leaves 80% of the list `Unknown` — which is a worse input to a score than not having the column, because a null reads as a low value in every naive scoring model.
 
-Budget for this step: roughly 10–40 credits for a 6–10 candidate shortlist at 10 accounts each.
+Budget for this step: roughly 30–80 credits for a 6–10 candidate shortlist at 10 accounts each — the Step 6 schema alone probes at ~46. Row-billed candidates dominate that range and are the reason it is a range at all, so probe them with `limit` already set to the cap you intend to ship; a probe run uncapped measures a cost you are not going to pay and hides the one you are.
 
 ## Step 6 — Present the shortlist, then wait
 
@@ -139,18 +145,23 @@ The deliverable is a costed table, not an essay. Present it and stay in AWAIT_AP
 > | 2 | `has_platform_team` | boolean | same call, title parse | 0.00 | 9/10 | Monthly | Routes to the technical persona |
 > | 3 | `soc2_status` | enum | `firecrawl.scrape` /security + extract | 0.25 | 6/10 | Quarterly | Kills or unlocks enterprise motion |
 > | 4 | `ai_tool_state` | enum | `cargo.enrichBusinessTechnographics` | 1.00 | 4/10 | Quarterly | Displacement vs greenfield play |
-> | 5 | `eng_hiring_velocity` | number | `theirStack.searchJobs` | 0.50 | 7/10 | Weekly | Timing — expansion in progress |
+> | 5 | `eng_hiring_velocity` | number | `theirStack.searchJobs`, `limit: 3` | 1.50 | 7/10 | Weekly | Timing — expansion in progress |
 > | 6 | `workforce_trend_12mo` | enum | `cargo.enrichBusinessWorkforceTrends` | 1.00 | 6/10 | Monthly | Growing vs contracting account |
+>
+> #5 is **row-billed**: 0.5 per posting returned, and the probe found a median of 3 relevant postings per account (max 9). `limit: 3` is what turns that into the fixed 1.50 above — uncapped, the top decile of accounts would cost 4.50 each.
 >
 > **Cut, with reason:** exact competitor spend (no source at any price) · contract renewal date (not public) · "is growing" (not discriminating) · industry (already a column).
 >
-> **Full-list arithmetic:** 3.55 credits/account (2 prereqs + 6 attributes) × 4,100 accounts = **~14,600 credits**. Balance is 12,000 — the full fan-out does not fit, which is the point of quoting it before running it.
-> **Cheaper cut (recommended):** drop #4 and #6, the two 1-credit cargo enrichments → **~4,300 credits** (1.05/account), keeps 80% of the scoring signal. Dropping them also drops the 0.50 `matchBusiness` prereq, since nothing else needs a `business_id` — 2.50/account saved, not 2.00.
-> **Narrower cut:** run all 6 on the 900 accounts already in the Tier-1 segment → **~3,200 credits**.
+> **Full-list arithmetic:** 4.55 credits/account (2 prereqs + 6 attributes) × 4,100 accounts = **~18,700 credits**. Balance is 12,000 — the full fan-out does not fit, which is the point of quoting it before running it.
+> **Cheaper cut (recommended):** drop #4 and #6, the two 1-credit cargo enrichments → **~8,400 credits** (2.05/account), keeps 80% of the scoring signal. Dropping them also drops the 0.50 `matchBusiness` prereq, since nothing else needs a `business_id` — 2.50/account saved, not 2.00.
+> **Narrower cut:** run all 6 on the 900 accounts already in the Tier-1 segment → **~4,100 credits**.
 
 Three shaped options, a default, the reconciled balance — the standard approval shape from [`../references/cost-discipline.md`](../references/cost-discipline.md).
 
-Note what the cheaper cut does to the prereq line. Cutting an attribute can cut its ID fee too, so the saving is larger than the attribute's own price — and conversely, keeping one 1-credit cargo enrichment keeps the whole 0.50 match for the entire list. Recompute the prereqs for each option rather than subtracting attribute prices from the total; that subtraction is where these estimates usually stop reconciling.
+Two things in that table are worth copying into your own version, because both are places the arithmetic silently stops reconciling:
+
+- **Cutting an attribute can cut its ID fee too**, so the saving is larger than the attribute's own price — and conversely, keeping *one* 1-credit cargo enrichment keeps the whole 0.50 match for the entire list. Recompute the prereqs per option instead of subtracting attribute prices from the total.
+- **A row-billed field needs its multiplier and its cap shown**, not just a number. `1.50` in a costed table is only true because `limit: 3` makes it true; without the cap, the same row is an open-ended price that lands hardest on the fastest-growing accounts.
 
 That arithmetic is the whole reason the feasibility gate exists. Designing ten attributes is free. Filling ten attributes across a TAM is a four-figure credit line, and the user should see it before agreeing rather than after.
 
@@ -190,7 +201,9 @@ Turn each cadence into a play — [`save-as-play.md`](save-as-play.md). Before d
 
 Scope each play to the fields whose cadence is actually due. In the Step 6 schema the monthly-cadence fields are #1, #2, and #6 — 1.25 credits/account, so **~5,100 credits every month** across 4,100 accounts, not once.
 
-Putting all six on one monthly play instead costs ~12,300/month and is wrong in both directions: #5 is a weekly field that a monthly sweep lets go stale, while #3 and #4 are quarterly ones it re-bills three times more often than they can change. One play per cadence, not one play per schema. The two ID prereqs are the one thing no refresh re-pays — once `companyId` and `business_id` are columns, every later run skips them, which is why the refresh rate (3.00/account) is below the first-fill rate (3.55).
+Putting all six on one monthly play instead costs ~16,400/month and is wrong in both directions: #5 is a weekly field that a monthly sweep lets go stale, while #3 and #4 are quarterly ones it re-bills three times more often than they can change. One play per cadence, not one play per schema. The two ID prereqs are the one thing no refresh re-pays — once `companyId` and `business_id` are columns, every later run skips them, which is why the refresh rate (4.00/account) is below the first-fill rate (4.55).
+
+**Do the annual arithmetic on the fastest field before you schedule it.** #5 at 1.50/account weekly across 4,100 accounts is ~6,200 credits *per week* — more than the entire first fill of every other field combined, and about 320,000 a year. Weekly cadence belongs on the segment where timing actually changes a decision (the 900 Tier-1 accounts, ~1,350/week), not on the full list. The cheapest version of a fast signal is a narrow audience, not a lower price.
 
 **In Cargo, a live signal is a tracked column diff.** That is the mechanical link between Step 3's signal list and something that fires. Create the segment with the signal-bearing attributes as tracking columns, then read its delta feed:
 
