@@ -18,13 +18,24 @@ X data is public, which is not the same as usable. [`../references/acceptable-us
 
 ## Credits-based actions
 
-All 0.02. Grouped by what they take.
+All fourteen cost 0.02. Four of them are engagement lists and carry a warning rather than a use.
 
-| Input | Actions |
-|---|---|
-| `handle` | `getUserProfile`, `getUserPosts`, `getUserReplies`, `getUserMedia`, `getUserLikes`, `getFollowers`, `getFollowing` |
-| `tweetId` | `getPostDetails`, `getPostComments`, `getRetweeters`, `getQuoteTweets`, `getPostLikers` |
-| `query` | `searchPosts` (also takes `type`), `searchPeople` |
+| Action | Cost | Inputs | Use for |
+|---|---|---|---|
+| `getUserPosts` | 0.02 | `handle`, `limit` | **The one worth reaching for.** Recent posts from a company handle: launches, funding, hiring. |
+| `getUserProfile` | 0.02 | `handle` | Bio, follower count, links. Confirms a handle is who you think it is. |
+| `searchPosts` | 0.02 | `query`, `limit`, `type` | Who is discussing a problem in public. |
+| `getPostDetails` | 0.02 | `tweetId` | One post, when a signal pointed at it. |
+| `getUserReplies` | 0.02 | `handle`, `limit` | What a company answers in public. |
+| `getPostComments` | 0.02 | `tweetId`, `limit` | Reaction to an announcement. |
+| `getQuoteTweets` | 0.02 | `tweetId`, `limit` | The same, one step out. |
+| `getUserMedia` | 0.02 | `handle`, `limit` | Images and video from a handle. |
+| `getFollowing` | 0.02 | `handle`, `limit` | Who a handle follows. |
+| `searchPeople` | 0.02 | `query`, `limit` | X accounts by query. **Not a contact source.** |
+| `getFollowers` | 0.02 | `handle`, `limit` | **See the anti-patterns.** |
+| `getUserLikes` | 0.02 | `handle`, `limit` | **See the anti-patterns.** |
+| `getRetweeters` | 0.02 | `tweetId`, `limit` | **See the anti-patterns.** |
+| `getPostLikers` | 0.02 | `tweetId`, `limit` | **See the anti-patterns.** |
 
 Everything except `getUserProfile` and `getPostDetails` also takes a required `limit`.
 
