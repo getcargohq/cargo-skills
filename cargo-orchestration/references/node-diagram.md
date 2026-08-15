@@ -174,18 +174,29 @@ summary — `start → branch(missing firmographics) → enrich 💳 → merge �
 score → end`.
 
 ```
+                  start
+                    │
+                Aviato 💳
+           Lookup LinkedIn URL
+                    │
               LinkedIn URL?
                     │
                     ├──────────────┐
                    yes             no
                     │              │
-                    │          AI agent
+                    │            Agent
                     │      Find LinkedIn URL
                     │              │
                     ├──────────────┘
                     │
               Lead Magic 💳
          Enrich LinkedIn profile
+                    │
+               Apollo.io 💳
+          Find company headcount
+                    │
+                JavaScript
+            ICP fit assessment
                     │
                  Tier 1?
                     │
@@ -206,8 +217,10 @@ Send to #best-leads     Update record
 | `◀━` | the step was named in `--highlight` |
 | `↑ <name>` | a step already drawn above, not repeated |
 
-Each step is two lines: the system it runs on (`Slack`, `Apollo`, `Code`) over
-what it does. Branch steps get one line, because the labelled rails leaving them
+Each step is two lines: the system it runs on over what it does, both resolved
+from the platform's catalogs, so a step reads `Apollo.io` / `Enrich person`
+rather than `apolloio` / `enrichPerson`. A step keeps its own name where the
+author set one. Branch steps get one line, because the labelled rails leaving them
 already say that they route.
 
 **Width.** Rails stack rightward and each must clear the one below it, so a graph
