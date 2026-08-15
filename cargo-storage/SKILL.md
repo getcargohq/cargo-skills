@@ -123,7 +123,7 @@ echo "$BASE/v1/models/$MODEL_UUID/records/ingest?token=$TOKEN"
 ```
 
 Check the extractor's mode first — when it reports `"autoIngest": true` (calendly,
-smartlead, instantlyV2, heyReach, datachimp, cargo signals) Cargo registers the
+smartlead, instantlyV2, heyReach, cargo signals) Cargo registers the
 hook with the provider itself and the URL must **not** be handed out. Full flow,
 payload shapes, and limits: `references/examples/ingest-webhook.md`.
 

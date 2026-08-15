@@ -76,6 +76,13 @@ const KNOWN_CLI_DOMAINS = new Set([
   "--version",
 ]);
 
+/**
+ * Kept in sync by hand with DENIED_INTEGRATIONS in sync-trigger-slugs.ts. Two
+ * copies because they police different halves: that one filters the generated
+ * catalog, this one polices prose no generator writes.
+ */
+const DENIED_INTEGRATIONS = ["datachimp"];
+
 const findings = []; // { file, line, severity: "error"|"warn", message }
 
 function err(file, line, message) {
@@ -302,6 +309,30 @@ function main() {
   for (const top of ["README.md", "AGENTS.md", "CHANGELOG.md", "CLAUDE.md"]) {
     const p = join(repoRoot, top);
     if (existsSync(p)) lintFile(p);
+  }
+
+  // Denied integrations — a product decision, enforced here so it survives the
+  // next person who adds a provider without knowing about it. The generated
+  // catalog is filtered at source in sync-trigger-slugs.ts; this catches the
+  // hand-written half (prose, recipes, playbooks, examples) that no generator
+  // touches.
+  for (const slug of DENIED_INTEGRATIONS) {
+    for (const file of [...walk(repoRoot)].filter(
+      (f) => f.endsWith(".md") || f.endsWith(".json"),
+    )) {
+      const rel = relative(repoRoot, file);
+      if (rel.startsWith(".git/") || rel.includes("node_modules/")) continue;
+      const lines = readFileSync(file, "utf8").split("\n");
+      lines.forEach((line, i) => {
+        if (new RegExp(`\\b${slug}\\b`, "i").test(line)) {
+          err(
+            rel,
+            i + 1,
+            `\`${slug}\` must not appear anywhere in this repo. It is on the denied-integrations list in .github/scripts/sync-trigger-slugs.ts; remove the mention rather than the check.`,
+          );
+        }
+      });
+    }
   }
 
   // Catalog consistency — hand-maintained catalogs must not drift from disk.
