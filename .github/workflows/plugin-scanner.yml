@@ -38,4 +38,4 @@ jobs:
       # which is exactly when the findings matter. Publish it ourselves.
       - name: Publish scanner report
         if: always()
-        run: cat scanner-report.md >> "$GITHUB_STEP_SUMMARY" || true
+        run: tee -a "$GITHUB_STEP_SUMMARY" < scanner-report.md || true
