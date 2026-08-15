@@ -31,6 +31,20 @@ const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const catalogPath = join(repoRoot, ".github/data/integrations.json");
 
 /**
+ * Integrations that must never reach a skill, a description, or the committed
+ * catalog, whatever the API returns.
+ *
+ * This is a product decision, not a technical one, so it is enforced in code
+ * rather than left to whoever next runs `--refresh`. The catalog is generated,
+ * so deleting an entry by hand lasts exactly until the next refresh puts it
+ * back; the filter below is what makes the removal stick.
+ *
+ * `datachimp` — excluded on Aurelien's instruction, 2026-08-15. It is also an
+ * integration with **zero callable actions**, so nothing was lost.
+ */
+const DENIED_INTEGRATIONS = new Set(["datachimp"]);
+
+/**
  * Categories whose integrations are systems a user *names* when they want to
  * connect Cargo to something they already run — CRMs, sequencers, warehouses,
  * ad platforms, support desks. The `enrichment` category is deliberately
@@ -65,6 +79,7 @@ function refreshCatalog(): void {
   const parsed = JSON.parse(raw) as { integrations?: unknown[] };
   const list = parsed.integrations ?? [];
   const integrations: Integration[] = list
+    .filter((raw) => !DENIED_INTEGRATIONS.has(String((raw as Record<string, any>).slug)))
     .map((raw) => {
       const i = raw as Record<string, any>;
       return {
@@ -101,6 +116,8 @@ function loadCatalog(): Integration[] {
       `${catalogPath} is missing — regenerate it with: node .github/scripts/sync-trigger-slugs.ts --refresh`,
     );
   }
+  // Filtered on read as well as on refresh: a hand-edited catalog is still a
+  // catalog, and this list must hold however the file got there.
   return (JSON.parse(readFileSync(catalogPath, "utf8")) as { integrations: Integration[] })
     .integrations;
 }

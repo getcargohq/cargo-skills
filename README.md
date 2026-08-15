@@ -43,10 +43,12 @@ The agent runs the whole setup itself: installs the CLI at the bundle's pinned v
 ### Manual — skills.sh
 
 ```bash
-npx skills add getcargohq/cargo-skills
+npx skills add getcargohq/cargo-skills --all
 ```
 
-Works with Claude Code, Codex, Cursor, Windsurf, GitHub Copilot, [Hermes Agent](#hermes-agent), and any agent that supports the [skills.sh](https://skills.sh) standard. These skills have been installed **54,885 times** across the bundle on skills.sh (August 2026).
+`--all` is shorthand for `--skill '*' --agent '*' -y`: it takes every skill in the bundle and behaves the same in a terminal, in CI, and inside an agent. Drop it to pick interactively, or name one skill with `getcargohq/cargo-skills/<skill-name>`.
+
+Works with Claude Code, Codex, Cursor, Windsurf, GitHub Copilot, [Hermes Agent](#hermes-agent), and any agent that supports the [skills.sh](https://skills.sh) standard.
 
 ### Hermes Agent
 
@@ -76,13 +78,14 @@ hermes skills tap add getcargohq/cargo-skills
 
 ### Just one job — `gtm-skills`
 
-If you want a single outcome rather than the whole workstation, [`getcargohq/gtm-skills`](https://github.com/getcargohq/gtm-skills) packages twelve of them as standalone skills named after the job:
+If you want a single outcome rather than the whole workstation, [`getcargohq/gtm-skills`](https://github.com/getcargohq/gtm-skills) packages the same jobs as standalone skills named after the job rather than after Cargo:
 
 ```bash
-npx skills add getcargohq/gtm-skills/find-work-email
+npx skills add getcargohq/gtm-skills --all          # all of them
+npx skills add getcargohq/gtm-skills/find-work-email # or exactly one
 ```
 
-`find-b2b-leads`, `build-tam-list`, `find-linkedin-url`, `enrich-linkedin-profile`, `find-work-email`, `verify-email-list`, `enrich-company-data`, `find-stakeholders`, `track-job-changes`, `track-funding-rounds`, `find-companies-using-tech`, `find-portfolio-companies`. Each one installs alone, carries its own cost table, and runs end to end inside the 100 free credits.
+Finding leads and stakeholders, building a TAM, resolving and enriching LinkedIn profiles, work emails and verification, company enrichment, job-change, funding and tech-intent signals, and migrating off a Clay table. The current list is in [that repo's README](https://github.com/getcargohq/gtm-skills#readme); it is not repeated here, because a hand-maintained copy of somebody else's list is a copy that goes stale. Each installs alone, carries its own cost table, and runs end to end inside the 100 free credits.
 
 Install those **or** this pack, not both — each standalone skill defers to `cargo-gtm` when the pack is present, so the same request is never claimed twice.
 

@@ -1,6 +1,6 @@
 {
   "generatedFrom": "cargo-ai connection integration list",
-  "count": 138,
+  "count": 137,
   "integrations": [
     {
       "slug": "6sense",
@@ -232,13 +232,6 @@
       "category": "marketing",
       "actions": 6,
       "credits": false
-    },
-    {
-      "slug": "datachimp",
-      "name": "Datachimp",
-      "category": "enrichment",
-      "actions": 0,
-      "credits": true
     },
     {
       "slug": "datagma",
@@ -968,5 +961,6 @@
       "actions": 7,
       "credits": false
     }
-  ]
+  ],
+  "creditsBasedCount": 49
 }
