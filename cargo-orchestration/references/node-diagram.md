@@ -223,6 +223,10 @@ rather than `apolloio` / `enrichPerson`. A step keeps its own name where the
 author set one. Branch steps get one line, because the labelled rails leaving them
 already say that they route.
 
+A `group` step draws its own graph in a captioned box, one level down, with
+`--paid` / `--highlight` carried inside; a broken graph in a loop body is
+reported against the loop.
+
 **Width.** Rails stack rightward and each must clear the one below it, so a graph
 branching at nearly every step of a long chain gets wide. A 29-node provider
 waterfall draws at 57 columns; past 120 the command adds a warning pointing at
