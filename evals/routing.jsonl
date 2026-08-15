@@ -98,6 +98,11 @@
 
 // Harder cases — deliberately avoid the literal trigger phrasing, so these test
 // the description's vocabulary rather than its quoted examples.
+{"prompt": "Show me the workflow for the Find email tool", "expect": "cargo-orchestration", "why": "Visualising a graph is orchestration, not diagnostics — nothing has failed."}
+{"prompt": "What does this tool actually do? Walk me through the steps", "expect": "cargo-orchestration"}
+{"prompt": "Draw the graph for this play so I can review it before deploy", "expect": "cargo-orchestration"}
+{"prompt": "Visualize this play", "expect": "cargo-orchestration"}
+{"prompt": "Show me what that run actually did, and mark where it broke", "expect": "cargo-diagnostics", "why": "A run that broke is diagnostics, even though the answer is also a diagram."}
 {"prompt":"I have a spreadsheet of 400 domains and need a decision-maker with a working email address at each one","expect":"cargo-gtm","why":"Pure job description, zero Cargo or trigger vocabulary.","tier":"hard"}
 {"prompt":"Our outbound is going to the wrong people — help me figure out who actually buys from us","expect":"cargo-gtm","tier":"hard"}
 {"prompt":"Something in the nightly pipeline produced garbage last night and I need to know what","expect":"cargo-diagnostics","why":"Paraphrase of 'why did this fail' with no shared words.","tier":"hard"}
@@ -118,3 +123,4 @@
 {"prompt": "What do I get for free before I have to pay?", "expect": "cargo-billing"}
 {"prompt":"Expose our CRM tools as an MCP server so I can call them from Claude Desktop","expect":"cargo-ai","why":"The publish direction of MCP. Was previously reachable from no description at all."}
 {"prompt":"How do I use Cargo from ChatGPT?","expect":"cargo-ai","why":"An agent that does not speak skills.sh reaches Cargo through a published MCP server plus the cargo-ai mcp bridge.","tier":"hard"}
+{"prompt":"Explain this automation to someone who has never seen it — I need a picture, not JSON","expect":"cargo-orchestration","why":"No CLI vocabulary at all; the job is rendering a graph.","tier":"hard"}

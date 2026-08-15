@@ -1,7 +1,7 @@
 ---
 name: cargo-orchestration
-description: "Make Cargo actually run something — execute one connector action, run a multi-step workflow, trigger a batch across a whole segment or model, message an AI agent, build or edit a node graph, and query the runtime tables (runs, batches, spans, records) with SQL. Triggers: \"run this on all my contacts\", \"execute the action\", \"kick off a batch\", \"build a workflow\", \"schedule a play\", \"make it run every morning\", \"ask the agent\", \"how many runs failed today\", \"what is the output schema for this action\", \"add a step that\". Skip when: explaining why a run misbehaved — use cargo-diagnostics; downloading result files — use cargo-analytics; committing the workflow as code — use cargo-cdk."
-version: "1.7.0"
+description: "Make Cargo actually run something, or show what it would run — execute one connector action, run a multi-step workflow, trigger a batch across a whole segment or model, message an AI agent, build or edit a node graph, draw a workflow, tool or play as a diagram, and query the runtime tables (runs, batches, spans, records) with SQL. Triggers: \"run this on all my contacts\", \"execute the action\", \"kick off a batch\", \"build a workflow\", \"schedule a play\", \"make it run every morning\", \"ask the agent\", \"show me the workflow\", \"what does this tool do\", \"visualize this play\", \"draw the graph\", \"explain this workflow\", \"how many runs failed today\", \"what is the output schema for this action\", \"add a step that\". Skip when: explaining why a run misbehaved — use cargo-diagnostics; downloading result files — use cargo-analytics; committing the workflow as code — use cargo-cdk."
+version: "1.8.0"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -60,10 +60,14 @@ Need to run something?
 
 > **Show the graph, don't describe it.** Before deploying a draft, and whenever
 > the user asks what a workflow or play does, draw it:
-> `cargo-ai orchestration node diagram --workflow-uuid <uuid> --raw` (free, runs
-> nothing, CLI ≥ 1.0.54). Routing, fallback edges, and which steps bill are what
-> the user is actually approving, and prose flattens all three. Sources, cost
-> marking, and the duplicate-slug footgun: **`references/node-diagram.md`**.
+> `cargo-ai orchestration node diagram --workflow-uuid <uuid> --format ascii --raw`
+> (free, runs nothing; `--format` needs CLI ≥ 1.0.56, the command itself ≥ 1.0.54).
+> Routing, fallback edges, and which steps bill are what the user is actually
+> approving, and prose flattens all three. **Pick the format by where the output
+> goes:** `ascii` renders a picture a person can read in a terminal or a chat
+> reply; `mermaid` (the default) is source code, correct only when you are
+> pasting into a PR, a doc, or a page that renders it. Sources, the ASCII legend,
+> cost marking, and the duplicate-slug footgun: **`references/node-diagram.md`**.
 
 **References:**
 
@@ -430,7 +434,7 @@ Then **show it before deploying it** — `validate` proves the graph is well-for
 not that it does what the user asked for:
 
 ```bash
-cargo-ai orchestration node diagram --nodes '[...]' --raw   # free, runs nothing
+cargo-ai orchestration node diagram --nodes '[...]' --format ascii --raw   # free, runs nothing
 ```
 
 Same command draws a deployed workflow (`--workflow-uuid`), a draft (`--draft`), a
