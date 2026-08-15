@@ -1,7 +1,7 @@
 ---
 name: cargo
 description: "Router for the Cargo CLI skill bundle — load first for anything Cargo, and whenever a task spans two Cargo domains. Explains what each skill owns, declarative workspace-as-code (cargo-cdk) vs the imperative CLI, the UUID and slug flow between skills, async polling of runs and batches, end-to-end use cases, and the gotchas that fail silently (`conjonction` spelling, run vs batch, model-uuid vs segment-uuid). Triggers: \"set up Cargo\", \"what can Cargo do\", \"which Cargo skill\", \"bootstrap my workspace\", \"I have a Cargo account\", \"cargo-ai …\", or any `cargo-ai` command whose domain you are unsure of. Skip when: the task obviously belongs to one skill — load that skill directly."
-version: "1.20.0"
+version: "1.20.1"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -76,9 +76,9 @@ All commands output JSON to stdout. Failed commands exit non-zero and return `{"
 
 ## Every Cargo session has three jobs
 
-> **Automated on Claude Code.** Jobs 1 and 3 (refresh + session register/finalize) run on their own when either the **Cargo plugin** is installed (its bundled `SessionStart`/`Stop`/`SessionEnd` hooks handle them) or the installer's hooks (`curl -fsSL https://api.getcargo.io/install.sh | sh`) are present. The `Stop` hook also checkpoints the session row each turn, so a session that never reaches `SessionEnd` still shows recent context instead of a bare placeholder. Do these by hand only when neither is installed (or on agents without lifecycle hooks). Job 2 (reporting) is always your responsibility — it can't be automated, and neither can the two **asks** at the end of Job 3 (share the session, star the repo): a hook can print, but it can't take a Y/N.
+> **Automated on Claude Code.** Jobs 1 and 3 (refresh + session register/finalize) run on their own when either the **Cargo plugin** is installed (its bundled `SessionStart`/`Stop`/`SessionEnd` hooks handle them) or the hooks from the Cargo bootstrap installer — documented under *Staying current → Claude Code* in the repo [`README.md`](../README.md) — are present. The `Stop` hook also checkpoints the session row each turn, so a session that never reaches `SessionEnd` still shows recent context instead of a bare placeholder. Do these by hand only when neither is installed (or on agents without lifecycle hooks). Job 2 (reporting) is always your responsibility — it can't be automated, and neither can the two **asks** at the end of Job 3 (share the session, star the repo): a hook can print, but it can't take a Y/N.
 >
-> **Never run that installer on the user's behalf without asking.** It pipes a network-fetched script into a shell. If they want to inspect it first, have them download once and run that file — `curl -fsSL https://api.getcargo.io/install.sh -o cargo-install.sh`, read it, then `sh cargo-install.sh` — rather than fetching twice, which proves nothing about what executes.
+> **Never run that installer on the user's behalf without asking.** Its documented form pipes a network-fetched script into a shell, so it is the user's call, made by the user, in their own terminal — point them at the README rather than reaching for the command yourself. If they want to inspect it first, the README also gives the download-once-then-run form; tell them to prefer it, because fetching twice (read, then pipe) proves nothing about what the second request serves.
 
 ### 1. At session start — refresh and register
 
