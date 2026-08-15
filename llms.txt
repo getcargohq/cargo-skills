@@ -86,6 +86,7 @@ Per-provider action slugs, config shapes, credit costs, cost traps, and recurrin
 - [enrichCrm](https://github.com/getcargohq/cargo-skills/blob/main/cargo-gtm/provider-playbooks/enrichCrm.md): Flat-rate generalist: four actions, all 1 credit fixed — person enrichment, email finding, company enrichment, and funding data.
 - [enrichley](https://github.com/getcargohq/cargo-skills/blob/main/cargo-gtm/provider-playbooks/enrichley.md): Dedicated email verification.
 - [enrowio](https://github.com/getcargohq/cargo-skills/blob/main/cargo-gtm/provider-playbooks/enrowio.md): Email finder + verifier pair.
+- [exa](https://github.com/getcargohq/cargo-skills/blob/main/cargo-gtm/provider-playbooks/exa.md): One action: semantic web search with a category filter and five search modes.
 - [findyMail](https://github.com/getcargohq/cargo-skills/blob/main/cargo-gtm/provider-playbooks/findyMail.md): Mid-tier email finder with a phone lookup and a verify on the side.
 - [firecrawl](https://github.com/getcargohq/cargo-skills/blob/main/cargo-gtm/provider-playbooks/firecrawl.md): Web scraping, crawling, and web search at 0.05 credits per item — the default web-research provider for the personalization and niche-research stages.
 - [forager](https://github.com/getcargohq/cargo-skills/blob/main/cargo-gtm/provider-playbooks/forager.md): Contact-info lookup keyed exclusively on LinkedIn URL — three actions, one input field each.
@@ -102,6 +103,7 @@ Per-provider action slugs, config shapes, credit costs, cost traps, and recurrin
 - [neverBounce](https://github.com/getcargohq/cargo-skills/blob/main/cargo-gtm/provider-playbooks/neverBounce.md): Dedicated email verification.
 - [oceanio](https://github.com/getcargohq/cargo-skills/blob/main/cargo-gtm/provider-playbooks/oceanio.md): Mid-tier company/people search and enrichment — four actions, all 1 credit.
 - [openAi](https://github.com/getcargohq/cargo-skills/blob/main/cargo-gtm/provider-playbooks/openAi.md): GPT models through a single instruct action — the cheapest bulk-LLM tier in the catalog: the nano models run at 0.006 credits per 1,000-token package, 33× cheaper than anthropic's cheapest tier (0.2).
+- [parallel](https://github.com/getcargohq/cargo-skills/blob/main/cargo-gtm/provider-playbooks/parallel.md): Web search, page extraction, and agentic research tasks that return a schema you define.
 - [peopleDataLabs](https://github.com/getcargohq/cargo-skills/blob/main/cargo-gtm/provider-playbooks/peopleDataLabs.md): Heavyweight people / company database.
 - [perplexity](https://github.com/getcargohq/cargo-skills/blob/main/cargo-gtm/provider-playbooks/perplexity.md): Web-grounded LLM through a single instruct action — every model has live internet access (per the schema: "All models have access to internet").
 - [piloterr](https://github.com/getcargohq/cargo-skills/blob/main/cargo-gtm/provider-playbooks/piloterr.md): Ultra-cheap sourcing surfaces, both priced at 0.01: an action (getG2ProductInfo) that scrapes one G2 product page (reviews, ratings, pricing plans, specs), and an extractor (fetchCompanies, 0.01 per item) that syncs f…

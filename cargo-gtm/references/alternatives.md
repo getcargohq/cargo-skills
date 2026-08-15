@@ -22,7 +22,7 @@ Default rule: **don't swap to chase 2× cheaper if hit-rate drops 30%**. The tot
 | At-scale account search | salesNavigator.searchAccounts (0.05) **or** aiArk.searchCompanies (0.01) | oceanio.searchCompanies (1) | Both priority actions are cheap; aiArk wins on price and lookalike seeds (≤5 domains), oceanio when the filter is technographic / web-traffic shaped. |
 |   |   | peopleDataLabs.searchCompanies (3) for cargo-filter shape, or queryCompanies (3) for SQL | When salesNavigator's filters miss (funding, investor, complex bool). |
 | Tech-intent sourcing | theirStack.searchJobs / searchCompanies (0.5) | (no priority alternative — theirStack IS priority) | n/a |
-| SMB / local | (none in priority — priority skips SMB) | serper.searchPlaces (1), firecrawl.scrape (0.05) | Always for local/storefront. |
+| SMB / local | (none in priority — priority skips SMB) | serper.searchPlaces (0.05), firecrawl.scrape (0.05) | Always for local/storefront. |
 | Visitor de-anonymization | (none — niche) | snitcher.searchSessions (0) | Always for visitor ID — free credits-tier. |
 | Warm-intro sourcing | (none — niche) | theSwarm.searchWarmIntrosToCompany (2) | When the goal is intros, not pure prospecting. |
 

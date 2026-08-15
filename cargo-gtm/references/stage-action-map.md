@@ -161,12 +161,20 @@ Prices are credits/record. "Priority?" marks providers in the priority stack (sa
 
 ## Web research
 
-| Provider | Action | Cost | Notes |
-|---|---|---|---|
-| firecrawl | scrape / search / crawl | 0.05 | Default web research. |
-| linkup | search | 0.5 | Structured web search with answers. |
-| linkup | instruct | 1 | Structured / sourced answers. |
-| serper | search | 1 | Google search results. |
+| Provider | Action | Cost | Priority? | Notes |
+|---|---|---|---|---|
+| parallel | extract | 0.025 **per URL** | ✅ | **Cheapest page read in the catalog.** Takes an `objective` to steer extraction. |
+| serper | search | 0.05 (fixed) |   | Google results, **fixed per query for up to 100** — raise `limit`, never the query count. |
+| firecrawl | scrape / search / crawl | 0.05 **per item** |   | Reach for `crawl` when you need a whole site rather than a URL list. |
+| parallel | createTask | 0.125 (`lite`) | ✅ | **Unique.** Agentic research filling a caller-supplied `outputSchema`. Ladder runs to 60 (`ultra8x`); `processor` is required, so the tier is always deliberate. |
+| parallel | search | 0.125 fixed **+ 0.025/item** |   | Objective-steered ranked search. |
+| exa | search | 0.175 fixed **+ 0.025/item** |   | The only rung with a **`category` filter** (`company`, `news`, `financial report`, …) and publication-date bounds. `searchType: "deep"` raises the fixed part to 0.3. |
+| linkup | search | 0.5 standard / 2 deep |   | Web search with answers. |
+| linkup | instruct | 1 |   | Sourced or schema-structured answers in one call. |
+
+**Corrected 2026-08-15**: this table priced `serper.search` at **1**. It is **0.05**, verified against the live integration catalog, and the 20x error was steering agents away from the cheapest search rung. `provider-playbooks/serper.md` had it right throughout.
+
+Picking between them: **known URL → `parallel.extract`. Plain keyword query → `serper.search`. Needs a document-type or date filter → `exa.search`. Needs structured output → `parallel.createTask` at `lite`.** Reach for `linkup.instruct` only when a prose sourced answer is genuinely what you want, since it is 8x `createTask` at `lite`.
 
 ## LLM (instruct)
 

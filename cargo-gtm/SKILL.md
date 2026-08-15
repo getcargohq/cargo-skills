@@ -259,6 +259,8 @@ If a recipe fails repeatedly and the cause isn't obvious, escalate via `cargo-ai
 - [`provider-playbooks/firecrawl.md`](provider-playbooks/firecrawl.md) — web scraping for research/personalization stages.
 - [`provider-playbooks/serper.md`](provider-playbooks/serper.md) — Google SERP queries for research and URL discovery.
 - [`provider-playbooks/linkup.md`](provider-playbooks/linkup.md) — web search (0.5 standard / 2 deep) + sourced/structured answers.
+- [`provider-playbooks/parallel.md`](provider-playbooks/parallel.md) — cheapest page read in the catalog (`extract`, 0.025/URL) plus `createTask`, the only action that fills a caller-supplied output schema.
+- [`provider-playbooks/exa.md`](provider-playbooks/exa.md) — semantic search with a document-type `category` filter and publication-date bounds.
 
 **LLM providers** (all: one `instruct` action, cost per 1,000-token package, per-model tiers — prompts come from [`references/prompt-library/index.md`](references/prompt-library/index.md)):
 - [`provider-playbooks/anthropic.md`](provider-playbooks/anthropic.md) — judgment-tier default (Haiku/Sonnet 0.2, Opus 2); temperature nests under `advancedSettings` with required `maxTokens`.
