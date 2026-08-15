@@ -1,0 +1,16 @@
+version: 2
+
+# The bundle ships no dependency manifest — the skills are markdown and the two
+# runnable surfaces (hooks/*.sh, cargo-gtm/scripts/*.ts) use only the shell and
+# the Node standard library. That leaves GitHub Actions as the one dependency
+# surface worth watching, and now that every `uses:` is pinned to a commit SHA,
+# Dependabot is what moves those pins.
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "CI"
+    labels:
+      - "dependencies"

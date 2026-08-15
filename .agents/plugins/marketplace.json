@@ -6,6 +6,7 @@
     {
       "name": "cargo",
       "source": { "source": "local", "path": "./" },
+      "category": "Sales & Marketing",
       "description": "17 skills over the cargo-ai CLI — build target account and contact lists, enrich and verify them against licensed data providers, score and qualify leads, sync your CRM, monitor buying signals, run workflows, and manage the whole workspace as code.",
       "policy": { "installation": "AVAILABLE", "authentication": "ON_INSTALL" }
     }

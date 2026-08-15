@@ -8,7 +8,7 @@
 import { readFileSync, existsSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
-import { execSync } from "node:child_process";
+import { execFileSync } from "node:child_process";
 import { createRequire } from "node:module";
 
 export type Row = Record<string, string>;
@@ -181,7 +181,13 @@ async function loadCargoApi(): Promise<{ buildApi: (deps: object) => any }> {
     // Not resolvable from here — try the global npm root (the CLI itself is
     // installed globally, so this is the common case for a global install).
     try {
-      const globalRoot = execSync("npm root -g", { encoding: "utf8" }).trim();
+      // execFileSync, not execSync: the argument vector goes to npm directly
+      // instead of through a shell, so there is no command string to interpret.
+      // Windows needs the .cmd shim by name, since there is no shell to find it.
+      const npm = process.platform === "win32" ? "npm.cmd" : "npm";
+      const globalRoot = execFileSync(npm, ["root", "-g"], {
+        encoding: "utf8",
+      }).trim();
       const requireFromGlobal = createRequire(join(globalRoot, "noop.js"));
       const entry = requireFromGlobal.resolve("@cargo-ai/api");
       return (await import(entry)) as any;

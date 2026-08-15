@@ -1,9 +1,12 @@
 {
   "name": "cargo",
   "description": "Build with Cargo in Codex — 17 skills over the cargo-ai CLI (target lists, contact enrichment and verification from licensed data providers, lead scoring, CRM sync, signal monitoring, orchestration, storage, segments, CDK, diagnostics) plus prompt-free approval for safe cargo-ai calls.",
-  "version": "1.20.0",
+  "version": "1.20.1",
   "author": { "name": "getcargo" },
   "homepage": "https://github.com/getcargohq/cargo-skills",
+  "repository": "https://github.com/getcargohq/cargo-skills",
+  "license": "MIT",
+  "keywords": ["cargo", "gtm", "revenue", "enrichment", "orchestration", "cli"],
   "skills": "./",
   "hooks": "./hooks/codex-hooks.json",
   "interface": {

@@ -1,0 +1,14 @@
+# Paths that are part of this repository but not part of the skill bundle a
+# Codex install should carry. Keeping them out shrinks what an agent loads and
+# what a packager ships.
+
+# Repo tooling and CI — not skill content.
+.github/
+evals/
+
+# Build output from .github/scripts/build-codex-package.mjs.
+dist/
+
+# Local editor / OS noise.
+.DS_Store
+node_modules/
