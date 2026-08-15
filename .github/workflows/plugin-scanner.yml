@@ -1,0 +1,33 @@
+name: plugin-scanner
+
+# Required by hashgraph-online/awesome-ai-plugins for a listing (their
+# `validate-contribution.py` gate checks that this repo runs the scanner on
+# push/pull_request). The action is pinned to a full commit SHA rather than the
+# floating `v1` tag, and the job gets a read-only token with no secrets in
+# scope — the same shape the awesome-ai-plugins maintainers use themselves.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  scan:
+    name: Scan the plugin bundle for security and quality signals
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run HOL AI Plugin Scanner
+        uses: hashgraph-online/ai-plugin-scanner-action@55616c962cf86368423f7673b2ecdfdbe613d1af # v1.2.515
+        with:
+          plugin_dir: "."
+          mode: scan
+          min_score: 80
+          fail_on_severity: high
+          # No `pull-requests: write` above, so the comment would fail anyway.
+          pr_comment: off
