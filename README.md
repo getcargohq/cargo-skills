@@ -230,6 +230,7 @@ Built-in recipes:
 | `account-expansion.md` | Multi-thread existing customer accounts — net-new buyers, deduped against the Contacts model. |
 | `save-as-play.md` | Convert a successful ad-hoc run into a durable scheduled play or cron tool. |
 | `import-gtm-data.md` | Import existing GTM data (CSV/CRM exports) into models, QA-audit it, rebuild recurring logic as plays with a parity check. |
+| `clay-to-cargo.md` | Migrate a Clay table specifically: extract the column configuration rather than the CSV, map every column family to its Cargo action, and prove parity against Clay's own output before switching. |
 
 ### Capabilities
 
