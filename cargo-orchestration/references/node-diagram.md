@@ -1,9 +1,10 @@
-# Diagramming a node graph (Mermaid)
+# Diagramming a node graph
 
 A workflow the user can't see is a workflow they can't approve. A node graph is a
 directed graph with routing, fallbacks, and paid steps in it — prose flattens all
-three. Render it as a Mermaid `flowchart` instead: it costs nothing, and it renders
-in Claude Code, on GitHub, and in the Cargo docs.
+three. Draw it instead: it costs nothing, and the command renders two formats from
+the same graph — ASCII for a terminal, Mermaid for anything that renders Mermaid
+(GitHub, the Cargo docs, a published page). See [The ASCII format](#the-ascii-format-cli--1056).
 
 `cargo-ai orchestration node diagram` does it (**CLI ≥ 1.0.54**; `unknown command`
 means the pin hasn't moved yet — bump per [`../../cargo/SKILL.md`](../../cargo/SKILL.md)
@@ -26,7 +27,8 @@ changed in a sentence instead. A diagram of `start → enrich → end` is ceremo
 
 ```bash
 # An existing workflow, tool, or play (workflowUuid from `tool list` / `play list`)
-cargo-ai orchestration node diagram --workflow-uuid <uuid> --raw
+# --format ascii when SHOWING it to someone; drop it when pasting into a PR or doc
+cargo-ai orchestration node diagram --workflow-uuid <uuid> --format ascii --raw
 
 # The draft you are about to deploy — the plan-gate case
 cargo-ai orchestration node diagram --workflow-uuid <uuid> --draft --raw
@@ -44,13 +46,14 @@ Pass exactly one source: `--nodes` (or `-` to read stdin), `--file <path>`,
 
 | Flag | Effect |
 | --- | --- |
+| `--format ascii\|mermaid` | `ascii` to show it in a terminal, `mermaid` to paste it somewhere that renders it (default). CLI ≥ 1.0.56. |
 | `--title <text>` | Title rendered above the diagram. |
-| `--direction TD\|LR` | Flow direction (default `TD`; `LR` reads better for long linear graphs). |
+| `--direction TD\|LR` | Mermaid flow direction (default `TD`; `LR` reads better for long linear graphs). Ignored by `--format ascii`. |
 | `--paid <slugs>` | Comma-separated node slugs/uuids that bill credits — marked 💳. |
-| `--highlight <slugs>` | Comma-separated slugs/uuids to mark red — the failing node in a trace. |
-| `--raw` | Print the fenced Mermaid block instead of JSON. |
+| `--highlight <slugs>` | Comma-separated slugs/uuids to mark — red in Mermaid, `◀━` in ASCII. The failing node in a trace. |
+| `--raw` | Print the diagram itself instead of JSON: plain text for `ascii`, a fenced block for `mermaid`. |
 
-Without `--raw` it returns `{"diagram": "...", "format": "mermaid", "warnings": [...]}`
+Without `--raw` it returns `{"diagram": "...", "format": "ascii"|"mermaid", "warnings": [...]}`
 like every other command. **Read the `warnings`** — they carry the structural
 problems a tidy drawing would otherwise hide (nodes unreachable from `start`,
 dangling `childrenUuids`) and belong in what you tell the user.
@@ -152,10 +155,81 @@ the credit line scales with the gap, not the segment), the model classifies, and
 the score is deterministic afterwards. That sentence is what the user approves —
 the diagram is what makes it checkable.
 
-## If the surface can't render Mermaid
+## The ASCII format (CLI ≥ 1.0.56)
 
-Some terminals and chat surfaces show the fenced block as text. Keep the fence (it
-stays copy-pasteable into GitHub or the docs) and add a one-line path summary
-beneath it — `start → branch(missing firmographics) → enrich 💳 → merge → agent →
-score → end`. Don't replace the diagram with an ASCII drawing; it wastes context
-and reads worse than the sentence.
+`--format ascii` renders the same graph as a drawing that needs no Mermaid
+renderer. **Pick the format by where the output goes**, not by preference:
+
+| | `--format ascii` | `--format mermaid` (default) |
+| --- | --- | --- |
+| Showing it in a terminal or a chat reply | **yes** | no — the reader sees `n4{"branch"}` |
+| Pasting into a PR body, a doc, a rendered page | no | **yes** |
+| Node shapes, `classDef` colouring, group subgraphs | no | yes |
+| Branch labels, fallback edges, `💳`, warnings | yes | yes |
+
+Mermaid stays the default for compatibility. That default is wrong for most agent
+replies, because most agent output is read in a terminal. On an older CLI that
+rejects `--format`, fall back to the fenced Mermaid block plus a one-line path
+summary — `start → branch(missing firmographics) → enrich 💳 → merge → agent →
+score → end`.
+
+```
+                  start
+                    │
+                Aviato 💳
+           Lookup LinkedIn URL
+                    │
+              LinkedIn URL?
+                    │
+                    ├──────────────┐
+                   yes             no
+                    │              │
+                    │            Agent
+                    │      Find LinkedIn URL
+                    │              │
+                    ├──────────────┘
+                    │
+              Lead Magic 💳
+         Enrich LinkedIn profile
+                    │
+               Apollo.io 💳
+          Find company headcount
+                    │
+                JavaScript
+            ICP fit assessment
+                    │
+                 Tier 1?
+                    │
+         ┌──────────┴─────────┐
+        yes                   no
+         │                    │
+       Slack             Salesforce
+Send to #best-leads     Update record
+```
+
+| Mark | Meaning |
+| --- | --- |
+| centred `│` spine | the main line of the flow |
+| `├───┐` … `├───┘` | a **detour**: a branch whose paths reconverge. The spine continues; the rail leaves and rejoins |
+| `┌───┴───┐` | a **fork**: a branch whose paths never reconverge. Nothing continues past it |
+| `┆` with `on failure` | a `fallbackChildUuid` edge: where the run goes if that step *errors*, as distinct from returning nothing |
+| `💳` | the step bills credits (`--paid`) |
+| `◀━` | the step was named in `--highlight` |
+| `↑ <name>` | a step already drawn above, not repeated |
+
+Each step is two lines: the system it runs on over what it does, both resolved
+from the platform's catalogs, so a step reads `Apollo.io` / `Enrich person`
+rather than `apolloio` / `enrichPerson`. A step keeps its own name where the
+author set one. Branch steps get one line, because the labelled rails leaving them
+already say that they route.
+
+A `group` step draws its own graph in a captioned box, one level down, with
+`--paid` / `--highlight` carried inside; a broken graph in a loop body is
+reported against the loop.
+
+**Width.** Rails stack rightward and each must clear the one below it, so a graph
+branching at nearly every step of a long chain gets wide. A 29-node provider
+waterfall draws at 57 columns; past 120 the command adds a warning pointing at
+`--format mermaid`. It never truncates — a diagram that silently dropped an edge
+would be worse than a wide one. Report that warning rather than pasting a drawing
+that will wrap in the user's terminal.

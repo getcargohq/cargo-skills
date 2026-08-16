@@ -10,6 +10,18 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### `cargo-orchestration` → 1.8.0, `cargo-diagnostics` → 1.3.0 — the ASCII diagram format, and routing "show me the workflow"
+
+CLI 1.0.56 adds `--format ascii` to `node diagram`, so the command now renders a drawing a person can read in a terminal as well as a Mermaid block to paste elsewhere. Two gaps went with it.
+
+- **Format selection.** `references/node-diagram.md` gains a `## The ASCII format` section: a table that picks the format by where the output is going, the legend (detour `├──┐…├──┘` vs fork `┌──┴──┐`, `┆ on failure`, `💳`, `◀━`, `↑`), and the width limit. Its closing section used to say "don't replace the diagram with an ASCII drawing; it wastes context and reads worse than the sentence" — true when the only option was hand-drawing one, wrong now that the CLI emits a real drawing, so it is replaced by the fallback for CLIs older than 1.0.56. The flag table, the JSON shape, and the `Show the graph, don't describe it` callout in `SKILL.md` all carry `--format` now.
+
+- **Routing.** The reference documented the command well, but `cargo-orchestration`'s **description** carried no visualise vocabulary at all, and the description is the only thing an agent reads before deciding whether to load a skill. A session asked to explain a workflow therefore never loaded this skill: it fell back to `workflow list` / `release get-deployed` and reconstructed the routing by hand, which drops every `fallbackChildUuid` hop and describes a workflow that survives a provider outage as one that dies on it. The description now leads with "or show what it would run" and carries `"show me the workflow"`, `"what does this tool do"`, `"visualize this play"`, `"draw the graph"`, `"explain this workflow"`.
+
+- **`cargo-diagnostics`** gains a fourth evidence surface (`node diagram --run-uuid <uuid> --highlight <slug>`) and the rule that a step which looks skipped is often one reached via a fallback edge, which is a different diagnosis with a different fix. Description picks up `"it went down the wrong path"`, `"this step never ran"`, `"show me what the run did"`.
+
+- **Evals.** Six new cases in `evals/routing.jsonl` pin the split: drawing a healthy graph goes to `cargo-orchestration`, drawing a run that broke goes to `cargo-diagnostics`. Core tier 86/86.
+
 ### `cargo` → 1.20.1 (router), `cargo-gtm` → 1.14.1 — clearing the plugin scanner's gate
 
 The listing PR at `hashgraph-online/awesome-ai-plugins#72` requires this repo to run [`hashgraph-online/ai-plugin-scanner-action`](https://github.com/hashgraph-online/ai-plugin-scanner-action) on push and pull request, and their contribution gate re-scans the repo with the same thresholds — `min_score: 80`, `fail_on_severity: high`. The first run scored **71/100** with one critical and one high finding, so the gate was failing on substance rather than on wiring. This is the substance. The bundle now scores **92/100 (A)** with zero critical and zero high findings.

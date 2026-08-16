@@ -1,7 +1,7 @@
 ---
 name: cargo-diagnostics
-description: "Explain what a Cargo run or batch actually did, after the fact — trace one run node by node, sweep a batch or play for errors grouped by root cause, and attribute credit spend down to the node and the provider. Triggers: \"why did this fail\", \"it succeeded but the output is wrong\", \"half my rows are empty\", \"why is this column blank\", \"what broke in this batch\", \"why did that cost so much\", \"which node is burning credits\", \"it worked yesterday\", \"these results look wrong\". Skip when: setting up an alert for next time — use cargo-observability; just downloading the data — use cargo-analytics."
-version: "1.2.0"
+description: "Explain what a Cargo run or batch actually did, after the fact — trace one run node by node, draw the graph it executed with the failing step marked, sweep a batch or play for errors grouped by root cause, and attribute credit spend down to the node and the provider. Triggers: \"why did this fail\", \"it succeeded but the output is wrong\", \"half my rows are empty\", \"why is this column blank\", \"what broke in this batch\", \"why did that cost so much\", \"which node is burning credits\", \"it worked yesterday\", \"these results look wrong\", \"it went down the wrong path\", \"this step never ran\", \"show me what the run did\". Skip when: setting up an alert for next time — use cargo-observability; just downloading the data — use cargo-analytics."
+version: "1.3.0"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -67,13 +67,21 @@ Rule of thumb: start with the **sweep** when you don't yet know which run to loo
 | [`references/batch-error-sweep.md`](references/batch-error-sweep.md) | Find errored runs across a batch/play/workspace, group failures by root cause, pick exemplars, decide fix vs report. |
 | [`references/play-optimize-credits.md`](references/play-optimize-credits.md) | Attribute credit spend to workflows and nodes, then apply the cost levers in priority order. |
 
-## The three surfaces every runbook draws on
+## The surfaces every runbook draws on
 
 | Surface | Command | Gives you |
 | --- | --- | --- |
 | Run detail | `cargo-ai orchestration run get <run-uuid>` | `run.executions[]` (node-by-node trace), `runContext` (per-node output keyed by `nodeSlug`), `runComputedConfigs` (what each node was actually called with) |
 | Orchestration SQL | `cargo-ai orchestration query execute "<sql>"` | Aggregates over `runs`, `batches`, `spans`, `records` (ClickHouse; no schema prefix; workspace-scoped) |
 | Billing metrics | `cargo-ai billing usage get-metrics --from <date> --to <date>` | Credit totals, filterable and groupable by `workflow_uuid`, `connector_uuid`, `agent_uuid`, `integration_slug`, `model_uuid` |
+| Graph picture | `cargo-ai orchestration node diagram --run-uuid <uuid> --highlight <slug> --format ascii --raw` | The graph the run executed, with the failing node marked. Free, runs nothing |
+
+**Draw the graph before explaining a routing bug.** For "it took the wrong branch"
+or "this step never ran", the picture is the evidence, and it shows one thing
+`run get` does not make obvious: the `on failure` edges. A step that looks skipped
+is often one the run *reached* via a `fallbackChildUuid` edge, which means the
+provider errored rather than returning nothing — a different diagnosis with a
+different fix. Flags and the ASCII legend: [`../cargo-orchestration/references/node-diagram.md`](../cargo-orchestration/references/node-diagram.md).
 
 Full query syntax, table columns, and caps: [`../cargo-orchestration/references/examples/queries.md`](../cargo-orchestration/references/examples/queries.md). Debugging field semantics: [`../cargo-orchestration/references/troubleshooting.md`](../cargo-orchestration/references/troubleshooting.md).
 
