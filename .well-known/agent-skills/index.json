@@ -1,0 +1,12 @@
+{
+  "$schema": "https://schemas.agentskills.io/discovery/0.2.0/schema.json",
+  "skills": [
+    {
+      "name": "cargo-install",
+      "type": "skill-md",
+      "description": "Install the Cargo skill bundle and sign in, so the full set of Cargo capabilities becomes available. Use when someone reaches Cargo by its domain rather than by its repository, when a Cargo command is wanted but `cargo-ai` is not installed, or when a Cargo skill is referenced and not present. Triggers, \"set up Cargo\", \"install Cargo\", \"I want to use Cargo\", \"cargo-ai is not found\". Skip when the bundle is already installed, in which case load the `cargo` router instead.",
+      "url": "cargo-install/skill.md",
+      "digest": "sha256:6a9b0d14ac093ebea2e4d12bc68f55e2b5b51eec5b7d690c14899aa3024649bd"
+    }
+  ]
+}

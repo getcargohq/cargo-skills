@@ -60,6 +60,15 @@ jobs:
       - name: Run the skill-load detector's self-test
         run: bash hooks/skill-loads.sh --self-test
 
+      # The well-known index declares a sha256 per skill and the skills CLI
+      # verifies it, returning no skill rather than an error when it does not
+      # match. So a stale index does not break loudly, it makes
+      # `npx skills add getcargo.ai` install nothing at all. Verified both ways
+      # against the real CLI: correct digest installs, corrupted digest fails
+      # with zero files written.
+      - name: Check the well-known index matches its skills
+        run: node .github/scripts/build-well-known.mjs --check
+
   routing-evals:
     name: Route prompts to the right skill
     runs-on: ubuntu-latest
