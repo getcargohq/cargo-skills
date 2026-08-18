@@ -2,7 +2,7 @@
   {
     "slug": "account-scoring",
     "kind": "outcome",
-    "outcome": "Every account scored and tiered against your written ICP by an agent that cites its evidence, with the rationale on the CRM record",
+    "outcome": "Score how well each account fits your ICP — judged by an agent against the ICP written in your context repo, not by point weights in code. Edit the ICP markdown, and accounts re-score against it as they come due.",
     "state": "to-be-approved",
     "chain": 1,
     "requires": [
@@ -109,7 +109,7 @@
     "kind": "foundation",
     "outcome": "The CRM slot. A foundation cookbook, like `base-gtm`: it defines no motion of its own, it gives the CRM-dependent cookbooks something to write to.",
     "state": "n/a",
-    "chain": null,
+    "chain": 0,
     "requires": [
       "base-gtm"
     ],
@@ -258,7 +258,7 @@
   {
     "slug": "tam-building",
     "kind": "outcome",
-    "outcome": "Your account universe built from a Sales Navigator company search, split past the 1,000 extraction cap and resolved to real domains",
+    "outcome": "Build your account universe from a Sales Navigator company search, even when the natural search returns far more than the extraction cap.",
     "state": "to-be-approved",
     "chain": 2,
     "requires": [

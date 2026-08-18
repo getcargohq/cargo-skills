@@ -28,7 +28,7 @@ comments as the interview.
 
 | Cookbook | Outcome | Requires | Skill | State |
 | --- | --- | --- | --- | --- |
-| `account-scoring` | Every account scored and tiered against your written ICP by an agent that cites its evidence, with the rationale on the CRM record | `base-gtm`, `crm-sync`, `gtm-knowledge-graph` | yes | to-be-approved |
+| `account-scoring` | Score how well each account fits your ICP — judged by an agent against the ICP written in your context repo, not by point weights in code. Edit the ICP markdown, and accounts re-score against it as they come due. | `base-gtm`, `crm-sync`, `gtm-knowledge-graph` | yes | to-be-approved |
 | `ai-sdr` | Go from an account to a sent first-touch — written by AI, enrolled into an Email Bison campaign. This is the "put it all together" cookbook. | `contact-sourcing`, `research-agent` | — | to-be-approved |
 | `auto-enrichment` | Keep your accounts and contacts filled in automatically. Every night, records missing key fields get re-enriched — without overwriting anything a human typed. | `base-gtm`, `crm-sync` | — | to-be-approved |
 | `closed-won-multiplier` | Turn every won deal into net-new lookalike accounts. | `base-gtm`, `pipeline-health` | — | to-be-approved |
@@ -45,7 +45,7 @@ comments as the interview.
 | `research-agent` | Turn an account into an AE-ready brief, grounded in your own GTM knowledge. | `base-gtm`, `gtm-knowledge-graph` | — | to-be-approved |
 | `routing-engine` | Define your sales territories and rep capacity as code, and automatically assign accounts to the right territory — on arrival and re-checked weekly. | `base-gtm`, `crm-sync` | — | to-be-approved |
 | `signal-based-tam` | Watch your whole account list for buying signals, and automatically reach out the moment a high-intent one fires. | `base-gtm` | — | to-be-approved |
-| `tam-building` | Your account universe built from a Sales Navigator company search, split past the 1,000 extraction cap and resolved to real domains | `base-gtm` | yes | to-be-approved |
+| `tam-building` | Build your account universe from a Sales Navigator company search, even when the natural search returns far more than the extraction cap. | `base-gtm` | yes | to-be-approved |
 
 ## Foundations
 

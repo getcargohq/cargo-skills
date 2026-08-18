@@ -47,32 +47,6 @@ interface Cookbook {
   variations: Variation[];
 }
 
-/**
- * Minimal frontmatter reader: only the scalar keys the menu needs. A cookbook's
- * frontmatter is validated as real YAML in its own repo (check-cookbooks.mjs),
- * so by the time it reaches here the shape is known and a full parser would be
- * a dependency for four fields.
- */
-function readFrontmatter(text: string): Record<string, string> | undefined {
-  if (!text.startsWith("---\n")) return undefined;
-  const end = text.indexOf("\n---", 3);
-  if (end === -1) return undefined;
-  const out: Record<string, string> = {};
-  for (const line of text.slice(4, end).split("\n")) {
-    const m = line.match(/^([a-zA-Z_]+):\s*(.*)$/);
-    if (!m) continue;
-    let v = m[2].trim();
-    if (
-      (v.startsWith('"') && v.endsWith('"')) ||
-      (v.startsWith("'") && v.endsWith("'"))
-    ) {
-      v = v.slice(1, -1).replace(/''/g, "'").replace(/\\"/g, '"');
-    }
-    out[m[1]] = v;
-  }
-  return out;
-}
-
 /** The variations table under `## What you can change`: id, when, cost. */
 function readVariations(body: string): Variation[] {
   const start = body.indexOf("\n## What you can change");
@@ -80,9 +54,7 @@ function readVariations(body: string): Variation[] {
   const rest = body.slice(start + 1);
   const next = rest.indexOf("\n## ", 1);
   const section = next === -1 ? rest : rest.slice(0, next);
-  const rows = section
-    .split("\n")
-    .filter((l) => l.startsWith("| `"));
+  const rows = section.split("\n").filter((l) => l.startsWith("| `"));
   return rows.map((row) => {
     const cells = row
       .split("|")
@@ -97,7 +69,10 @@ function readVariations(body: string): Variation[] {
 }
 
 async function refresh(): Promise<Cookbook[]> {
-  const local = resolve(repoRoot, process.env.CARGO_COOKBOOKS_ROOT ?? "../cargo-cookbooks");
+  const local = resolve(
+    repoRoot,
+    process.env.CARGO_COOKBOOKS_ROOT ?? "../cargo-cookbooks",
+  );
   const fromDisk = existsSync(join(local, "cargo.scaffold.json"));
 
   const read = async (path: string): Promise<string | null> => {
@@ -105,66 +80,52 @@ async function refresh(): Promise<Cookbook[]> {
       const p = join(local, path);
       return existsSync(p) ? readFileSync(p, "utf8") : null;
     }
-    const res = await fetch(`https://raw.githubusercontent.com/${REPO}/main/${path}`);
+    const res = await fetch(
+      `https://raw.githubusercontent.com/${REPO}/main/${path}`,
+    );
     return res.ok ? await res.text() : null;
   };
 
   console.log(fromDisk ? `reading ${local}` : `fetching ${REPO}@main`);
   const scaffold = JSON.parse((await read("cargo.scaffold.json"))!);
-  const folders: Record<string, { requires: string[]; kind: "outcome" | "foundation" }> =
-    scaffold.folders ?? {};
+  const folders: Record<
+    string,
+    {
+      requires: string[];
+      kind: "outcome" | "foundation";
+      state?: string;
+      chain?: number | null;
+    }
+  > = scaffold.folders ?? {};
+
+  // The one-line role of any cookbook is its README's first paragraph. That
+  // holds for foundations, unconverted outcomes and converted ones alike, so
+  // the menu never depends on the customer-facing SKILL.md carrying a Cargo
+  // field. SKILL.md contributes only the variations table.
+  const firstParagraph = async (slug: string): Promise<string> => {
+    const readme = (await read(`${slug}/README.md`)) ?? "";
+    const para =
+      readme.split("\n\n").find((p) => p && !p.startsWith("#")) ?? "";
+    return para.replace(/\s+/g, " ").trim();
+  };
 
   const out: Cookbook[] = [];
   for (const slug of Object.keys(folders)) {
     const entry = folders[slug];
-    if (entry.kind === "foundation") {
-      // Foundations carry no skill by design; their one-line role comes from
-      // the README's first heading paragraph, which is stable prose.
-      const readme = (await read(`${slug}/README.md`)) ?? "";
-      const firstPara = readme.split("\n\n").find((p) => p && !p.startsWith("#")) ?? "";
-      out.push({
-        slug,
-        kind: "foundation",
-        outcome: firstPara.replace(/\s+/g, " ").trim(),
-        state: "n/a",
-        chain: null,
-        requires: entry.requires ?? [],
-        hasSkill: false,
-        variations: [],
-      });
-      continue;
-    }
-    const skill = await read(`${slug}/SKILL.md`);
-    const fm = skill ? readFrontmatter(skill) : undefined;
-    if (!skill || !fm) {
-      // An outcome with no SKILL.md is not in the skill layer yet, but the code
-      // exists and `cdk init --from` / `manifest add` scaffold it today. Hiding
-      // it would send the agent off to author from scratch something already
-      // written; list it, say there is no skill, and let the README carry it.
-      const readme = (await read(`${slug}/README.md`)) ?? "";
-      const firstPara = readme.split("\n\n").find((p) => p && !p.startsWith("#")) ?? "";
-      out.push({
-        slug,
-        kind: "outcome",
-        outcome: firstPara.replace(/\s+/g, " ").trim(),
-        state: "to-be-approved",
-        chain: null,
-        requires: entry.requires ?? [],
-        hasSkill: false,
-        variations: [],
-      });
-      continue;
-    }
-    const bodyStart = skill.indexOf("\n---", 3) + 4;
+    const skill =
+      entry.kind === "outcome" ? await read(`${slug}/SKILL.md`) : null;
     out.push({
       slug,
-      kind: "outcome",
-      outcome: fm.outcome ?? "",
-      state: fm.state ?? "to-be-approved",
-      chain: fm.chain === undefined || fm.chain === "null" ? null : Number(fm.chain),
+      kind: entry.kind,
+      outcome: await firstParagraph(slug),
+      state:
+        entry.kind === "foundation" ? "n/a" : (entry.state ?? "to-be-approved"),
+      chain: entry.chain ?? null,
       requires: entry.requires ?? [],
-      hasSkill: true,
-      variations: readVariations(skill.slice(bodyStart)),
+      hasSkill: skill !== null,
+      variations: skill
+        ? readVariations(skill.slice(skill.indexOf("\n---", 3) + 4))
+        : [],
     });
   }
   return out.sort((a, b) => a.slug.localeCompare(b.slug));
@@ -207,10 +168,18 @@ function render(books: Cookbook[]): string {
   L.push("");
   L.push("## Outcomes");
   L.push("");
-  L.push("Every row scaffolds today. **Skill: yes** means an installable skill carries the");
-  L.push("adaptation contract (what you will be asked, what you can change, what should not");
-  L.push("change, done when). **Skill: —** means the code and README exist but nobody has");
-  L.push("written the skill yet: scaffold it, read its README, and treat the `PLACEHOLDER`");
+  L.push(
+    "Every row scaffolds today. **Skill: yes** means an installable skill carries the",
+  );
+  L.push(
+    "adaptation contract (what you will be asked, what you can change, what should not",
+  );
+  L.push(
+    "change, done when). **Skill: —** means the code and README exist but nobody has",
+  );
+  L.push(
+    "written the skill yet: scaffold it, read its README, and treat the `PLACEHOLDER`",
+  );
   L.push("comments as the interview.");
   L.push("");
   L.push("| Cookbook | Outcome | Requires | Skill | State |");
