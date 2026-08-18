@@ -17,8 +17,9 @@
  *
  *   node .github/scripts/sync-cookbooks.ts            # regenerate the reference
  *   node .github/scripts/sync-cookbooks.ts --check    # CI: fail if stale
- *   node .github/scripts/sync-cookbooks.ts --refresh  # re-pull from ../gtm-skills,
- *                                                       or GitHub if it is absent
+ *   node .github/scripts/sync-cookbooks.ts --refresh  # re-pull from ../gtm-skills
+ *                                                       (or GTM_SKILLS_ROOT, a dir or the
+ *                                                       catalog file), else GitHub
  *
  * Requires Node >= 22.18 (run as .ts via native type-stripping).
  */
@@ -45,7 +46,10 @@ interface Cookbook {
 }
 
 async function refresh(): Promise<Cookbook[]> {
-  const local = resolve(repoRoot, process.env.GTM_SKILLS_ROOT ?? "../gtm-skills/catalog.json");
+  // GTM_SKILLS_ROOT may name the sibling checkout (a directory) or the
+  // catalog file itself; either resolves to the file.
+  const configured = resolve(repoRoot, process.env.GTM_SKILLS_ROOT ?? "../gtm-skills");
+  const local = configured.endsWith(".json") ? configured : join(configured, "catalog.json");
   let raw: string;
   if (existsSync(local)) {
     console.log(`reading ${local}`);
