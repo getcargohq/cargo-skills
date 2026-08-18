@@ -282,11 +282,12 @@ function render(books: Cookbook[]): string {
     "`cargo.state.json` survives — so the next plan diffs a live workspace against code",
   );
   L.push(
-    "nobody wrote. Adding a cookbook to an existing project means scaffolding to a temp",
+    "nobody wrote. Into an existing project use `cargo-ai manifest add <slug>` (`--dir .`",
   );
   L.push(
-    "directory and copying across only the folders that are not already there.",
+    "for a plain CDK project; the default is `infra/`): copy-in, existing files kept,",
   );
+  L.push("every installed file recorded in `manifest.json` with its hash.");
   L.push("");
   return L.join("\n");
 }

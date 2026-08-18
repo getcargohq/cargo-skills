@@ -86,5 +86,6 @@ from the recipes in `../SKILL.md`.
 **Never `cargo-ai cdk init --force` into a directory that is not empty.** It replaces
 the project's `package.json` and reverts any adapted cookbook code, while
 `cargo.state.json` survives — so the next plan diffs a live workspace against code
-nobody wrote. Adding a cookbook to an existing project means scaffolding to a temp
-directory and copying across only the folders that are not already there.
+nobody wrote. Into an existing project use `cargo-ai manifest add <slug>` (`--dir .`
+for a plain CDK project; the default is `infra/`): copy-in, existing files kept,
+every installed file recorded in `manifest.json` with its hash.
