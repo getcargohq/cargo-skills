@@ -55,8 +55,8 @@ jobs:
       - name: Check integration/provider names in descriptions are in sync
         run: node .github/scripts/sync-trigger-slugs.ts --check
 
-      - name: Cookbook menu is in sync with its snapshot
-        run: node .github/scripts/sync-cookbooks.ts --check
+      - name: CDK-example menu is in sync with its snapshot
+        run: node .github/scripts/sync-cdk-examples.ts --check
 
       # The session hooks write this marker into every Cargo session row, so a
       # regression here corrupts telemetry silently rather than failing loudly.

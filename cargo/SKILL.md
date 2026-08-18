@@ -575,7 +575,7 @@ against the workspace) → author `define*` files → `cdk plan` (offline diff) 
 inbound flow, contact sourcing, account scoring, AI SDR, …) live in
 [`getcargohq/gtm-skills`](https://github.com/getcargohq/gtm-skills) beside its run-once
 skills. The menu is local:
-[`../cargo-cdk/references/cookbooks.md`](../cargo-cdk/references/cookbooks.md).
+[`../cargo-cdk/references/cdk-examples.md`](../cargo-cdk/references/cdk-examples.md).
 Check it before authoring a common GTM outcome from scratch.
 
 **The routing question is one-off versus standing.** "Build our TAM" is `cargo-gtm`

@@ -1,6 +1,6 @@
 ---
 name: cargo-cdk
-description: "Manage a whole Cargo workspace as code — declare connectors, models, plays, tools, agents, MCP servers, segments, context, folders, files, workers, and apps in TypeScript, then reconcile them with `cargo-ai cdk` (init → types → plan → deploy), the way you would run Pulumi or the AWS CDK. Triggers: \"as code\", \"in git\", \"version-controlled\", \"reproducible\", \"Terraform for Cargo\", \"set up a whole workspace\", \"staging and production\", \"deploy from CI\", \"review this in a PR\", \"cargo.state.json\", \"scaffold from a template\", \"is there a skill that already builds this\", \"start from a worked example\". Skills with a CDK example (TAM building, account scoring, contact sourcing, routing, AI SDR, rep cockpit) live in gtm-skills; menu in references/cookbooks.md. Skip when: it is a one-off operation, a read, or an ad-hoc query — use the matching capability skill."
+description: "Manage a whole Cargo workspace as code — declare connectors, models, plays, tools, agents, MCP servers, segments, context, folders, files, workers, and apps in TypeScript, then reconcile them with `cargo-ai cdk` (init → types → plan → deploy), the way you would run Pulumi or the AWS CDK. Triggers: \"as code\", \"in git\", \"version-controlled\", \"reproducible\", \"Terraform for Cargo\", \"set up a whole workspace\", \"staging and production\", \"deploy from CI\", \"review this in a PR\", \"cargo.state.json\", \"scaffold from a template\", \"is there a skill that already builds this\", \"start from a worked example\". Skills with a CDK example (TAM building, account scoring, contact sourcing, routing, AI SDR, rep cockpit) live in gtm-skills; menu in references/cdk-examples.md. Skip when: it is a one-off operation, a read, or an ad-hoc query — use the matching capability skill."
 version: "1.2.2"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
@@ -138,7 +138,7 @@ state) · `cargo-ai cdk rollback` (restore the pre-deploy state snapshot).
 | A field/spec/output for a specific builder | [`references/resources.md`](references/resources.md) | Every builder → spec fields → which ref each takes → outputs. |
 | Exact command flags | [`references/commands.md`](references/commands.md) | Every `cargo-ai cdk` subcommand and its flags. |
 | A deploy error / footgun | [`references/troubleshooting.md`](references/troubleshooting.md) | The known failure modes and fixes. |
-| A known GTM outcome, before authoring one | [`references/cookbooks.md`](references/cookbooks.md) | The menu of gtm-skills that carry a CDK example, and the adaptations each supports. |
+| A known GTM outcome, before authoring one | [`references/cdk-examples.md`](references/cdk-examples.md) | The menu of gtm-skills that carry a CDK example, and the adaptations each supports. |
 
 ### Skills that carry a CDK example — check the menu before authoring a known outcome from scratch
 
@@ -148,7 +148,7 @@ pipeline that keeps producing the result (TAM building, account scoring, contact
 sourcing, routing engine, AI SDR, rep cockpit, …). Every folder is self-contained: its
 own models, connectors and folders, no shared foundation, no requires graph.
 
-**The menu is local: [`references/cookbooks.md`](references/cookbooks.md).** Read it
+**The menu is local: [`references/cdk-examples.md`](references/cdk-examples.md).** Read it
 before authoring a common GTM outcome from scratch. It is generated from gtm-skills'
 `catalog.json`, so it cannot drift.
 
