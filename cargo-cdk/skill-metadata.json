@@ -54,6 +54,11 @@
       "title": "Command reference — `cargo-ai cdk`"
     },
     {
+      "path": "references/cookbooks.md",
+      "kind": "reference",
+      "title": "Cookbooks — the menu, before you author from scratch"
+    },
+    {
       "path": "references/examples/full-workspace.md",
       "kind": "example",
       "title": "Example: a full GTM workspace end-to-end"
@@ -69,5 +74,5 @@
       "title": "Troubleshooting"
     }
   ],
-  "contentHash": "9d057812d45d3b948e546d790da0f630f10c55c7c97bb5fd176e80ff80ac01e2"
+  "contentHash": "522a6a4b22e28993a524e4a9a6bf541d3f663ecb9403f20ec642bc63400b605b"
 }
