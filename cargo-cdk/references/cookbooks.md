@@ -23,30 +23,6 @@ cargo-ai cdk init <dir> --template blank      # only if there is no CDK project 
 | `account-scoring` | Keep every account scored and tiered against your written ICP by a deployed agent that re-scores as accounts arrive and as the ICP changes, writing the rationale back to the CRM. | to-be-approved |
 | `tam-building` | Stand up your account universe as a deployed pipeline: a Sales Navigator company search split past the 1,000 extraction cap, resolved to real domains, deduped into a shared accounts model. | to-be-approved |
 
-## Example code, no skill yet
-
-The folder and its README exist and can be copied in the same way; nobody has written the
-skill that carries the contract. Treat the `PLACEHOLDER` comments as the interview.
-
-| Folder | Deploys |
-| --- | --- |
-| `ai-sdr` | Go from an account to a sent first-touch — written by AI, enrolled into an Email Bison campaign. This is the "put it all together" skill. |
-| `auto-enrichment` | Keep your accounts and contacts filled in automatically. Every night, records missing key fields get re-enriched — without overwriting anything a human typed. |
-| `closed-won-multiplier` | Turn every won deal into net-new lookalike accounts. |
-| `contact-sourcing` | For every account you care about, find the right people, verify their emails, and add them to your CRM — all on Cargo credits, no extra provider keys. |
-| `crm-button` | Run a Cargo tool from any CRM record, with one click. |
-| `gtm-knowledge-graph` | Your go-to-market knowledge — ICP, positioning, personas, plays — written as versioned markdown that agents can read and answer questions from. |
-| `inbound-flow` | Turn every form or demo request into a verified, enriched CRM contact — then qualify it, alert the team on hot ones, and define who owns what. |
-| `list-building` | Build contact lists from Sales Navigator people searches, using the same recursive split as TAM building, with a higher ceiling. |
-| `mcp-copilot` | Expose your GTM stack to any AI assistant as tools, behind a single MCP endpoint. |
-| `meeting-prep` | A briefing card before every intro call, in Slack, unattended. |
-| `pipeline-health` | An agent that reads your open deals and surfaces the at-risk ones, each with the fix attached. |
-| `plg-motion` | Spot product-qualified workspaces from usage data, and route them to the right territory for a human to approve — once per workspace, with the usage context attached. |
-| `rep-cockpit` | One screen per rep: their routed, scored accounts with the AI outreach draft and a "next action" box that writes straight back to the workspace. This is the surface on top of everything the other skills computed. |
-| `research-agent` | Turn an account into an AE-ready brief, grounded in your own GTM knowledge. |
-| `routing-engine` | Define your sales territories and rep capacity as code, and automatically assign accounts to the right territory — on arrival and re-checked weekly. |
-| `signal-based-tam` | Watch your whole account list for buying signals, and automatically reach out the moment a high-intent one fires. |
-
 ## When one does not fit as written
 
 Declared adaptations, not forks. Reach for one before concluding a skill is the wrong start.
