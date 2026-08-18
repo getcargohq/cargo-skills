@@ -22,7 +22,7 @@
  *
  * Requires Node >= 22.18 (run as .ts via native type-stripping).
  */
-import { readFileSync, writeFileSync, existsSync, readdirSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -47,11 +47,57 @@ interface Cookbook {
   variations: Variation[];
 }
 
+/**
+ * Minimal frontmatter reader: only the scalar keys the menu needs. A cookbook's
+ * frontmatter is validated as real YAML in its own repo (check-cookbooks.mjs),
+ * so by the time it reaches here the shape is known and a full parser would be
+ * a dependency for four fields.
+ */
+function readFrontmatter(text: string): Record<string, string> | undefined {
+  if (!text.startsWith("---\n")) return undefined;
+  const end = text.indexOf("\n---", 3);
+  if (end === -1) return undefined;
+  const out: Record<string, string> = {};
+  for (const line of text.slice(4, end).split("\n")) {
+    const m = line.match(/^([a-zA-Z_]+):\s*(.*)$/);
+    if (!m) continue;
+    let v = m[2].trim();
+    if (
+      (v.startsWith('"') && v.endsWith('"')) ||
+      (v.startsWith("'") && v.endsWith("'"))
+    ) {
+      v = v.slice(1, -1).replace(/''/g, "'").replace(/\\"/g, '"');
+    }
+    out[m[1]] = v;
+  }
+  return out;
+}
+
+/** The variations table under `## What you can change`: id, when, cost. */
+function readVariations(body: string): Variation[] {
+  const start = body.indexOf("\n## What you can change");
+  if (start === -1) return [];
+  const rest = body.slice(start + 1);
+  const next = rest.indexOf("\n## ", 1);
+  const section = next === -1 ? rest : rest.slice(0, next);
+  const rows = section
+    .split("\n")
+    .filter((l) => l.startsWith("| `"));
+  return rows.map((row) => {
+    const cells = row
+      .split("|")
+      .slice(1, -1)
+      .map((c) => c.trim());
+    return {
+      id: cells[0].replace(/`/g, ""),
+      when: cells[1] ?? "",
+      trade: cells[3] ?? cells[2] ?? "",
+    };
+  });
+}
+
 async function refresh(): Promise<Cookbook[]> {
-  const local = resolve(
-    repoRoot,
-    process.env.CARGO_COOKBOOKS_ROOT ?? "../cargo-cookbooks",
-  );
+  const local = resolve(repoRoot, process.env.CARGO_COOKBOOKS_ROOT ?? "../cargo-cookbooks");
   const fromDisk = existsSync(join(local, "cargo.scaffold.json"));
 
   const read = async (path: string): Promise<string | null> => {
@@ -59,37 +105,51 @@ async function refresh(): Promise<Cookbook[]> {
       const p = join(local, path);
       return existsSync(p) ? readFileSync(p, "utf8") : null;
     }
-    const res = await fetch(
-      `https://raw.githubusercontent.com/${REPO}/main/${path}`,
-    );
+    const res = await fetch(`https://raw.githubusercontent.com/${REPO}/main/${path}`);
     return res.ok ? await res.text() : null;
   };
 
   console.log(fromDisk ? `reading ${local}` : `fetching ${REPO}@main`);
   const scaffold = JSON.parse((await read("cargo.scaffold.json"))!);
-  const folders: Record<string, { requires: string[] }> =
+  const folders: Record<string, { requires: string[]; kind: "outcome" | "foundation" }> =
     scaffold.folders ?? {};
 
   const out: Cookbook[] = [];
   for (const slug of Object.keys(folders)) {
-    const raw = await read(`${slug}/cookbook.json`);
-    // A folder with no cookbook.json is not yet in the skill layer. It stays
-    // out of the menu rather than appearing as an outcome with nothing behind it.
-    if (!raw) continue;
-    const book = JSON.parse(raw);
+    const entry = folders[slug];
+    if (entry.kind === "foundation") {
+      // Foundations carry no skill by design; their one-line role comes from
+      // the README's first heading paragraph, which is stable prose.
+      const readme = (await read(`${slug}/README.md`)) ?? "";
+      const firstPara = readme.split("\n\n").find((p) => p && !p.startsWith("#")) ?? "";
+      out.push({
+        slug,
+        kind: "foundation",
+        outcome: firstPara.replace(/\s+/g, " ").trim(),
+        state: "n/a",
+        chain: null,
+        requires: entry.requires ?? [],
+        hasSkill: false,
+        variations: [],
+      });
+      continue;
+    }
+    const skill = await read(`${slug}/SKILL.md`);
+    // An outcome with no SKILL.md is not yet in the skill layer. It stays out
+    // of the menu rather than appearing as an outcome with nothing behind it.
+    if (!skill) continue;
+    const fm = readFrontmatter(skill);
+    if (!fm) continue;
+    const bodyStart = skill.indexOf("\n---", 3) + 4;
     out.push({
       slug,
-      kind: book.kind,
-      outcome: book.outcome,
-      state: book.state,
-      chain: book.chain ?? null,
-      requires: folders[slug].requires ?? [],
-      hasSkill: (await read(`${slug}/SKILL.md`)) !== null,
-      variations: (book.variations ?? []).map((v: Variation) => ({
-        id: v.id,
-        when: v.when,
-        trade: v.trade,
-      })),
+      kind: "outcome",
+      outcome: fm.outcome ?? "",
+      state: fm.state ?? "to-be-approved",
+      chain: fm.chain === undefined || fm.chain === "null" ? null : Number(fm.chain),
+      requires: entry.requires ?? [],
+      hasSkill: true,
+      variations: readVariations(skill.slice(bodyStart)),
     });
   }
   return out.sort((a, b) => a.slug.localeCompare(b.slug));
@@ -115,18 +175,19 @@ function render(books: Cookbook[]): string {
     "**The code in a cookbook is a worked example, not a template to fill in.** Each one",
   );
   L.push(
-    "declares, in its `cookbook.json`, what may be reshaped (`variations`), what must hold",
+    "declares, in its `SKILL.md`, what may be reshaped, what must hold or it stops working,",
   );
   L.push(
-    "or it stops working (`invariants`), and what has to be answered either way (`inputs`).",
+    "and what has to be answered either way. The agent installing it adapts it and records why.",
   );
   L.push("");
   L.push("```sh");
   L.push("# an agent installs the skill and does the adapting");
   L.push(`npx skills add ${REPO} --all`);
   L.push("");
-  L.push("# or scaffold the code by hand");
+  L.push("# or by hand: into an empty directory, or into an existing project");
   L.push(`cargo-ai cdk init <dir> --from ${REPO}/<slug>`);
+  L.push("cargo-ai manifest add <slug> --dir .");
   L.push("```");
   L.push("");
   L.push("## Outcomes");

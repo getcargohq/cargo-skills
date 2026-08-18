@@ -6,15 +6,16 @@ Composable folders of pre-written `define*` resources in [`getcargohq/cargo-cook
 one per GTM outcome, all built on a shared `base-gtm` foundation.
 
 **The code in a cookbook is a worked example, not a template to fill in.** Each one
-declares, in its `cookbook.json`, what may be reshaped (`variations`), what must hold
-or it stops working (`invariants`), and what has to be answered either way (`inputs`).
+declares, in its `SKILL.md`, what may be reshaped, what must hold or it stops working,
+and what has to be answered either way. The agent installing it adapts it and records why.
 
 ```sh
 # an agent installs the skill and does the adapting
 npx skills add getcargohq/cargo-cookbooks --all
 
-# or scaffold the code by hand
+# or by hand: into an empty directory, or into an existing project
 cargo-ai cdk init <dir> --from getcargohq/cargo-cookbooks/<slug>
+cargo-ai manifest add <slug> --dir .
 ```
 
 ## Outcomes
@@ -30,8 +31,8 @@ Slots the outcomes build on. They define no motion of their own and carry no ski
 
 | Cookbook | What it is | Requires |
 | --- | --- | --- |
-| `base-gtm` | The shared accounts/contacts schema and credit-based connectors every other cookbook imports by handle | — |
-| `crm-sync` | The CRM slot: the one connector the CRM-dependent cookbooks read from and write back to | `base-gtm` |
+| `base-gtm` | The shared foundation every other cookbook builds on. It is not a use case on its own: it defines the pieces the other cookbooks reuse, so they stack together instead of clashing. | — |
+| `crm-sync` | The CRM slot. A foundation cookbook, like `base-gtm`: it defines no motion of its own, it gives the CRM-dependent cookbooks something to write to. | `base-gtm` |
 
 ## When a cookbook does not fit as written
 

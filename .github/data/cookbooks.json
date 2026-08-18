@@ -5,7 +5,11 @@
     "outcome": "Every account scored and tiered against your written ICP by an agent that cites its evidence, with the rationale on the CRM record",
     "state": "to-be-approved",
     "chain": 1,
-    "requires": ["base-gtm", "crm-sync", "gtm-knowledge-graph"],
+    "requires": [
+      "base-gtm",
+      "crm-sync",
+      "gtm-knowledge-graph"
+    ],
     "hasSkill": true,
     "variations": [
       {
@@ -28,8 +32,8 @@
   {
     "slug": "base-gtm",
     "kind": "foundation",
-    "outcome": "The shared accounts/contacts schema and credit-based connectors every other cookbook imports by handle",
-    "state": "to-be-approved",
+    "outcome": "The shared foundation every other cookbook builds on. It is not a use case on its own: it defines the pieces the other cookbooks reuse, so they stack together instead of clashing.",
+    "state": "n/a",
     "chain": null,
     "requires": [],
     "hasSkill": false,
@@ -38,23 +42,14 @@
   {
     "slug": "crm-sync",
     "kind": "foundation",
-    "outcome": "The CRM slot: the one connector the CRM-dependent cookbooks read from and write back to",
-    "state": "to-be-approved",
-    "chain": 0,
-    "requires": ["base-gtm"],
+    "outcome": "The CRM slot. A foundation cookbook, like `base-gtm`: it defines no motion of its own, it gives the CRM-dependent cookbooks something to write to.",
+    "state": "n/a",
+    "chain": null,
+    "requires": [
+      "base-gtm"
+    ],
     "hasSkill": false,
-    "variations": [
-      {
-        "id": "other-crm",
-        "when": "Your accounts live in Salesforce or Attio rather than HubSpot",
-        "trade": "None structurally. Action slugs and field names differ per provider, so any write-back column names need rechecking"
-      },
-      {
-        "id": "crm-sourced-models",
-        "when": "Your accounts and contacts already live in the CRM and should be sourced from it rather than filled by a sourcing cookbook",
-        "trade": "base-gtm stops deploying zero-config: a fresh workspace now needs the CRM credential before anything runs"
-      }
-    ]
+    "variations": []
   },
   {
     "slug": "tam-building",
@@ -62,7 +57,9 @@
     "outcome": "Your account universe built from a Sales Navigator company search, split past the 1,000 extraction cap and resolved to real domains",
     "state": "to-be-approved",
     "chain": 2,
-    "requires": ["base-gtm"],
+    "requires": [
+      "base-gtm"
+    ],
     "hasSkill": true,
     "variations": [
       {

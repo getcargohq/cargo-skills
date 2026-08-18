@@ -1,6 +1,6 @@
 ---
 name: cargo-cdk
-description: "Manage a whole Cargo workspace as code — declare connectors, models, plays, tools, agents, MCP servers, segments, context, folders, files, workers, and apps in TypeScript, then reconcile them with `cargo-ai cdk` (init → types → plan → deploy), the way you would run Pulumi or the AWS CDK. Triggers: \"as code\", \"in git\", \"version-controlled\", \"reproducible\", \"Terraform for Cargo\", \"set up a whole workspace\", \"staging and production\", \"deploy from CI\", \"review this in a PR\", \"cargo.state.json\", \"scaffold from a template\", \"set up the <x> cookbook\", \"install a cookbook\". Cookbooks: pre-written, adaptable GTM outcomes (TAM building, account scoring, contact sourcing, routing engine, AI SDR, rep cockpit) live in cargo-cookbooks, menu in references/cookbooks.md. Skip when: it is a one-off operation, a read, or an ad-hoc query — use the matching capability skill."
+description: "Manage a whole Cargo workspace as code — declare connectors, models, plays, tools, agents, MCP servers, segments, context, folders, files, workers, and apps in TypeScript, then reconcile them with `cargo-ai cdk` (init → types → plan → deploy), the way you would run Pulumi or the AWS CDK. Triggers: \"as code\", \"in git\", \"version-controlled\", \"reproducible\", \"Terraform for Cargo\", \"set up a whole workspace\", \"staging and production\", \"deploy from CI\", \"review this in a PR\", \"cargo.state.json\", \"scaffold from a template\", \"is there a cookbook for this\", \"start from a cookbook\". Cookbooks: pre-written, adaptable GTM outcomes (TAM building, account scoring, contact sourcing, routing engine, AI SDR, rep cockpit) live in cargo-cookbooks, menu in references/cookbooks.md. Skip when: it is a one-off operation, a read, or an ad-hoc query — use the matching capability skill."
 version: "1.2.2"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
@@ -154,17 +154,18 @@ outcome, what it requires, whether it ships a skill, and the adaptations it
 supports, and it is generated from the cookbook repo so it cannot drift.
 
 **The code in a cookbook is a worked example, not a template to fill in.** Each
-declares in its `cookbook.json` what may be reshaped (`variations`), what must hold
-or it stops working (`invariants`), and what has to be answered either way
-(`inputs`). Installing one means adapting it until it is this company's code; a
-cookbook that was merely copied will deploy cleanly and produce nothing.
+declares in its `SKILL.md` what may be reshaped, what must hold or it stops
+working, and what has to be answered either way. Installing one means adapting it
+until it is this company's code; a cookbook that was merely copied will deploy
+cleanly and produce nothing.
 
 Two ways in. Prefer the first: the skill does the adapting, offers the variations,
 and defends the invariants.
 
 ```sh
 npx skills add getcargohq/cargo-cookbooks --all      # then: "set up the tam-building cookbook"
-cargo-ai cdk init my-tam --from getcargohq/cargo-cookbooks/tam-building   # or by hand
+cargo-ai cdk init my-tam --from getcargohq/cargo-cookbooks/tam-building   # by hand, empty dir
+cargo-ai manifest add tam-building --dir .           # by hand, into an existing CDK project
 ```
 
 `--from` pulls the cookbook plus its required siblings (`base-gtm`, transitively)
@@ -179,8 +180,8 @@ adapt. No match → author from the recipes below.
 **Never `cargo-ai cdk init --force` into a directory that is not empty.** It replaces
 the project's `package.json` and reverts adapted cookbook code, while
 `cargo.state.json` survives — so the next `plan` diffs a live workspace against code
-nobody wrote. To add a cookbook to an existing project, scaffold into a temp
-directory and copy across only the folders that are not already there.
+nobody wrote. Into an existing project use `cargo-ai manifest add <slug>`: copy-in,
+existing files kept, every installed file hashed in `manifest.json`.
 
 Caveat: cookbooks typecheck and their scaffold graph validates, but they are not yet
 deploy-verified against a live workspace, and every one is `to-be-approved`. Treat
