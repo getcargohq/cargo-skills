@@ -135,11 +135,26 @@ async function refresh(): Promise<Cookbook[]> {
       continue;
     }
     const skill = await read(`${slug}/SKILL.md`);
-    // An outcome with no SKILL.md is not yet in the skill layer. It stays out
-    // of the menu rather than appearing as an outcome with nothing behind it.
-    if (!skill) continue;
-    const fm = readFrontmatter(skill);
-    if (!fm) continue;
+    const fm = skill ? readFrontmatter(skill) : undefined;
+    if (!skill || !fm) {
+      // An outcome with no SKILL.md is not in the skill layer yet, but the code
+      // exists and `cdk init --from` / `manifest add` scaffold it today. Hiding
+      // it would send the agent off to author from scratch something already
+      // written; list it, say there is no skill, and let the README carry it.
+      const readme = (await read(`${slug}/README.md`)) ?? "";
+      const firstPara = readme.split("\n\n").find((p) => p && !p.startsWith("#")) ?? "";
+      out.push({
+        slug,
+        kind: "outcome",
+        outcome: firstPara.replace(/\s+/g, " ").trim(),
+        state: "to-be-approved",
+        chain: null,
+        requires: entry.requires ?? [],
+        hasSkill: false,
+        variations: [],
+      });
+      continue;
+    }
     const bodyStart = skill.indexOf("\n---", 3) + 4;
     out.push({
       slug,
@@ -191,6 +206,12 @@ function render(books: Cookbook[]): string {
   L.push("```");
   L.push("");
   L.push("## Outcomes");
+  L.push("");
+  L.push("Every row scaffolds today. **Skill: yes** means an installable skill carries the");
+  L.push("adaptation contract (what you will be asked, what you can change, what should not");
+  L.push("change, done when). **Skill: —** means the code and README exist but nobody has");
+  L.push("written the skill yet: scaffold it, read its README, and treat the `PLACEHOLDER`");
+  L.push("comments as the interview.");
   L.push("");
   L.push("| Cookbook | Outcome | Requires | Skill | State |");
   L.push("| --- | --- | --- | --- | --- |");

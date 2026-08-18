@@ -30,6 +30,32 @@
     ]
   },
   {
+    "slug": "ai-sdr",
+    "kind": "outcome",
+    "outcome": "Go from an account to a sent first-touch — written by AI, enrolled into an Email Bison campaign. This is the \"put it all together\" cookbook.",
+    "state": "to-be-approved",
+    "chain": null,
+    "requires": [
+      "contact-sourcing",
+      "research-agent"
+    ],
+    "hasSkill": false,
+    "variations": []
+  },
+  {
+    "slug": "auto-enrichment",
+    "kind": "outcome",
+    "outcome": "Keep your accounts and contacts filled in automatically. Every night, records missing key fields get re-enriched — without overwriting anything a human typed.",
+    "state": "to-be-approved",
+    "chain": null,
+    "requires": [
+      "base-gtm",
+      "crm-sync"
+    ],
+    "hasSkill": false,
+    "variations": []
+  },
+  {
     "slug": "base-gtm",
     "kind": "foundation",
     "outcome": "The shared foundation every other cookbook builds on. It is not a use case on its own: it defines the pieces the other cookbooks reuse, so they stack together instead of clashing.",
@@ -40,10 +66,188 @@
     "variations": []
   },
   {
+    "slug": "closed-won-multiplier",
+    "kind": "outcome",
+    "outcome": "Turn every won deal into net-new lookalike accounts.",
+    "state": "to-be-approved",
+    "chain": null,
+    "requires": [
+      "base-gtm",
+      "pipeline-health"
+    ],
+    "hasSkill": false,
+    "variations": []
+  },
+  {
+    "slug": "contact-sourcing",
+    "kind": "outcome",
+    "outcome": "For every account you care about, find the right people, verify their emails, and add them to your CRM — all on Cargo credits, no extra provider keys.",
+    "state": "to-be-approved",
+    "chain": null,
+    "requires": [
+      "base-gtm",
+      "crm-sync"
+    ],
+    "hasSkill": false,
+    "variations": []
+  },
+  {
+    "slug": "crm-button",
+    "kind": "outcome",
+    "outcome": "Run a Cargo tool from any CRM record, with one click.",
+    "state": "to-be-approved",
+    "chain": null,
+    "requires": [
+      "base-gtm",
+      "crm-sync"
+    ],
+    "hasSkill": false,
+    "variations": []
+  },
+  {
     "slug": "crm-sync",
     "kind": "foundation",
     "outcome": "The CRM slot. A foundation cookbook, like `base-gtm`: it defines no motion of its own, it gives the CRM-dependent cookbooks something to write to.",
     "state": "n/a",
+    "chain": null,
+    "requires": [
+      "base-gtm"
+    ],
+    "hasSkill": false,
+    "variations": []
+  },
+  {
+    "slug": "gtm-knowledge-graph",
+    "kind": "outcome",
+    "outcome": "Your go-to-market knowledge — ICP, positioning, personas, plays — written as versioned markdown that agents can read and answer questions from.",
+    "state": "to-be-approved",
+    "chain": null,
+    "requires": [
+      "base-gtm"
+    ],
+    "hasSkill": false,
+    "variations": []
+  },
+  {
+    "slug": "inbound-flow",
+    "kind": "outcome",
+    "outcome": "Turn every form or demo request into a verified, enriched CRM contact — then qualify it, alert the team on hot ones, and define who owns what.",
+    "state": "to-be-approved",
+    "chain": null,
+    "requires": [
+      "base-gtm",
+      "crm-sync"
+    ],
+    "hasSkill": false,
+    "variations": []
+  },
+  {
+    "slug": "list-building",
+    "kind": "outcome",
+    "outcome": "Build contact lists from Sales Navigator people searches, using the same recursive split as TAM building, with a higher ceiling.",
+    "state": "to-be-approved",
+    "chain": null,
+    "requires": [
+      "base-gtm"
+    ],
+    "hasSkill": false,
+    "variations": []
+  },
+  {
+    "slug": "mcp-copilot",
+    "kind": "outcome",
+    "outcome": "Expose your GTM stack to any AI assistant as tools, behind a single MCP endpoint.",
+    "state": "to-be-approved",
+    "chain": null,
+    "requires": [
+      "research-agent"
+    ],
+    "hasSkill": false,
+    "variations": []
+  },
+  {
+    "slug": "meeting-prep",
+    "kind": "outcome",
+    "outcome": "A briefing card before every intro call, in Slack, unattended.",
+    "state": "to-be-approved",
+    "chain": null,
+    "requires": [
+      "base-gtm",
+      "crm-sync"
+    ],
+    "hasSkill": false,
+    "variations": []
+  },
+  {
+    "slug": "pipeline-health",
+    "kind": "outcome",
+    "outcome": "An agent that reads your open deals and surfaces the at-risk ones, each with the fix attached.",
+    "state": "to-be-approved",
+    "chain": null,
+    "requires": [
+      "base-gtm"
+    ],
+    "hasSkill": false,
+    "variations": []
+  },
+  {
+    "slug": "plg-motion",
+    "kind": "outcome",
+    "outcome": "Spot product-qualified workspaces from usage data, and route them to the right territory for a human to approve — once per workspace, with the usage context attached.",
+    "state": "to-be-approved",
+    "chain": null,
+    "requires": [
+      "base-gtm",
+      "crm-sync"
+    ],
+    "hasSkill": false,
+    "variations": []
+  },
+  {
+    "slug": "rep-cockpit",
+    "kind": "outcome",
+    "outcome": "One screen per rep: their routed, scored accounts with the AI outreach draft and a \"next action\" box that writes straight back to the workspace. This is the surface on top of everything the other cookbooks computed.",
+    "state": "to-be-approved",
+    "chain": null,
+    "requires": [
+      "account-scoring",
+      "routing-engine",
+      "ai-sdr"
+    ],
+    "hasSkill": false,
+    "variations": []
+  },
+  {
+    "slug": "research-agent",
+    "kind": "outcome",
+    "outcome": "Turn an account into an AE-ready brief, grounded in your own GTM knowledge.",
+    "state": "to-be-approved",
+    "chain": null,
+    "requires": [
+      "base-gtm",
+      "gtm-knowledge-graph"
+    ],
+    "hasSkill": false,
+    "variations": []
+  },
+  {
+    "slug": "routing-engine",
+    "kind": "outcome",
+    "outcome": "Define your sales territories and rep capacity as code, and automatically assign accounts to the right territory — on arrival and re-checked weekly.",
+    "state": "to-be-approved",
+    "chain": null,
+    "requires": [
+      "base-gtm",
+      "crm-sync"
+    ],
+    "hasSkill": false,
+    "variations": []
+  },
+  {
+    "slug": "signal-based-tam",
+    "kind": "outcome",
+    "outcome": "Watch your whole account list for buying signals, and automatically reach out the moment a high-intent one fires.",
+    "state": "to-be-approved",
     "chain": null,
     "requires": [
       "base-gtm"

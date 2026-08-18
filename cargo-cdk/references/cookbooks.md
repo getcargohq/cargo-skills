@@ -20,9 +20,31 @@ cargo-ai manifest add <slug> --dir .
 
 ## Outcomes
 
+Every row scaffolds today. **Skill: yes** means an installable skill carries the
+adaptation contract (what you will be asked, what you can change, what should not
+change, done when). **Skill: —** means the code and README exist but nobody has
+written the skill yet: scaffold it, read its README, and treat the `PLACEHOLDER`
+comments as the interview.
+
 | Cookbook | Outcome | Requires | Skill | State |
 | --- | --- | --- | --- | --- |
 | `account-scoring` | Every account scored and tiered against your written ICP by an agent that cites its evidence, with the rationale on the CRM record | `base-gtm`, `crm-sync`, `gtm-knowledge-graph` | yes | to-be-approved |
+| `ai-sdr` | Go from an account to a sent first-touch — written by AI, enrolled into an Email Bison campaign. This is the "put it all together" cookbook. | `contact-sourcing`, `research-agent` | — | to-be-approved |
+| `auto-enrichment` | Keep your accounts and contacts filled in automatically. Every night, records missing key fields get re-enriched — without overwriting anything a human typed. | `base-gtm`, `crm-sync` | — | to-be-approved |
+| `closed-won-multiplier` | Turn every won deal into net-new lookalike accounts. | `base-gtm`, `pipeline-health` | — | to-be-approved |
+| `contact-sourcing` | For every account you care about, find the right people, verify their emails, and add them to your CRM — all on Cargo credits, no extra provider keys. | `base-gtm`, `crm-sync` | — | to-be-approved |
+| `crm-button` | Run a Cargo tool from any CRM record, with one click. | `base-gtm`, `crm-sync` | — | to-be-approved |
+| `gtm-knowledge-graph` | Your go-to-market knowledge — ICP, positioning, personas, plays — written as versioned markdown that agents can read and answer questions from. | `base-gtm` | — | to-be-approved |
+| `inbound-flow` | Turn every form or demo request into a verified, enriched CRM contact — then qualify it, alert the team on hot ones, and define who owns what. | `base-gtm`, `crm-sync` | — | to-be-approved |
+| `list-building` | Build contact lists from Sales Navigator people searches, using the same recursive split as TAM building, with a higher ceiling. | `base-gtm` | — | to-be-approved |
+| `mcp-copilot` | Expose your GTM stack to any AI assistant as tools, behind a single MCP endpoint. | `research-agent` | — | to-be-approved |
+| `meeting-prep` | A briefing card before every intro call, in Slack, unattended. | `base-gtm`, `crm-sync` | — | to-be-approved |
+| `pipeline-health` | An agent that reads your open deals and surfaces the at-risk ones, each with the fix attached. | `base-gtm` | — | to-be-approved |
+| `plg-motion` | Spot product-qualified workspaces from usage data, and route them to the right territory for a human to approve — once per workspace, with the usage context attached. | `base-gtm`, `crm-sync` | — | to-be-approved |
+| `rep-cockpit` | One screen per rep: their routed, scored accounts with the AI outreach draft and a "next action" box that writes straight back to the workspace. This is the surface on top of everything the other cookbooks computed. | `account-scoring`, `routing-engine`, `ai-sdr` | — | to-be-approved |
+| `research-agent` | Turn an account into an AE-ready brief, grounded in your own GTM knowledge. | `base-gtm`, `gtm-knowledge-graph` | — | to-be-approved |
+| `routing-engine` | Define your sales territories and rep capacity as code, and automatically assign accounts to the right territory — on arrival and re-checked weekly. | `base-gtm`, `crm-sync` | — | to-be-approved |
+| `signal-based-tam` | Watch your whole account list for buying signals, and automatically reach out the moment a high-intent one fires. | `base-gtm` | — | to-be-approved |
 | `tam-building` | Your account universe built from a Sales Navigator company search, split past the 1,000 extraction cap and resolved to real domains | `base-gtm` | yes | to-be-approved |
 
 ## Foundations
