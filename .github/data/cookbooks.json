@@ -2,14 +2,10 @@
   {
     "slug": "account-scoring",
     "kind": "outcome",
-    "outcome": "Score how well each account fits your ICP — judged by an agent against the ICP written in your context repo, not by point weights in code. Edit the ICP markdown, and accounts re-score against it as they come due.",
+    "outcome": "Keep every account scored and tiered against your written ICP by a deployed agent that re-scores as accounts arrive and as the ICP changes, writing the rationale back to the CRM.",
     "state": "to-be-approved",
     "chain": 1,
-    "requires": [
-      "base-gtm",
-      "crm-sync",
-      "gtm-knowledge-graph"
-    ],
+    "requires": [],
     "hasSkill": true,
     "variations": [
       {
@@ -24,21 +20,18 @@
       },
       {
         "id": "no-crm-at-all",
-        "when": "You have no CRM, or you do not want to hand this cookbook a CRM credential",
-        "trade": "Every other CRM-dependent cookbook you install later will pull `crm-sync` back in anyway"
+        "when": "You have no CRM, or you do not want to hand this skill a CRM credential",
+        "trade": "Every other CRM-dependent skill you install later brings a CRM connector of its own; reuse one"
       }
     ]
   },
   {
     "slug": "ai-sdr",
     "kind": "outcome",
-    "outcome": "Go from an account to a sent first-touch — written by AI, enrolled into an Email Bison campaign. This is the \"put it all together\" cookbook.",
+    "outcome": "Go from an account to a sent first-touch — written by AI, enrolled into an Email Bison campaign. This is the \"put it all together\" skill.",
     "state": "to-be-approved",
     "chain": null,
-    "requires": [
-      "contact-sourcing",
-      "research-agent"
-    ],
+    "requires": [],
     "hasSkill": false,
     "variations": []
   },
@@ -47,19 +40,6 @@
     "kind": "outcome",
     "outcome": "Keep your accounts and contacts filled in automatically. Every night, records missing key fields get re-enriched — without overwriting anything a human typed.",
     "state": "to-be-approved",
-    "chain": null,
-    "requires": [
-      "base-gtm",
-      "crm-sync"
-    ],
-    "hasSkill": false,
-    "variations": []
-  },
-  {
-    "slug": "base-gtm",
-    "kind": "foundation",
-    "outcome": "The shared foundation every other cookbook builds on. It is not a use case on its own: it defines the pieces the other cookbooks reuse, so they stack together instead of clashing.",
-    "state": "n/a",
     "chain": null,
     "requires": [],
     "hasSkill": false,
@@ -71,10 +51,7 @@
     "outcome": "Turn every won deal into net-new lookalike accounts.",
     "state": "to-be-approved",
     "chain": null,
-    "requires": [
-      "base-gtm",
-      "pipeline-health"
-    ],
+    "requires": [],
     "hasSkill": false,
     "variations": []
   },
@@ -84,10 +61,7 @@
     "outcome": "For every account you care about, find the right people, verify their emails, and add them to your CRM — all on Cargo credits, no extra provider keys.",
     "state": "to-be-approved",
     "chain": null,
-    "requires": [
-      "base-gtm",
-      "crm-sync"
-    ],
+    "requires": [],
     "hasSkill": false,
     "variations": []
   },
@@ -97,22 +71,7 @@
     "outcome": "Run a Cargo tool from any CRM record, with one click.",
     "state": "to-be-approved",
     "chain": null,
-    "requires": [
-      "base-gtm",
-      "crm-sync"
-    ],
-    "hasSkill": false,
-    "variations": []
-  },
-  {
-    "slug": "crm-sync",
-    "kind": "foundation",
-    "outcome": "The CRM slot. A foundation cookbook, like `base-gtm`: it defines no motion of its own, it gives the CRM-dependent cookbooks something to write to.",
-    "state": "n/a",
-    "chain": 0,
-    "requires": [
-      "base-gtm"
-    ],
+    "requires": [],
     "hasSkill": false,
     "variations": []
   },
@@ -122,9 +81,7 @@
     "outcome": "Your go-to-market knowledge — ICP, positioning, personas, plays — written as versioned markdown that agents can read and answer questions from.",
     "state": "to-be-approved",
     "chain": null,
-    "requires": [
-      "base-gtm"
-    ],
+    "requires": [],
     "hasSkill": false,
     "variations": []
   },
@@ -134,10 +91,7 @@
     "outcome": "Turn every form or demo request into a verified, enriched CRM contact — then qualify it, alert the team on hot ones, and define who owns what.",
     "state": "to-be-approved",
     "chain": null,
-    "requires": [
-      "base-gtm",
-      "crm-sync"
-    ],
+    "requires": [],
     "hasSkill": false,
     "variations": []
   },
@@ -147,9 +101,7 @@
     "outcome": "Build contact lists from Sales Navigator people searches, using the same recursive split as TAM building, with a higher ceiling.",
     "state": "to-be-approved",
     "chain": null,
-    "requires": [
-      "base-gtm"
-    ],
+    "requires": [],
     "hasSkill": false,
     "variations": []
   },
@@ -159,9 +111,7 @@
     "outcome": "Expose your GTM stack to any AI assistant as tools, behind a single MCP endpoint.",
     "state": "to-be-approved",
     "chain": null,
-    "requires": [
-      "research-agent"
-    ],
+    "requires": [],
     "hasSkill": false,
     "variations": []
   },
@@ -171,10 +121,7 @@
     "outcome": "A briefing card before every intro call, in Slack, unattended.",
     "state": "to-be-approved",
     "chain": null,
-    "requires": [
-      "base-gtm",
-      "crm-sync"
-    ],
+    "requires": [],
     "hasSkill": false,
     "variations": []
   },
@@ -184,9 +131,7 @@
     "outcome": "An agent that reads your open deals and surfaces the at-risk ones, each with the fix attached.",
     "state": "to-be-approved",
     "chain": null,
-    "requires": [
-      "base-gtm"
-    ],
+    "requires": [],
     "hasSkill": false,
     "variations": []
   },
@@ -196,24 +141,17 @@
     "outcome": "Spot product-qualified workspaces from usage data, and route them to the right territory for a human to approve — once per workspace, with the usage context attached.",
     "state": "to-be-approved",
     "chain": null,
-    "requires": [
-      "base-gtm",
-      "crm-sync"
-    ],
+    "requires": [],
     "hasSkill": false,
     "variations": []
   },
   {
     "slug": "rep-cockpit",
     "kind": "outcome",
-    "outcome": "One screen per rep: their routed, scored accounts with the AI outreach draft and a \"next action\" box that writes straight back to the workspace. This is the surface on top of everything the other cookbooks computed.",
+    "outcome": "One screen per rep: their routed, scored accounts with the AI outreach draft and a \"next action\" box that writes straight back to the workspace. This is the surface on top of everything the other skills computed.",
     "state": "to-be-approved",
     "chain": null,
-    "requires": [
-      "account-scoring",
-      "routing-engine",
-      "ai-sdr"
-    ],
+    "requires": [],
     "hasSkill": false,
     "variations": []
   },
@@ -223,10 +161,7 @@
     "outcome": "Turn an account into an AE-ready brief, grounded in your own GTM knowledge.",
     "state": "to-be-approved",
     "chain": null,
-    "requires": [
-      "base-gtm",
-      "gtm-knowledge-graph"
-    ],
+    "requires": [],
     "hasSkill": false,
     "variations": []
   },
@@ -236,10 +171,7 @@
     "outcome": "Define your sales territories and rep capacity as code, and automatically assign accounts to the right territory — on arrival and re-checked weekly.",
     "state": "to-be-approved",
     "chain": null,
-    "requires": [
-      "base-gtm",
-      "crm-sync"
-    ],
+    "requires": [],
     "hasSkill": false,
     "variations": []
   },
@@ -249,21 +181,17 @@
     "outcome": "Watch your whole account list for buying signals, and automatically reach out the moment a high-intent one fires.",
     "state": "to-be-approved",
     "chain": null,
-    "requires": [
-      "base-gtm"
-    ],
+    "requires": [],
     "hasSkill": false,
     "variations": []
   },
   {
     "slug": "tam-building",
     "kind": "outcome",
-    "outcome": "Build your account universe from a Sales Navigator company search, even when the natural search returns far more than the extraction cap.",
+    "outcome": "Stand up your account universe as a deployed pipeline: a Sales Navigator company search split past the 1,000 extraction cap, resolved to real domains, deduped into a shared accounts model.",
     "state": "to-be-approved",
     "chain": 2,
-    "requires": [
-      "base-gtm"
-    ],
+    "requires": [],
     "hasSkill": true,
     "variations": [
       {
@@ -274,7 +202,7 @@
       {
         "id": "land-without-promoting",
         "when": "You want to see and filter the raw market before paying to enrich it",
-        "trade": "Nothing reaches `accounts`, so no downstream cookbook (scoring, contact sourcing, signals) has anything to work with until you promote"
+        "trade": "Nothing reaches `accounts`, so no downstream skill (scoring, contact sourcing, signals) has anything to work with until you promote"
       },
       {
         "id": "sample-first",

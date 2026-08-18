@@ -1,6 +1,6 @@
 ---
 name: cargo-cdk
-description: "Manage a whole Cargo workspace as code — declare connectors, models, plays, tools, agents, MCP servers, segments, context, folders, files, workers, and apps in TypeScript, then reconcile them with `cargo-ai cdk` (init → types → plan → deploy), the way you would run Pulumi or the AWS CDK. Triggers: \"as code\", \"in git\", \"version-controlled\", \"reproducible\", \"Terraform for Cargo\", \"set up a whole workspace\", \"staging and production\", \"deploy from CI\", \"review this in a PR\", \"cargo.state.json\", \"scaffold from a template\", \"is there a cookbook for this\", \"start from a cookbook\". Cookbooks: pre-written, adaptable GTM outcomes (TAM building, account scoring, contact sourcing, routing engine, AI SDR, rep cockpit) live in cargo-cookbooks, menu in references/cookbooks.md. Skip when: it is a one-off operation, a read, or an ad-hoc query — use the matching capability skill."
+description: "Manage a whole Cargo workspace as code — declare connectors, models, plays, tools, agents, MCP servers, segments, context, folders, files, workers, and apps in TypeScript, then reconcile them with `cargo-ai cdk` (init → types → plan → deploy), the way you would run Pulumi or the AWS CDK. Triggers: \"as code\", \"in git\", \"version-controlled\", \"reproducible\", \"Terraform for Cargo\", \"set up a whole workspace\", \"staging and production\", \"deploy from CI\", \"review this in a PR\", \"cargo.state.json\", \"scaffold from a template\", \"is there a skill that already builds this\", \"start from a worked example\". Skills with a CDK example (TAM building, account scoring, contact sourcing, routing, AI SDR, rep cockpit) live in gtm-skills; menu in references/cookbooks.md. Skip when: it is a one-off operation, a read, or an ad-hoc query — use the matching capability skill."
 version: "1.2.2"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
@@ -138,62 +138,52 @@ state) · `cargo-ai cdk rollback` (restore the pre-deploy state snapshot).
 | A field/spec/output for a specific builder | [`references/resources.md`](references/resources.md) | Every builder → spec fields → which ref each takes → outputs. |
 | Exact command flags | [`references/commands.md`](references/commands.md) | Every `cargo-ai cdk` subcommand and its flags. |
 | A deploy error / footgun | [`references/troubleshooting.md`](references/troubleshooting.md) | The known failure modes and fixes. |
-| A known GTM outcome, before authoring one | [`references/cookbooks.md`](references/cookbooks.md) | The cookbook menu: outcomes, what each requires, and the adaptations each supports. |
+| A known GTM outcome, before authoring one | [`references/cookbooks.md`](references/cookbooks.md) | The menu of gtm-skills that carry a CDK example, and the adaptations each supports. |
 
-### Cookbooks — check the menu before authoring a known outcome from scratch
+### Skills that carry a CDK example — check the menu before authoring a known outcome from scratch
 
-[`getcargohq/cargo-cookbooks`](https://github.com/getcargohq/cargo-cookbooks) is a
-library of composable cookbook folders of pre-written `define*` resources — one per
-GTM outcome (TAM building, list building, inbound qualification, contact sourcing,
-routing engine, account scoring, auto-enrichment, meeting prep, pipeline health,
-AI SDR, rep cockpit, …), all built on a shared `base-gtm` foundation.
+[`getcargohq/gtm-skills`](https://github.com/getcargohq/gtm-skills) holds, beside its
+run-once skills, skills that carry **worked CDK resources**: the same job as a deployed
+pipeline that keeps producing the result (TAM building, account scoring, contact
+sourcing, routing engine, AI SDR, rep cockpit, …). Every folder is self-contained: its
+own models, connectors and folders, no shared foundation, no requires graph.
 
 **The menu is local: [`references/cookbooks.md`](references/cookbooks.md).** Read it
-before authoring a common GTM outcome from scratch. It carries every cookbook's
-outcome, what it requires, whether it ships a skill, and the adaptations it
-supports, and it is generated from the cookbook repo so it cannot drift.
+before authoring a common GTM outcome from scratch. It is generated from gtm-skills'
+`catalog.json`, so it cannot drift.
 
-**The code in a cookbook is a worked example, not a template to fill in.** Each
-declares in its `SKILL.md` what may be reshaped, what must hold or it stops
-working, and what has to be answered either way. Installing one means adapting it
-until it is this company's code; a cookbook that was merely copied will deploy
-cleanly and produce nothing.
-
-Two ways in. Prefer the first: the skill does the adapting, offers the variations,
-and defends the invariants.
+**The code in one of these is a worked example, not a template to fill in.** Each
+skill declares in its `SKILL.md` what may be reshaped, what must hold or it stops
+working, and what has to be answered either way, and it carries its own procedure:
+look at the repo, `cargo-ai cdk init --template blank` if there is no CDK project yet,
+copy the folder in as a sibling and reconcile it with what is already declared, adapt,
+plan and stop, deploy on a yes, walk its `Done when`. There is no scaffolder or copy
+tool in the middle: **you place the code**, because you can see the project and a tool
+cannot.
 
 ```sh
-npx skills add getcargohq/cargo-cookbooks --all      # then: "set up the tam-building cookbook"
-cargo-ai cdk init my-tam --from getcargohq/cargo-cookbooks/tam-building   # by hand, empty dir
-cargo-ai manifest add tam-building --dir .           # by hand, into an existing CDK project
+npx skills add getcargohq/gtm-skills/tam-building    # then: "keep our TAM current"
+cargo-ai cdk init my-project --template blank        # only if there is no CDK project yet
 ```
 
-**If you are mid-task and the cookbook skills are not in this session**, do not wait
-for a reload: run the `skills add` above, then read
-`.agents/skills/deploy-cookbook/SKILL.md` and `.agents/skills/<slug>/SKILL.md`
-directly and follow them. To read one without installing anything,
-`npx skills use getcargohq/cargo-cookbooks@<slug>` prints it to stdout.
-
-`--from` pulls the cookbook plus its required siblings (`base-gtm`, transitively)
-with the folder layout intact, so cross-folder imports resolve.
+**If you are mid-task and the skill is not in this session**, run the `skills add`
+above and read `.agents/skills/<slug>/SKILL.md` directly; no reload needed. To read
+one without installing, `npx skills use getcargohq/gtm-skills@<slug>` prints it.
 
 **Routing rule: one-off versus standing.** A user who wants the list today wants
-`cargo-gtm`; a user who wants a pipeline that keeps producing it wants a cookbook.
-The same words describe both ("build our TAM"), so listen for whether the result is
-meant to keep arriving. A cookbook matches → install its skill, or scaffold and
-adapt. No match → author from the recipes below.
+`cargo-gtm` (or gtm-skills' run-once `build-tam-list`); a user who wants a pipeline
+that keeps producing it wants `tam-building`. The same words describe both ("build
+our TAM"), so listen for whether the result is meant to keep arriving. A skill
+matches → install it and follow it. No match → author from the recipes below.
 
 **Never `cargo-ai cdk init --force` into a directory that is not empty.** It replaces
-the project's `package.json` and reverts adapted cookbook code, while
-`cargo.state.json` survives — so the next `plan` diffs a live workspace against code
-nobody wrote. Into an existing project use `cargo-ai manifest add <slug>` (`--dir .`
-for a plain CDK project; the default is `infra/`): copy-in, existing files kept,
-every installed file recorded in `manifest.json` with its hash.
+the project's `package.json` and reverts adapted code, while `cargo.state.json`
+survives, so the next `plan` diffs a live workspace against code nobody wrote. Copy the
+skill folder in as a sibling instead.
 
-Caveat: cookbooks typecheck and their scaffold graph validates, but they are not yet
-deploy-verified against a live workspace, and every one is `to-be-approved`. Treat
-each cookbook's `doneWhen` as the acceptance test, and always review
-`cargo-ai cdk plan` before deploying.
+Caveat: the examples typecheck, but they are not yet deploy-verified against a live
+workspace, and every one is `to-be-approved`. Treat each skill's `Done when` as the
+acceptance test, and always review `cargo-ai cdk plan` before deploying.
 
 ### Recipes — follow step-by-step when one matches
 

@@ -56,7 +56,7 @@
     {
       "path": "references/cookbooks.md",
       "kind": "reference",
-      "title": "Cookbooks — the menu, before you author from scratch"
+      "title": "Skills that carry a CDK example, before you author one from scratch"
     },
     {
       "path": "references/examples/full-workspace.md",
@@ -74,5 +74,5 @@
       "title": "Troubleshooting"
     }
   ],
-  "contentHash": "7058a39d3a29be1e23841865b6843daa31f4f97bc4af6fba6640444311bae87e"
+  "contentHash": "320f78709bea134bf340c5be2b37d1436dadbff37ed73e6366c85caba3a4a3de"
 }

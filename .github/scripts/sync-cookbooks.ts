@@ -1,24 +1,24 @@
 /**
- * Keeps cargo-cdk aware of the cookbook menu.
+ * Keeps cargo-cdk aware of the skills in getcargohq/gtm-skills that carry a
+ * CDK example: the same jobs as the run-once skills, as a deployed pipeline an
+ * agent adapts into a project.
  *
  * WHY THIS EXISTS
  *
- * `cargo-cdk/SKILL.md` used to tell the agent to "read the cookbook menu (the
- * repo README's table)" — a network fetch to another GitHub repo, mid-task,
- * which an agent may simply not make. When it does not, it authors a common GTM
- * outcome from scratch that was already sitting there written and tested. The
- * menu has to be a local file to be reliably read.
+ * `cargo-cdk/SKILL.md` used to tell the agent to go read a menu on GitHub,
+ * mid-task, which an agent may simply not do. When it does not, it authors from
+ * scratch an outcome that was already written. The menu has to be a local file.
  *
- * Same shape as sync-trigger-slugs.ts: a committed data snapshot, prose
- * generated from it, and `--check` in CI so the two cannot drift. CI never
- * reaches the network, so a cookbook repo change cannot turn this build red on
- * its own — staleness is fixed deliberately, with --refresh.
+ * gtm-skills publishes ONE machine-readable catalog.json, generated and gated
+ * in that repo, so this script parses no markdown: it fetches one URL (or reads
+ * the sibling checkout), snapshots it, and renders the reference. Same shape as
+ * sync-trigger-slugs.ts: a committed snapshot, prose generated from it, and
+ * `--check` in CI so the two cannot drift. CI never reaches the network.
  *
  *   node .github/scripts/sync-cookbooks.ts            # regenerate the reference
  *   node .github/scripts/sync-cookbooks.ts --check    # CI: fail if stale
- *   node .github/scripts/sync-cookbooks.ts --refresh  # re-pull the snapshot from
- *                                                       ../cargo-cookbooks, or
- *                                                       GitHub if it is absent
+ *   node .github/scripts/sync-cookbooks.ts --refresh  # re-pull from ../gtm-skills,
+ *                                                       or GitHub if it is absent
  *
  * Requires Node >= 22.18 (run as .ts via native type-stripping).
  */
@@ -29,13 +29,10 @@ import { fileURLToPath } from "node:url";
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const snapshotPath = join(repoRoot, ".github/data/cookbooks.json");
 const referencePath = join(repoRoot, "cargo-cdk/references/cookbooks.md");
-const REPO = "getcargohq/cargo-cookbooks";
+const REPO = "getcargohq/gtm-skills";
+const CATALOG_URL = `https://raw.githubusercontent.com/${REPO}/main/catalog.json`;
 
-interface Variation {
-  id: string;
-  when: string;
-  trade: string;
-}
+interface Variation { id: string; when: string; trade: string; }
 interface Cookbook {
   slug: string;
   kind: "outcome" | "foundation";
@@ -47,216 +44,103 @@ interface Cookbook {
   variations: Variation[];
 }
 
-/** The variations table under `## What you can change`: id, when, cost. */
-function readVariations(body: string): Variation[] {
-  const start = body.indexOf("\n## What you can change");
-  if (start === -1) return [];
-  const rest = body.slice(start + 1);
-  const next = rest.indexOf("\n## ", 1);
-  const section = next === -1 ? rest : rest.slice(0, next);
-  const rows = section.split("\n").filter((l) => l.startsWith("| `"));
-  return rows.map((row) => {
-    const cells = row
-      .split("|")
-      .slice(1, -1)
-      .map((c) => c.trim());
-    return {
-      id: cells[0].replace(/`/g, ""),
-      when: cells[1] ?? "",
-      trade: cells[3] ?? cells[2] ?? "",
-    };
-  });
-}
-
 async function refresh(): Promise<Cookbook[]> {
-  const local = resolve(
-    repoRoot,
-    process.env.CARGO_COOKBOOKS_ROOT ?? "../cargo-cookbooks",
-  );
-  const fromDisk = existsSync(join(local, "cargo.scaffold.json"));
-
-  const read = async (path: string): Promise<string | null> => {
-    if (fromDisk) {
-      const p = join(local, path);
-      return existsSync(p) ? readFileSync(p, "utf8") : null;
-    }
-    const res = await fetch(
-      `https://raw.githubusercontent.com/${REPO}/main/${path}`,
-    );
-    return res.ok ? await res.text() : null;
+  const local = resolve(repoRoot, process.env.GTM_SKILLS_ROOT ?? "../gtm-skills/catalog.json");
+  let raw: string;
+  if (existsSync(local)) {
+    console.log(`reading ${local}`);
+    raw = readFileSync(local, "utf8");
+  } else {
+    console.log(`fetching ${CATALOG_URL}`);
+    const res = await fetch(CATALOG_URL);
+    if (!res.ok) throw new Error(`${CATALOG_URL}: ${res.status}`);
+    raw = await res.text();
+  }
+  const catalog = JSON.parse(raw) as {
+    skills: Array<{
+      name: string; kind: string; job: string; state?: string; chain?: number | null;
+      canChange?: Array<{ id: string; when: string; cost: string }>;
+    }>;
+    pending: Array<{ name: string; job: string; state?: string }>;
   };
-
-  console.log(fromDisk ? `reading ${local}` : `fetching ${REPO}@main`);
-  const scaffold = JSON.parse((await read("cargo.scaffold.json"))!);
-  const folders: Record<
-    string,
-    {
-      requires: string[];
-      kind: "outcome" | "foundation";
-      state?: string;
-      chain?: number | null;
-    }
-  > = scaffold.folders ?? {};
-
-  // The one-line role of any cookbook is its README's first paragraph. That
-  // holds for foundations, unconverted outcomes and converted ones alike, so
-  // the menu never depends on the customer-facing SKILL.md carrying a Cargo
-  // field. SKILL.md contributes only the variations table.
-  const firstParagraph = async (slug: string): Promise<string> => {
-    const readme = (await read(`${slug}/README.md`)) ?? "";
-    const para =
-      readme.split("\n\n").find((p) => p && !p.startsWith("#")) ?? "";
-    return para.replace(/\s+/g, " ").trim();
-  };
-
   const out: Cookbook[] = [];
-  for (const slug of Object.keys(folders)) {
-    const entry = folders[slug];
-    const skill =
-      entry.kind === "outcome" ? await read(`${slug}/SKILL.md`) : null;
+  for (const s of catalog.skills) {
+    if (s.kind !== "cdk-example") continue;
     out.push({
-      slug,
-      kind: entry.kind,
-      outcome: await firstParagraph(slug),
-      state:
-        entry.kind === "foundation" ? "n/a" : (entry.state ?? "to-be-approved"),
-      chain: entry.chain ?? null,
-      requires: entry.requires ?? [],
-      hasSkill: skill !== null,
-      variations: skill
-        ? readVariations(skill.slice(skill.indexOf("\n---", 3) + 4))
-        : [],
+      slug: s.name, kind: "outcome", outcome: s.job, state: s.state ?? "to-be-approved",
+      chain: s.chain ?? null, requires: [], hasSkill: true,
+      variations: (s.canChange ?? []).map((v) => ({ id: v.id, when: v.when, trade: v.cost })),
     });
+  }
+  for (const p of catalog.pending) {
+    out.push({ slug: p.name, kind: "outcome", outcome: p.job, state: p.state ?? "to-be-approved", chain: null, requires: [], hasSkill: false, variations: [] });
   }
   return out.sort((a, b) => a.slug.localeCompare(b.slug));
 }
 
 function render(books: Cookbook[]): string {
-  const outcomes = books.filter((b) => b.kind === "outcome");
-  const foundations = books.filter((b) => b.kind === "foundation");
+  const withSkill = books.filter((b) => b.hasSkill);
+  const pending = books.filter((b) => !b.hasSkill);
   const L: string[] = [];
-
-  L.push(
-    "<!-- Generated by .github/scripts/sync-cookbooks.ts. Do not edit by hand. -->",
-  );
+  L.push("<!-- Generated by .github/scripts/sync-cookbooks.ts from gtm-skills' catalog.json. Do not edit by hand. -->");
   L.push("");
-  L.push("# Cookbooks — the menu, before you author from scratch");
+  L.push("# Skills that carry a CDK example, before you author one from scratch");
   L.push("");
-  L.push(
-    `Composable folders of pre-written \`define*\` resources in [\`${REPO}\`](https://github.com/${REPO}),`,
-  );
-  L.push("one per GTM outcome, all built on a shared `base-gtm` foundation.");
+  L.push(`Skills in [\`${REPO}\`](https://github.com/${REPO}) that carry worked CDK resources: the same`);
+  L.push("jobs as the run-once skills there, as a deployed pipeline that keeps producing the result.");
   L.push("");
-  L.push(
-    "**The code in a cookbook is a worked example, not a template to fill in.** Each one",
-  );
-  L.push(
-    "declares, in its `SKILL.md`, what may be reshaped, what must hold or it stops working,",
-  );
-  L.push(
-    "and what has to be answered either way. The agent installing it adapts it and records why.",
-  );
+  L.push("**Every folder is self-contained** (its own models, connectors and folders; no shared");
+  L.push("foundation, no requires graph). The agent installing one copies it into the project as a");
+  L.push("sibling of what is there, reconciles it with what is already declared (an existing accounts");
+  L.push("model, an existing CRM connector), adapts it, plans, deploys on a yes, and walks its `Done");
+  L.push("when`. The code is a worked example, not a template to fill in.");
   L.push("");
   L.push("```sh");
-  L.push("# an agent installs the skill and does the adapting");
-  L.push(`npx skills add ${REPO} --all`);
-  L.push("");
-  L.push("# or by hand: into an empty directory, or into an existing project");
-  L.push(`cargo-ai cdk init <dir> --from ${REPO}/<slug>`);
-  L.push("cargo-ai manifest add <slug> --dir .");
+  L.push(`npx skills add ${REPO}/<slug>       # then say what you want; the skill carries its own procedure`);
+  L.push("cargo-ai cdk init <dir> --template blank      # only if there is no CDK project yet: the shell comes from the CLI");
   L.push("```");
   L.push("");
-  L.push("## Outcomes");
+  L.push("## With a skill");
   L.push("");
-  L.push(
-    "Every row scaffolds today. **Skill: yes** means an installable skill carries the",
-  );
-  L.push(
-    "adaptation contract (what you will be asked, what you can change, what should not",
-  );
-  L.push(
-    "change, done when). **Skill: —** means the code and README exist but nobody has",
-  );
-  L.push(
-    "written the skill yet: scaffold it, read its README, and treat the `PLACEHOLDER`",
-  );
-  L.push("comments as the interview.");
-  L.push("");
-  L.push("| Cookbook | Outcome | Requires | Skill | State |");
-  L.push("| --- | --- | --- | --- | --- |");
-  for (const b of outcomes) {
-    L.push(
-      `| \`${b.slug}\` | ${b.outcome} | ${b.requires.map((r) => `\`${r}\``).join(", ") || "—"} | ${b.hasSkill ? "yes" : "—"} | ${b.state} |`,
-    );
-  }
-  L.push("");
-  L.push("## Foundations");
-  L.push("");
-  L.push(
-    "Slots the outcomes build on. They define no motion of their own and carry no skill.",
-  );
-  L.push("");
-  L.push("| Cookbook | What it is | Requires |");
+  L.push("| Skill | Deploys | State |");
   L.push("| --- | --- | --- |");
-  for (const b of foundations) {
-    L.push(
-      `| \`${b.slug}\` | ${b.outcome} | ${b.requires.map((r) => `\`${r}\``).join(", ") || "—"} |`,
-    );
+  for (const b of withSkill) L.push(`| \`${b.slug}\` | ${b.outcome} | ${b.state} |`);
+  if (pending.length) {
+    L.push("");
+    L.push("## Example code, no skill yet");
+    L.push("");
+    L.push("The folder and its README exist and can be copied in the same way; nobody has written the");
+    L.push("skill that carries the contract. Treat the `PLACEHOLDER` comments as the interview.");
+    L.push("");
+    L.push("| Folder | Deploys |");
+    L.push("| --- | --- |");
+    for (const b of pending) L.push(`| \`${b.slug}\` | ${b.outcome} |`);
   }
-
-  const withVariations = outcomes.filter((b) => b.variations.length);
+  const withVariations = withSkill.filter((b) => b.variations.length);
   if (withVariations.length) {
     L.push("");
-    L.push("## When a cookbook does not fit as written");
+    L.push("## When one does not fit as written");
     L.push("");
-    L.push(
-      "These are declared adaptations, not forks. Reach for one before concluding that a",
-    );
-    L.push("cookbook is the wrong starting point.");
+    L.push("Declared adaptations, not forks. Reach for one before concluding a skill is the wrong start.");
     L.push("");
     for (const b of withVariations) {
       L.push(`**\`${b.slug}\`**`);
       L.push("");
-      for (const v of b.variations)
-        L.push(`- \`${v.id}\` — ${v.when}. Costs: ${v.trade}.`);
+      for (const v of b.variations) L.push(`- \`${v.id}\` — ${v.when}. Costs: ${v.trade}.`);
       L.push("");
     }
   }
-
   L.push("## Routing");
   L.push("");
-  L.push(
-    "**One-off versus standing is the whole test.** A user who wants a list today wants",
-  );
-  L.push(
-    "`cargo-gtm`; a user who wants a pipeline that keeps producing it wants a cookbook.",
-  );
-  L.push(
-    "The same words describe both, so listen for whether the result is meant to keep",
-  );
-  L.push("arriving.");
+  L.push("**One-off versus standing is the whole test.** A user who wants a list today wants a run-once");
+  L.push("skill (or `cargo-gtm`, when this pack is installed); a user who wants a pipeline that keeps");
+  L.push("producing it wants one of these. The same words describe both, so listen for whether the");
+  L.push("result is meant to keep arriving.");
   L.push("");
-  L.push(
-    "A cookbook matches → install its skill, or scaffold and adapt it. No match → author",
-  );
-  L.push("from the recipes in `../SKILL.md`.");
-  L.push("");
-  L.push(
-    "**Never `cargo-ai cdk init --force` into a directory that is not empty.** It replaces",
-  );
-  L.push(
-    "the project's `package.json` and reverts any adapted cookbook code, while",
-  );
-  L.push(
-    "`cargo.state.json` survives — so the next plan diffs a live workspace against code",
-  );
-  L.push(
-    "nobody wrote. Into an existing project use `cargo-ai manifest add <slug>` (`--dir .`",
-  );
-  L.push(
-    "for a plain CDK project; the default is `infra/`): copy-in, existing files kept,",
-  );
-  L.push("every installed file recorded in `manifest.json` with its hash.");
+  L.push("**Never `cargo-ai cdk init --force` into a directory that is not empty.** It replaces the");
+  L.push("project's `package.json` and reverts adapted code while `cargo.state.json` survives, so the");
+  L.push("next plan diffs a live workspace against code nobody wrote. Copy the skill folder in as a");
+  L.push("sibling instead; that is what its own procedure says.");
   L.push("");
   return L.join("\n");
 }
