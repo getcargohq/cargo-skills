@@ -168,6 +168,12 @@ cargo-ai cdk init my-tam --from getcargohq/cargo-cookbooks/tam-building   # by h
 cargo-ai manifest add tam-building --dir .           # by hand, into an existing CDK project
 ```
 
+**If you are mid-task and the cookbook skills are not in this session**, do not wait
+for a reload: run the `skills add` above, then read
+`.agents/skills/deploy-cookbook/SKILL.md` and `.agents/skills/<slug>/SKILL.md`
+directly and follow them. To read one without installing anything,
+`npx skills use getcargohq/cargo-cookbooks@<slug>` prints it to stdout.
+
 `--from` pulls the cookbook plus its required siblings (`base-gtm`, transitively)
 with the folder layout intact, so cross-folder imports resolve.
 
@@ -180,8 +186,9 @@ adapt. No match → author from the recipes below.
 **Never `cargo-ai cdk init --force` into a directory that is not empty.** It replaces
 the project's `package.json` and reverts adapted cookbook code, while
 `cargo.state.json` survives — so the next `plan` diffs a live workspace against code
-nobody wrote. Into an existing project use `cargo-ai manifest add <slug>`: copy-in,
-existing files kept, every installed file hashed in `manifest.json`.
+nobody wrote. Into an existing project use `cargo-ai manifest add <slug>` (`--dir .`
+for a plain CDK project; the default is `infra/`): copy-in, existing files kept,
+every installed file recorded in `manifest.json` with its hash.
 
 Caveat: cookbooks typecheck and their scaffold graph validates, but they are not yet
 deploy-verified against a live workspace, and every one is `to-be-approved`. Treat
