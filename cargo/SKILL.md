@@ -571,12 +571,20 @@ against the workspace) → author `define*` files → `cdk plan` (offline diff) 
 **Recipes shipped:** `recipes/scaffold-a-workspace.md`, `add-connector-and-model.md`,
 `build-an-agent.md`, `migrate-existing-workspace.md`, `deploy-from-ci.md`.
 
-**Cookbooks:** ~20 scaffoldable outcome templates (TAM building, inbound flow,
-contact sourcing, account scoring, AI SDR, …) live in
-[`getcargohq/cargo-cookbooks`](https://github.com/getcargohq/cargo-cookbooks) —
-`cargo-ai cdk init <dir> --from getcargohq/cargo-cookbooks/<name>`. Check that menu
-before authoring a common GTM outcome from scratch; see the Cookbooks section of
-`../cargo-cdk/SKILL.md` for the routing rule and caveats.
+**Cookbooks:** ~20 pre-written GTM outcomes (TAM building,
+inbound flow, contact sourcing, account scoring, AI SDR, …) live in
+[`getcargohq/gtm-skills`](https://github.com/getcargohq/gtm-skills) beside its one-off
+skills. The menu is local:
+[`../cargo-cdk/references/cookbooks.md`](../cargo-cdk/references/cookbooks.md).
+Check it before authoring a common GTM outcome from scratch.
+
+**The routing question is one-off versus standing.** "Build our TAM" is `cargo-gtm`
+when the user wants a list today, and `tam-building` when they want a pipeline that
+keeps producing it. The words are the same; listen for whether the result is meant to
+keep arriving. Each cookbook is a self-contained worked example the installing agent
+copies into the project and adapts, not a template to fill in:
+`npx skills add getcargohq/gtm-skills/<name>`. See the section in
+`../cargo-cdk/SKILL.md` for the caveats and the `--force` warning.
 
 ### cargo-workspace-management
 

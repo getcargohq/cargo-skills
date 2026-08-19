@@ -52,6 +52,7 @@ const KNOWN_CLI_DOMAINS = new Set([
   "ai",
   "billing",
   "cdk",
+  "manifest", // shipped in @cargo-ai/cli 1.0.57: `manifest init`
   "doctor",
   "mcp",
   "connection",

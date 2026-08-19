@@ -1,0 +1,54 @@
+[
+  {
+    "slug": "account-scoring",
+    "kind": "cookbook",
+    "outcome": "Keep every account scored and tiered against your written ICP by a deployed agent that re-scores as accounts arrive and as the ICP changes, writing the rationale back to the CRM.",
+    "state": "to-be-approved",
+    "chain": 1,
+    "requires": [],
+    "hasSkill": true,
+    "variations": [
+      {
+        "id": "deterministic-scoring",
+        "when": "You need fixed cost and exact reproducibility, or an LLM judgement is not acceptable to your team",
+        "trade": "The criteria move out of the ICP markdown and into code, so they stop being reviewable by non-engineers, and you lose the rationale entirely"
+      },
+      {
+        "id": "skip-crm-roundtrip",
+        "when": "You want the score on the model directly and do not need it visible in the CRM",
+        "trade": "Reps lose the score and rationale where they actually work. The native's input is untyped, so confirm the field shape on the first run"
+      },
+      {
+        "id": "no-crm-at-all",
+        "when": "You have no CRM, or you do not want to hand this skill a CRM credential",
+        "trade": "Every other CRM-dependent skill you install later brings a CRM connector of its own; reuse one"
+      }
+    ]
+  },
+  {
+    "slug": "tam-building",
+    "kind": "cookbook",
+    "outcome": "Stand up your account universe as a deployed pipeline: a Sales Navigator company search split past the 1,000 extraction cap, resolved to real domains, deduped into a shared accounts model.",
+    "state": "to-be-approved",
+    "chain": 2,
+    "requires": [],
+    "hasSkill": true,
+    "variations": [
+      {
+        "id": "non-linkedin-source",
+        "when": "You do not want to source from LinkedIn at all, or Sales Nav does not cover your market",
+        "trade": "You lose the Sales Nav facet taxonomy that makes the split tactic mechanical, and the splitting has to be redesigned around the new source's own limits"
+      },
+      {
+        "id": "land-without-promoting",
+        "when": "You want to see and filter the raw market before paying to enrich it",
+        "trade": "Nothing reaches `accounts`, so no downstream skill (scoring, contact sourcing, signals) has anything to work with until you promote"
+      },
+      {
+        "id": "sample-first",
+        "when": "The market search is large and you want to see the cost curve before committing",
+        "trade": "Your TAM is deliberately incomplete until you widen it, so do not score or report on coverage from a sample"
+      }
+    ]
+  }
+]
