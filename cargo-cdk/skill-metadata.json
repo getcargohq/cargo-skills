@@ -49,14 +49,14 @@
       "title": "Recipe: scaffold a workspace from scratch"
     },
     {
-      "path": "references/cdk-examples.md",
-      "kind": "reference",
-      "title": "Skills that carry a CDK example, before you author one from scratch"
-    },
-    {
       "path": "references/commands.md",
       "kind": "reference",
       "title": "Command reference — `cargo-ai cdk`"
+    },
+    {
+      "path": "references/cookbooks.md",
+      "kind": "reference",
+      "title": "Cookbooks: worked CDK examples, before you author one from scratch"
     },
     {
       "path": "references/examples/full-workspace.md",
@@ -74,5 +74,5 @@
       "title": "Troubleshooting"
     }
   ],
-  "contentHash": "d47ac4b830cbaa0d3b63c2be061dd5092c54f41463ff7ee89e8186de930d42ca"
+  "contentHash": "a53da03a30d4489ea51a6896827e7cfe8c42244264bb6f67b8943c419824716f"
 }

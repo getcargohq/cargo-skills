@@ -1,7 +1,7 @@
 [
   {
     "slug": "account-scoring",
-    "kind": "cdk-example",
+    "kind": "cookbook",
     "outcome": "Keep every account scored and tiered against your written ICP by a deployed agent that re-scores as accounts arrive and as the ICP changes, writing the rationale back to the CRM.",
     "state": "to-be-approved",
     "chain": 1,
@@ -27,7 +27,7 @@
   },
   {
     "slug": "tam-building",
-    "kind": "cdk-example",
+    "kind": "cookbook",
     "outcome": "Stand up your account universe as a deployed pipeline: a Sales Navigator company search split past the 1,000 extraction cap, resolved to real domains, deduped into a shared accounts model.",
     "state": "to-be-approved",
     "chain": 2,
