@@ -1,17 +1,20 @@
 ---
 provider: aiArk
 category: enrichment
-last-reviewed: 2026-07-25
+last-reviewed: 2026-08-20
 ---
 
 # aiArk (AI Ark)
 
-LinkedIn-anchored people/company data with an unusually cheap enrich-and-email combo, a personality-analysis action nothing else in the catalog has, and per-record search that bills at the bottom of the catalog. **All six actions are credits-based and run on cargo's managed connection** — no own-key connector required (unlike `apolloio`, where only two are). Category `enrichment`, sub-category list-building. Reach for it when you hold **LinkedIn URLs** (cheapest profile+email at 0.1), need a **mobile phone** cheaply (0.5 vs the 3+ phone tier), want **lookalike-company** discovery (0.01/record), or need **personality/selling guidance** for personalization. **In the priority stack** ([`../SKILL.md`](../SKILL.md) §5) as the URL-anchored enrich rung and the cheapest per-record search — but it doesn't displace the sourcing-first spine: `salesNavigator` (0.02/lead) still leads plain at-scale people sourcing, and `cargo` native still owns match-verified firmographics.
+LinkedIn-anchored people/company data with an unusually cheap enrich-and-email combo, a personality-analysis action nothing else in the catalog has, and per-record search that bills at the bottom of the catalog. **All nine actions run on cargo's managed connection** — no own-key connector required (unlike `apolloio`, where only two are) — and the two `count*` actions are **free**. Category `enrichment`, sub-category list-building. Reach for it when you hold **LinkedIn URLs** (cheapest profile+email at 0.1), need a **mobile phone** cheaply (0.5 vs the 3+ phone tier), want **lookalike-company** discovery (0.01/record), or need **personality/selling guidance** for personalization. **In the priority stack** ([`../SKILL.md`](../SKILL.md) §5) as the URL-anchored enrich rung and the cheapest per-record search — but it doesn't displace the sourcing-first spine: `salesNavigator` (0.02/lead) still leads plain at-scale people sourcing, and `cargo` native still owns match-verified firmographics.
 
 ## Credits-based actions
 
 | Action | Cost | Inputs | Use for |
 |---|---|---|---|
+| `countPeople` | **0** | contact + account filter **groups** | How many people match, without retrieving them. **Run this before any paid search.** |
+| `countCompanies` | **0** | account filter **groups** + `lookalikeDomains` | How many companies match, without retrieving them. |
+| `enrichCompany` | **0.01** | `domain` **or** `linkedinUrl` | Firmographics for one company. **Cheapest company enrich in the catalog** — 25x under `companyEnrich.enrichByDomain` (0.25). |
 | `enrichPerson` | **0.1** | `linkedinUrl` **or** `id` (AI-Ark person ID from a prior `searchPeople`) | Full person profile **+ verified email** in one call. Bills **0** when no email is found. |
 | `reverseLookup` | **0.05** | `search` (an email address **or** a phone number) | Resolve a full person profile from an email or phone. Bills **0** on no match. |
 | `analyzePersonality` | **0.05** | `linkedinUrl` | Personality insights (OCEAN, DISC) + tailored **selling and hiring guidance**. Bills **0** on no match. |
@@ -27,6 +30,8 @@ Two extractors (`fetchPeople`, `fetchCompanies`) also exist for syncing search r
 - ✅ **Cheap mobile phone** — `findMobilePhone` (0.5) undercuts the whole phone tier (`prospeo.findPhone` 3, `FullEnrich.findPhone` 6). Mobile-only, LinkedIn-URL or domain+name anchored, billed only on a hit.
 - ✅ **Lookalike-company sourcing** — `searchCompanies` with `lookalikeDomains` at 0.01/record: seed up to 5 domains, get similar companies for less than `oceanio` / `companyEnrich` lookalikes.
 - ✅ **Rich people search** — `searchPeople` filters on education, skills, tenure windows, seniority, department, and past company that `salesNavigator` can't express, at 0.05/record.
+- ✅ **Free sizing** — `countPeople` / `countCompanies` cost **0** and answer "how big is this audience" before a single credit is spent. This is the count-first gate in [`../references/cost-discipline.md`](../references/cost-discipline.md) §4, and it is available for any filter you were about to pass to `searchPeople` / `searchCompanies`.
+- ✅ **Cheapest company enrich** — `enrichCompany` at **0.01** from a domain or LinkedIn URL. Go to `companyEnrich.enrichByDomain` (0.25) only when the 0.01 field set comes back thin.
 - ✅ **Reverse lookup** — `reverseLookup` (0.05) turns a stray email or phone back into a profile.
 - ✅ **Personalization signal** — `analyzePersonality` (0.05) is unique: OCEAN/DISC + selling guidance to feed the WRITE step.
 - ❌ **Generic at-scale sourcing** — for plain industry/size/geo lead lists, `salesNavigator.searchLeads` (0.02) is still cheaper per record.

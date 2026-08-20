@@ -1,20 +1,27 @@
 # Stage → cheapest credits-based action map
 
-Canonical reference for picking the cheapest credits-based action per GTM stage across the full 120-integration cargo catalog. Use this when the priority-stack default doesn't have what you need.
+Canonical reference for picking the cheapest credits-based action per GTM stage across the full 138-integration cargo catalog. Use this when the priority-stack default doesn't have what you need.
 
 Prices are credits/record. "Priority?" marks providers in the priority stack (salesNavigator / cargo / aiArk / waterfall / FullEnrich / apolloio / theirStack / peopleDataLabs).
+
+This map is **curated** — the cheapest few rungs per stage, with the routing judgement attached. For the complete machine-generated list of all 197 credits-based actions, including per-config pricing, see [`credits-cost-table.md`](credits-cost-table.md).
+
+**Size before you spend.** `aiArk.countPeople` and `aiArk.countCompanies` cost **0** and return how many records a filter matches without retrieving them. Run the count, quote it, then decide whether to pay for the search.
 
 ## Sourcing — Search people
 
 | Provider | Action | Cost | Priority? | Notes |
 |---|---|---|---|---|
+| aiArk | countPeople | **0** | ✅ | Not a source — counts matches for a filter. Run this first. |
+| apolloio | searchPeople | 0 / **1** per person | ✅ | **0 with `shouldEnrich: false`** (identity only), 1 when it enriches. Cheapest way to test whether Apollo has the audience at all. |
 | salesNavigator | searchLeads | 0.02 | ✅ | LinkedIn-anchored. Default at-scale. |
 | icypeas | findPeople | 0.02 |   | Cheapest non-LinkedIn source. |
 | aiArk | searchPeople | 0.05 | ✅ | Rich filters (education, skills, tenure, seniority, past company). Per returned record. |
 | firecrawl | search | 0.05 |   | Web search; use when no structured provider has the data. |
 | linkup | search | 0.5 |   | Web search with structured answers. |
-| contactOut | search | 1 |   | Mid-tier when other sources miss. |
+| contactOut | search | 1 / item (**3** with `revealInfo: true`) |   | Mid-tier when other sources miss. |
 | oceanio | searchPeople | 1 |   | Mid-tier. |
+| proxycurl | search | 1 / item |   | Last resort. Unique filters: profile free-text (`headline`, `summary`, `*_job_description`), `linkedin_groups`/`interests`/`languages`, an **absolute** role-start date, and `public_identifier_not_in_list`. Education/skills/tenure/funding are `aiArk.searchPeople` at 0.05 — 20x cheaper. See [`../provider-playbooks/proxycurl.md`](../provider-playbooks/proxycurl.md). |
 | peopleDataLabs | searchPeople / queryPeople | 3 | ✅ | Heavyweight. `searchPeople` uses cargo's `{conjonction, groups, conditions}` filter; `queryPeople` takes a PDL **SQL string**. |
 | waterfall | searchProspects | 3 | ✅ | Multi-source; useful when LinkedIn isn't enough. |
 
@@ -22,7 +29,9 @@ Prices are credits/record. "Priority?" marks providers in the priority stack (sa
 
 | Provider | Action | Cost | Priority? | Notes |
 |---|---|---|---|---|
+| aiArk | countCompanies | **0** | ✅ | Not a source — counts matches for a filter. Run this first. |
 | aiArk | searchCompanies | 0.01 | ✅ | **Cheapest in catalog.** Per returned record; supports `lookalikeDomains` (≤5 seeds). |
+| apolloio | searchOrganizations | 0.01 / organization | ✅ | Ties aiArk on price. Firmographic, funding, technology and hiring filters. |
 | icypeas | findCompanies | 0.02 |   | Cheapest non-lookalike. |
 | salesNavigator | searchAccounts | 0.05 | ✅ | LinkedIn-anchored. Default at-scale. |
 | theirStack | searchCompanies | 0.5 | ✅ | Tech-stack + hiring-intent filter. |
@@ -33,8 +42,8 @@ Prices are credits/record. "Priority?" marks providers in the priority stack (sa
 
 | Provider | Action | Cost | Notes |
 |---|---|---|---|
-| serper | searchPlaces | 1 | Google Maps-style. Default for SMB / storefront / service-area. |
-| firecrawl | search | 0.05 | Web search fallback. |
+| serper | searchPlaces | 0.05 | Google Maps-style, **fixed per query**. Default for SMB / storefront / service-area. |
+| firecrawl | search | 0.05 | Web search fallback; same price, unstructured results. |
 
 ## Enrich — Person
 
@@ -45,17 +54,23 @@ Prices are credits/record. "Priority?" marks providers in the priority stack (sa
 | linkedin | enrichProfile | 0.25 |   | LinkedIn-anchored (no email). |
 | prospeo | enrichLinkedin | 0.5 |   | Cheapest LinkedIn URL → details. |
 | linkedin | enrichProfileFromName | 0.5 |   | Name+company → LinkedIn details. |
-| apolloio | enrichPerson | 1 (**3** with `revealPhoneNumber`) | ✅ | Niche-coverage rung — promote per-batch only when a pilot shows Apollo hits where cargo/waterfall miss. |
+| apolloio | enrichPerson | 1 (**9** with `revealPhoneNumber`) | ✅ | Niche-coverage rung — promote per-batch only when a pilot shows Apollo hits where cargo/waterfall miss. The phone flag is **9x**, not a small uplift. |
 | cargo | enrichProspectDetails | 2 | ✅ | After matchProspect. Default in priority stack. |
 | waterfall | enrichContact | 2 | ✅ | Multi-source contact enrichment. |
 | peopleDataLabs | enrichPerson | 3 | ✅ | Heavyweight backfill. |
+| datagma | enrichPerson | 8 |   | LinkedIn URL or work email → profile. Priced as a phone rung; use only when cheaper rungs miss. |
+
+**From an email rather than a URL:** `aiArk.reverseLookup` (0.05) is the cheapest, then `companyEnrich.lookupPerson` (0.25, resolves the company from the domain), then `contactOut.enrich` (0–3 by config), then `datagma.enrichPersonFromPersonalEmail` (2, the only rung that takes a **personal** address — non-EU only).
 
 ## Enrich — Company
 
 | Provider | Action | Cost | Priority? | Notes |
 |---|---|---|---|---|
-| companyEnrich | enrichByDomain | 0.25 |   | Cheapest by domain. |
+| aiArk | enrichCompany | 0.01 | ✅ | **Cheapest in catalog.** Firmographics from a domain or LinkedIn URL. |
+| companyEnrich | enrichByDomain | 0.25 |   | Fuller field set than aiArk when 0.01 comes back thin. |
+| companyEnrich | getWorkforce | 0.25 |   | Historical headcount **by department** — a growth signal nothing else in the catalog returns. |
 | linkedin | enrichCompany | 0.25 |   | LinkedIn ID-based. |
+| prospeo | enrichCompany | 0.5 |   | Alt mid-tier. |
 | linkedin | enrichCompanyFromDomain | 0.5 |   | Domain → LinkedIn-anchored details. |
 | cargo | enrichBusinessFirmographics | 0.5 | ✅ | After matchBusiness. Default in priority stack. |
 | apolloio | enrichOrganization | 1 | ✅ | Apollo-anchored; the niche-coverage rung when cargo's match misses. |
@@ -89,7 +104,6 @@ Prices are credits/record. "Priority?" marks providers in the priority stack (sa
 | kitt | verifyEmail | 0.05 |   |   |
 | enrichley | verify | 0.1 |   |   |
 | enrowio | verifyEmail | 0.1 |   |   |
-| prospeo | verifyEmail | 0.1 |   |   |
 | waterfall | verifyEmail | 0.1 | ✅ | **Default in priority stack** — multi-source. |
 | zeroBounce | verifyEmail | 0.1 |   |   |
 | neverBounce | verifyEmail | 0.2 |   |   |
@@ -103,13 +117,13 @@ Prices are credits/record. "Priority?" marks providers in the priority stack (sa
 |---|---|---|---|---|
 | aiArk | findMobilePhone | 0.5 | ✅ | **Cheapest.** Mobile-only; needs a LinkedIn URL or domain+name. Bills 0 on miss. First stop with a URL in hand. |
 | prospeo | findPhone | 3 |   | Cheapest landline/DID; escalate from aiArk on a mobile miss. |
-| apolloio | enrichPerson (`revealPhoneNumber: true`) | 3 | ✅ | Phone bundled into the person enrich (1 → 3) — only worth it when you were enriching with Apollo anyway. |
 | forager | findPhone | 5 |   | Mid-tier. |
 | findyMail | findPhone | 5 |   | Mid-tier. |
 | FullEnrich | findPhone | 6 | ✅ | Better hit rate; escalate from prospeo. |
 | waterfall | findPhone | 7 | ✅ | Multi-source; last-resort priority stack. |
 | FullEnrich | findPhoneAndEmail | 7 | ✅ | Combined call. No discount over running both. |
 | datagma | findPhone | 8 |   |   |
+| apolloio | enrichPerson (`revealPhoneNumber: true`) | **9** | ✅ | Phone bundled into the person enrich (1 → 9). Rarely the right call: at 9 it is dearer than every dedicated phone rung except cleon1. |
 | cleon1 | findPhoneFromLinkedin | 15 |   | Premium; LinkedIn-anchored. |
 
 ## LinkedIn URL lookup
@@ -137,8 +151,10 @@ Prices are credits/record. "Priority?" marks providers in the priority stack (sa
 
 | Provider | Action | Cost | Notes |
 |---|---|---|---|
-| cargo | enrichBusinessTechnographics | 1 | Cargo-native. |
+| builtwith | getDomainSummary | **0** | Free tier — technology-group *counts* for a domain. Enough to bucket accounts before paying for detail. |
 | theirStack | searchTechnologies | 0.5 | Catalog-style lookup. |
+| builtwith | enrichDomain | 1 | Full stack + metadata for one domain. |
+| cargo | enrichBusinessTechnographics | 1 | Cargo-native. |
 
 ## Hiring intent
 
@@ -159,6 +175,32 @@ Prices are credits/record. "Priority?" marks providers in the priority stack (sa
 |---|---|---|---|
 | snitcher | searchSessions | 0 | Free credits-tier. De-anonymize site visitors. |
 
+## LinkedIn audience extraction
+
+Everything here is **0.05 per item returned** and needs a LinkedIn URL in hand. They read an audience that already engaged with something, which is a cheaper and warmer starting point than a cold title search.
+
+| Provider | Action | Cost | Notes |
+|---|---|---|---|
+| linkedin | extractEventAttendees | 0.05 / item | Attendees of a LinkedIn event. |
+| linkedin | searchPostComments / searchPostReactions | 0.05 / item | Who engaged with a specific post. |
+| linkedin | extractProfilePostActivity / extractProfileCommentActivity / extractProfileReactionActivity | 0.05 / item | What one person has been posting, commenting on, reacting to. |
+| linkedin | extractFollowers / extractPageFollowers | 0.05 / item | A profile's or page's followers. |
+| linkedin | extractProfileViewers / extractCompanyViewers | 0.05 / item | Who viewed the profile / company page. |
+| linkedin | extractCompanyEmployeesInsights | 0.25 | Aggregate view of a company's employees. |
+| linkedin | extractSimilarCompanies | 0.25 | Lookalikes from LinkedIn's own graph. |
+
+These act through a real LinkedIn identity — the engagement actions (`connectProfile`, `commentPost`, `messageProfile`, all 0.25) are rate-and-conduct sensitive and must never be batch-blasted. See [`../provider-playbooks/linkedin.md`](../provider-playbooks/linkedin.md) and [`acceptable-use.md`](acceptable-use.md) §2.
+
+## Social profiles (non-LinkedIn)
+
+| Provider | Action | Cost | Notes |
+|---|---|---|---|
+| x | `getUserProfile` / `getUserPosts` / `getFollowers` / `getPostLikers` / `searchPosts` … (14 actions) | 0.02 | Everything X. Cheapest social rung in the catalog. |
+| brightData | `scrapeInstagramProfile` / `scrapeTikTokProfile` / `scrapeFacebookProfile` / `scrapeFacebookPagePosts` / `scrapeYouTubeChannel` | 0.1 | **Only** coverage for these four platforms. One profile URL in, profile out. |
+| brightData | `scrapeTwitterProfile` | 0.1 | 5x `x.getUserProfile` for less. Fallback only. |
+
+Consumer platforms: read **brand, creator and agency accounts as company records**. Building person records from a named individual's personal social profile is a consumer-targeting refusal under [`acceptable-use.md`](acceptable-use.md) §2 — see [`../provider-playbooks/brightData.md`](../provider-playbooks/brightData.md).
+
 ## Web research
 
 | Provider | Action | Cost | Priority? | Notes |
@@ -174,19 +216,23 @@ Prices are credits/record. "Priority?" marks providers in the priority stack (sa
 
 **Corrected 2026-08-15**: this table priced `serper.search` at **1**. It is **0.05**, verified against the live integration catalog, and the 20x error was steering agents away from the cheapest search rung. `provider-playbooks/serper.md` had it right throughout.
 
+**Corrected 2026-08-20**, all verified against the live catalog: `serper.searchPlaces` was priced at **1**, the same 20x error as `search` above, missed in the previous pass — it is **0.05**. `apolloio.enrichPerson` with `revealPhoneNumber` was priced at **3**; it is **9**. `anthropic.instruct`'s cheapest rung was labelled 0.2 (Haiku); Haiku 3.5 is **0.05** and 0.2 is Sonnet. `prospeo.verifyEmail` was listed at 0.1 and **no longer exists** in the catalog. `aiArk.enrichCompany` (**0.01**, the cheapest company enrich there is) was missing from Enrich — Company entirely.
+
 Picking between them: **known URL → `parallel.extract`. Plain keyword query → `serper.search`. Needs a document-type or date filter → `exa.search`. Needs structured output → `parallel.createTask` at `lite`.** Reach for `linkup.instruct` only when a prose sourced answer is genuinely what you want, since it is 8x `createTask` at `lite`.
 
 ## LLM (instruct)
 
 | Provider | Action | Cost (cheapest model) | Notes |
 |---|---|---|---|
-| openAi | instruct | 0.006 (nano) | Cheapest at-scale; gpt-5-nano. |
-| gemini | instruct | 0.01 (Flash) | Cheap large-context. |
-| anthropic | instruct | 0.2 (Haiku) | Default for high-quality reasoning + structured output. |
-| perplexity | instruct | 0.3 (Sonar) | Web-grounded research with citations. |
+| openAi | instruct | 0.006 (gpt-5-nano) | Cheapest at-scale. Ladder to 0.5 (gpt-4o). |
+| gemini | instruct | 0.01 (1.5/2.0 Flash) | Cheap large-context. Ladder to 0.25 (3.6 Flash). |
+| anthropic | instruct | 0.05 (Haiku 3.5) | **0.2 for Sonnet**, 2 for Opus, 4 for Fable 5. Default for high-quality reasoning + structured output. |
+| perplexity | instruct | 0.3 (Sonar, `searchContextSize: low`) | Web-grounded research with citations. Ladder to 1 (sonar-pro, high). |
+
+Prices are **per 1k tokens**, not per record. On openAi, gemini and anthropic, `advancedSettings.withWebSearch: true` adds a **0.4 flat charge per call** on top — cheap per token, expensive per row in a batch. Per-model pricing is in [`credits-cost-table.md`](credits-cost-table.md).
 
 ## Notes on this map
 
-- All 145 credits-based actions documented. Free CRUD actions (sequencer / CRM upserts, list/get/delete) not shown — they don't consume credits.
+- This map is curated, not exhaustive: it carries the cheapest rungs per stage plus the routing judgement. The complete list of all **194** credits-based actions is generated from the live catalog into [`credits-cost-table.md`](credits-cost-table.md) — regenerate it with `cargo-ai orchestration action cost-table --raw`. The other 310 catalog actions (sequencer / CRM upserts, list/get/delete) consume no credits and appear in neither.
 - Costs are per-record at the cheapest config. Some actions have variable cost by config (e.g., `contactOut.enrich` returns 0/1/2/3 credits depending on data returned).
 - Priority stack: see `../SKILL.md` for the canonical 8-provider priority list and `../provider-playbooks/` for per-provider deep dives.

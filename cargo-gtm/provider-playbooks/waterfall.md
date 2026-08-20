@@ -22,7 +22,7 @@ Multi-source enrichment with built-in fallback across multiple underlying provid
 ## What it's for
 
 - ✅ **Email verification at the cheapest tier** (0.1) — default for any verify step in the spine.
-- ✅ **Job change signal** — `detectJobChange` is the only credits-based action of its kind in the entire 120-integration catalog. Cargo-unique strength.
+- ✅ **Job change signal** — `detectJobChange` is the only credits-based action of its kind in the entire 138-integration catalog. Cargo-unique strength.
 - ✅ **Fallback contact / company enrichment** — when cargo native + FullEnrich miss, waterfall is the next stop before the heavyweight peopleDataLabs.
 - ✅ **Multi-identifier enrichment** — accepts LinkedIn URL, domain, name, or email. Useful when the input is weakly identified.
 

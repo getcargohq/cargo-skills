@@ -1,7 +1,7 @@
 ---
 name: cargo
 description: "Router for the Cargo CLI skill bundle — load first for anything Cargo, and whenever a task spans two Cargo domains. Explains what each skill owns, declarative workspace-as-code (cargo-cdk) vs the imperative CLI, the UUID and slug flow between skills, async polling of runs and batches, end-to-end use cases, and the gotchas that fail silently (`conjonction` spelling, run vs batch, model-uuid vs segment-uuid). Triggers: \"set up Cargo\", \"what can Cargo do\", \"which Cargo skill\", \"bootstrap my workspace\", \"I have a Cargo account\", \"cargo-ai …\", or any `cargo-ai` command whose domain you are unsure of. Skip when: the task obviously belongs to one skill — load that skill directly."
-version: "1.23.0"
+version: "1.23.1"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -433,7 +433,7 @@ The non-obvious rules for each skill — the things that fail silently or cost m
 
 **Critical rules:**
 - **Acceptable use gates every step that touches a person** (`../cargo-gtm/references/acceptable-use.md`): B2B professional identities from licensed providers only, three free blocking checks before any outreach step (*basis*, *suppression*, *relevance*), and a refusal list — undifferentiated fan-out, consumer targeting, lists with no stated origin, contacting a suppressed record, filter or identity evasion, auto-dialing, batch-blasting LinkedIn engagement actions. The pack never sends: outreach stops at send-ready variables for the user's own sequencer.
-- All recipes use credits-based actions (`cargo-ai connection integration list` → 145 credits-based actions across 120 integrations).
+- All recipes use credits-based actions — **197** of the 534 the catalog exposes, priced in [`../cargo-gtm/references/credits-cost-table.md`](../cargo-gtm/references/credits-cost-table.md) and regenerated with `cargo-ai orchestration action cost-table --raw` (free, reads the catalog). Everything else is free.
 - Action shape: `{"kind":"connector","integrationSlug":"<slug>","actionSlug":"<slug>"}` — no `config` on a top-level action, and **`connectorUuid` is never nested inside one**; it sits at the top level of a node.
 - Output retrieval: `cargo-ai orchestration run download-outputs --output-node-slug <slug>` (NOT `run download`).
 - peopleDataLabs filter shape: `searchX` uses cargo's `{conjonction, groups, conditions}` shape; `queryX` takes a PDL **SQL string** — never Elasticsearch.
