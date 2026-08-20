@@ -2,7 +2,7 @@
 
 When the priority stack (salesNavigator / cargo / aiArk / waterfall / FullEnrich / apolloio / theirStack / peopleDataLabs) can't serve the user's criteria, swap in providers from the long tail.
 
-For every alternative, see [`stage-action-map.md`](stage-action-map.md) for the cheapest credits-based action per stage across the full 120-integration catalog.
+For every alternative, see [`stage-action-map.md`](stage-action-map.md) for the cheapest credits-based action per stage across the full 138-integration catalog.
 
 ## When to swap providers
 
