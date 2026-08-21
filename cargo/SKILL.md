@@ -467,6 +467,7 @@ The non-obvious rules for each skill — the things that fail silently or cost m
 - Query via `cargo-ai storage query execute "<sql>"` (or `storage query download --query "<sql>"` for full exports) using `<datasetSlug>.<modelSlug>` table names (e.g. `default.companies`). `model get-ddl` is optional — useful for column types and SQL dialect.
 - For SQL against orchestration runtime tables (`runs`/`batches`/`spans`/`records`), use `cargo-ai orchestration query execute "<sql>"` — documented in `cargo-orchestration`.
 - For advanced record queries (filtering, sorting, pagination), use `segmentation segment fetch` — documented in `cargo-segmentation`.
+- **Relationships and unification are CLI-authorable, not UI-only.** `storage relationship set` and `storage model update --unification` both exist. Two traps: `relationship set` **replaces** the dataset's whole set (anything absent from the payload is deleted — `list` first, send the full array back), and `--unification` only writes config, so the merge does not happen until a `storage run create --model-uuid <uuid>`.
 
 ### cargo-segmentation
 

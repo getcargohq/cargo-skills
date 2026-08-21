@@ -1,6 +1,6 @@
 ---
 name: cargo-storage
-description: "Work with the data inside a Cargo workspace — models (Companies, Contacts, Deals…), datasets, columns, relationships, records, and SQL over workspace storage. Triggers: \"what models do I have\", \"show me the schema\", \"add a column for\", \"how many contacts do I have\", \"SELECT … FROM\", \"query my companies table\", \"join contacts to companies\", \"what is the DDL\", \"set up a webhook-fed model\", \"where does this field live\", \"import this into a model\". Skip when: querying run or batch telemetry rather than business data — use cargo-orchestration; naming a reusable filtered audience — use cargo-segmentation."
+description: "Work with the data inside a Cargo workspace — models (Companies, Contacts, Deals…), datasets, columns, relationships, records, and SQL over workspace storage. Triggers: \"what models do I have\", \"show me the schema\", \"add a column for\", \"how many contacts do I have\", \"SELECT … FROM\", \"query my companies table\", \"join contacts to companies\", \"what is the DDL\", \"set up a webhook-fed model\", \"where does this field live\", \"import this into a model\", \"unify these models\", \"merge duplicate accounts\", \"link contacts to companies\", \"set up a relationship between\". Skip when: querying run or batch telemetry rather than business data — use cargo-orchestration; naming a reusable filtered audience — use cargo-segmentation."
 version: "1.2.1"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
@@ -20,7 +20,7 @@ metadata:
 
 # Cargo CLI — Storage
 
-Data layer management: inspecting and modifying models, datasets, columns, relationships, and records, and running SQL queries against workspace storage.
+Data layer management: inspecting and modifying models, datasets, columns, relationships, unification, and records, and running SQL queries against workspace storage.
 
 > See `references/response-shapes.md` for full JSON response structures.
 > See `references/troubleshooting.md` for common errors and how to fix them.
@@ -63,7 +63,7 @@ cargo-ai storage model get <model-uuid>
 cargo-ai storage model get-ddl <model-uuid>
 cargo-ai storage dataset list
 cargo-ai storage column list --model-uuid <uuid>
-cargo-ai storage relationship list --model-uuid <uuid>
+cargo-ai storage relationship list
 cargo-ai storage record list --model-uuid <uuid>
 cargo-ai storage query execute "SELECT * FROM default.companies LIMIT 10"
 cargo-ai storage query download --query "SELECT * FROM default.companies"
@@ -187,17 +187,88 @@ If the preview comes back empty or all-null when it shouldn't, that's a finding 
 
 ## Relationships
 
-Relationships link models together (e.g. Contacts belong to Companies).
+Relationships link models together (e.g. Contacts belong to Companies). They are
+authored from the CLI, not just the UI.
+
+`relationship list` takes **no flags** — it returns every relationship in the
+workspace. Filter client-side on `fromModelUuid` / `toModelUuid`.
 
 ```bash
-# List relationships for a model
-cargo-ai storage relationship list --model-uuid <uuid>
-
-# Set a relationship between two models
-cargo-ai storage relationship set \
-  --from-model-uuid <uuid> \
-  --to-model-uuid <uuid>
+cargo-ai storage relationship list
 ```
+
+**`relationship set` replaces the dataset's whole relationship set.** It takes a
+dataset and the complete list that should exist within it: entries carrying a
+`uuid` are updated, entries without one are created, and **any existing
+relationship whose `uuid` is absent from the payload is deleted**. Sending one
+relationship to a dataset that has five removes the other four. Always `list`
+first, then send back the full array with your addition:
+
+```bash
+cargo-ai storage relationship set \
+  --dataset-uuid <dataset-uuid> \
+  --relationships '[
+    {"uuid":"<existing-uuid>","fromModelUuid":"<contacts-uuid>","fromColumnSlug":"account_id","toModelUuid":"<companies-uuid>","toColumnSlug":"id","relation":"manyToOne"},
+    {"fromModelUuid":"<deals-uuid>","fromColumnSlug":"company_id","toModelUuid":"<companies-uuid>","toColumnSlug":"id","relation":"manyToOne"}
+  ]'
+```
+
+`relation` is `oneToOne`, `manyToOne`, or `oneToMany`. Both models must live in
+the dataset you pass — relationships never span datasets, so `fromDatasetUuid`
+and `toDatasetUuid` on the response always equal `--dataset-uuid`.
+
+Failure reasons: `datasetNotFound`; `invalidRelationships` (a column slug or
+model UUID that doesn't resolve, or a duplicate — including the same pair stated
+in reverse); `modelNotCompatible` (see below).
+
+**Unify models refuse manual relationships.** In the native dataset, a unify
+model's relationships are generated during sync, so naming one as `fromModelUuid`
+or `toModelUuid` returns `modelNotCompatible`. Those auto-generated rows are also
+excluded from the replace above, so a `set` call cannot delete them.
+
+## Unification
+
+Unification is what merges records from several source models into one canonical
+account/contact — and it is **configurable from the CLI**, via `--unification` on
+`model update`. Pass `null` to clear it.
+
+```bash
+# Connector-driven: the integration decides how records unify
+cargo-ai storage model update --uuid <model-uuid> --unification '{"source":"integration"}'
+
+# Custom: you name the type, the matching keys, and optionally a parent
+cargo-ai storage model update --uuid <model-uuid> --unification '{
+  "source": "custom",
+  "type": "account",
+  "uniqueColumns": [{"slug":"domain","reference":"domain"}],
+  "selectedColumnSlugs": ["name","industry","employee_count"],
+  "parent": {"kind":"model","columnSlug":"account_id","parentModelUuid":"<accounts-uuid>"}
+}'
+```
+
+| Field | Applies to | Meaning |
+|---|---|---|
+| `source` | both | `integration` (connector-defined) or `custom` |
+| `type` | custom | `account`, `contact`, `accountEvent`, `contactEvent` |
+| `uniqueColumns` | custom | Match keys — `{slug, reference}` per column. This is what decides which rows are the same entity |
+| `selectedColumnSlugs` | custom | Columns carried into the unified model. Omit for all |
+| `timeColumnSlug` | custom | Event timestamp — for the two `*Event` types |
+| `parent` | custom | Links contacts/events to their account: `{"kind":"model","columnSlug":…,"parentModelUuid":…}` or `{"kind":"reference","columnSlug":…,"reference":…}` |
+| `filter` | custom | Segmentation filter restricting which rows unify — same `conjonction` shape as segments |
+
+**Writing the config does not recompute anything.** The unified rows are rebuilt
+by the model's sync run, so follow the update with a run and poll it:
+
+```bash
+cargo-ai storage run create --model-uuid <model-uuid>
+cargo-ai storage run list --model-uuid <model-uuid>
+```
+
+Get the current config from `storage model get <uuid>` → `unification` (`null`
+when the model doesn't unify). Once the run finishes, check the row count with
+`storage query execute` before treating the change as done — a too-narrow
+`uniqueColumns` under-merges and a too-broad one collapses distinct entities, and
+both look like a successful run.
 
 ## Records
 
