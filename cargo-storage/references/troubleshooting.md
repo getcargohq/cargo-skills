@@ -31,8 +31,20 @@ Common errors and recovery steps for `cargo-storage` commands.
 
 | Symptom | Cause | Fix |
 |---------|-------|-----|
-| `relationship set` fails | One or both model UUIDs are wrong | Verify both model UUIDs with `model list` |
-| `relationship list` returns empty | No relationships defined for that model | This is expected if relationships haven't been configured yet |
+| Relationships disappeared after a `set` | `relationship set` replaces the dataset's whole set — anything whose `uuid` is missing from the payload is deleted | `relationship list` first, then send the full array back with your addition, keeping each existing `uuid` |
+| `invalidRelationships` | A model UUID or column slug doesn't resolve, or the payload duplicates a pair (including stated in reverse) | Verify UUIDs with `model list` and slugs with `column list --model-uuid <uuid>` |
+| `modelNotCompatible` | A unify model was named as `fromModelUuid` or `toModelUuid` | Unify-model relationships are generated during sync and can't be authored by hand |
+| `datasetNotFound` | `--dataset-uuid` is wrong, or the two models live in different datasets | Relationships never span datasets; confirm with `model list` → `datasetUuid` |
+| `relationship list` returns everything | It takes no flags and is workspace-wide by design | Filter client-side on `fromModelUuid` / `toModelUuid` |
+
+## Unification
+
+| Symptom | Cause | Fix |
+|---------|-------|-----|
+| `model update --unification` succeeded but nothing merged | Writing the config doesn't recompute; unified rows are rebuilt by the sync run | `storage run create --model-uuid <uuid>`, then poll `storage run list --model-uuid <uuid>` |
+| Duplicates survive unification | `uniqueColumns` is too narrow, or the match key is dirty (mixed case, `www.` prefixes) | Widen or normalize the key, then re-run |
+| Distinct entities merged into one | `uniqueColumns` is too broad (e.g. matching on a shared generic domain) | Add a second key column, or scope with `filter` |
+| Contacts not attached to accounts | `parent` is unset on a `contact` unification | Set `parent` to the account model and the joining column slug |
 
 ## Records
 

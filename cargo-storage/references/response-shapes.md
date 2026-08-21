@@ -25,6 +25,7 @@ JSON response structures returned by Cargo CLI commands used in the `cargo-stora
         { "slug": "full_name", "type": "string", "label": "Full Name", "kind": "computed", "expression": { "kind": "jsExpression", "expression": "..." }, "columnsUsed": ["first_name", "last_name"] },
         { "slug": "total_deals", "type": "number", "label": "Total Deals", "kind": "metric", "relationshipUuid": "...", "aggregation": { "function": "count", "columnSlug": "uuid" } }
       ],
+      "unification": null,
       "playsCount": 2,
       "segmentsCount": 1,
       "isPaused": false,
@@ -43,6 +44,11 @@ JSON response structures returned by Cargo CLI commands used in the `cargo-stora
 ```
 
 **Key fields:** `uuid`, `slug`, `name`, `datasetUuid`, `idColumnSlug`, `columns` (original columns), `additionalColumns` (custom/computed/metric/lookup columns).
+
+`unification` is `null` unless the model unifies. When set it is either
+`{"source":"integration"}` or the `custom` shape (`type`, `uniqueColumns`,
+optionally `selectedColumnSlugs` / `timeColumnSlug` / `parent` / `filter`) —
+see the Unification section of `SKILL.md`.
 
 Columns have no `uuid` — they are identified by `slug` within the model.
 
@@ -176,15 +182,26 @@ Kind-specific fields are included alongside the base fields:
   "relationships": [
     {
       "uuid": "relationship-uuid",
+      "workspaceUuid": "workspace-uuid",
+      "fromDatasetUuid": "dataset-uuid",
       "fromModelUuid": "contacts-model-uuid",
+      "fromColumnSlug": "account_id",
+      "fromPropertySlug": "hubspot___contacts[0]",
+      "toDatasetUuid": "dataset-uuid",
       "toModelUuid": "companies-model-uuid",
-      "fromColumnSlug": "company_uuid",
-      "toColumnSlug": "uuid",
+      "toColumnSlug": "id",
       "relation": "manyToOne"
     }
   ]
 }
 ```
+
+Workspace-wide — the command takes no flags. `fromDatasetUuid` always equals
+`toDatasetUuid`. `fromPropertySlug` / `toPropertySlug` appear only where the
+relationship keys off a nested property of a connector column.
+
+`relationship set` returns the same shape, holding the dataset's full set after
+the replace.
 
 ## cargo-ai storage record list
 
