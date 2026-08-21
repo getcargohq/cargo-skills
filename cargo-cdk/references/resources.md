@@ -29,6 +29,8 @@ per-call options).
 | `defineTerritory(slug, spec)` | Revenue-org territory | `model`, `members`, `color?`, `description?`, `fallbackMember?` | `model`, `members` | `uuid` |
 | `defineWorker(slug, spec)` | Hosted worker (built bundle) | `path`, `description?`, `folder?` | `folder` | `uuid`, `url` |
 | `defineApp(slug, spec)` | Hosted Vite SPA | `path`, `description?`, `folder?` | `folder` | `uuid`, `url` |
+| `defineDomain(name, spec)` | Sending domain + its DNS zone | `adopt?`, `dnsRecords?` (**replaces the whole zone**) | — | `uuid` |
+| `defineMailbox(slug, spec)` | Sending inbox on a domain (**monthly credit charge**) | `domain`, `type` (`google`/`shared`/`private` — no `outlook`), `username?` (defaults to slug), `firstName`, `lastName`, `signature?`, `folder?`, `adopt?` | `domain`, `folder` | `uuid` |
 | `defineAlert(slug, spec)` | Scheduled threshold alert (observability) | `schedule`, `scope`, `threshold`, `actions`, `name?`, `description?`, `enabled?`, `folder?` | scope: `workflow`/`connector`/`tool`/`agent`/`model`; each action's `ref`; `folder` | `uuid` |
 
 `defineWorkflow(slug, { input, output, uses? }, build)` is re-exported from

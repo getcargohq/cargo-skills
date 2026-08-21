@@ -96,6 +96,12 @@
 {"prompt": "Which Cargo skill should I use for this?", "expect": "cargo"}
 {"prompt": "What is the UUID flow between the Cargo skills?", "expect": "cargo"}
 
+{"prompt":"Set up a sending mailbox on our outreach domain","expect":"cargo-mailbox-management","why":"Provisioning an inbox Cargo owns. The only skill with the mailboxManagement vocabulary."}
+{"prompt":"How many emails can this inbox send today?","expect":"cargo-mailbox-management","why":"The send allowance under the warm-up ramp — no other skill knows the ramp exists."}
+{"prompt":"Someone asked to be taken off our list — make sure we never email them again","expect":"cargo-mailbox-management","why":"The workspace suppression list lives in this domain, not in the GTM skill that merely gates on it."}
+{"prompt":"Did anyone reply to the emails we sent last week?","expect":"cargo-mailbox-management","why":"Replies are events on outbound messages; threads and events are read here, not through analytics."}
+{"prompt":"Warm up these inboxes before we start sending","expect":"cargo-mailbox-management","why":"start-warmup and the 45-day ramp."}
+
 // Harder cases — deliberately avoid the literal trigger phrasing, so these test
 // the description's vocabulary rather than its quoted examples.
 {"prompt": "Show me the workflow for the Find email tool", "expect": "cargo-orchestration", "why": "Visualising a graph is orchestration, not diagnostics — nothing has failed."}
@@ -126,3 +132,5 @@
 {"prompt":"Explain this automation to someone who has never seen it — I need a picture, not JSON","expect":"cargo-orchestration","why":"No CLI vocabulary at all; the job is rendering a graph.","tier":"hard"}
 {"prompt":"Is there a skill that already builds account scoring, or do I write it from scratch?","expect":"cargo-cdk","why":"cargo-cdk gained the worked-example vocabulary: it owns the menu of gtm-skills that carry a CDK example and must catch the 'before I author it' question."}
 {"prompt":"Start from a worked example for a TAM pipeline and adapt it to our workspace","expect":"cargo-cdk","why":"'worked example' and a deployed pipeline are the standing-side words; the pack's CDK skill routes them, and its menu hands off to tam-building."}
+{"prompt":"Write me a first-touch email for these fintech CTOs","expect":"cargo-gtm","why":"Copywriting and audience, not sending infrastructure — must NOT be pulled to cargo-mailbox-management by the word email.","tier":"hard"}
+{"prompt":"What did that email-sending workflow cost us last month?","expect":"cargo-billing","why":"Credit spend is billing even when the subject is mail; the mailbox skill owns the fleet, not the invoice.","tier":"hard"}

@@ -9,7 +9,7 @@ Seventeen skills at the repo root, each its own directory with a `SKILL.md`:
 - **`cargo`** — the router. Explains the graph and routes to everything else.
 - **`cargo-quickstart`** — the guided first-run demo.
 - **`cargo-gtm`** — the outcome skill: recipes, phase guides, provider playbooks.
-- **Fourteen capability skills** — one per CLI domain, plus the cross-domain `cargo-diagnostics`.
+- **Fifteen capability skills** — one per CLI domain, plus the cross-domain `cargo-diagnostics`.
 
 Supporting material sits beside each `SKILL.md` in `references/`, `recipes/`, `guides/`, `provider-playbooks/`, `agents/`, and `scripts/`.
 

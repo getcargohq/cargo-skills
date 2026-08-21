@@ -37,6 +37,7 @@ const SKILL_DIRS = [
   "cargo-diagnostics",
   "cargo-observability",
   "cargo-hosting",
+  "cargo-mailbox-management",
   "cargo-workspace-management",
 ];
 
@@ -72,6 +73,7 @@ const KNOWN_CLI_DOMAINS = new Set([
   "whoami",
   "login",
   "logout",
+  "mailboxManagement",
   "workspaceManagement",
   "--help",
   "--version",

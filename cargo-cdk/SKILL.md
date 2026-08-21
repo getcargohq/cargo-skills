@@ -1,7 +1,7 @@
 ---
 name: cargo-cdk
 description: "Manage a whole Cargo workspace as code — declare connectors, models, plays, tools, agents, MCP servers, segments, context, folders, files, workers, and apps in TypeScript, then reconcile them with `cargo-ai cdk` (init → types → plan → deploy), the way you would run Pulumi or the AWS CDK. Triggers: \"as code\", \"in git\", \"version-controlled\", \"reproducible\", \"Terraform for Cargo\", \"set up a whole workspace\", \"staging and production\", \"deploy from CI\", \"review this in a PR\", \"cargo.state.json\", \"scaffold from a template\", \"is there a cookbook for this\", \"start from a cookbook\". Skills with a CDK example (TAM building, account scoring, contact sourcing, routing, AI SDR, rep cockpit) live in gtm-skills; menu in references/cookbooks.md. Skip when: it is a one-off operation, a read, or an ad-hoc query — use the matching capability skill."
-version: "1.2.2"
+version: "1.2.3"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -246,6 +246,18 @@ acceptance test, and always review `cargo-ai cdk plan` before deploying.
   out, and apply the same cost gate above when an action calls a credits-based
   provider. Scope/threshold and firing semantics:
   [`../cargo-observability/SKILL.md`](../cargo-observability/SKILL.md).
+- **`defineMailbox` bills monthly, and `defineDomain` rewrites a DNS zone.** A
+  mailbox is 100–160 credits *per month* for as long as it exists (`cargo-ai
+  mailboxManagement pricing get` for live figures), so a `+ create mailbox:…` line
+  in the plan is a recurring charge the user approves, not a one-off. Its `domain`,
+  `username` and `type` are **create-only** — changing any of them is destroy +
+  recreate, i.e. a brand-new inbox back at the bottom of a 45-day warm-up ramp. The
+  deploy polls `refreshStatus` for up to 5 minutes waiting for `active`. On
+  `defineDomain`, `dnsRecords` is the **whole zone, not a patch**: declaring it
+  replaces every live record (including the ones the registrar wrote at purchase),
+  and omitting it leaves the zone untouched. Use `adopt: true` for a domain or
+  mailbox bought in the UI. Ramp, suppression and sending:
+  [`../cargo-mailbox-management/SKILL.md`](../cargo-mailbox-management/SKILL.md).
 - **Route CDK-managed resources into a clearly-labelled folder.** Set `folder:` on
   each builder so everything CDK owns lands in a dedicated folder whose name signals
   "owned by code — don't hand-edit" to anyone in the UI (manual UI edits read back as

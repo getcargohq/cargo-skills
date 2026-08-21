@@ -40,8 +40,13 @@
     },
     {
       "title": "Ship and administer",
-      "description": "Hosted apps and edge workers, workspace-as-code, members, tokens, and folders.",
-      "skills": ["cargo-hosting", "cargo-cdk", "cargo-workspace-management"]
+      "description": "Hosted apps and edge workers, sending mailboxes, workspace-as-code, members, tokens, and folders.",
+      "skills": [
+        "cargo-hosting",
+        "cargo-cdk",
+        "cargo-mailbox-management",
+        "cargo-workspace-management"
+      ]
     }
   ]
 }
