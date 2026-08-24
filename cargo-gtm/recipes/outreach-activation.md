@@ -111,12 +111,16 @@ jq '[.[] | select(.audit_action == "SEND")]' /tmp/audited.json > /tmp/deliverabl
 
 ```bash
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"anthropic","actionSlug":"instruct","config":{"model":"claude-3-5-haiku-latest","advancedSettings":{"temperature":0.3,"maxTokens":1024}}}' \
+  --action '{"kind":"connector","integrationSlug":"anthropic","actionSlug":"instruct","config":{}}' \
   --records "$(jq -c '[.[] | {
+    model: "claude-3-5-haiku-latest",
+    advancedSettings: {temperature: 0.3, maxTokens: 1024},
     prompt: ("You are writing the opening line of a first-touch email. The recipient is " + .first_name + " " + .last_name + ", " + .title + " at " + .company_name + ". Signal triggering this outreach: " + .signal_summary + ". Write ONE sentence that references the signal naturally and ties it to a relevant business outcome. No greeting. No follow-up. ≤30 words.")
   }]' /tmp/deliverable.json)" \
   --wait-until-finished > /tmp/personalized.json
 ```
+
+`model` is a **required input**, so it belongs in every record alongside `prompt` — the action's `config` stays empty. Put it in `config` and newer backends drop it silently, billing the call at the default model.
 
 More proven prompts (subject lines, follow-ups, job-change angles): [`../references/prompt-library/index.md`](../references/prompt-library/index.md).
 

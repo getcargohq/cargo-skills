@@ -193,7 +193,7 @@ A collection in the **content domain** (`cargo-ai content library …`) that gro
 ## M
 
 **MCP server**
-A Model Context Protocol server that exposes additional actions to agents. Connected via `cargo-ai`. Once connected, agents can call MCP actions automatically during conversations or workflow runs.
+A Model Context Protocol server. Three distinct things wear this name in Cargo. The **platform MCP** (`https://mcp.getcargo.io/mcp`) is first-party and always there: a fixed toolset for operating a workspace (search/execute actions, inspect runs, query models), reached over HTTP with OAuth or over stdio via `cargo-ai mcp`. A **curated MCP server** (`ai mcp-server create`, served at `/v1/ai/mcpServers/<uuid>/mcp` or `cargo-ai mcp --server <uuid>`) exposes only the tools, agents, and models a workspace chose to publish. An **MCP client** (`ai mcp-client connect`) points the other way — someone else's server, attached to an agent release so the agent can call its tools during conversations or workflow runs.
 
 **memory**
 A piece of information an agent stores from a conversation for future reference. Listed via `ai memory list --agent-uuid <uuid>`. Can be cleared with `ai memory remove`. Distinct from the **context repository** (workspace-wide, structured, git-backed) and from agent files / RAG resources.

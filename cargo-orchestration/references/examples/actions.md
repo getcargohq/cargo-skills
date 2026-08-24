@@ -13,9 +13,63 @@ Actions come in four kinds:
 | `agent`     | Invoke an AI agent                   | `agentUuid` or `templateSlug` or `releaseUuid` |
 | `native`    | Run a built-in platform action       | `actionSlug`                                   |
 
-Every action object also requires a `config` field (use `{}` for defaults).
+`config` is where a **node** keeps its configuration; a top-level action has none — its inputs go in `--data` (single) or `--records` (batch). Newer backends let you omit the key entirely on `execute` / `execute-batch`; `"config": {}` is still accepted everywhere and is what the examples below use, so it works against any version. `get-output-schema`, alert `--actions`, and a play's `healthAlertActions` still require it.
 
 > **When to use actions vs workflows:** Actions are for running a **single operation** without building a workflow graph. If you need to **chain multiple operations** together (enrichment → scoring → CRM push), use `run create --nodes` or `batch create --nodes` instead. See `tools.md` for workflow examples.
+
+---
+
+## Find an action — `action list`
+
+Free: no run, no credits. Searches the integration catalog, Cargo native actions, this workspace's tools, and its agents in one call.
+
+```bash
+cargo-ai orchestration action list enrich company
+cargo-ai orchestration action list --kind tool
+cargo-ai orchestration action list send --kind connector --integration-slug slack
+cargo-ai orchestration action list verify email --limit 5
+```
+
+| Flag | Meaning |
+| --- | --- |
+| `[query...]` | Space-separated keywords. **All** terms must match (AND), against action slug, name, description, and integration. Omit to browse. |
+| `--kind` | One of `connector`, `native`, `tool`, `agent`. `tool` and `agent` need a signed-in workspace. |
+| `--integration-slug` | Restrict connector results to one integration. |
+| `--limit` | Default 20, max 50. |
+
+Response:
+
+```json
+{
+  "query": "enrich company",
+  "totalMatches": 37,
+  "results": [
+    {
+      "name": "Enrich company",
+      "description": "Return firmographics for a domain…",
+      "score": 12,
+      "action": {
+        "kind": "connector",
+        "integrationSlug": "cargo",
+        "actionSlug": "enrichCompany",
+        "connectorUuid": "<uuid>"
+      },
+      "connectors": [{ "uuid": "<uuid>", "slug": "cargo", "name": "Cargo" }],
+      "credits": [{ "...": "cost table for this action" }],
+      "autocompletes": [{ "slug": "<slug>", "params": { "...": "..." } }]
+    }
+  ]
+}
+```
+
+Notes worth knowing:
+
+- **`results[].action` is the payload** — pass it verbatim to `execute`, `execute-batch`, or `get-output-schema`. `connectorUuid` is resolved to the integration's default connector (or the first one) and sits **at the top level of the action, never inside `config`**.
+- **`credits`** is the action's cost table when it bills — the cheapest pre-flight cost check there is. Cross-check a GTM provider's playbook (`../../../cargo-gtm/provider-playbooks/<slug>.md`) before fanning out.
+- **`autocompletes`** flags config fields that need a picked id (HubSpot object type, Slack channel, Metabase question). Resolve those to concrete values before running — over MCP that is the `autocomplete_action` tool; over the CLI, use the integration's own list actions.
+- Ranking: action slug/name > integration > description. `score` is comparable within one response only.
+- Structural native nodes (`start`, `end`, `branch`, `delay`, `filter`, `group`, `split`, `switch`, `note`) are excluded — they belong in a node graph, not in `action execute`. See `nodes.md`.
+- `unknown command` means the CLI predates `action list` — refresh it (`npm install -g @cargo-ai/cli@…`).
 
 ---
 

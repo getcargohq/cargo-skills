@@ -36,12 +36,12 @@ Web-grounded LLM through a single `instruct` action — **every model has live i
 
 ```bash
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"perplexity","actionSlug":"instruct","config":{"model":"sonar","advancedSettings":{"searchContextSize":"low","searchRecencyFilter":"month","temperature":0}}}' \
-  --records '[{"prompt":"What is Acme GmbH known for? 2-sentence summary."},{"prompt":"..."}, ...]' \
+  --action '{"kind":"connector","integrationSlug":"perplexity","actionSlug":"instruct","config":{}}' \
+  --records '[{"model":"sonar","prompt":"What is Acme GmbH known for? 2-sentence summary.","advancedSettings":{"searchContextSize":"low","searchRecencyFilter":"month","temperature":0}},{"model":"sonar","prompt":"..."}, ...]' \
   --wait-until-finished
 ```
 
-`prompt` goes in each record; `model` and `advancedSettings` in `config`. Pipe the answers into a cheap `anthropic`/`openAi` step for structured extraction if you need parse-ready JSON downstream.
+**`model`, `prompt`, and `advancedSettings` are all *inputs*** — they go in each record, never in the action's `config`, which stays empty on a top-level action. Settings placed there are rejected on older backends and **silently dropped** on newer ones — and a dropped `searchContextSize` is a real cost difference here. Pipe the answers into a cheap `anthropic`/`openAi` step for structured extraction if you need parse-ready JSON downstream.
 
 ## Input quirks
 
@@ -72,7 +72,7 @@ Web-grounded answers decay — **re-research is legitimate here**, but only on r
 
 ## Action shape
 
-`{"kind":"connector","integrationSlug":"perplexity","actionSlug":"instruct","config":{"model":"…","advancedSettings":{…}}}`. **No `connectorUuid` in `config`.** Costs above are the Cargo-credits rules; a workspace can instead attach its own Perplexity key (connector config takes a single required `apiKey`) and bill the provider directly.
+`{"kind":"connector","integrationSlug":"perplexity","actionSlug":"instruct","config":{}}`, with `model`, `prompt`, and `advancedSettings` per record in `--records` / `--data`. **No `connectorUuid` in `config`** — and no model settings there either; inside a workflow **node** those same fields are the node's `config`. Costs above are the Cargo-credits rules; a workspace can instead attach its own Perplexity key (connector config takes a single required `apiKey`) and bill the provider directly.
 
 ## Pairs with
 

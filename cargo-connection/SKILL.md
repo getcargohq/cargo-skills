@@ -1,7 +1,7 @@
 ---
 name: cargo-connection
 description: "Connect Cargo to an external system and find out what it can do — authenticate connectors, browse the integration catalog, and resolve the `connectorUuid` and `actionSlug` a workflow node needs. Triggers: \"connect my HubSpot\", \"is Salesforce connected\", \"what integrations do you support\", \"can Cargo talk to <tool>\", \"what actions does <provider> have\", \"I need the connector UUID\", \"set up the API key for\", \"it is asking for credentials again\", \"why is this connector failing auth\", \"list my connectors\". Integrations: amplemarket, amplitude, attio, bigQuery, calendly, closecom, contrast, csv, customerio, dbt, emailBison, expandi, googleAds, googleSheets, heyReach, http, hubspot, hubspotMcp, instantly, instantlyV2, intercom, jira, kitt, lemlist, lgm, linkedinAds, linkedinMatchedAudience, livestorm, manus, marketo, metabase, microsoftTeams, mixpanel, netsuite, netsuiteSoap, notionMcp, octave, onesignal, outreach, pipedrive, postgresql, redshift, resend, rift, salesforce, salesforceMcp, salesloft, Sendgrid, sillage, slack, smartlead, snowflake, sql, stripe, and 83 more. Skip when: choosing between enrichment providers for a GTM job — use cargo-gtm and its provider playbooks."
-version: "1.3.0"
+version: "1.3.1"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -52,6 +52,9 @@ Every command prints JSON to stdout; failures exit non-zero with `{"errorMessage
 ```bash
 cargo-ai connection connector list                        # all authenticated connectors
 cargo-ai connection integration list                      # all available integration types
+cargo-ai orchestration action list <query>                # search actions across every integration at once
+                                                          # (+ native, tools, agents — returns credits and a
+                                                          #  ready action object; see cargo-orchestration)
 cargo-ai connection integration list --search "hubspot"   # search by name
 cargo-ai connection integration get <slug>                # third-party-specific actions (e.g. HubSpot)
 cargo-ai connection native-integration get                # built-in Cargo actions only (NOT third-party)
@@ -296,7 +299,7 @@ cargo-ai connection integration get linkedin \
 
 Two footguns:
 
-- **For a top-level action (`action execute` / `execute-batch`), the input values go in `--data`, NOT in the action's `config`.** The action definition's `config` (`{"kind":"connector",…,"config":{}}`) stays `{}`; the fields described by `config.schema` are the `--data` payload. Passing them in `config` fails with `A top-level action does not use action.config; pass the action's inputs via data instead.` (Inside a workflow **node graph** those same fields go in the node's `config` — see `cargo-orchestration/references/nodes.md`. The "`--data`, not `config`" rule is specific to `action execute`/`execute-batch`.)
+- **For a top-level action (`action execute` / `execute-batch`), the input values go in `--data`, NOT in the action's `config`.** The fields described by `config.schema` are the `--data` payload; the action definition's `config` is empty (`{}`) or omitted entirely on newer backends. **Misplacing them is no longer a loud failure:** older backends rejected the call with `A top-level action does not use action.config; pass the action's inputs via data instead.`, newer ones drop `config` on the way in and run the action with **no inputs at all** — you get a missing-required-field error from the provider, or an empty result, not a message about `config`. If an action comes back empty for no obvious reason, check that the inputs are in `--data`. (Inside a workflow **node graph** those same fields go in the node's `config` — see `cargo-orchestration/references/nodes.md`. The "`--data`, not `config`" rule is specific to `action execute`/`execute-batch`.)
 - **Some inputs must be resolved first via autocomplete.** If a field's `uiSchema` carries `IntegrationAutocompleteWidget`, fetch its values with `connector autocomplete` (above). Notably, LinkedIn engagement/extraction actions (`connectProfile`, `visitProfile`, `extractEventAttendees`, `extractProfileViewers`) require `identityIds` — the connected account that *acts* — resolved via the `listIdentityIds` autocomplete. A `must match format "uuid"` error means that identity is missing.
 
 Example connector node (Clearbit company enrichment):

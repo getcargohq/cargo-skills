@@ -276,11 +276,11 @@ The second is the curation path, and remains the right answer when a workspace
 wants to expose one approved tool rather than the whole platform:
 
 ```bash
-cargo-ai ai mcp-server list                       # find the server UUID
-claude mcp add cargo -- cargo-ai mcp --server <uuid>   # Claude Code, Cursor, Claude Desktop…
+claude mcp add cargo -- cargo-ai mcp                    # the platform MCP
+claude mcp add cargo -- cargo-ai mcp --server <uuid>    # a curated server instead
 ```
 
-`cargo-ai mcp` bridges over stdio using the CLI's own credentials — no token to paste into client config. With no `--server`, it uses `CARGO_MCP_SERVER_UUID` or the workspace's only MCP server.
+With no `--server`, the bridge uses `CARGO_MCP_SERVER_UUID` when set, otherwise the platform `/mcp`. (Older CLIs instead fell back to "the workspace's only MCP server" and failed outright when there wasn't exactly one.)
 
 Route between the CLI and either MCP surface by shape of the request:
 
@@ -444,6 +444,8 @@ The non-obvious rules for each skill — the things that fail silently or cost m
 
 - See the decision flowchart at the top of `../cargo-orchestration/SKILL.md` for when to use `action execute` vs `run create` vs `batch create`.
 - **Never enroll a full batch on the first attempt.** `batch create` / `action execute-batch` fan out across every record in the source. Sample **10–20 records**, report observed cost + hit-rate, then ask the user to approve the full enrollment — quoting the **record count** and the **credit estimate**. Mechanics: `../cargo-orchestration/SKILL.md` → "Create a batch"; spend rules: `../cargo-gtm/references/cost-discipline.md` §1.
+- **Find the action before you write the JSON.** `cargo-ai orchestration action list <keywords> [--kind connector|native|tool|agent] [--integration-slug <slug>] [--limit 20]` searches the integration catalog, Cargo native actions, workspace tools, and agents in one call, and returns a ready-to-paste `action` object (with `connectorUuid` filled in) plus the action's **credit costs**. `unknown command` means the CLI predates it — refresh. Beats guessing a slug or paging `connection integration list`.
+- **`config` is optional on `action execute` / `action execute-batch`** — inputs go in `--data` / `--records`, never in `config`. `"config": {}` is still accepted (and every example here still shows it), and is still **required** on workflow **nodes**, alert `--actions`, and play `healthAlertActions`.
 - **`action execute` is the default for running an operation; `node execute` is debug-only.** Use `node execute` only to test a single node of a workflow you're authoring — it requires `--workflow-uuid`, `--release-uuid`, `--node`, `--computed-config` and `--context` (all five). Anything else — enrich a record, call a connector action, invoke a tool or agent — goes through `action execute` / `action execute-batch`.
 - **Prefer built-in actions + expressions when building a node graph.** Avoid `python`, `script` (JS), and raw HTTP nodes unless necessary: use `variables` for transforms, the native `agent` node for LLM calls, the integration's dedicated connector action for APIs, and `branch`/`filter`/`switch` for routing. See `../cargo-orchestration/references/node-selection.md`.
 - **Show a node graph, don't describe it.** Before deploying a draft, and whenever the user asks what a workflow or play does: `cargo-ai orchestration node diagram --workflow-uuid <uuid> --raw` (free, runs nothing, CLI ≥ 1.0.54; `references/node-diagram.md`). Routing, fallback edges, and which nodes bill are what's being approved. Let the command draw it rather than transcribing — node **slugs repeat within a release**, so a hand-drawn diagram keyed on slug merges nodes that aren't the same.
@@ -523,6 +525,7 @@ The non-obvious rules for each skill — the things that fail silently or cost m
 **Critical rules:**
 
 - Knowledge for RAG attaches to an agent via the release's `resources`: **files** + **libraries** come from [`cargo-content`](#cargo-content). Wire them in with `release update-draft --resources …` then `release deploy-draft`.
+- **`cargo-ai mcp` with no `--server` now bridges the first-party platform MCP** (`mcp.getcargo.io/mcp`), not "the workspace's only MCP server". `ai mcp-server` still builds a curated server; pass its uuid with `--server`. See "These skills vs Cargo's MCP surfaces" above.
 - **CLI ≥ 1.0.19:** files and libraries moved out of the `ai` domain into the top-level **`content`** domain (now the `cargo-content` skill). The old `cargo-ai ai file …` commands no longer exist.
 
 > For _using_ agents (sending messages, multi-turn chat, polling), use `cargo-orchestration`.

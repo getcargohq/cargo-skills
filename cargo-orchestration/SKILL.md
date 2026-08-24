@@ -1,7 +1,7 @@
 ---
 name: cargo-orchestration
 description: "Make Cargo actually run something, or show what it would run — execute one connector action, run a multi-step workflow, trigger a batch across a whole segment or model, message an AI agent, build or edit a node graph, draw a workflow, tool or play as a diagram, and query the runtime tables (runs, batches, spans, records) with SQL. Triggers: \"run this on all my contacts\", \"execute the action\", \"kick off a batch\", \"build a workflow\", \"schedule a play\", \"make it run every morning\", \"ask the agent\", \"show me the workflow\", \"what does this tool do\", \"visualize this play\", \"draw the graph\", \"explain this workflow\", \"how many runs failed today\", \"what is the output schema for this action\", \"add a step that\". Skip when: explaining why a run misbehaved — use cargo-diagnostics; downloading result files — use cargo-analytics; committing the workflow as code — use cargo-cdk."
-version: "1.8.0"
+version: "1.9.0"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -26,6 +26,7 @@ Runtime operations for the Cargo platform.
 
 ```
 Need to run something?
+├── Don't know the action yet    → action list <keywords>
 ├── One action, one record       → action execute
 ├── One action, many records     → action execute-batch
 ├── Multiple actions chained
@@ -39,6 +40,14 @@ Need to run something?
 ```
 
 > **Fanning out across many records (`action execute-batch`, `batch create`)? Sample first.** Run 10–20 records, report the observed cost and hit-rate, then ask the user to approve the full enrollment — quoting the **record count** and the **credit estimate**. See [Create a batch → the sample gate](#the-sample-gate).
+
+> **Find the action before you hand-write the JSON.** `cargo-ai orchestration
+> action list <keywords>` searches the integration catalog, Cargo native actions,
+> workspace tools, and agents in one call — free, runs nothing — and each result
+> carries a ready-to-paste `action` object (with `connectorUuid` already filled
+> in), the action's **credit costs**, and its autocomplete slugs. Narrow with
+> `--kind connector|native|tool|agent`, `--integration-slug <slug>`, `--limit`
+> (default 20, max 50). `unknown command` means the CLI predates it — refresh.
 
 > **`action execute`, not `node execute`, is the default for running something.**
 > `node execute` is a **debug** surface for a node that already lives in a workflow:
@@ -106,6 +115,7 @@ Every command prints JSON to stdout; failures exit non-zero with `{"errorMessage
 Most commands require UUIDs. Always discover them before acting.
 
 ```bash
+cargo-ai orchestration action list <query>  # actions across connectors, native, tools, agents (+ credits)
 cargo-ai orchestration play list            # all plays (name, workflowUuid, modelUuid, segmentUuid)
 cargo-ai orchestration tool list            # all tools (name, workflowUuid, description)
 cargo-ai orchestration workflow list        # all workflows (uuid only — no name)
@@ -134,6 +144,10 @@ cargo-ai connection connector list         # all connectors
 ## Quick reference
 
 ```bash
+# Find an action (free — no run, no credits)
+cargo-ai orchestration action list enrich company
+cargo-ai orchestration action list send --kind connector --integration-slug slack
+
 # Single actions
 cargo-ai orchestration action execute --action '{"kind":"tool","toolUuid":"<uuid>","config":{}}' --data '{"domain":"acme.com"}'
 cargo-ai orchestration action execute-batch --action '{"kind":"connector","integrationSlug":"clearbit","actionSlug":"enrichCompany","config":{}}' --records '[{...},{...}]'
@@ -171,6 +185,23 @@ For long-running batches (1000+ records), increase the interval to 10-15s after 
 
 Run a single action — no workflow or node graph needed.
 
+### Find it first — `action list`
+
+```bash
+cargo-ai orchestration action list enrich company          # all kinds
+cargo-ai orchestration action list --kind tool             # this workspace's tools
+cargo-ai orchestration action list send --kind connector --integration-slug slack
+```
+
+Free, executes nothing. All query terms must match (AND); a hit on the action
+slug or name ranks above the integration, which ranks above the description.
+Returns `{query, totalMatches, results[]}` where each result carries `name`,
+`description`, `score`, an `action` object to paste straight into `execute` /
+`execute-batch` / `get-output-schema`, the workspace `connectors` for that
+integration, `credits` (the cost table, when the action bills), and
+`autocompletes` (config fields that need a picked id — a HubSpot object type, a
+Slack channel). Defaults to 20 results, max 50.
+
 ```bash
 # One action, one record → returns a run
 cargo-ai orchestration action execute \
@@ -186,6 +217,13 @@ cargo-ai orchestration action execute-batch \
 ```
 
 Action kinds: `tool`, `connector`, `agent`, `native`. See `references/examples/actions.md` for all action kinds, parameters, retry config, response shapes, and end-to-end examples.
+
+> **`config` on a top-level action:** inputs belong in `--data` / `--records`,
+> never in `config`. Newer backends accept an action with **no `config` key at
+> all** on `execute` / `execute-batch`; `"config": {}` stays valid everywhere and
+> is what the examples here use, so it is the safe form against any version. A
+> workflow **node**, an alert's `--actions`, and a play's `healthAlertActions`
+> still **require** `config` — that is where a node's real configuration lives.
 
 > **`execute-batch` bills per record.** Pass a 10–20 record slice of `--records` first, report the observed per-record cost and hit-rate, and get approval (with the full record count and credit estimate) before sending the rest — same gate as [Create a batch](#the-sample-gate).
 
