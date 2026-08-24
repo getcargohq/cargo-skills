@@ -1,6 +1,6 @@
 # Cargo skills — agent guide
 
-The router skill at [`cargo/SKILL.md`](cargo/SKILL.md) is the canonical entry point for working with this skillpack. It explains the seventeen skills (the `cargo` router + one onboarding skill `cargo-quickstart` + one outcome skill `cargo-gtm` + fourteen capability skills), the UUID flow between them, async polling, end-to-end use cases, and common gotchas.
+The router skill at [`cargo/SKILL.md`](cargo/SKILL.md) is the canonical entry point for working with this skillpack. It explains the eighteen skills (the `cargo` router + one onboarding skill `cargo-quickstart` + one outcome skill `cargo-gtm` + fifteen capability skills), the UUID flow between them, async polling, end-to-end use cases, and common gotchas.
 
 The term reference lives in [`cargo/references/glossary.md`](cargo/references/glossary.md).
 

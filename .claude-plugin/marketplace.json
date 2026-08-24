@@ -1,13 +1,13 @@
 {
   "name": "cargo",
   "owner": { "name": "Cargo", "url": "https://getcargo.ai" },
-  "metadata": { "description": "The Cargo pack for Claude Code — 17 GTM skills, plus what a plain skills install doesn't carry: prompt-free approval for safe cargo-ai calls, and session-lifecycle hooks that keep the CLI pinned and record each session." },
+  "metadata": { "description": "The Cargo pack for Claude Code — 18 GTM skills, plus what a plain skills install doesn't carry: prompt-free approval for safe cargo-ai calls, and session-lifecycle hooks that keep the CLI pinned and record each session." },
   "plugins": [
     {
       "name": "cargo",
       "displayName": "Cargo",
       "source": "./",
-      "description": "17 skills over the cargo-ai CLI — build target account and contact lists, enrich and verify them against licensed data providers, score and qualify leads, sync your CRM, monitor buying signals, run workflows, and manage the whole workspace as code."
+      "description": "18 skills over the cargo-ai CLI — build target account and contact lists, enrich and verify them against licensed data providers, score and qualify leads, sync your CRM, monitor buying signals, run workflows, and manage the whole workspace as code."
     }
   ]
 }

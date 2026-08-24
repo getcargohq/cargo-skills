@@ -8,7 +8,7 @@ Scope: every step that touches a person — sourcing, enrichment, verification, 
 
 Business-to-business revenue work, on business identities, using data the workspace is licensed to receive through the providers in [`../provider-playbooks/`](../provider-playbooks/). The unit of work is a **qualified account and the person whose professional role makes them a plausible buyer** — a list that has been filtered, scored, and costed before anyone is contacted.
 
-It is not a bulk-messaging tool. Nothing in this skill sends mail: the outreach recipes stop at send-ready variables and hand off to the workspace's own sequencer, under that sequencer's sending limits and the user's own domains and identities.
+It is not a bulk-messaging tool. Nothing in *this* skill sends mail: the outreach recipes stop at send-ready variables and hand off to a sequencer, under that sequencer's sending limits and identities. Where that sequencer is Cargo's own — a mailbox the workspace provisioned through [`../../cargo-mailbox-management/SKILL.md`](../../cargo-mailbox-management/SKILL.md) — nothing on this page relaxes: the three checks in §3 run before the first send, the mailbox's warm-up ramp is the ceiling, and an unsubscribe writes a workspace-wide suppression that no later send may work around. Cargo owning the inbox changes who presses send, not whether the message should be sent.
 
 ## 2) Hard refusals
 
@@ -53,7 +53,7 @@ The skill drafts copy; these are the properties that copy must have before the u
 
 ## 6) Volume and cadence
 
-- Respect the sequencer's and mailbox's own limits — this skill never proposes raising them, and a request to work around them is an evasion refusal under §2.
+- Respect the sequencer's and mailbox's own limits — this skill never proposes raising them, and a request to work around them is an evasion refusal under §2. On a Cargo-owned mailbox that limit is the warm-up ramp (5/day rising to 40/day over 45 days, read with `mailbox get-send-allowance`): it is a ceiling, not a target, and spreading one campaign across extra mailboxes to clear the same volume is the same refusal wearing a fleet — see [`../../cargo-mailbox-management/references/warmup-and-allowance.md`](../../cargo-mailbox-management/references/warmup-and-allowance.md).
 - One campaign per contact at a time; cap the touch count; **stop on reply, opt-out, or bounce**.
 - Cadence on recurring plays is a spend gate *and* a contact-frequency gate — a play that re-enrolls the same segment weekly is re-contacting the same people weekly. Check the provider playbook's **Recurring use** section before scheduling.
 
@@ -61,5 +61,6 @@ The skill drafts copy; these are the properties that copy must have before the u
 
 - Spend gates and the approval message: [`cost-discipline.md`](cost-discipline.md)
 - Ads consent and the removal path: [`../recipes/ads-audience-activation.md`](../recipes/ads-audience-activation.md)
+- Sending from a Cargo-owned mailbox — warm-up ramp, suppression list, delivery events: [`../../cargo-mailbox-management/SKILL.md`](../../cargo-mailbox-management/SKILL.md)
 - Personal-mailbox routing: [`../provider-playbooks/forager.md`](../provider-playbooks/forager.md)
 - LinkedIn identity limits: [`../provider-playbooks/linkedin.md`](../provider-playbooks/linkedin.md)

@@ -1,13 +1,13 @@
 {
   "name": "cargo",
   "interface": { "displayName": "Cargo" },
-  "metadata": { "description": "The Cargo pack for Codex — 17 GTM skills, plus what a plain skills install doesn't carry: prompt-free approval for safe cargo-ai calls." },
+  "metadata": { "description": "The Cargo pack for Codex — 18 GTM skills, plus what a plain skills install doesn't carry: prompt-free approval for safe cargo-ai calls." },
   "plugins": [
     {
       "name": "cargo",
       "source": { "source": "local", "path": "./" },
       "category": "Sales & Marketing",
-      "description": "17 skills over the cargo-ai CLI — build target account and contact lists, enrich and verify them against licensed data providers, score and qualify leads, sync your CRM, monitor buying signals, run workflows, and manage the whole workspace as code.",
+      "description": "18 skills over the cargo-ai CLI — build target account and contact lists, enrich and verify them against licensed data providers, score and qualify leads, sync your CRM, monitor buying signals, run workflows, and manage the whole workspace as code.",
       "policy": { "installation": "AVAILABLE", "authentication": "ON_INSTALL" }
     }
   ]
