@@ -46,12 +46,12 @@ Model recall about a company is stale, thin for anything under ~1,000 employees,
 ```bash
 # Crawl the seller's own site — homepage, product, pricing, docs, customers, careers
 cargo-ai orchestration action execute \
-  --action '{"kind":"connector","integrationSlug":"firecrawl","actionSlug":"crawl","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"firecrawl","actionSlug":"crawl"}' \
   --data '{"url":"https://<seller-domain>","limit":25}' --wait-until-finished
 
 # Sourced answers for anything the site does not state (funding, category, named competitors)
 cargo-ai orchestration action execute \
-  --action '{"kind":"connector","integrationSlug":"linkup","actionSlug":"instruct","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"linkup","actionSlug":"instruct"}' \
   --data '{"q":"Who does <seller> sell to, and who do they compete with?","depth":"standard","outputType":"sourcedAnswer"}' \
   --wait-until-finished
 ```

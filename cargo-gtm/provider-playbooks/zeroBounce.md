@@ -29,7 +29,7 @@ Dedicated email verification. **One credits-based action, 0.1 credits** — same
 ```bash
 # Only on rows where the first verifier returned catch-all / ambiguous
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"zeroBounce","actionSlug":"verifyEmail","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"zeroBounce","actionSlug":"verifyEmail"}' \
   --records '[{"email":"alice@acme.com"},{"email":"bob@globex.com"}]' \
   --wait-until-finished
 ```
@@ -40,7 +40,7 @@ Keep an email when either verifier passes it cleanly; drop it only when both agr
 
 ```bash
 cargo-ai orchestration action execute \
-  --action '{"kind":"connector","integrationSlug":"zeroBounce","actionSlug":"verifyEmail","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"zeroBounce","actionSlug":"verifyEmail"}' \
   --data '{"email":"alice@acme.com"}' \
   --wait-until-finished
 ```
@@ -68,7 +68,7 @@ Read `status` + `sub_status` for the verdict, `catchall_domain` / `free_email` f
 
 ## Action shape
 
-`{"kind":"connector","integrationSlug":"zeroBounce","actionSlug":"verifyEmail","config":{}}`. **No `connectorUuid` in `config`.**
+`{"kind":"connector","integrationSlug":"zeroBounce","actionSlug":"verifyEmail"}`. **No `connectorUuid` in `config`.**
 
 ## Pairs with
 

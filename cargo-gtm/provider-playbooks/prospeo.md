@@ -30,7 +30,7 @@ Contact-lookup specialist whose standout is **the cheapest landline/DID phone fi
 ```bash
 # Phone is the expensive lever — qualified rows only, never the full list
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"prospeo","actionSlug":"findPhone","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"prospeo","actionSlug":"findPhone"}' \
   --records '[
     {"url":"https://linkedin.com/in/alicesmith"},
     {"url":"https://linkedin.com/in/bobjones"}
@@ -44,7 +44,7 @@ The only accepted identifier is a LinkedIn URL (`url`). No URL → no lookup; re
 
 ```bash
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"prospeo","actionSlug":"findEmail","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"prospeo","actionSlug":"findEmail"}' \
   --records '[
     {"firstName":"Alice","lastName":"Smith","companyDomain":"acme.com"},
     {"fullName":"Bob Jones","companyDomain":"globex.com"}
@@ -81,4 +81,4 @@ No scheduled fit — per-record contact lookup only; recurring use means **paid 
 
 ## Action shape
 
-`{"kind":"connector","integrationSlug":"prospeo","actionSlug":"<slug>","config":{}}`. **No `connectorUuid` in `config`.**
+`{"kind":"connector","integrationSlug":"prospeo","actionSlug":"<slug>"}`. **No `connectorUuid` in `config`.**

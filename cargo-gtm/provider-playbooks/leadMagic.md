@@ -29,7 +29,7 @@ Mid-tier email finder whose hits come **pre-annotated**: `findEmail` (0.5) retur
 ```bash
 # Run on the rows the earlier rung missed
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"leadMagic","actionSlug":"findEmail","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"leadMagic","actionSlug":"findEmail"}' \
   --records '[
     {"firstName":"Alice","lastName":"Smith","domain":"acme.com"},
     {"firstName":"Bob","lastName":"Jones","companyName":"Globex"}
@@ -43,7 +43,7 @@ cargo-ai orchestration action execute-batch \
 
 ```bash
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"leadMagic","actionSlug":"enrichProfile","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"leadMagic","actionSlug":"enrichProfile"}' \
   --records '[{"email":"alice@acme.com"},{"email":"bob.jones@gmail.com","isPersonal":true}]' \
   --wait-until-finished
 ```
@@ -77,4 +77,4 @@ No scheduled fit — **per-record enrichment only**; found emails and profile UR
 
 ## Action shape
 
-`{"kind":"connector","integrationSlug":"leadMagic","actionSlug":"<slug>","config":{}}`. **No `connectorUuid` in `config`.** Note the capitalization: `leadMagic` (camel-case with capital `M`).
+`{"kind":"connector","integrationSlug":"leadMagic","actionSlug":"<slug>"}`. **No `connectorUuid` in `config`.** Note the capitalization: `leadMagic` (camel-case with capital `M`).

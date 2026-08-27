@@ -29,7 +29,7 @@ Mid-tier email finder with a phone lookup and a verify on the side. `findEmail` 
 ```bash
 # Run on the rows the earlier rung missed
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"findyMail","actionSlug":"findEmail","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"findyMail","actionSlug":"findEmail"}' \
   --records '[
     {"name":"Alice Smith","domain":"acme.com"},
     {"linkedinUrl":"https://linkedin.com/in/bobjones"}
@@ -44,7 +44,7 @@ cargo-ai orchestration action execute-batch \
 ```bash
 # Only on qualified leads that prospeo.findPhone missed
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"findyMail","actionSlug":"findPhone","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"findyMail","actionSlug":"findPhone"}' \
   --records '[{"linkedinUrl":"https://linkedin.com/in/alicesmith"}]' \
   --wait-until-finished
 ```
@@ -79,4 +79,4 @@ No scheduled fit — per-record enrichment only; findyMail earns its recurring k
 
 ## Action shape
 
-`{"kind":"connector","integrationSlug":"findyMail","actionSlug":"<slug>","config":{}}`. **No `connectorUuid` in `config`.** Note the capitalization: `findyMail` (camel-case with capital `M`).
+`{"kind":"connector","integrationSlug":"findyMail","actionSlug":"<slug>"}`. **No `connectorUuid` in `config`.** Note the capitalization: `findyMail` (camel-case with capital `M`).

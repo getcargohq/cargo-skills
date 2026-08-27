@@ -31,7 +31,7 @@ The connector also accepts your own Bouncer API key (`apiKey`) — same action, 
 ```bash
 # Only on rows where waterfall and zeroBounce disagreed, and the contact justifies 0.3
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"bouncer","actionSlug":"verifyEmail","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"bouncer","actionSlug":"verifyEmail"}' \
   --records '[{"email":"alice@acme.com"},{"email":"bob@globex.com"}]' \
   --wait-until-finished
 ```
@@ -54,7 +54,7 @@ The catalog dump documents no output schema for this action — inspect the firs
 
 ## Action shape
 
-`{"kind":"connector","integrationSlug":"bouncer","actionSlug":"verifyEmail","config":{}}`. **No `connectorUuid` in `config`.**
+`{"kind":"connector","integrationSlug":"bouncer","actionSlug":"verifyEmail"}`. **No `connectorUuid` in `config`.**
 
 ## Pairs with
 

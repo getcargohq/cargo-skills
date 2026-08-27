@@ -29,7 +29,7 @@ Natural-language web research with synthesized answers. Two actions: `search` (0
 
 ```bash
 cargo-ai orchestration action execute \
-  --action '{"kind":"connector","integrationSlug":"linkup","actionSlug":"instruct","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"linkup","actionSlug":"instruct"}' \
   --data '{
     "q": "What pricing model does acme.com use for its main product?",
     "depth": "standard",
@@ -51,7 +51,7 @@ The schema root **must** be `type: "object"`. Keep it small — a few well-descr
 
 ```bash
 cargo-ai orchestration action execute \
-  --action '{"kind":"connector","integrationSlug":"linkup","actionSlug":"search","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"linkup","actionSlug":"search"}' \
   --data '{"q": "Who is the current CTO of Acme Corp?", "depth": "standard"}' \
   --wait-until-finished
 ```
@@ -79,7 +79,7 @@ Research answers are point-in-time — **recur only when the question itself mov
 
 ## Action shape
 
-`{"kind":"connector","integrationSlug":"linkup","actionSlug":"<slug>","config":{}}`. **No `connectorUuid` in `config`.**
+`{"kind":"connector","integrationSlug":"linkup","actionSlug":"<slug>"}`. **No `connectorUuid` in `config`.**
 
 ## Pairs with
 

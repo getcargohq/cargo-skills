@@ -41,7 +41,7 @@ GPT models through a single `instruct` action — **the cheapest bulk-LLM tier i
 
 ```bash
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"openAi","actionSlug":"instruct","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"openAi","actionSlug":"instruct"}' \
   --records '[{"model":"gpt-5-nano","prompt":"<substituted extraction prompt row 1>","advancedSettings":{"temperature":0},"output":{"responseFormat":"json_schema","jsonSchema":{"type":"object","properties":{"industry":{"type":"string"},"confidence":{"type":"string"}}}}},{"model":"gpt-5-nano","prompt":"<row 2>"}, ...]' \
   --wait-until-finished
 ```
@@ -74,7 +74,7 @@ No scheduled fit — `instruct` is an offline transform; the recurring shape is 
 
 ## Action shape
 
-`{"kind":"connector","integrationSlug":"openAi","actionSlug":"instruct","config":{}}`, with `model`, `prompt`, `advancedSettings`, and `output` per record in `--records` / `--data`. **No `connectorUuid` in `config`** — and no model settings there either; inside a workflow **node** those same fields are the node's `config`. Costs above are the Cargo-credits rules; a workspace can instead attach its own OpenAI key (connector config takes a single required `apiKey`) and bill the provider directly.
+`{"kind":"connector","integrationSlug":"openAi","actionSlug":"instruct"}`, with `model`, `prompt`, `advancedSettings`, and `output` per record in `--records` / `--data`. **No `connectorUuid` in `config`** — and no model settings there either; inside a workflow **node** those same fields are the node's `config`. Costs above are the Cargo-credits rules; a workspace can instead attach its own OpenAI key (connector config takes a single required `apiKey`) and bill the provider directly.
 
 ## Pairs with
 

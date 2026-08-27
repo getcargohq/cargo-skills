@@ -31,7 +31,7 @@ The shape is different from every other provider here and that is the thing to u
 
 ```bash
 cargo-ai orchestration action execute \
-  --action '{"kind":"connector","integrationSlug":"sillage","actionSlug":"searchLeads","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"sillage","actionSlug":"searchLeads"}' \
   --data '{
     "modelUuid": "<the model receiving detections>",
     "companyDomains": ["acme.com", "globex.com"],
@@ -63,7 +63,7 @@ Run `searchLeads` across the segment first. Rows that already carry a detection 
 
 ## Action shape
 
-`{"kind":"connector","integrationSlug":"sillage","actionSlug":"searchLeads","config":{}}`. **No `connectorUuid` in `config`.** Filters go in `--data`.
+`{"kind":"connector","integrationSlug":"sillage","actionSlug":"searchLeads"}`. **No `connectorUuid` in `config`.** Filters go in `--data`.
 
 ## Pairs with
 

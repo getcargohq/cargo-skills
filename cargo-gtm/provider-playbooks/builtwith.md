@@ -31,7 +31,7 @@ A domain's technology stack. Three actions, and the important thing about them i
 
 ```bash
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"builtwith","actionSlug":"getDomainSummary","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"builtwith","actionSlug":"getDomainSummary"}' \
   --records '[{"domain":"acme.com"}]' \
   --wait-until-finished
 ```
@@ -42,7 +42,7 @@ Run this across the whole list. It costs nothing, and on most qualification ques
 
 ```bash
 cargo-ai orchestration action execute \
-  --action '{"kind":"connector","integrationSlug":"builtwith","actionSlug":"findWebsitesByTechnology","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"builtwith","actionSlug":"findWebsitesByTechnology"}' \
   --data '{"technology":"Snowflake","country":"US","since":"2026-01-01","includeMeta":true}' \
   --wait-until-finished
 ```
@@ -68,7 +68,7 @@ cargo-ai orchestration action execute \
 
 ## Action shape
 
-`{"kind":"connector","integrationSlug":"builtwith","actionSlug":"<slug>","config":{}}`. **No `connectorUuid` in `config`.** Per-row domains go in `--records`; the reverse-lookup filter goes in `--data`.
+`{"kind":"connector","integrationSlug":"builtwith","actionSlug":"<slug>"}`. **No `connectorUuid` in `config`.** Per-row domains go in `--records`; the reverse-lookup filter goes in `--data`.
 
 ## Pairs with
 

@@ -36,7 +36,7 @@ Web-grounded LLM through a single `instruct` action — **every model has live i
 
 ```bash
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"perplexity","actionSlug":"instruct","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"perplexity","actionSlug":"instruct"}' \
   --records '[{"model":"sonar","prompt":"What is Acme GmbH known for? 2-sentence summary.","advancedSettings":{"searchContextSize":"low","searchRecencyFilter":"month","temperature":0}},{"model":"sonar","prompt":"..."}, ...]' \
   --wait-until-finished
 ```
@@ -72,7 +72,7 @@ Web-grounded answers decay — **re-research is legitimate here**, but only on r
 
 ## Action shape
 
-`{"kind":"connector","integrationSlug":"perplexity","actionSlug":"instruct","config":{}}`, with `model`, `prompt`, and `advancedSettings` per record in `--records` / `--data`. **No `connectorUuid` in `config`** — and no model settings there either; inside a workflow **node** those same fields are the node's `config`. Costs above are the Cargo-credits rules; a workspace can instead attach its own Perplexity key (connector config takes a single required `apiKey`) and bill the provider directly.
+`{"kind":"connector","integrationSlug":"perplexity","actionSlug":"instruct"}`, with `model`, `prompt`, and `advancedSettings` per record in `--records` / `--data`. **No `connectorUuid` in `config`** — and no model settings there either; inside a workflow **node** those same fields are the node's `config`. Costs above are the Cargo-credits rules; a workspace can instead attach its own Perplexity key (connector config takes a single required `apiKey`) and bill the provider directly.
 
 ## Pairs with
 

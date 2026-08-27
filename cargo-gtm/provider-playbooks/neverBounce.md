@@ -31,7 +31,7 @@ The connector also accepts your own NeverBounce API key (`apiKey`) — same acti
 ```bash
 # Only on rows the first verifier flagged catch-all / ambiguous
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"neverBounce","actionSlug":"verifyEmail","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"neverBounce","actionSlug":"verifyEmail"}' \
   --records '[{"email":"alice@acme.com"},{"email":"bob@globex.com"}]' \
   --wait-until-finished
 ```
@@ -67,7 +67,7 @@ Verification recurs per **send wave**, not per calendar — at 0.2/row this is t
 
 ## Action shape
 
-`{"kind":"connector","integrationSlug":"neverBounce","actionSlug":"verifyEmail","config":{}}`. **No `connectorUuid` in `config`.**
+`{"kind":"connector","integrationSlug":"neverBounce","actionSlug":"verifyEmail"}`. **No `connectorUuid` in `config`.**
 
 ## Pairs with
 

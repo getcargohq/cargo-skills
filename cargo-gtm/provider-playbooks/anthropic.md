@@ -37,7 +37,7 @@ Claude through a single `instruct` action — the **default judgment-tier LLM of
 
 ```bash
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"anthropic","actionSlug":"instruct","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"anthropic","actionSlug":"instruct"}' \
   --records '[{"model":"claude-sonnet-4-6","prompt":"<substituted prompt for row 1>","advancedSettings":{"maxTokens":4096,"temperature":0}},{"model":"claude-sonnet-4-6","prompt":"<row 2>"}, ...]' \
   --wait-until-finished
 ```
@@ -64,7 +64,7 @@ cargo-ai orchestration action execute-batch \
 
 ## Action shape
 
-`{"kind":"connector","integrationSlug":"anthropic","actionSlug":"instruct","config":{}}`, with `model` (required), `prompt` (required), and `advancedSettings` per record in `--records` / `--data`. **No `connectorUuid` in `config`** — and no model settings there either; inside a workflow **node** those same fields are the node's `config`. Costs above are the Cargo-credits rules; a workspace can instead attach its own Anthropic key (connector config takes a single required `apiKey`) and bill the provider directly.
+`{"kind":"connector","integrationSlug":"anthropic","actionSlug":"instruct"}`, with `model` (required), `prompt` (required), and `advancedSettings` per record in `--records` / `--data`. **No `connectorUuid` in `config`** — and no model settings there either; inside a workflow **node** those same fields are the node's `config`. Costs above are the Cargo-credits rules; a workspace can instead attach its own Anthropic key (connector config takes a single required `apiKey`) and bill the provider directly.
 
 ## Pairs with
 

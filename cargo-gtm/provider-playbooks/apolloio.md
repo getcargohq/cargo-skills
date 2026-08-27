@@ -43,7 +43,7 @@ These consume your Apollo plan's quota, not cargo credits — recipes stay on cr
 ```bash
 # Only on rows the priority stack missed
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"apolloio","actionSlug":"enrichPerson","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"apolloio","actionSlug":"enrichPerson"}' \
   --records '[
     {"parameters":{"first_name":"Alice","last_name":"Smith","organization_name":"Acme"}},
     {"parameters":{"linkedin_url":"https://linkedin.com/in/bobjones","domain":"globex.com"}}
@@ -57,7 +57,7 @@ Identifiers nest under `parameters` and are **snake_case**. Any combination work
 
 ```bash
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"apolloio","actionSlug":"enrichOrganization","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"apolloio","actionSlug":"enrichOrganization"}' \
   --records '[{"domain":"acme.com"},{"domain":"globex.com"}]' \
   --wait-until-finished
 ```
@@ -90,4 +90,4 @@ cargo-ai orchestration action execute-batch \
 
 ## Action shape
 
-`{"kind":"connector","integrationSlug":"apolloio","actionSlug":"<slug>","config":{}}`. **No `connectorUuid` in `config`.**
+`{"kind":"connector","integrationSlug":"apolloio","actionSlug":"<slug>"}`. **No `connectorUuid` in `config`.**

@@ -35,7 +35,7 @@ Wire it with `cargo-ai storage model create … --extractor-slug fetchCompanies`
 
 ```bash
 cargo-ai orchestration action execute \
-  --action '{"kind":"connector","integrationSlug":"piloterr","actionSlug":"getG2ProductInfo","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"piloterr","actionSlug":"getG2ProductInfo"}' \
   --data '{"query":"postman"}' \
   --wait-until-finished
 ```
@@ -84,7 +84,7 @@ Recurring is **built in** — the `fetchCompanies` extractor *is* the scheduled 
 
 ## Action shape
 
-`{"kind":"connector","integrationSlug":"piloterr","actionSlug":"getG2ProductInfo","config":{}}`. **No `connectorUuid` in `config`.**
+`{"kind":"connector","integrationSlug":"piloterr","actionSlug":"getG2ProductInfo"}`. **No `connectorUuid` in `config`.**
 
 ## Pairs with
 

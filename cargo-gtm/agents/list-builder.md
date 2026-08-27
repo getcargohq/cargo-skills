@@ -14,7 +14,7 @@ Sub-agent for `cargo-gtm`. Executes **one bounded slice** of a sourcing job — 
 
 The invoking prompt MUST specify, and this agent MUST NOT exceed:
 
-1. **The exact action** — full `{"kind":"connector","integrationSlug":"…","actionSlug":"…","config":{}}` JSON and the records/filters payload.
+1. **The exact action** — full `{"kind":"connector","integrationSlug":"…","actionSlug":"…"}` JSON and the records/filters payload.
 2. **The row cap** — the `limit` to pass and the maximum rows to return.
 3. **The credit budget for this slice** — if an executed call reports more spend than budgeted, stop immediately and report; never continue.
 4. **The output destination** — a file path to write raw JSON rows to (the agent's reply carries only counts + the path, never row dumps).

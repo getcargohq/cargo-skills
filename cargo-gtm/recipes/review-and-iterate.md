@@ -26,7 +26,7 @@ Then either hand over the file, or push the rows into a sheet the team can edit:
 
 ```bash
 cargo-ai orchestration action execute \
-  --action '{"kind":"connector","integrationSlug":"googleSheets","actionSlug":"insert","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"googleSheets","actionSlug":"insert"}' \
   --data '{"spreadsheetId": "<id>", "worksheet": "review"}' \
   --wait-until-finished
 ```

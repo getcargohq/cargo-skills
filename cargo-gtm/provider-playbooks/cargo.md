@@ -55,13 +55,13 @@ Cargo's proprietary enrichment layer. **22 credits-based actions covering firmog
 ```bash
 # Step 1 — match domains to business_ids
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"cargo","actionSlug":"matchBusiness","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"cargo","actionSlug":"matchBusiness"}' \
   --records '[{"domain":"acme.com"},{"domain":"globex.com"}]' \
   --wait-until-finished
 
 # Step 2 — enrich firmographics on the matched IDs
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"cargo","actionSlug":"enrichBusinessFirmographics","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"cargo","actionSlug":"enrichBusinessFirmographics"}' \
   --records '[{"business_id":"<uuid>"},{"business_id":"<uuid>"}]' \
   --wait-until-finished
 ```
@@ -73,7 +73,7 @@ Run several enrichBusiness* actions in parallel (each independent batch):
 ```bash
 for slug in enrichBusinessFirmographics enrichBusinessFundingAndAcquisitions enrichBusinessTechnographics; do
   cargo-ai orchestration action execute \
-    --action "$(jq -nc --arg s "$slug" '{kind:"connector",integrationSlug:"cargo",actionSlug:$s,config:{}}')" \
+    --action "$(jq -nc --arg s "$slug" '{kind:"connector",integrationSlug:"cargo",actionSlug:$s}')" \
     --data '{"business_id":"<uuid>"}' \
     --wait-until-finished &
 done
@@ -85,7 +85,7 @@ wait
 ```bash
 # Get the last 30 days of events (job changes, posts) for a prospect
 cargo-ai orchestration action execute \
-  --action '{"kind":"connector","integrationSlug":"cargo","actionSlug":"fetchProspectEvents","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"cargo","actionSlug":"fetchProspectEvents"}' \
   --data '{
     "prospect_id":"<uuid>",
     "event_types":["job_change","linkedin_post"],
@@ -118,4 +118,4 @@ cargo-ai orchestration action execute \
 
 ## Action shape
 
-`{"kind":"connector","integrationSlug":"cargo","actionSlug":"<slug>","config":{}}`. **No `connectorUuid` in `config`** — single workspace connector resolves automatically.
+`{"kind":"connector","integrationSlug":"cargo","actionSlug":"<slug>"}`. **No `connectorUuid` in `config`** — single workspace connector resolves automatically.

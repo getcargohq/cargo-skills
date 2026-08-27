@@ -39,7 +39,7 @@ Gemini models through a single `instruct` action — the **cheap high-throughput
 
 ```bash
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"gemini","actionSlug":"instruct","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"gemini","actionSlug":"instruct"}' \
   --records '[{"model":"gemini-2.5-flash","prompt":"<substituted classification prompt row 1>","advancedSettings":{"temperature":0},"output":{"responseFormat":"json_object"}},{"model":"gemini-2.5-flash","prompt":"<row 2>"}, ...]' \
   --wait-until-finished
 ```
@@ -65,7 +65,7 @@ cargo-ai orchestration action execute-batch \
 
 ## Action shape
 
-`{"kind":"connector","integrationSlug":"gemini","actionSlug":"instruct","config":{}}`, with `model`, `prompt`, `advancedSettings`, and `output` per record in `--records` / `--data`. **No `connectorUuid` in `config`** — and no model settings there either; inside a workflow **node** those same fields are the node's `config`. Costs above are the Cargo-credits rules; a workspace can instead attach its own Gemini key (connector config takes a single required `apiKey`) and bill Google directly.
+`{"kind":"connector","integrationSlug":"gemini","actionSlug":"instruct"}`, with `model`, `prompt`, `advancedSettings`, and `output` per record in `--records` / `--data`. **No `connectorUuid` in `config`** — and no model settings there either; inside a workflow **node** those same fields are the node's `config`. Costs above are the Cargo-credits rules; a workspace can instead attach its own Gemini key (connector config takes a single required `apiKey`) and bill Google directly.
 
 ## Pairs with
 

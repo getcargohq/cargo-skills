@@ -71,7 +71,7 @@ Create once, then batch the members in. Both `createAudience` calls return the i
 
 ```bash
 cargo-ai orchestration action execute \
-  --action '{"kind":"connector","integrationSlug":"googleAds","actionSlug":"createAudience","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"googleAds","actionSlug":"createAudience"}' \
   --data '{
     "customerId": "123-456-7890",
     "name": "Closed-Won lookalike seed 2026-Q3",
@@ -91,7 +91,7 @@ cargo-ai segmentation segment fetch --model-uuid <uuid> \
   --filter '<segment filter json>' --fetching-limit 20 > /tmp/audience.json
 
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"googleAds","actionSlug":"addContactToAudience","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"googleAds","actionSlug":"addContactToAudience"}' \
   --records "$(jq -c '[.records[] | {
     customerId: "123-456-7890",
     userListId: "987654321",
@@ -107,7 +107,7 @@ cargo-ai orchestration action execute-batch \
 ```bash
 # Contacts (email-keyed)
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"linkedinMatchedAudience","actionSlug":"addContactToAudience","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"linkedinMatchedAudience","actionSlug":"addContactToAudience"}' \
   --records "$(jq -c '[.records[] | {
     accountUrn: "urn:li:sponsoredAccount:123456789",
     audienceId: "<id>",
@@ -121,7 +121,7 @@ cargo-ai orchestration action execute-batch \
 # Companies (ABM — no personal data): fetch the account segment the same way
 # (cargo-ai segmentation segment fetch --model-uuid <companies-model> … > /tmp/accounts.json)
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"linkedinMatchedAudience","actionSlug":"addCompanyToAudience","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"linkedinMatchedAudience","actionSlug":"addCompanyToAudience"}' \
   --records "$(jq -c '[.records[] | {
     accountUrn: "urn:li:sponsoredAccount:123456789",
     audienceId: "<id>",
@@ -137,7 +137,7 @@ cargo-ai orchestration action execute-batch \
 
 ```bash
 cargo-ai orchestration action execute \
-  --action '{"kind":"connector","integrationSlug":"googleAds","actionSlug":"createReport","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"googleAds","actionSlug":"createReport"}' \
   --data '{"customerId": "123-456-7890", "userListId": "987654321"}' \
   --wait-until-finished
 ```

@@ -65,7 +65,7 @@ LinkedIn page-level enrichment, URL resolution, and activity signals. **Cheapest
 
 ```bash
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"linkedin","actionSlug":"findProfileUrl","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"linkedin","actionSlug":"findProfileUrl"}' \
   --records '[{"fullName":"Alice Smith","companyName":"Acme"},{"fullName":"Bob Jones","companyName":"Globex"}]' \
   --wait-until-finished
 ```
@@ -77,12 +77,12 @@ Then run `enrichProfile` on each returned URL and cross-check name + company —
 ```bash
 # 1. Find the post(s)
 cargo-ai orchestration action execute \
-  --action '{"kind":"connector","integrationSlug":"linkedin","actionSlug":"searchPosts","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"linkedin","actionSlug":"searchPosts"}' \
   --data '{"searchKeywords":"revenue operations benchmarks","sortBy":"Latest","datePosted":"Past week"}' \
   --wait-until-finished
 # 2. Pull who engaged (billed per item — cap the pull)
 cargo-ai orchestration action execute \
-  --action '{"kind":"connector","integrationSlug":"linkedin","actionSlug":"searchPostReactions","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"linkedin","actionSlug":"searchPostReactions"}' \
   --data '{"urn":"7181234567890123456","type":"ALL"}' \
   --wait-until-finished
 ```
@@ -93,7 +93,7 @@ cargo-ai orchestration action execute \
 
 ```bash
 cargo-ai orchestration action execute \
-  --action '{"kind":"connector","integrationSlug":"linkedin","actionSlug":"extractCompanyEmployeesInsights","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"linkedin","actionSlug":"extractCompanyEmployeesInsights"}' \
   --data '{"linkedinUrl":"https://linkedin.com/company/acme","affiliates":false}' \
   --wait-until-finished
 ```
@@ -130,4 +130,4 @@ Split by data half-life: **posts, jobs, and activity decay — profiles and comp
 
 ## Action shape
 
-`{"kind":"connector","integrationSlug":"linkedin","actionSlug":"<slug>","config":{}}`. **No `connectorUuid` in `config`.**
+`{"kind":"connector","integrationSlug":"linkedin","actionSlug":"<slug>"}`. **No `connectorUuid` in `config`.**

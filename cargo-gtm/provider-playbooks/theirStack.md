@@ -30,7 +30,7 @@ Tech-stack and jobs-posted intent signals. **Three credits-based actions, all 0.
 ```bash
 # "Find every company hiring a Head of RevOps in the last 30 days"
 cargo-ai orchestration action execute \
-  --action '{"kind":"connector","integrationSlug":"theirStack","actionSlug":"searchJobs","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"theirStack","actionSlug":"searchJobs"}' \
   --data '{
     "fields": {
       "job_titles": ["Head of RevOps", "VP RevOps", "Director of RevOps"],
@@ -52,7 +52,7 @@ Result includes both job postings and the companies that posted them. Dedup on c
 ```bash
 # "Find every company using Snowflake AND dbt"
 cargo-ai orchestration action execute \
-  --action '{"kind":"connector","integrationSlug":"theirStack","actionSlug":"searchCompanies","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"theirStack","actionSlug":"searchCompanies"}' \
   --data '{
     "techFields": {
       "technologies": ["snowflake", "dbt"]
@@ -71,7 +71,7 @@ cargo-ai orchestration action execute \
 ```bash
 # "Find every B2B SaaS hiring a data engineer AND already using Snowflake"
 cargo-ai orchestration action execute \
-  --action '{"kind":"connector","integrationSlug":"theirStack","actionSlug":"searchCompanies","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"theirStack","actionSlug":"searchCompanies"}' \
   --data '{
     "techFields": {"technologies": ["snowflake"]},
     "jobFields": {"job_titles": ["Data Engineer"], "posted_at_max_age_days": 60},
@@ -101,7 +101,7 @@ This is the unique strength of theirStack — combined tech-stack AND hiring-int
 
 ## Action shape
 
-`{"kind":"connector","integrationSlug":"theirStack","actionSlug":"<slug>","config":{}}`. **No `connectorUuid` in `config`.**
+`{"kind":"connector","integrationSlug":"theirStack","actionSlug":"<slug>"}`. **No `connectorUuid` in `config`.**
 
 ## When to combine with cargo native
 

@@ -32,7 +32,7 @@ All three bill **per item returned**, not per call. In credits mode the connecto
 
 ```bash
 cargo-ai orchestration action execute \
-  --action '{"kind":"connector","integrationSlug":"firecrawl","actionSlug":"scrape","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"firecrawl","actionSlug":"scrape"}' \
   --data '{"url":"https://acme.com/customers"}' \
   --wait-until-finished
 ```
@@ -43,7 +43,7 @@ Feed the returned markdown to `anthropic.instruct` for structured extraction —
 
 ```bash
 cargo-ai orchestration action execute \
-  --action '{"kind":"connector","integrationSlug":"firecrawl","actionSlug":"search","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"firecrawl","actionSlug":"search"}' \
   --data '{"query":"\"built on Stripe Atlas\" fintech startup","limit":20}' \
   --wait-until-finished
 ```
@@ -54,7 +54,7 @@ Billed per result: `limit: 20` ≈ 1 credit. Size `limit` to what you'll actuall
 
 ```bash
 cargo-ai orchestration action execute \
-  --action '{"kind":"connector","integrationSlug":"firecrawl","actionSlug":"crawl","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"firecrawl","actionSlug":"crawl"}' \
   --data '{
     "url": "https://jobs.nicheboard.io",
     "maxDepth": 1,
@@ -91,4 +91,4 @@ Firecrawl's `crawl` also exists as an **extractor** — usable to sync a website
 
 ## Action shape
 
-`{"kind":"connector","integrationSlug":"firecrawl","actionSlug":"<slug>","config":{}}`. **No `connectorUuid` in `config`.**
+`{"kind":"connector","integrationSlug":"firecrawl","actionSlug":"<slug>"}`. **No `connectorUuid` in `config`.**

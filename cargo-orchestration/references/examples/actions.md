@@ -13,7 +13,9 @@ Actions come in four kinds:
 | `agent`     | Invoke an AI agent                   | `agentUuid` or `templateSlug` or `releaseUuid` |
 | `native`    | Run a built-in platform action       | `actionSlug`                                   |
 
-`config` is where a **node** keeps its configuration; a top-level action has none — its inputs go in `--data` (single) or `--records` (batch). Newer backends let you omit the key entirely on `execute` / `execute-batch`; `"config": {}` is still accepted everywhere and is what the examples below use, so it works against any version. `get-output-schema`, alert `--actions`, and a play's `healthAlertActions` still require it.
+`config` is where a **node** keeps its configuration; a top-level action has none — its inputs go in `--data` (single) or `--records` (batch). Omit the key on `execute` / `execute-batch`: that is the shape `action list` returns, and `"config": {}` is merely tolerated there.
+
+**`get-output-schema` is the exception — it still requires `config`.** Hand it the action object from `action list` unchanged and it fails `400 — expected record, received undefined` at `action.config`; add `"config": {}` for that command only (the examples below do). Nodes, alert `--actions`, play `healthAlertActions`, and agent / MCP-server `--actions` require it as well.
 
 > **When to use actions vs workflows:** Actions are for running a **single operation** without building a workflow graph. If you need to **chain multiple operations** together (enrichment → scoring → CRM push), use `run create --nodes` or `batch create --nodes` instead. See `tools.md` for workflow examples.
 
@@ -78,17 +80,17 @@ Notes worth knowing:
 ```bash
 # Tool action
 cargo-ai orchestration action execute \
-  --action '{"kind":"tool","toolUuid":"<tool-uuid>","config":{}}' \
+  --action '{"kind":"tool","toolUuid":"<tool-uuid>"}' \
   --data '{"domain":"acme.com"}'
 
 # Connector action
 cargo-ai orchestration action execute \
-  --action '{"kind":"connector","integrationSlug":"clearbit","actionSlug":"enrichCompany","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"clearbit","actionSlug":"enrichCompany"}' \
   --data '{"domain":"acme.com"}'
 
 # Agent action
 cargo-ai orchestration action execute \
-  --action '{"kind":"agent","agentUuid":"<agent-uuid>","config":{}}' \
+  --action '{"kind":"agent","agentUuid":"<agent-uuid>"}' \
   --data '{"company":"Acme Corp"}'
 ```
 
@@ -96,7 +98,7 @@ Returns a `run` object. Poll with `run get <uuid>` until terminal, or pass `--wa
 
 ```bash
 cargo-ai orchestration action execute \
-  --action '{"kind":"connector","integrationSlug":"clearbit","actionSlug":"enrichCompany","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"clearbit","actionSlug":"enrichCompany"}' \
   --data '{"domain":"acme.com"}' \
   --wait-until-finished
 ```
@@ -105,7 +107,7 @@ Custom polling interval (default 5000ms):
 
 ```bash
 cargo-ai orchestration action execute \
-  --action '{"kind":"tool","toolUuid":"<tool-uuid>","config":{}}' \
+  --action '{"kind":"tool","toolUuid":"<tool-uuid>"}' \
   --data '{"domain":"acme.com"}' \
   --wait-until-finished --polling-interval 2000
 ```
@@ -143,7 +145,7 @@ With `--wait-until-finished`, the response contains the terminal run state:
 
 ```bash
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"tool","toolUuid":"<tool-uuid>","config":{}}' \
+  --action '{"kind":"tool","toolUuid":"<tool-uuid>"}' \
   --records '[{"domain":"acme.com"},{"domain":"globex.com"},{"domain":"initech.com"}]'
 ```
 
@@ -151,7 +153,7 @@ Returns a `batch` object. Poll with `batch get <uuid>` until terminal, or pass `
 
 ```bash
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"clearbit","actionSlug":"enrichCompany","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"clearbit","actionSlug":"enrichCompany"}' \
   --records '[{"domain":"acme.com"},{"domain":"globex.com"}]' \
   --wait-until-finished
 ```
@@ -162,7 +164,7 @@ Get notified when the batch completes instead of polling:
 
 ```bash
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"tool","toolUuid":"<tool-uuid>","config":{}}' \
+  --action '{"kind":"tool","toolUuid":"<tool-uuid>"}' \
   --records '[{"domain":"acme.com"},{"domain":"globex.com"}]' \
   --webhook-url "https://hooks.example.com/done" \
   --webhook-secret "my-secret"
@@ -209,7 +211,6 @@ cargo-ai orchestration action execute \
     "kind":"connector",
     "integrationSlug":"clearbit",
     "actionSlug":"enrichCompany",
-    "config":{},
     "retry":{"maximumAttempts":3,"initialInterval":1000,"backoffCoefficient":2}
   }' \
   --data '{"domain":"acme.com"}' \
@@ -328,7 +329,7 @@ cargo-ai connection integration get clearbit
 
 # 2. Execute
 cargo-ai orchestration action execute \
-  --action '{"kind":"connector","integrationSlug":"clearbit","actionSlug":"enrichCompany","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"clearbit","actionSlug":"enrichCompany"}' \
   --data '{"domain":"acme.com"}' \
   --wait-until-finished
 # → Done. Check run.status for success/error.
@@ -343,7 +344,7 @@ cargo-ai orchestration tool list
 
 # 2. Execute batch
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"tool","toolUuid":"<tool-uuid>","config":{}}' \
+  --action '{"kind":"tool","toolUuid":"<tool-uuid>"}' \
   --records '[
     {"email":"alice@acme.com","company":"Acme"},
     {"email":"bob@globex.com","company":"Globex"},

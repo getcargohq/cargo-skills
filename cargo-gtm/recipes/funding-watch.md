@@ -25,13 +25,13 @@ cargo-ai segmentation segment fetch \
 
 # 2. Match each domain to a cargo business_id (required for the funding action)
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"cargo","actionSlug":"matchBusiness","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"cargo","actionSlug":"matchBusiness"}' \
   --records "$(jq -c '[.records[] | {domain}]' /tmp/targets.json)" \
   --wait-until-finished > /tmp/matched.json
 
 # 3. Pull funding + acquisition events
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"cargo","actionSlug":"enrichBusinessFundingAndAcquisitions","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"cargo","actionSlug":"enrichBusinessFundingAndAcquisitions"}' \
   --records "$(jq -c '[.results[] | select(.business_id) | {business_id}]' /tmp/matched.json)" \
   --wait-until-finished > /tmp/funding.json
 
@@ -46,7 +46,7 @@ jq -c '[.results[]
 ```bash
 # Get all events of type "funding" or "acquisition" for one or many businesses
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"cargo","actionSlug":"fetchBusinessEvents","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"cargo","actionSlug":"fetchBusinessEvents"}' \
   --records '[
     {"business_id":"<uuid>","event_types":["funding","acquisition"],"timestamp_from":"2026-03-01T00:00:00Z"}
   ]' \
@@ -88,7 +88,7 @@ The output of this recipe is a list of company records with funding events. Offe
 
 ## Action shape
 
-`{"kind":"connector","integrationSlug":"cargo","actionSlug":"<slug>","config":{}}`. **No `connectorUuid` in `config`** — single workspace cargo connector resolves automatically.
+`{"kind":"connector","integrationSlug":"cargo","actionSlug":"<slug>"}`. **No `connectorUuid` in `config`** — single workspace cargo connector resolves automatically.
 
 ## Output retrieval
 

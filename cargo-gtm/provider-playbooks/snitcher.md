@@ -36,7 +36,7 @@ Both run incrementally with `autoFetch` at a minimum 30-minute interval once con
 
 ```bash
 cargo-ai orchestration action execute \
-  --action '{"kind":"connector","integrationSlug":"snitcher","actionSlug":"searchSessions","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"snitcher","actionSlug":"searchSessions"}' \
   --record '{"workspaceUuid":"<snitcher-workspace-uuid>","organisationUuid":"<snitcher-organisation-uuid>","dateFrom":"2026-06-01","dateTo":"2026-07-09","limit":50}' \
   --wait-until-finished
 ```
@@ -73,4 +73,4 @@ Both UUIDs are **Snitcher's** identifiers (workspace = the tracked site; organis
 
 ## Action shape
 
-`{"kind":"connector","integrationSlug":"snitcher","actionSlug":"searchSessions","config":{}}`. **No `connectorUuid` in `config`.**
+`{"kind":"connector","integrationSlug":"snitcher","actionSlug":"searchSessions"}`. **No `connectorUuid` in `config`.**

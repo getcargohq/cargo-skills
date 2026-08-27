@@ -67,7 +67,7 @@ cargo-ai segmentation segment list
 ```bash
 # Step 1 — SOURCE: cheapest at-scale lead search
 cargo-ai orchestration action execute \
-  --action '{"kind":"connector","integrationSlug":"salesNavigator","actionSlug":"searchLeads","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"salesNavigator","actionSlug":"searchLeads"}' \
   --data '{
     "keywords": "CTO",
     "company": {"industries": [43]},
@@ -78,36 +78,36 @@ cargo-ai orchestration action execute \
 
 # Step 2 — DEDUPE: resolve each lead to a cargo prospect_id
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"cargo","actionSlug":"matchProspect","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"cargo","actionSlug":"matchProspect"}' \
   --records "$(jq -c '[.results[] | {full_name, company_name, linkedin: .linkedinUrl}]' /tmp/p1-leads.json)" \
   --wait-until-finished > /tmp/p1-matched.json
 
 # Step 3a — ENRICH (prospect details)
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"cargo","actionSlug":"enrichProspectDetails","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"cargo","actionSlug":"enrichProspectDetails"}' \
   --records "$(jq -c '[.results[] | select(.prospect_id) | {prospect_id}]' /tmp/p1-matched.json)" \
   --wait-until-finished > /tmp/p1-prospect-enriched.json
 
 # Step 3b — ENRICH (firmographics on each contact's company)
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"cargo","actionSlug":"matchBusiness","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"cargo","actionSlug":"matchBusiness"}' \
   --records "$(jq -c '[.results[] | {domain: .companyDomain}]' /tmp/p1-leads.json)" \
   --wait-until-finished > /tmp/p1-business-matched.json
 
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"cargo","actionSlug":"enrichBusinessFirmographics","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"cargo","actionSlug":"enrichBusinessFirmographics"}' \
   --records "$(jq -c '[.results[] | select(.business_id) | {business_id}]' /tmp/p1-business-matched.json)" \
   --wait-until-finished > /tmp/p1-firmo.json
 
 # Step 5 — CONTACT: find email for each prospect
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"FullEnrich","actionSlug":"findEmail","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"FullEnrich","actionSlug":"findEmail"}' \
   --records "$(jq -c '[.results[] | {firstName: .firstName, lastName: .lastName, domainName: .companyDomain}]' /tmp/p1-leads.json)" \
   --wait-until-finished > /tmp/p1-emails.json
 
 # Step 6 — VERIFY each found email
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"waterfall","actionSlug":"verifyEmail","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"waterfall","actionSlug":"verifyEmail"}' \
   --records "$(jq -c '[.results[] | select(.email) | {email}]' /tmp/p1-emails.json)" \
   --wait-until-finished > /tmp/p1-verified.json
 
@@ -133,7 +133,7 @@ jq -s '[.[0].results, .[1].results, .[2].results, .[3].results]
 
 ```bash
 cargo-ai orchestration action execute \
-  --action '{"kind":"connector","integrationSlug":"theirStack","actionSlug":"searchJobs","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"theirStack","actionSlug":"searchJobs"}' \
   --data '{
     "fields": {"job_titles": ["Data Engineer"], "posted_at_max_age_days": 60},
     "companyFields": {"industries": ["software", "saas"], "employeeCounts": ["50-200","200-500"]},
@@ -146,12 +146,12 @@ cargo-ai orchestration action execute \
 
 ```bash
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"cargo","actionSlug":"matchBusiness","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"cargo","actionSlug":"matchBusiness"}' \
   --records "$(jq -c '[.results[].company | {domain}]' /tmp/p2-companies.json)" \
   --wait-until-finished > /tmp/p2-business-matched.json
 
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"cargo","actionSlug":"enrichBusinessFirmographics","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"cargo","actionSlug":"enrichBusinessFirmographics"}' \
   --records "$(jq -c '[.results[] | select(.business_id) | {business_id}]' /tmp/p2-business-matched.json)" \
   --wait-until-finished > /tmp/p2-firmo.json
 ```
@@ -160,7 +160,7 @@ cargo-ai orchestration action execute-batch \
 
 ```bash
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"salesNavigator","actionSlug":"searchLeads","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"salesNavigator","actionSlug":"searchLeads"}' \
   --records "$(jq -c '[.results[].company | {keywords: "Head of RevOps", company: {linkedinIds: [.linkedinId]}, limit: 3}]' /tmp/p2-companies.json)" \
   --wait-until-finished > /tmp/p2-leads.json
 ```
@@ -169,12 +169,12 @@ cargo-ai orchestration action execute-batch \
 
 ```bash
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"cargo","actionSlug":"matchProspect","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"cargo","actionSlug":"matchProspect"}' \
   --records "$(jq -c '[.results[].leads[] | {full_name, company_name, linkedin: .linkedinUrl}]' /tmp/p2-leads.json)" \
   --wait-until-finished > /tmp/p2-prospect-matched.json
 
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"cargo","actionSlug":"enrichProspectDetails","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"cargo","actionSlug":"enrichProspectDetails"}' \
   --records "$(jq -c '[.results[] | select(.prospect_id) | {prospect_id}]' /tmp/p2-prospect-matched.json)" \
   --wait-until-finished > /tmp/p2-prospect-enriched.json
 ```
@@ -183,7 +183,7 @@ cargo-ai orchestration action execute-batch \
 
 ```bash
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"FullEnrich","actionSlug":"findEmail","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"FullEnrich","actionSlug":"findEmail"}' \
   --records "$(jq -c '[.results[].leads[] | {firstName, lastName, domainName: .companyDomain}]' /tmp/p2-leads.json)" \
   --wait-until-finished > /tmp/p2-emails.json
 ```
@@ -200,7 +200,7 @@ node <skill-dir>/scripts/validate-emails.ts --input /tmp/p2-emails.json --json >
 #     credits, so the verify batch must be built from its output, never from
 #     the original list
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"waterfall","actionSlug":"verifyEmail","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"waterfall","actionSlug":"verifyEmail"}' \
   --records "$(jq -c '[.[] | select(.recommendation != "skip") | {email}]' /tmp/p2-culled.json)" \
   --wait-until-finished > /tmp/p2-verified.json
 ```
@@ -265,12 +265,12 @@ jq -c '[.records[] | select(.email == null or .email == "")]' /tmp/p3-segment.js
 
 # 3. Try cargo first (cheapest; works on already-known prospects)
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"cargo","actionSlug":"matchProspect","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"cargo","actionSlug":"matchProspect"}' \
   --records "$(jq -c '[.[] | {full_name, company_name, linkedin}]' /tmp/p3-missing-email.json)" \
   --wait-until-finished > /tmp/p3-cargo-matched.json
 
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"cargo","actionSlug":"enrichProspectDetails","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"cargo","actionSlug":"enrichProspectDetails"}' \
   --records "$(jq -c '[.results[] | select(.prospect_id) | {prospect_id}]' /tmp/p3-cargo-matched.json)" \
   --wait-until-finished > /tmp/p3-cargo-enriched.json
 
@@ -279,7 +279,7 @@ jq -s '[.[0][], .[1].results[]] | group_by(.full_name) | map(reduce .[] as $r ({
   /tmp/p3-missing-email.json /tmp/p3-cargo-enriched.json > /tmp/p3-still-missing.json
 
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"FullEnrich","actionSlug":"findEmail","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"FullEnrich","actionSlug":"findEmail"}' \
   --records "$(jq -c '[.[] | {firstName, lastName, domainName}]' /tmp/p3-still-missing.json)" \
   --wait-until-finished > /tmp/p3-fullenrich.json
 
@@ -288,7 +288,7 @@ jq -s '[.[0][], .[1].results[]] | group_by(.firstName + .lastName) | map(reduce 
   /tmp/p3-still-missing.json /tmp/p3-fullenrich.json > /tmp/p3-final-missing.json
 
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"peopleDataLabs","actionSlug":"enrichPerson","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"peopleDataLabs","actionSlug":"enrichPerson"}' \
   --records "$(jq -c '[.[] | {parameters: {first_name: .firstName, last_name: .lastName, company: .companyName}}]' /tmp/p3-final-missing.json)" \
   --wait-until-finished > /tmp/p3-pdl.json
 
@@ -296,7 +296,7 @@ cargo-ai orchestration action execute-batch \
 jq -s '[.[].results[] | select(.email)] | unique_by(.email)' /tmp/p3-fullenrich.json /tmp/p3-pdl.json > /tmp/p3-emails-to-verify.json
 
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"waterfall","actionSlug":"verifyEmail","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"waterfall","actionSlug":"verifyEmail"}' \
   --records "$(jq -c '[.[] | {email}]' /tmp/p3-emails-to-verify.json)" \
   --wait-until-finished > /tmp/p3-verified.json
 ```
@@ -337,7 +337,7 @@ When the priority stack misses the user's criteria, see [`../references/alternat
 
 ## Action shape rules
 
-`{"kind":"connector","integrationSlug":"<slug>","actionSlug":"<slug>","config":{}}`. **No `connectorUuid` in `config`** — see [`../../cargo-orchestration/references/examples/actions.md`](../../cargo-orchestration/references/examples/actions.md). Cross-node interpolation: `{{nodes.<slug>.<field>}}`.
+`{"kind":"connector","integrationSlug":"<slug>","actionSlug":"<slug>"}`. **No `connectorUuid` in `config`** — see [`../../cargo-orchestration/references/examples/actions.md`](../../cargo-orchestration/references/examples/actions.md). Cross-node interpolation: `{{nodes.<slug>.<field>}}`.
 
 ## When stuck — file a workspace report
 

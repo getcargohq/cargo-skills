@@ -149,8 +149,8 @@ cargo-ai orchestration action list enrich company
 cargo-ai orchestration action list send --kind connector --integration-slug slack
 
 # Single actions
-cargo-ai orchestration action execute --action '{"kind":"tool","toolUuid":"<uuid>","config":{}}' --data '{"domain":"acme.com"}'
-cargo-ai orchestration action execute-batch --action '{"kind":"connector","integrationSlug":"clearbit","actionSlug":"enrichCompany","config":{}}' --records '[{...},{...}]'
+cargo-ai orchestration action execute --action '{"kind":"tool","toolUuid":"<uuid>"}' --data '{"domain":"acme.com"}'
+cargo-ai orchestration action execute-batch --action '{"kind":"connector","integrationSlug":"clearbit","actionSlug":"enrichCompany"}' --records '[{...},{...}]'
 cargo-ai orchestration action get-output-schema --action '{"kind":"connector","integrationSlug":"clearbit","actionSlug":"enrichCompany","config":{}}' # → {"schema": <JSON Schema>} without executing
 
 # Workflows (chain multiple actions)
@@ -205,25 +205,36 @@ Slack channel). Defaults to 20 results, max 50.
 ```bash
 # One action, one record → returns a run
 cargo-ai orchestration action execute \
-  --action '{"kind":"connector","integrationSlug":"clearbit","actionSlug":"enrichCompany","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"clearbit","actionSlug":"enrichCompany"}' \
   --data '{"domain":"acme.com"}' \
   --wait-until-finished
 
 # One action, many records → returns a batch
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"tool","toolUuid":"<tool-uuid>","config":{}}' \
+  --action '{"kind":"tool","toolUuid":"<tool-uuid>"}' \
   --records '[{"domain":"acme.com"},{"domain":"globex.com"}]' \
   --wait-until-finished
 ```
 
 Action kinds: `tool`, `connector`, `agent`, `native`. See `references/examples/actions.md` for all action kinds, parameters, retry config, response shapes, and end-to-end examples.
 
-> **`config` on a top-level action:** inputs belong in `--data` / `--records`,
-> never in `config`. Newer backends accept an action with **no `config` key at
-> all** on `execute` / `execute-batch`; `"config": {}` stays valid everywhere and
-> is what the examples here use, so it is the safe form against any version. A
-> workflow **node**, an alert's `--actions`, and a play's `healthAlertActions`
-> still **require** `config` — that is where a node's real configuration lives.
+> **A top-level action has no `config` — omit it.** Inputs belong in `--data` /
+> `--records`; `execute` and `execute-batch` take the action with no `config` key
+> at all, which is exactly what `action list` hands back, so its result pastes
+> straight in. (`"config": {}` is still accepted there, harmlessly.)
+>
+> **The exception that will bite you: `get-output-schema` still *requires*
+> `config`.** Give it the same action object from `action list` and it fails
+> `400 — expected record, received undefined` at `action.config`. Add `"config": {}`
+> for that one command. Workflow **nodes**, an alert's `--actions`, a play's
+> `healthAlertActions`, and an agent's or MCP server's `--actions` require it too
+> — that is where a node's real configuration lives.
+>
+> **Inputs put in `config` are now dropped, not rejected.** The guard that used to
+> answer `A top-level action does not use action.config…` is gone, so the action
+> runs with *no input* — you get a provider-side missing-field error or an empty
+> result that never mentions `config`. Check this first when a call comes back
+> empty for no visible reason.
 
 > **`execute-batch` bills per record.** Pass a 10–20 record slice of `--records` first, report the observed per-record cost and hit-rate, and get approval (with the full record count and credit estimate) before sending the rest — same gate as [Create a batch](#the-sample-gate).
 

@@ -30,7 +30,7 @@ Mid-tier email finder. Its `findEmail` (0.5) is **rung 2 of the find-email water
 ```bash
 # Run ONLY on the rows where FullEnrich.findEmail returned nothing
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"hunter","actionSlug":"findEmail","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"hunter","actionSlug":"findEmail"}' \
   --records '[
     {"first_name":"Alice","last_name":"Smith","domain":"acme.com"},
     {"full_name":"Bob Jones","company":"Globex"}
@@ -44,7 +44,7 @@ cargo-ai orchestration action execute-batch \
 
 ```bash
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"hunter","actionSlug":"searchDomain","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"hunter","actionSlug":"searchDomain"}' \
   --records '[{"domain":"acme.com","type":"personal","seniorities":["executive"],"departments":["sales","marketing"],"limit":10}]' \
   --wait-until-finished
 ```
@@ -79,4 +79,4 @@ No scheduled fit — a found email is stable data; re-running `findEmail` on a t
 
 ## Action shape
 
-`{"kind":"connector","integrationSlug":"hunter","actionSlug":"<slug>","config":{}}`. **No `connectorUuid` in `config`.**
+`{"kind":"connector","integrationSlug":"hunter","actionSlug":"<slug>"}`. **No `connectorUuid` in `config`.**

@@ -37,7 +37,7 @@ Rate limited to 10 calls per second.
 
 ```bash
 cargo-ai orchestration action execute \
-  --action '{"kind":"connector","integrationSlug":"exa","actionSlug":"search","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"exa","actionSlug":"search"}' \
   --data '{
     "query": "B2B data enrichment platforms for revenue teams",
     "category": "company",
@@ -53,7 +53,7 @@ cargo-ai orchestration action execute \
 
 ```bash
 cargo-ai orchestration action execute \
-  --action '{"kind":"connector","integrationSlug":"exa","actionSlug":"search","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"exa","actionSlug":"search"}' \
   --data '{
     "query": "Acme product strategy and priorities",
     "category": "news",
@@ -85,7 +85,7 @@ cargo-ai orchestration action execute \
 
 ## Action shape
 
-`{"kind":"connector","integrationSlug":"exa","actionSlug":"search","config":{}}`. **No `connectorUuid` in `config`.** Filters go in `--data`.
+`{"kind":"connector","integrationSlug":"exa","actionSlug":"search"}`. **No `connectorUuid` in `config`.** Filters go in `--data`.
 
 ## Pairs with
 

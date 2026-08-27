@@ -29,7 +29,7 @@ Single-action person lookup: `lookupPerson` (1 credit) resolves a person **and t
 ```bash
 # Only on rows the priority stack missed
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"rocketreach","actionSlug":"lookupPerson","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"rocketreach","actionSlug":"lookupPerson"}' \
   --records '[
     {"name":"Alice Smith","currrentEmployer":"Acme","title":"CTO"},
     {"linkedinUrl":"https://linkedin.com/in/bobjones"}
@@ -41,7 +41,7 @@ cargo-ai orchestration action execute-batch \
 
 ```bash
 cargo-ai orchestration action execute \
-  --action '{"kind":"connector","integrationSlug":"rocketreach","actionSlug":"lookupPerson","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"rocketreach","actionSlug":"lookupPerson"}' \
   --record '{"npiNumber":1234567890}' \
   --wait-until-finished
 ```
@@ -74,4 +74,4 @@ No scheduled fit — `lookupPerson` is a per-record fallback lookup; there is no
 
 ## Action shape
 
-`{"kind":"connector","integrationSlug":"rocketreach","actionSlug":"lookupPerson","config":{}}`. **No `connectorUuid` in `config`.**
+`{"kind":"connector","integrationSlug":"rocketreach","actionSlug":"lookupPerson"}`. **No `connectorUuid` in `config`.**

@@ -43,7 +43,7 @@ Adjust the threshold (`180d` → `365d` for very large lists) and exclusions to 
 
 ```bash
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"waterfall","actionSlug":"detectJobChange","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"waterfall","actionSlug":"detectJobChange"}' \
   --records "$(jq -c '[.records[] | {
     professional_email: .email,
     contact_linkedin: .linkedin_url,
@@ -59,12 +59,12 @@ cargo-ai orchestration action execute-batch \
 ```bash
 # Match contact's company → cargo business_id, then fetch events
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"cargo","actionSlug":"matchBusiness","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"cargo","actionSlug":"matchBusiness"}' \
   --records "$(jq -c '[.records[] | {domain: .company_domain}]' /tmp/stale.json)" \
   --wait-until-finished > /tmp/matched.json
 
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"cargo","actionSlug":"fetchBusinessEvents","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"cargo","actionSlug":"fetchBusinessEvents"}' \
   --records "$(jq -c '[.results[] | select(.business_id) | {business_id, event_types: ["funding","acquisition"], since: "90d"}]' /tmp/matched.json)" \
   --wait-until-finished > /tmp/events.json
 ```
@@ -75,7 +75,7 @@ For contacts at companies where a tech signal is your strongest qualifier:
 
 ```bash
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"theirStack","actionSlug":"searchTechnologies","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"theirStack","actionSlug":"searchTechnologies"}' \
   --records "$(jq -c '[.records[] | {company_domain: .company_domain, technologies: ["snowflake","databricks"]}]' /tmp/stale.json)" \
   --wait-until-finished > /tmp/tech.json
 ```
@@ -127,7 +127,7 @@ Filter aggressively before the scan — only include contacts where revival is a
 
 ## Action shape
 
-Every action follows: `{"kind":"connector","integrationSlug":"<slug>","actionSlug":"<slug>","config":{}}`. **No `connectorUuid` in `config`** — see [`../../cargo-orchestration/references/examples/actions.md`](../../cargo-orchestration/references/examples/actions.md).
+Every action follows: `{"kind":"connector","integrationSlug":"<slug>","actionSlug":"<slug>"}`. **No `connectorUuid` in `config`** — see [`../../cargo-orchestration/references/examples/actions.md`](../../cargo-orchestration/references/examples/actions.md).
 
 ## Output retrieval
 

@@ -55,7 +55,7 @@ This is the step that pays for the whole recipe. Take a deliberately **represent
 
 ```bash
 cargo-ai orchestration action execute \
-  --action '{"kind":"connector","integrationSlug":"<slug>","actionSlug":"<slug>","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"<slug>","actionSlug":"<slug>"}' \
   --data '{"domain":"example.com"}' --wait-until-finished
 ```
 

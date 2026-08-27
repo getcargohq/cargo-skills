@@ -1,7 +1,7 @@
 ---
 name: cargo-connection
 description: "Connect Cargo to an external system and find out what it can do — authenticate connectors, browse the integration catalog, and resolve the `connectorUuid` and `actionSlug` a workflow node needs. Triggers: \"connect my HubSpot\", \"is Salesforce connected\", \"what integrations do you support\", \"can Cargo talk to <tool>\", \"what actions does <provider> have\", \"I need the connector UUID\", \"set up the API key for\", \"it is asking for credentials again\", \"why is this connector failing auth\", \"list my connectors\". Integrations: amplemarket, amplitude, attio, bigQuery, calendly, closecom, contrast, csv, customerio, dbt, emailBison, expandi, googleAds, googleSheets, heyReach, http, hubspot, hubspotMcp, instantly, instantlyV2, intercom, jira, kitt, lemlist, lgm, linkedinAds, linkedinMatchedAudience, livestorm, manus, marketo, metabase, microsoftTeams, mixpanel, netsuite, netsuiteSoap, notionMcp, octave, onesignal, outreach, pipedrive, postgresql, redshift, resend, rift, salesforce, salesforceMcp, salesloft, Sendgrid, sillage, slack, smartlead, snowflake, sql, stripe, and 83 more. Skip when: choosing between enrichment providers for a GTM job — use cargo-gtm and its provider playbooks."
-version: "1.3.1"
+version: "1.4.0"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -49,16 +49,44 @@ Every command prints JSON to stdout; failures exit non-zero with `{"errorMessage
 
 ## Discover resources first
 
+**Looking for an action? Search for it — don't browse the catalog.** Two keyword
+searches cover the whole surface, and both beat paging `integration list` or
+reading a whole `integration get` payload:
+
+```bash
+cargo-ai orchestration action list <query>                # START HERE — connector + native + tools + agents.
+                                                          # Returns a ready-to-run action object (connectorUuid
+                                                          # resolved) and the action's credit costs.
+cargo-ai connection action search <query> --credits-only  # connector catalog only, but filters by category
+                                                          # and by "is it paid" — which `action list` cannot.
+```
+
+Reach for the catalog commands when you need the *integration*, not an action —
+its auth fields, its extractors, or the full input schema of an action you have
+already picked:
+
 ```bash
 cargo-ai connection connector list                        # all authenticated connectors
 cargo-ai connection integration list                      # all available integration types
-cargo-ai orchestration action list <query>                # search actions across every integration at once
-                                                          # (+ native, tools, agents — returns credits and a
-                                                          #  ready action object; see cargo-orchestration)
 cargo-ai connection integration list --search "hubspot"   # search by name
-cargo-ai connection integration get <slug>                # third-party-specific actions (e.g. HubSpot)
+cargo-ai connection integration get <slug>                # one integration's actions + input schemas
 cargo-ai connection native-integration get                # built-in Cargo actions only (NOT third-party)
 ```
+
+### Which action search?
+
+| | `orchestration action list` | `connection action search` |
+|---|---|---|
+| Covers | connector, native, **tools, agents** | connector catalog only |
+| Returns | a runnable `action` object with `connectorUuid`, workspace connectors, `credits`, autocompletes | `integrationSlug` + `actionSlug`, category, `credits` — you assemble the action yourself |
+| Filters | `--kind`, `--integration-slug`, `--limit` | `--category`, `--integration`, **`--credits-only`**, `--limit` |
+| Needs | CLI ≥ 1.0.66 | CLI ≥ 1.0.36 |
+
+Default to `action list` — it is the one that hands you something you can execute.
+Switch to `action search` for the two questions it alone answers: *which paid
+actions match this?* (`--credits-only`) and *what does this category offer?*
+(`--category`). Both rank an action-slug or name hit above an integration hit,
+above a description hit, and require **all** query terms to match.
 
 ### `integration get` vs `native-integration get`
 
@@ -274,7 +302,8 @@ Connector actions are used as nodes in workflow graphs. To use an action:
 cargo-ai connection connector list
 # → Filter the output by integrationSlug to find the right connector
 
-# 2. Discover available actions for the integration
+# 2. Discover the action — search first, and only then read its schema
+cargo-ai orchestration action list <keywords> --integration-slug <integration-slug>
 cargo-ai connection integration get <integration-slug>
 # → actions are keyed by actionSlug, with config.jsonSchema (input) for each
 # → many actions also carry output.schema — the JSON Schema of what the action

@@ -40,7 +40,7 @@ Two filter shapes — pick the right one:
 ```bash
 # "Find every company backed by Sequoia Capital, USA, 50-500 employees"
 cargo-ai orchestration action execute \
-  --action '{"kind":"connector","integrationSlug":"peopleDataLabs","actionSlug":"queryCompanies","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"peopleDataLabs","actionSlug":"queryCompanies"}' \
   --data '{
     "query": "SELECT * FROM company WHERE summary.investors LIKE %Sequoia Capital% AND employee_count >= 50 AND employee_count <= 500 AND location.country = '\''united states'\''",
     "limit": 200
@@ -56,7 +56,7 @@ After cargo + waterfall both return empty for a row:
 
 ```bash
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"peopleDataLabs","actionSlug":"enrichPerson","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"peopleDataLabs","actionSlug":"enrichPerson"}' \
   --records '[
     {"parameters":{"email":"alice@acme.com"}},
     {"parameters":{"linkedin":"linkedin.com/in/alicesmith"}},
@@ -74,7 +74,7 @@ For criteria that fit cargo's standard filter shape (key/operator/value AND/OR),
 ```bash
 # "Find Heads of Engineering at fintechs in NYC, 50-500 employees"
 cargo-ai orchestration action execute \
-  --action '{"kind":"connector","integrationSlug":"peopleDataLabs","actionSlug":"searchPeople","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"peopleDataLabs","actionSlug":"searchPeople"}' \
   --data '{
     "filter": {
       "conjonction": "and",
@@ -115,7 +115,7 @@ If cargo's filter shape can't express the criteria (e.g., array-membership filte
 
 ## Action shape
 
-`{"kind":"connector","integrationSlug":"peopleDataLabs","actionSlug":"<slug>","config":{}}`. **No `connectorUuid` in `config`.**
+`{"kind":"connector","integrationSlug":"peopleDataLabs","actionSlug":"<slug>"}`. **No `connectorUuid` in `config`.**
 
 ## Where peopleDataLabs sits in the spine
 

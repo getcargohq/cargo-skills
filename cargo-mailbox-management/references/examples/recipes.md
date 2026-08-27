@@ -87,7 +87,7 @@ cargo-ai mailboxManagement mailbox get-send-allowance <mailbox-uuid> | jq .allow
 
 # 0.1 credits
 cargo-ai orchestration action execute \
-  --action '{"kind":"native","actionSlug":"sendEmail","config":{}}' \
+  --action '{"kind":"native","actionSlug":"sendEmail"}' \
   --data '{"mailboxUuid":"<mailbox-uuid>","to":"jane@acme.com","subject":"Quick question about <signal>","bodyHtml":"<p>…</p>"}' \
   --wait-until-finished
 # → {"messageUuid":"…","rfcMessageId":"<abc@cargo>","sentAt":"…"}
@@ -110,7 +110,7 @@ cargo-ai mailboxManagement thread get <thread-uuid>
 
 # Reply on-thread: references carries the WHOLE chain, oldest first
 cargo-ai orchestration action execute \
-  --action '{"kind":"native","actionSlug":"sendEmail","config":{}}' \
+  --action '{"kind":"native","actionSlug":"sendEmail"}' \
   --data '{"mailboxUuid":"<mailbox-uuid>","to":"jane@acme.com","subject":"Re: Quick question","bodyHtml":"<p>…</p>","inReplyTo":"<abc@cargo>","references":["<abc@cargo>"]}' \
   --wait-until-finished
 ```
@@ -154,7 +154,7 @@ cargo-ai mailboxManagement suppression create --email opted-out@acme.com
 
 # Prove it: the next send is refused by the engine, before it costs anything
 cargo-ai orchestration action execute \
-  --action '{"kind":"native","actionSlug":"sendEmail","config":{}}' \
+  --action '{"kind":"native","actionSlug":"sendEmail"}' \
   --data '{"mailboxUuid":"<mailbox-uuid>","to":"opted-out@acme.com","subject":"…","bodyHtml":"…"}' \
   --wait-until-finished
 # → run error: recipientSuppressed

@@ -92,7 +92,7 @@ Provider coverage is a property of the target company, not something more retrie
 
 Size the pool before paying for it:
 
-- Use free lookups (`connection integration list-actions`, model SQL counts, existing segments) and the cheapest search page before any paid pull.
+- Use free lookups (`orchestration action list <keywords>` — or `connection action search <keywords> --credits-only` to see only the paid ones — plus model SQL counts and existing segments) and the cheapest search page before any paid pull. `action list` returns each action's `credits` cost table, so the price is knowable before the call rather than after.
 - **Keep `limit`/page sizes strict** — search actions are billed on *returned* rows, not on matched totals. Where a provider returns a `total_count` alongside results, a 1-row request sizes the whole TAM for the price of one row.
 - Never pull a full result set "to see what's there." Decide the filter from a small page, then pull exactly the scope approved in §1.
 

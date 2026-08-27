@@ -53,7 +53,7 @@ jq -c '[.records[] | select(.lost_reason == "wrong_time" or .lost_reason == "tim
 
 ```bash
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"waterfall","actionSlug":"detectJobChange","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"waterfall","actionSlug":"detectJobChange"}' \
   --records "$(jq -c '[.[] | {
     professional_email: .primary_contact_email,
     contact_linkedin: .primary_contact_linkedin,
@@ -69,12 +69,12 @@ jq -c '[.results[] | select(.status == "MOVED")]' /tmp/champion-changes.json > /
 
 ```bash
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"cargo","actionSlug":"matchBusiness","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"cargo","actionSlug":"matchBusiness"}' \
   --records "$(jq -c '[.[] | {domain: .account_domain}]' /tmp/lost-budget.json)" \
   --wait-until-finished > /tmp/budget-matched.json
 
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"cargo","actionSlug":"fetchBusinessEvents","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"cargo","actionSlug":"fetchBusinessEvents"}' \
   --records "$(jq -c '[.results[] | select(.business_id) | {business_id, event_types: ["funding"], since: "180d"}]' /tmp/budget-matched.json)" \
   --wait-until-finished > /tmp/budget-events.json
 
@@ -86,7 +86,7 @@ jq -c '[.results[] | select((.events // []) | length > 0)]' /tmp/budget-events.j
 
 ```bash
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"salesNavigator","actionSlug":"searchLeads","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"salesNavigator","actionSlug":"searchLeads"}' \
   --records "$(jq -c '[.[] | {
     company_domain: .account_domain,
     seniority: ["VP+", "C-Level"],
@@ -140,7 +140,7 @@ Much cheaper than the broader [`re-engagement.md`](re-engagement.md) scan becaus
 
 ## Action shape
 
-Every action follows: `{"kind":"connector","integrationSlug":"<slug>","actionSlug":"<slug>","config":{}}`. **No `connectorUuid` in `config`** — see [`../../cargo-orchestration/references/examples/actions.md`](../../cargo-orchestration/references/examples/actions.md).
+Every action follows: `{"kind":"connector","integrationSlug":"<slug>","actionSlug":"<slug>"}`. **No `connectorUuid` in `config`** — see [`../../cargo-orchestration/references/examples/actions.md`](../../cargo-orchestration/references/examples/actions.md).
 
 ## Output retrieval
 

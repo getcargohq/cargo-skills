@@ -63,19 +63,19 @@ When one provider misses, escalate to the next. Run each step only on the rows w
 ```bash
 # Step 1 — try cargo first (cheapest + best for known companies)
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"cargo","actionSlug":"enrichBusinessFirmographics","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"cargo","actionSlug":"enrichBusinessFirmographics"}' \
   --records '[{"domain":"acme.com"}, ... ]' \
   --wait-until-finished > /tmp/step1.json
 
 # Step 2 — extract rows where step 1 returned no firmographics, retry with waterfall
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"waterfall","actionSlug":"enrichCompany","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"waterfall","actionSlug":"enrichCompany"}' \
   --records '<rows from step 1 where firmographics empty>' \
   --wait-until-finished > /tmp/step2.json
 
 # Step 3 — last-resort backfill with peopleDataLabs (3 credits flat)
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"peopleDataLabs","actionSlug":"enrichCompany","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"peopleDataLabs","actionSlug":"enrichCompany"}' \
   --records '<rows still empty after step 2>' \
   --wait-until-finished > /tmp/step3.json
 
@@ -118,7 +118,7 @@ For ad-hoc `action execute` / `action execute-batch` runs (no saved tool), use `
 
 ## Action shape rules
 
-`kind: "connector"` action: `{"kind":"connector","integrationSlug":"<slug>","actionSlug":"<slug>","config":{}}`. **`connectorUuid` is NOT in `config`.** The platform resolves the workspace's authenticated connector from `integrationSlug`. See [`../../cargo-orchestration/references/examples/actions.md`](../../cargo-orchestration/references/examples/actions.md).
+`kind: "connector"` action: `{"kind":"connector","integrationSlug":"<slug>","actionSlug":"<slug>"}`. **`connectorUuid` is NOT in `config`.** The platform resolves the workspace's authenticated connector from `integrationSlug`. See [`../../cargo-orchestration/references/examples/actions.md`](../../cargo-orchestration/references/examples/actions.md).
 
 ## Polling guidance
 

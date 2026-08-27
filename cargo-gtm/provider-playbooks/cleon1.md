@@ -29,7 +29,7 @@ Premium phone finder — **the most expensive phone rung in the catalog at 15 cr
 ```bash
 # Explicit user request + qualified leads only — 15 credits each
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"cleon1","actionSlug":"findPhoneFromLinkedin","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"cleon1","actionSlug":"findPhoneFromLinkedin"}' \
   --records '[{"linkedinUrl":"https://linkedin.com/in/alicesmith"}]' \
   --wait-until-finished
 ```
@@ -38,7 +38,7 @@ cargo-ai orchestration action execute-batch \
 
 ```bash
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"cleon1","actionSlug":"findPhone","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"cleon1","actionSlug":"findPhone"}' \
   --records '[{"firstName":"Alice","lastName":"Smith","companyName":"Acme","companyDomain":"acme.com"}]' \
   --wait-until-finished
 ```
@@ -71,4 +71,4 @@ No scheduled fit — per-record phone lookup only, and at 15 credits it should b
 
 ## Action shape
 
-`{"kind":"connector","integrationSlug":"cleon1","actionSlug":"<slug>","config":{}}`. **No `connectorUuid` in `config`.**
+`{"kind":"connector","integrationSlug":"cleon1","actionSlug":"<slug>"}`. **No `connectorUuid` in `config`.**

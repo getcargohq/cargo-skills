@@ -1,7 +1,7 @@
 ---
 name: cargo-mailbox-management
 description: "Send mail from inboxes Cargo owns — provision mailboxes on a sending domain, run provider warm-up and the 5→40/day send ramp, deliver with the `sendEmail` action, and read back threads, replies, delivery events, and the workspace suppression list. Triggers: \"set up a sending mailbox\", \"provision inboxes for outbound\", \"warm up this mailbox\", \"how many sends do I have left today\", \"send this from Cargo\", \"did they reply\", \"who unsubscribed\", \"suppress this recipient\", \"take me off your list\", \"never email them again\", \"what do mailboxes cost\", \"my mailbox is stuck pending\". A mailbox is a recurring monthly credit charge, and every send is gated on basis, suppression, and relevance. Skip when: writing the copy or building the audience — use cargo-gtm; the mailbox belongs in git — use cargo-cdk."
-version: "1.0.0"
+version: "1.0.1"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -258,12 +258,12 @@ sends inherit orchestration's pacing, retry, and credit machinery:
 
 ```bash
 cargo-ai orchestration action execute \
-  --action '{"kind":"native","actionSlug":"sendEmail","config":{}}' \
+  --action '{"kind":"native","actionSlug":"sendEmail"}' \
   --data '{"mailboxUuid":"<mailbox-uuid>","to":"jane@acme.com","subject":"...","bodyHtml":"<p>…</p>"}' \
   --wait-until-finished
 ```
 
-- **0.1 credits per send**, fixed. `config` stays `{}`; the inputs go in `--data`, like every
+- **0.1 credits per send**, fixed. The action carries no `config`; the inputs go in `--data`, like every
   other action ([`../cargo-orchestration/SKILL.md`](../cargo-orchestration/SKILL.md)).
 - Optional `bodyText` (generated from the HTML when omitted), `inReplyTo`, and `references`.
 - **To keep a reply threaded, send the whole chain.** `references` is every `Message-ID` in the

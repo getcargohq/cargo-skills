@@ -32,7 +32,7 @@ The connector also accepts your own Enrow API key (`apiKey`) — same actions, b
 ```bash
 # Run ONLY on rows the earlier rungs missed
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"enrowio","actionSlug":"findEmail","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"enrowio","actionSlug":"findEmail"}' \
   --records '[
     {"fullName":"Alice Martin","companyDomain":"acme.com"},
     {"fullName":"Bob Durand","companyName":"Globex","countryCode":"FR"}
@@ -46,7 +46,7 @@ cargo-ai orchestration action execute-batch \
 
 ```bash
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"enrowio","actionSlug":"verifyEmail","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"enrowio","actionSlug":"verifyEmail"}' \
   --records '[{"email":"alice@acme.com"}]' \
   --wait-until-finished
 ```
@@ -79,7 +79,7 @@ No scheduled fit — both actions are per-record; their recurring shape is a gat
 
 ## Action shape
 
-`{"kind":"connector","integrationSlug":"enrowio","actionSlug":"<slug>","config":{}}`. **No `connectorUuid` in `config`.**
+`{"kind":"connector","integrationSlug":"enrowio","actionSlug":"<slug>"}`. **No `connectorUuid` in `config`.**
 
 ## Pairs with
 

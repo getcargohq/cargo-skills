@@ -29,7 +29,7 @@ Premium person/company enrichment — two actions, both **4 credits**, the most 
 
 ```bash
 cargo-ai orchestration action execute \
-  --action '{"kind":"connector","integrationSlug":"mixrank","actionSlug":"findPerson","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"mixrank","actionSlug":"findPerson"}' \
   --data '{"phone":"+14155551234"}' \
   --wait-until-finished
 ```
@@ -39,7 +39,7 @@ cargo-ai orchestration action execute \
 ```bash
 # Only on rows the cheaper enrich rungs missed
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"mixrank","actionSlug":"findPerson","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"mixrank","actionSlug":"findPerson"}' \
   --records '[
     {"firstName":"Alice","lastName":"Smith","companyName":"Acme","domain":"acme.com"},
     {"socialUrl":"https://linkedin.com/in/bobjones"}
@@ -68,7 +68,7 @@ No scheduled fit — **last-rung, per-record backfill only**; at 4 credits a rec
 
 ## Action shape
 
-`{"kind":"connector","integrationSlug":"mixrank","actionSlug":"<slug>","config":{}}`. **No `connectorUuid` in `config`.**
+`{"kind":"connector","integrationSlug":"mixrank","actionSlug":"<slug>"}`. **No `connectorUuid` in `config`.**
 
 ## Pairs with
 
