@@ -31,7 +31,7 @@ Billing is **fixed per query, not per record** — a `limit: 100` call costs the
 
 ```bash
 cargo-ai orchestration action execute \
-  --action '{"kind":"connector","integrationSlug":"serper","actionSlug":"searchPlaces","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"serper","actionSlug":"searchPlaces"}' \
   --data '{"query":"dentists in Austin, TX","country":"us","limit":100}' \
   --wait-until-finished
 ```
@@ -42,7 +42,7 @@ One query = 0.05 credits for up to 100 places. To build a bigger TAM, fan out **
 
 ```bash
 cargo-ai orchestration action execute \
-  --action '{"kind":"connector","integrationSlug":"serper","actionSlug":"search","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"serper","actionSlug":"search"}' \
   --data '{"query":"Acme GmbH funding announcement","country":"de","locale":"de","limit":10}' \
   --wait-until-finished
 ```
@@ -67,7 +67,7 @@ Pipe the results into an LLM step (`anthropic.instruct`) to extract the fact you
 
 ## Action shape
 
-`{"kind":"connector","integrationSlug":"serper","actionSlug":"<slug>","config":{}}`. **No `connectorUuid` in `config`.**
+`{"kind":"connector","integrationSlug":"serper","actionSlug":"<slug>"}`. **No `connectorUuid` in `config`.**
 
 ## Pairs with
 

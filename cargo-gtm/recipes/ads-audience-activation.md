@@ -70,41 +70,65 @@ Create once, then batch the members in. Both `createAudience` calls return the i
 **Google Ads:**
 
 ```bash
-cargo-ai orchestration action execute --action '{
-  "kind": "connector",
-  "integrationSlug": "googleAds",
-  "actionSlug": "createAudience",
-  "config": {
+cargo-ai orchestration action execute \
+  --action '{"kind":"connector","integrationSlug":"googleAds","actionSlug":"createAudience"}' \
+  --data '{
     "customerId": "123-456-7890",
     "name": "Closed-Won lookalike seed 2026-Q3",
     "membershipLifeSpan": 540
-  }
-}' --wait-until-finished
+  }' --wait-until-finished
 ```
+
+**Every field below goes in `--data` / `--records`, never in the action's `config`** — a top-level action carries no `config` at all. Older backends reject inputs placed there; newer ones silently drop them and run the action with nothing, which here means an audience created with no name or an upload that adds no members. (Inside a workflow **node** these same fields are the node's `config`.)
 
 `membershipLifeSpan` is in days; `540` is the maximum and the right default for a seed list. Use a short span (30–90) only for a genuinely time-boxed retargeting pool.
 
 Then fan the segment across `addContactToAudience`, which needs `customerId` + `userListId` plus at least one identifier (`email`, `phoneNumber`, `mobileId`, or the address triple `firstName`/`lastName`/`countryCode`/`postalCode`):
 
 ```bash
+# Pull the audience from the segment, then shape one record per member.
+cargo-ai segmentation segment fetch --model-uuid <uuid> \
+  --filter '<segment filter json>' --fetching-limit 20 > /tmp/audience.json
+
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"googleAds","actionSlug":"addContactToAudience","config":{"customerId":"123-456-7890","userListId":"987654321","email":"{{record.personal_email}}"}}' \
-  --model-uuid <uuid> \
-  --filter '<segment filter json>'
+  --action '{"kind":"connector","integrationSlug":"googleAds","actionSlug":"addContactToAudience"}' \
+  --records "$(jq -c '[.records[] | {
+    customerId: "123-456-7890",
+    userListId: "987654321",
+    email: .personal_email
+  }]' /tmp/audience.json)" \
+  --wait-until-finished
 ```
+
+`action execute-batch` takes `--records` only — there is no `--model-uuid`/`--filter` form, and `{{record.…}}` expressions resolve inside a **node graph**, not in a top-level action. Fetch the rows first (as above), or build the graph as a play/tool when this should run on a schedule.
 
 **LinkedIn Matched Audiences** — same shape, different keys. `createAudience` takes `account`, `name`, and `type`; members take `accountUrn` + `audienceId`:
 
 ```bash
 # Contacts (email-keyed)
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"linkedinMatchedAudience","actionSlug":"addContactToAudience","config":{"accountUrn":"urn:li:sponsoredAccount:123456789","audienceId":"<id>","email":"{{record.email}}","firstname":"{{record.first_name}}","lastname":"{{record.last_name}}","companyName":"{{record.company_name}}"}}' \
-  --model-uuid <uuid> --filter '<segment filter json>'
+  --action '{"kind":"connector","integrationSlug":"linkedinMatchedAudience","actionSlug":"addContactToAudience"}' \
+  --records "$(jq -c '[.records[] | {
+    accountUrn: "urn:li:sponsoredAccount:123456789",
+    audienceId: "<id>",
+    email: .email,
+    firstname: .first_name,
+    lastname: .last_name,
+    companyName: .company_name
+  }]' /tmp/audience.json)" \
+  --wait-until-finished
 
-# Companies (ABM — no personal data)
+# Companies (ABM — no personal data): fetch the account segment the same way
+# (cargo-ai segmentation segment fetch --model-uuid <companies-model> … > /tmp/accounts.json)
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"linkedinMatchedAudience","actionSlug":"addCompanyToAudience","config":{"accountUrn":"urn:li:sponsoredAccount:123456789","audienceId":"<id>","companyName":"{{record.name}}","companyWebsiteDomain":"{{record.domain}}"}}' \
-  --model-uuid <uuid> --filter '<segment filter json>'
+  --action '{"kind":"connector","integrationSlug":"linkedinMatchedAudience","actionSlug":"addCompanyToAudience"}' \
+  --records "$(jq -c '[.records[] | {
+    accountUrn: "urn:li:sponsoredAccount:123456789",
+    audienceId: "<id>",
+    companyName: .name,
+    companyWebsiteDomain: .domain
+  }]' /tmp/accounts.json)" \
+  --wait-until-finished
 ```
 
 **Batch discipline applies here even though the actions are free.** Enroll 10–20 records first, confirm they land, then ask the user to approve the full enrollment — quoting the record count. A wrong `customerId`/`accountUrn` writes to the wrong ad account, and the fix is a manual cleanup in someone's ads console. See [`../../cargo-orchestration/SKILL.md`](../../cargo-orchestration/SKILL.md) → "Create a batch".
@@ -112,12 +136,10 @@ cargo-ai orchestration action execute-batch \
 ## Step 5 — Report the match rate, and interpret it
 
 ```bash
-cargo-ai orchestration action execute --action '{
-  "kind": "connector",
-  "integrationSlug": "googleAds",
-  "actionSlug": "createReport",
-  "config": {"customerId": "123-456-7890", "userListId": "987654321"}
-}' --wait-until-finished
+cargo-ai orchestration action execute \
+  --action '{"kind":"connector","integrationSlug":"googleAds","actionSlug":"createReport"}' \
+  --data '{"customerId": "123-456-7890", "userListId": "987654321"}' \
+  --wait-until-finished
 ```
 
 `linkedinMatchedAudience.createReport` takes `accountUrn` + `audienceId` and returns the same shape of answer.

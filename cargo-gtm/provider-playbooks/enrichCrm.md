@@ -31,7 +31,7 @@ Flat-rate generalist: four actions, all **1 credit fixed** — person enrichment
 ```bash
 # Only on rows where cargo.enrichBusinessFundingAndAcquisitions missed
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"enrichCrm","actionSlug":"getFunding","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"enrichCrm","actionSlug":"getFunding"}' \
   --records '[{"domain":"acme.com"},{"domain":"globex.com"}]' \
   --wait-until-finished
 ```
@@ -40,7 +40,7 @@ cargo-ai orchestration action execute-batch \
 
 ```bash
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"enrichCrm","actionSlug":"findEmail","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"enrichCrm","actionSlug":"findEmail"}' \
   --records '[{"firstName":"Alice","lastName":"Smith","company":"Acme","findEmailV2Country":"France"}]' \
   --wait-until-finished
 ```
@@ -74,4 +74,4 @@ The one action here with a real monitor shape is `getFunding` — funding is an 
 
 ## Action shape
 
-`{"kind":"connector","integrationSlug":"enrichCrm","actionSlug":"<slug>","config":{}}`. **No `connectorUuid` in `config`.**
+`{"kind":"connector","integrationSlug":"enrichCrm","actionSlug":"<slug>"}`. **No `connectorUuid` in `config`.**

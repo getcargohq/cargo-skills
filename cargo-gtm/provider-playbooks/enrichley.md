@@ -30,7 +30,7 @@ The connector also accepts your own Enrichley API key (`apiKey`) — same action
 ```bash
 # Only on rows where the first verifier returned catch-all / ambiguous
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"enrichley","actionSlug":"verify","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"enrichley","actionSlug":"verify"}' \
   --records '[
     {"objectType":"email","email":"alice@acme.com"},
     {"objectType":"email","email":"bob@globex.com"}
@@ -70,7 +70,7 @@ Verification status decays, but re-verifying a whole list on a timer re-bills ev
 
 ## Action shape
 
-`{"kind":"connector","integrationSlug":"enrichley","actionSlug":"verify","config":{}}`. **No `connectorUuid` in `config`.**
+`{"kind":"connector","integrationSlug":"enrichley","actionSlug":"verify"}`. **No `connectorUuid` in `config`.**
 
 ## Pairs with
 

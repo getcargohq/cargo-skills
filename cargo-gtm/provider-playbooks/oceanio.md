@@ -32,7 +32,7 @@ Mid-tier company/people search and enrichment — four actions, all 1 credit. It
 
 ```bash
 cargo-ai orchestration action execute \
-  --action '{"kind":"connector","integrationSlug":"oceanio","actionSlug":"searchCompanies","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"oceanio","actionSlug":"searchCompanies"}' \
   --data '{
     "companiesFilters": {
       "lookalikeDomains": ["acme.com", "globex.com", "initech.com"],
@@ -51,7 +51,7 @@ Billed per returned record — set `limit` to the approved scope ([`../reference
 
 ```bash
 cargo-ai orchestration action execute \
-  --action '{"kind":"connector","integrationSlug":"oceanio","actionSlug":"searchPeople","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"oceanio","actionSlug":"searchPeople"}' \
   --data '{
     "peopleFilters": {"jobTitles": ["VP Marketing", "CMO"], "seniorities": ["vp", "c_suite"]},
     "companiesFilters": {"technologies": ["shopify"], "countries": ["US"]},
@@ -66,7 +66,7 @@ Enum values in both examples (`companySizes`, `seniorities`, `technologies`, …
 
 ```bash
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"oceanio","actionSlug":"enrichPerson","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"oceanio","actionSlug":"enrichPerson"}' \
   --records '[
     {"person":{"firstName":"Alice","lastName":"Smith","jobTitle":"CTO"},"company":{"domain":"acme.com"}},
     {"person":{"linkedin":"https://linkedin.com/in/bobjones"}}
@@ -99,4 +99,4 @@ Lookalike discovery compounds — **re-run `searchCompanies` weekly as the seed 
 
 ## Action shape
 
-`{"kind":"connector","integrationSlug":"oceanio","actionSlug":"<slug>","config":{}}`. **No `connectorUuid` in `config`.**
+`{"kind":"connector","integrationSlug":"oceanio","actionSlug":"<slug>"}`. **No `connectorUuid` in `config`.**

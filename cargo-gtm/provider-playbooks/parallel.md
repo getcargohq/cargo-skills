@@ -50,7 +50,7 @@ Cheapest extraction in the catalog at **0.025 per URL**, half of `firecrawl.scra
 
 ```bash
 cargo-ai orchestration action execute \
-  --action '{"kind":"connector","integrationSlug":"parallel","actionSlug":"extract","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"parallel","actionSlug":"extract"}' \
   --data '{
     "urls": ["https://acme.com", "https://acme.com/careers"],
     "objective": "What the company says it does, and which teams it is growing"
@@ -64,7 +64,7 @@ Two URLs, 0.05 credits. Pass `objective` even when it feels optional: it is the 
 
 ```bash
 cargo-ai orchestration action execute \
-  --action '{"kind":"connector","integrationSlug":"parallel","actionSlug":"createTask","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"parallel","actionSlug":"createTask"}' \
   --data '{
     "input": "What has Acme publicly said about its priorities in the last 12 months, and who does it name as competitors?",
     "processor": "lite",
@@ -86,7 +86,7 @@ cargo-ai orchestration action execute \
 
 ```bash
 cargo-ai orchestration action execute \
-  --action '{"kind":"connector","integrationSlug":"parallel","actionSlug":"search","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"parallel","actionSlug":"search"}' \
   --data '{
     "searchQueries": ["Acme Series B", "Acme layoffs 2026"],
     "objective": "Recent funding or headcount changes at Acme",
@@ -119,7 +119,7 @@ cargo-ai orchestration action execute \
 
 ## Action shape
 
-`{"kind":"connector","integrationSlug":"parallel","actionSlug":"<slug>","config":{}}`. **No `connectorUuid` in `config`.** Inputs go in `--data` for a single call and in `--records` when fanning out per row.
+`{"kind":"connector","integrationSlug":"parallel","actionSlug":"<slug>"}`. **No `connectorUuid` in `config`.** Inputs go in `--data` for a single call and in `--records` when fanning out per row.
 
 ## Pairs with
 

@@ -38,7 +38,7 @@ Adjust the filter to match the segment the user wants to monitor.
 
 ```bash
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"waterfall","actionSlug":"detectJobChange","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"waterfall","actionSlug":"detectJobChange"}' \
   --records "$(jq -c '[.records[] | {
     professional_email: .email,
     contact_linkedin: .linkedin_url,
@@ -95,7 +95,7 @@ For weekly monitoring on a 1,000-contact segment: ~12,000 credits/month. Filter 
 
 ## Action shape
 
-`{"kind":"connector","integrationSlug":"waterfall","actionSlug":"detectJobChange","config":{}}`. **No `connectorUuid` in `config`.**
+`{"kind":"connector","integrationSlug":"waterfall","actionSlug":"detectJobChange"}`. **No `connectorUuid` in `config`.**
 
 Per-record inputs (any combination):
 - `professional_email` — work email.

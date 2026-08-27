@@ -33,7 +33,7 @@ The **cheap tier** of the contact stack, three ways: `verifyEmail` at **0.01** i
 
 ```bash
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"icypeas","actionSlug":"verifyEmail","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"icypeas","actionSlug":"verifyEmail"}' \
   --records '[{"email":"alice@acme.com"},{"email":"bob@globex.com"}]' \
   --wait-until-finished
 ```
@@ -45,7 +45,7 @@ Run the free `validate-emails.ts` cull first ([`../references/contact-accuracy.m
 ```bash
 # Only on rows that FullEnrich, hunter, AND peopleDataLabs all missed
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"icypeas","actionSlug":"findEmail","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"icypeas","actionSlug":"findEmail"}' \
   --records '[{"firstName":"Alice","lastName":"Smith","domainOrCompany":"acme.com"}]' \
   --wait-until-finished
 ```
@@ -56,7 +56,7 @@ All three fields are **required**; `domainOrCompany` accepts either a domain or 
 
 ```bash
 cargo-ai orchestration action execute \
-  --action '{"kind":"connector","integrationSlug":"icypeas","actionSlug":"findPeople","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"icypeas","actionSlug":"findPeople"}' \
   --data '{"currentJobTitle":"CTO","location":"FR","limit":200}' \
   --wait-until-finished
 ```
@@ -90,4 +90,4 @@ Filters are coarse (title, company, location, keyword) — nothing like salesNav
 
 ## Action shape
 
-`{"kind":"connector","integrationSlug":"icypeas","actionSlug":"<slug>","config":{}}`. **No `connectorUuid` in `config`.**
+`{"kind":"connector","integrationSlug":"icypeas","actionSlug":"<slug>"}`. **No `connectorUuid` in `config`.**

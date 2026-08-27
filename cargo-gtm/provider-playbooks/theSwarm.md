@@ -31,7 +31,7 @@ Warm-intro path discovery — **two actions, both 2 credits**, scoring the relat
 
 ```bash
 cargo-ai orchestration action execute \
-  --action '{"kind":"connector","integrationSlug":"theSwarm","actionSlug":"searchWarmIntrosToCompany","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"theSwarm","actionSlug":"searchWarmIntrosToCompany"}' \
   --data '{
     "matchingCompanyDomain": "yourco.com",
     "targetCompanyDomain": "acme.com",
@@ -47,7 +47,7 @@ cargo-ai orchestration action execute \
 
 ```bash
 cargo-ai orchestration action execute \
-  --action '{"kind":"connector","integrationSlug":"theSwarm","actionSlug":"searchWarmIntrosToPerson","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"theSwarm","actionSlug":"searchWarmIntrosToPerson"}' \
   --data '{
     "matchingCompanyDomain": "yourco.com",
     "targetLinkedinUrl": "https://linkedin.com/in/janedoe"
@@ -68,7 +68,7 @@ cargo-ai orchestration action execute \
 
 ## Action shape
 
-`{"kind":"connector","integrationSlug":"theSwarm","actionSlug":"<slug>","config":{}}`. **No `connectorUuid` in `config`.**
+`{"kind":"connector","integrationSlug":"theSwarm","actionSlug":"<slug>"}`. **No `connectorUuid` in `config`.**
 
 ## Pairs with
 

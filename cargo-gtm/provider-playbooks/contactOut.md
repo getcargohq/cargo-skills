@@ -32,7 +32,7 @@ Cost is driven by the **config you request**, not the data returned: asking for 
 
 ```bash
 cargo-ai orchestration action execute \
-  --action '{"kind":"connector","integrationSlug":"contactOut","actionSlug":"enrich","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"contactOut","actionSlug":"enrich"}' \
   --data '{
     "objectType": "contact",
     "linkedinUrl": "https://linkedin.com/in/alicesmith",
@@ -48,7 +48,7 @@ cargo-ai orchestration action execute \
 
 ```bash
 cargo-ai orchestration action execute \
-  --action '{"kind":"connector","integrationSlug":"contactOut","actionSlug":"enrich","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"contactOut","actionSlug":"enrich"}' \
   --data '{"objectType":"company","companyDomain":"acme.com"}' \
   --wait-until-finished
 ```
@@ -60,7 +60,7 @@ Zero credits. Worth a probe before paying `waterfall.enrichCompany` (1) on unmat
 ```bash
 # Step 1 — search WITHOUT revealing (1/item): filter and shortlist first
 cargo-ai orchestration action execute \
-  --action '{"kind":"connector","integrationSlug":"contactOut","actionSlug":"search","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"contactOut","actionSlug":"search"}' \
   --data '{
     "objectType": "people",
     "filters": [
@@ -102,4 +102,4 @@ No scheduled fit — per-record enrichment only; a re-run `search` re-bills ever
 
 ## Action shape
 
-`{"kind":"connector","integrationSlug":"contactOut","actionSlug":"<slug>","config":{}}`. **No `connectorUuid` in `config`.**
+`{"kind":"connector","integrationSlug":"contactOut","actionSlug":"<slug>"}`. **No `connectorUuid` in `config`.**

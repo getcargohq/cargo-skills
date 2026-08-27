@@ -87,7 +87,7 @@ The plan IS the approval gate: pilot first, estimate reconciled against the bala
 
 ## Action shape rule (critical)
 
-Every recipe step must use the canonical action shape: `{"kind":"connector","integrationSlug":"<slug>","actionSlug":"<slug>","config":{}}`. **No `connectorUuid` in `config`.** See [`../../cargo-orchestration/references/examples/actions.md`](../../cargo-orchestration/references/examples/actions.md).
+Every recipe step must use the canonical action shape: `{"kind":"connector","integrationSlug":"<slug>","actionSlug":"<slug>"}`. **No `connectorUuid` in `config`.** See [`../../cargo-orchestration/references/examples/actions.md`](../../cargo-orchestration/references/examples/actions.md).
 
 ## Output retrieval
 

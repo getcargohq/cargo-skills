@@ -30,7 +30,7 @@ Premium contact-detail provider. Four credits-based actions, all focused on fill
 ```bash
 # After sourcing + (optional) basic enrichment, find emails for the contacts
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"FullEnrich","actionSlug":"findEmail","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"FullEnrich","actionSlug":"findEmail"}' \
   --records '[
     {"firstName":"Alice","lastName":"Smith","domainName":"acme.com"},
     {"firstName":"Bob","lastName":"Jones","linkedinUrl":"https://linkedin.com/in/bobjones"}
@@ -46,7 +46,7 @@ When you have an email but no other identity (e.g., from `snitcher.searchSession
 
 ```bash
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"FullEnrich","actionSlug":"reverseEmailLookup","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"FullEnrich","actionSlug":"reverseEmailLookup"}' \
   --records '[{"email":"alice@acme.com"},{"email":"bob@globex.com"}]' \
   --wait-until-finished
 ```
@@ -57,7 +57,7 @@ Returns LinkedIn URL + company name + (sometimes) title. Feed the LinkedIn URL i
 
 ```bash
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"FullEnrich","actionSlug":"findPhoneAndEmail","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"FullEnrich","actionSlug":"findPhoneAndEmail"}' \
   --records '[{"firstName":"Alice","lastName":"Smith","linkedinUrl":"…","domainName":"acme.com"}]' \
   --wait-until-finished
 ```
@@ -96,4 +96,4 @@ No scheduled fit — per-record enrichment only. A found email is stable data; r
 
 ## Action shape
 
-`{"kind":"connector","integrationSlug":"FullEnrich","actionSlug":"<slug>","config":{}}`. **No `connectorUuid` in `config`.** Note the capitalization: `FullEnrich` (camel-case starting with capital `F`).
+`{"kind":"connector","integrationSlug":"FullEnrich","actionSlug":"<slug>"}`. **No `connectorUuid` in `config`.** Note the capitalization: `FullEnrich` (camel-case starting with capital `F`).

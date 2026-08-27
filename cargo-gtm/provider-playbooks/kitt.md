@@ -28,7 +28,7 @@ Dedicated email verification — **one action, 0.05 credits**, half the price of
 
 ```bash
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"kitt","actionSlug":"verifyEmail","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"kitt","actionSlug":"verifyEmail"}' \
   --records '[{"email":"alice@acme.com"},{"email":"bob@globex.com"}]' \
   --wait-until-finished
 ```
@@ -39,7 +39,7 @@ Filter on `validity`; when it's ambiguous, `validIdentity` vs `validSMTP` tells 
 
 ```bash
 cargo-ai orchestration action execute \
-  --action '{"kind":"connector","integrationSlug":"kitt","actionSlug":"verifyEmail","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"kitt","actionSlug":"verifyEmail"}' \
   --data '{"email":"alice@acme.com"}' \
   --wait-until-finished
 ```
@@ -64,7 +64,7 @@ Verification recurs per **send wave**, not per calendar — no scheduled fit bey
 
 ## Action shape
 
-`{"kind":"connector","integrationSlug":"kitt","actionSlug":"verifyEmail","config":{}}`. **No `connectorUuid` in `config`.**
+`{"kind":"connector","integrationSlug":"kitt","actionSlug":"verifyEmail"}`. **No `connectorUuid` in `config`.**
 
 ## Pairs with
 

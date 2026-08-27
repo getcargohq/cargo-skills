@@ -40,7 +40,7 @@ Choose precision (salesNavigator) or scale (peopleDataLabs). For expansion, **pr
 
 ```bash
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"salesNavigator","actionSlug":"searchLeads","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"salesNavigator","actionSlug":"searchLeads"}' \
   --records "$(jq -c '[.records[] | {
     company_domain: .domain,
     title_keywords: ["VP Engineering","Director of Data","Head of Analytics","CTO"],
@@ -92,7 +92,7 @@ LinkedIn URL is the most reliable dedup key — emails can vary (work vs. person
 
 ```bash
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"waterfall","actionSlug":"enrichProspectDetails","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"waterfall","actionSlug":"enrichProspectDetails"}' \
   --records "$(jq -c '[.[] | {
     first_name, last_name,
     company_domain,
@@ -138,7 +138,7 @@ Expansion typically runs on smaller targeted lists, so per-record costs (even hi
 
 ## Action shape
 
-Every action follows: `{"kind":"connector","integrationSlug":"<slug>","actionSlug":"<slug>","config":{}}`. **No `connectorUuid` in `config`** — see [`../../cargo-orchestration/references/examples/actions.md`](../../cargo-orchestration/references/examples/actions.md).
+Every action follows: `{"kind":"connector","integrationSlug":"<slug>","actionSlug":"<slug>"}`. **No `connectorUuid` in `config`** — see [`../../cargo-orchestration/references/examples/actions.md`](../../cargo-orchestration/references/examples/actions.md).
 
 ## Output retrieval
 

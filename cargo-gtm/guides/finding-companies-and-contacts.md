@@ -61,7 +61,7 @@ For full provider details, see the per-provider playbooks under `../provider-pla
 ```bash
 # Source — cheapest large-scale account search
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"salesNavigator","actionSlug":"searchAccounts","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"salesNavigator","actionSlug":"searchAccounts"}' \
   --records '[{"filters":{"industry":["fintech"],"countries":["US"],"sizeMin":50,"sizeMax":500}}]' \
   --wait-until-finished
 ```
@@ -73,7 +73,7 @@ If salesNavigator filters don't cover the criteria you need, fall back to people
 ```bash
 # Fan out one searchLeads per company
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"salesNavigator","actionSlug":"searchLeads","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"salesNavigator","actionSlug":"searchLeads"}' \
   --records "$(jq -c '[.companies[] | {filters:{accountId:.linkedinId,titles:["CTO","VP Engineering"]}}]' /tmp/companies.json)" \
   --wait-until-finished
 ```
@@ -87,13 +87,13 @@ When you already have a domain list and need firmographics:
 ```bash
 # Match against cargo's catalog first (cheapest, most reliable for known companies)
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"cargo","actionSlug":"matchBusiness","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"cargo","actionSlug":"matchBusiness"}' \
   --records '[{"domain":"acme.com"},{"domain":"globex.com"}]' \
   --wait-until-finished
 
 # Then enrich the matches
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"cargo","actionSlug":"enrichBusinessFirmographics","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"cargo","actionSlug":"enrichBusinessFirmographics"}' \
   --records '<matched output from previous step>' \
   --wait-until-finished
 ```
@@ -103,13 +103,13 @@ cargo-ai orchestration action execute-batch \
 ```bash
 # Find companies running a specific stack
 cargo-ai orchestration action execute \
-  --action '{"kind":"connector","integrationSlug":"theirStack","actionSlug":"searchCompanies","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"theirStack","actionSlug":"searchCompanies"}' \
   --data '{"technologies":["snowflake","dbt"],"locations":["United States"]}' \
   --wait-until-finished
 
 # Or "everyone hiring for role X" (intent signal)
 cargo-ai orchestration action execute \
-  --action '{"kind":"connector","integrationSlug":"theirStack","actionSlug":"searchJobs","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"theirStack","actionSlug":"searchJobs"}' \
   --data '{"job_titles":["Head of RevOps"],"posted_at_max_age_days":30}' \
   --wait-until-finished
 ```
@@ -119,7 +119,7 @@ cargo-ai orchestration action execute \
 ```bash
 # Step 1 — query companies by investor (peopleDataLabs is the reliable source)
 cargo-ai orchestration action execute \
-  --action '{"kind":"connector","integrationSlug":"peopleDataLabs","actionSlug":"queryCompanies","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"peopleDataLabs","actionSlug":"queryCompanies"}' \
   --data '{"query":"SELECT * FROM company WHERE summary.investors LIKE %Sequoia%"}' \
   --wait-until-finished > /tmp/portfolio.json
 

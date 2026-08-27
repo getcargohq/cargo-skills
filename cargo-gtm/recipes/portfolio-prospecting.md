@@ -24,7 +24,7 @@ Portfolio prospecting has a specific shape that doesn't fit the generic prospect
 
 ```bash
 cargo-ai orchestration action execute \
-  --action '{"kind":"connector","integrationSlug":"peopleDataLabs","actionSlug":"queryCompanies","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"peopleDataLabs","actionSlug":"queryCompanies"}' \
   --data '{
     "query": "SELECT * FROM company WHERE summary.investors LIKE %Sequoia Capital%",
     "limit": 200
@@ -50,7 +50,7 @@ See PDL's SQL reference for the full schema.
 
 ```bash
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"cargo","actionSlug":"matchBusiness","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"cargo","actionSlug":"matchBusiness"}' \
   --records "$(jq -c '[.results[] | {domain: .website}]' /tmp/portfolio.json)" \
   --wait-until-finished > /tmp/matched.json
 ```
@@ -59,7 +59,7 @@ cargo-ai orchestration action execute-batch \
 
 ```bash
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"cargo","actionSlug":"enrichBusinessFirmographics","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"cargo","actionSlug":"enrichBusinessFirmographics"}' \
   --records "$(jq -c '[.results[] | select(.business_id) | {business_id}]' /tmp/matched.json)" \
   --wait-until-finished > /tmp/firmo.json
 ```
@@ -70,7 +70,7 @@ Cap tightly — for portfolio prospecting, 1–3 contacts per company is usually
 
 ```bash
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"salesNavigator","actionSlug":"searchLeads","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"salesNavigator","actionSlug":"searchLeads"}' \
   --records "$(jq -c '[.results[] | {
     keywords: "Founder OR CEO OR CTO",
     company: {linkedinIds: [.linkedinId]},
@@ -83,7 +83,7 @@ cargo-ai orchestration action execute-batch \
 
 ```bash
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"FullEnrich","actionSlug":"findEmail","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"FullEnrich","actionSlug":"findEmail"}' \
   --records "$(jq -c '[.contacts[] | {firstName, lastName, domainName: .companyDomain, linkedinUrl: .linkedinUrl}]' /tmp/contacts.json)" \
   --wait-until-finished > /tmp/emails.json
 ```
@@ -92,7 +92,7 @@ cargo-ai orchestration action execute-batch \
 
 ```bash
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"waterfall","actionSlug":"verifyEmail","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"waterfall","actionSlug":"verifyEmail"}' \
   --records "$(jq -c '[.results[] | select(.email) | {email}]' /tmp/emails.json)" \
   --wait-until-finished > /tmp/verified.json
 ```
@@ -128,7 +128,7 @@ done
 
 ## Action shape
 
-`{"kind":"connector","integrationSlug":"<slug>","actionSlug":"<slug>","config":{}}`. **No `connectorUuid` in `config`.**
+`{"kind":"connector","integrationSlug":"<slug>","actionSlug":"<slug>"}`. **No `connectorUuid` in `config`.**
 
 ## Output retrieval
 

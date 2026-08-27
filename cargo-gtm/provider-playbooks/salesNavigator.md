@@ -53,8 +53,7 @@ LinkedIn-anchored search for accounts and leads. **Cheapest sourcing in the carg
 {
   "kind": "connector",
   "integrationSlug": "salesNavigator",
-  "actionSlug": "searchAccounts",
-  "config": {}
+  "actionSlug": "searchAccounts"
 }
 ```
 

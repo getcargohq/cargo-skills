@@ -8,12 +8,12 @@ than bypassing them. This page is everything that action does.
 
 ```bash
 cargo-ai orchestration action execute \
-  --action '{"kind":"native","actionSlug":"sendEmail","config":{}}' \
+  --action '{"kind":"native","actionSlug":"sendEmail"}' \
   --data '{"mailboxUuid":"<mailbox-uuid>","to":"jane@acme.com","subject":"Quick question","bodyHtml":"<p>…</p>"}' \
   --wait-until-finished
 ```
 
-`config` stays `{}` — inputs go in `--data`, as with every action
+No `config` on the action — inputs go in `--data`, as with every action
 ([`../../cargo-orchestration/SKILL.md`](../../cargo-orchestration/SKILL.md)).
 
 | Field | Required | Meaning |
@@ -38,14 +38,14 @@ Output: `{ messageUuid, rfcMessageId, providerMessageId, sentAt }`.
 ```bash
 # 1. First touch — keep the rfcMessageId it returns
 cargo-ai orchestration action execute \
-  --action '{"kind":"native","actionSlug":"sendEmail","config":{}}' \
+  --action '{"kind":"native","actionSlug":"sendEmail"}' \
   --data '{"mailboxUuid":"<uuid>","to":"jane@acme.com","subject":"Quick question","bodyHtml":"<p>…</p>"}' \
   --wait-until-finished
 # → {"messageUuid":"…","rfcMessageId":"<abc@cargo>","…":"…"}
 
 # 2. Follow-up on the same thread
 cargo-ai orchestration action execute \
-  --action '{"kind":"native","actionSlug":"sendEmail","config":{}}' \
+  --action '{"kind":"native","actionSlug":"sendEmail"}' \
   --data '{"mailboxUuid":"<uuid>","to":"jane@acme.com","subject":"Re: Quick question","bodyHtml":"<p>…</p>","inReplyTo":"<abc@cargo>","references":["<abc@cargo>"]}' \
   --wait-until-finished
 ```

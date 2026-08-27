@@ -39,7 +39,7 @@ These consume your Reverse Contact plan's quota, not cargo credits — treat the
 ```bash
 # Only on rows the priority enrich chain missed, where a LinkedIn company URL exists
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"reverseContact","actionSlug":"enrichCompanyFromLinkedin","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"reverseContact","actionSlug":"enrichCompanyFromLinkedin"}' \
   --records '[{"linkedinUrl":"https://www.linkedin.com/company/acme"}]' \
   --wait-until-finished
 ```
@@ -69,7 +69,7 @@ No scheduled fit — a niche per-record fallback rung, never a re-pull.
 
 ## Action shape
 
-`{"kind":"connector","integrationSlug":"reverseContact","actionSlug":"enrichCompanyFromLinkedin","config":{}}`. **No `connectorUuid` in `config`.**
+`{"kind":"connector","integrationSlug":"reverseContact","actionSlug":"enrichCompanyFromLinkedin"}`. **No `connectorUuid` in `config`.**
 
 ## Pairs with
 

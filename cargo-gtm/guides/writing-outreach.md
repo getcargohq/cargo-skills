@@ -77,19 +77,19 @@ Run as three sequential `action execute-batch` calls, piping each step's output 
 ```bash
 # Pass 1 — Research (perplexity for fresh web context)
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"perplexity","actionSlug":"instruct","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"perplexity","actionSlug":"instruct"}' \
   --records '[{"prompt":"What is <company> known for? 2-sentence summary.","model":"sonar"}, ...]' \
   --wait-until-finished > /tmp/research.json
 
 # Pass 2 — Score (anthropic with structured output)
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"anthropic","actionSlug":"instruct","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"anthropic","actionSlug":"instruct"}' \
   --records '<scoring inputs combining enrichment + research>' \
   --wait-until-finished > /tmp/scores.json
 
 # Pass 3 — Personalize (openAi mini for cost)
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"openAi","actionSlug":"instruct","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"openAi","actionSlug":"instruct"}' \
   --records '<personalization inputs for high-scored leads only>' \
   --wait-until-finished > /tmp/openers.json
 ```
@@ -122,7 +122,7 @@ If the user wants the enriched + scored data in their CRM:
 | **pipedrive** | (CRUD) | Person / Organization / Deal objects. |
 | **attio** | (CRUD) | Custom-object friendly. |
 
-CRM CRUD is free (no credits). Compose ad hoc — discover actions via `cargo-ai connection integration get <slug>` and run via `orchestration action execute-batch`.
+CRM CRUD is free (no credits). Compose ad hoc — find the action with `cargo-ai orchestration action list <keywords> --integration-slug <slug>`, then read its input schema via `cargo-ai connection integration get <slug>` and run via `orchestration action execute-batch`.
 
 ## When to use Cargo AI agents instead of raw LLM `instruct`
 
@@ -138,7 +138,7 @@ See [`../../cargo-ai/SKILL.md`](../../cargo-ai/SKILL.md) for the agent surface.
 
 ## Action shape rules
 
-Same as everywhere else: `kind: "connector"` with `integrationSlug` + `actionSlug` + `config: {}`. No `connectorUuid` in config.
+Same as everywhere else: `kind: "connector"` with `integrationSlug` + `actionSlug`, and **no `config`** — a top-level action carries none, and `connectorUuid` is never nested inside one.
 
 For LLM `instruct` actions, the `model` field is in the per-record data, not in `config`:
 
@@ -146,8 +146,7 @@ For LLM `instruct` actions, the `model` field is in the per-record data, not in 
 {
   "kind": "connector",
   "integrationSlug": "anthropic",
-  "actionSlug": "instruct",
-  "config": {}
+  "actionSlug": "instruct"
 }
 ```
 

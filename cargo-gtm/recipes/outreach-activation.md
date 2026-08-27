@@ -48,7 +48,7 @@ If the segment is company-level (e.g. recently funded), pull target personas at 
 ```bash
 # Use salesNavigator for precision, peopleDataLabs for scale.
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"salesNavigator","actionSlug":"searchLeads","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"salesNavigator","actionSlug":"searchLeads"}' \
   --records "$(jq -c '[.records[] | {
     company_domain: .domain,
     title_keywords: ["VP", "Director", "Head"],
@@ -63,7 +63,7 @@ If the segment is already contact-level (e.g. job-change MOVED rows), skip this 
 
 ```bash
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"waterfall","actionSlug":"enrichProspectDetails","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"waterfall","actionSlug":"enrichProspectDetails"}' \
   --records "$(jq -c '[.results[] | {
     first_name, last_name,
     company_domain: .company_domain,
@@ -86,7 +86,7 @@ node <skill-dir>/scripts/validate-emails.ts --input /tmp/enriched.json --json > 
 # 4b. Paid verification — build the batch from the CULLED rows, never the
 #     original list (that's where the credit saving happens)
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"waterfall","actionSlug":"verifyEmail","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"waterfall","actionSlug":"verifyEmail"}' \
   --records "$(jq -c '[.[] | select(.recommendation != "skip") | {email}]' /tmp/culled.json)" \
   --wait-until-finished > /tmp/verified.json
 
@@ -111,12 +111,16 @@ jq '[.[] | select(.audit_action == "SEND")]' /tmp/audited.json > /tmp/deliverabl
 
 ```bash
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"anthropic","actionSlug":"instruct","config":{"model":"claude-3-5-haiku-latest","advancedSettings":{"temperature":0.3,"maxTokens":1024}}}' \
+  --action '{"kind":"connector","integrationSlug":"anthropic","actionSlug":"instruct"}' \
   --records "$(jq -c '[.[] | {
+    model: "claude-3-5-haiku-latest",
+    advancedSettings: {temperature: 0.3, maxTokens: 1024},
     prompt: ("You are writing the opening line of a first-touch email. The recipient is " + .first_name + " " + .last_name + ", " + .title + " at " + .company_name + ". Signal triggering this outreach: " + .signal_summary + ". Write ONE sentence that references the signal naturally and ties it to a relevant business outcome. No greeting. No follow-up. ≤30 words.")
   }]' /tmp/deliverable.json)" \
   --wait-until-finished > /tmp/personalized.json
 ```
+
+`model` is a **required input**, so it belongs in every record alongside `prompt` — the action carries no `config` at all. Put it in `config` and newer backends drop it silently, billing the call at the default model.
 
 More proven prompts (subject lines, follow-ups, job-change angles): [`../references/prompt-library/index.md`](../references/prompt-library/index.md).
 
@@ -172,7 +176,7 @@ Cut personalization ~30× by switching to `openAi.instruct` with `gpt-5-nano` (0
 
 ## Action shape
 
-Every action follows: `{"kind":"connector","integrationSlug":"<slug>","actionSlug":"<slug>","config":{}}`. **No `connectorUuid` in `config`** — see [`../../cargo-orchestration/references/examples/actions.md`](../../cargo-orchestration/references/examples/actions.md). Cross-node interpolation in node graphs: `{{nodes.<slug>.<field>}}`.
+Every action follows: `{"kind":"connector","integrationSlug":"<slug>","actionSlug":"<slug>"}`. **No `connectorUuid` in `config`** — see [`../../cargo-orchestration/references/examples/actions.md`](../../cargo-orchestration/references/examples/actions.md). Cross-node interpolation in node graphs: `{{nodes.<slug>.<field>}}`.
 
 ## Output retrieval
 

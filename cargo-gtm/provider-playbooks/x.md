@@ -54,7 +54,7 @@ Everything except `getUserProfile` and `getPostDetails` also takes a required `l
 
 ```bash
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"x","actionSlug":"getUserPosts","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"x","actionSlug":"getUserPosts"}' \
   --records '[{"handle":"acme","limit":20}]' \
   --wait-until-finished
 ```
@@ -65,7 +65,7 @@ One call per account. Keep `limit` low: twenty recent posts is more than enough 
 
 ```bash
 cargo-ai orchestration action execute \
-  --action '{"kind":"connector","integrationSlug":"x","actionSlug":"searchPosts","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"x","actionSlug":"searchPosts"}' \
   --data '{"query":"\"data enrichment\" pricing frustrating","type":"Latest","limit":50}' \
   --wait-until-finished
 ```
@@ -92,7 +92,7 @@ Resolve the resulting accounts to companies and enrich from there. The search ou
 
 ## Action shape
 
-`{"kind":"connector","integrationSlug":"x","actionSlug":"<slug>","config":{}}`. **No `connectorUuid` in `config`.** Per-row handles go in `--records`, search filters in `--data`.
+`{"kind":"connector","integrationSlug":"x","actionSlug":"<slug>"}`. **No `connectorUuid` in `config`.** Per-row handles go in `--records`, search filters in `--data`.
 
 ## Pairs with
 

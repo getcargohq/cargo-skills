@@ -58,7 +58,7 @@ cargo-ai workspaceManagement report create \
 ```bash
 cargo-ai workspaceManagement report create \
   --title "Agent unable to determine correct --action JSON for HubSpot company_create" \
-  --description "Tried 4 variants of cargo-ai orchestration action execute --action '{\"kind\":\"connector\",\"integrationSlug\":\"hubspot\",\"actionSlug\":\"company_create\",\"config\":{}}' --data '{...}'. Each fails with a different validation error ('config.portalId required', then 'data.properties required', etc.). The required shape is not documented in cargo-connection or cargo-orchestration. Need a worked example or a schema reference."
+  --description "Tried 4 variants of cargo-ai orchestration action execute --action '{\"kind\":\"connector\",\"integrationSlug\":\"hubspot\",\"actionSlug\":\"company_create\"}' --data '{...}'. Each fails with a different validation error ('data.portalId required', then 'data.properties required', etc.). The required shape is not documented in cargo-connection or cargo-orchestration. Need a worked example or a schema reference."
 ```
 
 ### Missing capability

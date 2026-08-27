@@ -29,7 +29,7 @@ Contact-info finder: one mid-tier email action and two premium phone actions. `f
 ```bash
 # Only on rows where the earlier rungs returned nothing
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"datagma","actionSlug":"findEmail","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"datagma","actionSlug":"findEmail"}' \
   --records '[
     {"firstName":"Alice","lastName":"Smith","companyName":"Acme"},
     {"firstName":"Bob","lastName":"Jones","companyName":"Globex"}
@@ -44,7 +44,7 @@ All three fields are required — no domain-only or full-name variants. Every hi
 ```bash
 # Qualified, high-value leads only — 8 credits each
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"datagma","actionSlug":"findPhone","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"datagma","actionSlug":"findPhone"}' \
   --records '[{"personLinkedInUrl":"https://linkedin.com/in/alicesmith","email":"alice@acme.com"}]' \
   --wait-until-finished
 ```
@@ -78,4 +78,4 @@ No scheduled fit — per-record enrichment only; every datagma action is an esca
 
 ## Action shape
 
-`{"kind":"connector","integrationSlug":"datagma","actionSlug":"<slug>","config":{}}`. **No `connectorUuid` in `config`.**
+`{"kind":"connector","integrationSlug":"datagma","actionSlug":"<slug>"}`. **No `connectorUuid` in `config`.**

@@ -30,7 +30,7 @@ The connector also accepts your own Dropcontact API key (`apiKey`) — same acti
 ```bash
 # Run on the FR/EU rows (or on FullEnrich misses for those rows)
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"dropcontact","actionSlug":"findEmail","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"dropcontact","actionSlug":"findEmail"}' \
   --records '[
     {"first_name":"Alice","last_name":"Martin","website":"acme.fr"},
     {"full_name":"Bob Durand","company":"Globex","country":"France"}
@@ -68,7 +68,7 @@ No scheduled fit — per-record enrichment only; wire `findEmail` as the FR/EU C
 
 ## Action shape
 
-`{"kind":"connector","integrationSlug":"dropcontact","actionSlug":"findEmail","config":{}}`. **No `connectorUuid` in `config`.**
+`{"kind":"connector","integrationSlug":"dropcontact","actionSlug":"findEmail"}`. **No `connectorUuid` in `config`.**
 
 ## Pairs with
 

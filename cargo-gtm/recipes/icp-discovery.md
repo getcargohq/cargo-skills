@@ -58,7 +58,7 @@ cargo-ai storage query execute "
 ```bash
 for src in won lost; do
   cargo-ai orchestration action execute-batch \
-    --action '{"kind":"connector","integrationSlug":"cargo","actionSlug":"matchBusiness","config":{}}' \
+    --action '{"kind":"connector","integrationSlug":"cargo","actionSlug":"matchBusiness"}' \
     --records "$(jq -c '[.[] | {domain}]' /tmp/$src.json)" \
     --wait-until-finished > /tmp/$src-matched.json
 done
@@ -72,7 +72,7 @@ Run the same enrichments on both segments so the diff is apples-to-apples:
 for src in won lost; do
   for action in enrichBusinessFirmographics enrichBusinessTechnographics enrichBusinessFundingAndAcquisitions enrichBusinessFinancialMetrics; do
     cargo-ai orchestration action execute-batch \
-      --action "$(jq -nc --arg a "$action" '{kind:"connector",integrationSlug:"cargo",actionSlug:$a,config:{}}')" \
+      --action "$(jq -nc --arg a "$action" '{kind:"connector",integrationSlug:"cargo",actionSlug:$a}')" \
       --records "$(jq -c '[.results[] | select(.business_id) | {business_id}]' /tmp/$src-matched.json)" \
       --wait-until-finished > /tmp/$src-$action.json
   done
@@ -102,7 +102,7 @@ jq -s '{
 
 # Use anthropic to surface differentiating signals
 cargo-ai orchestration action execute \
-  --action '{"kind":"connector","integrationSlug":"anthropic","actionSlug":"instruct","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"anthropic","actionSlug":"instruct"}' \
   --data '{
     "model": "claude-sonnet-4-6",
     "prompt": "Two arrays: Closed-Won companies and Closed-Lost companies. Compare feature distributions and surface the top 10 signals that differentiate Won from Lost. Return JSON: [{signal, won_rate, lost_rate, difference_pct, why_it_matters}]. Data: <paste /tmp/comparison.json>",
@@ -120,7 +120,7 @@ For each surfaced signal, validate by running it as a filter against the Won seg
 ```bash
 # Example: signal is "uses Snowflake" → query storage + cargo technographics
 cargo-ai orchestration action execute \
-  --action '{"kind":"connector","integrationSlug":"theirStack","actionSlug":"searchTechnologies","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"theirStack","actionSlug":"searchTechnologies"}' \
   --data '{"fields":{"keywords":"snowflake"},"limit":1}' \
   --wait-until-finished
 ```
@@ -161,7 +161,7 @@ If any are missing, ask **once** before running — don't guess on the SQL.
 
 ## Action shape
 
-`{"kind":"connector","integrationSlug":"<slug>","actionSlug":"<slug>","config":{}}`. **No `connectorUuid` in `config`.**
+`{"kind":"connector","integrationSlug":"<slug>","actionSlug":"<slug>"}`. **No `connectorUuid` in `config`.**
 
 ## Output retrieval
 

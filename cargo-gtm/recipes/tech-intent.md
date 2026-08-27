@@ -16,7 +16,7 @@ Use this recipe when the user wants to find or prioritize companies based on **w
 
 ```bash
 cargo-ai orchestration action execute \
-  --action '{"kind":"connector","integrationSlug":"theirStack","actionSlug":"searchCompanies","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"theirStack","actionSlug":"searchCompanies"}' \
   --data '{
     "techFields": {"technologies": ["snowflake", "dbt"]},
     "fields": {"industries": ["software"], "headcountMin": 100},
@@ -31,7 +31,7 @@ cargo-ai orchestration action execute \
 
 ```bash
 cargo-ai orchestration action execute \
-  --action '{"kind":"connector","integrationSlug":"theirStack","actionSlug":"searchJobs","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"theirStack","actionSlug":"searchJobs"}' \
   --data '{
     "fields": {
       "job_titles": ["Head of RevOps", "VP RevOps"],
@@ -51,7 +51,7 @@ Result includes both job postings and the companies that posted them. Dedup on c
 
 ```bash
 cargo-ai orchestration action execute \
-  --action '{"kind":"connector","integrationSlug":"theirStack","actionSlug":"searchCompanies","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"theirStack","actionSlug":"searchCompanies"}' \
   --data '{
     "techFields": {"technologies": ["snowflake"]},
     "jobFields": {"job_titles": ["Data Engineer"], "posted_at_max_age_days": 60},
@@ -70,13 +70,13 @@ After sourcing with theirStack, validate the technographics on each company with
 ```bash
 # 1. Match the sourced companies to cargo
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"cargo","actionSlug":"matchBusiness","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"cargo","actionSlug":"matchBusiness"}' \
   --records "$(jq -c '[.results[] | {domain}]' /tmp/sourced.json)" \
   --wait-until-finished
 
 # 2. Pull cargo's technographics view
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"cargo","actionSlug":"enrichBusinessTechnographics","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"cargo","actionSlug":"enrichBusinessTechnographics"}' \
   --records "$(jq -c '[.results[] | select(.business_id) | {business_id}]' /tmp/matched.json)" \
   --wait-until-finished
 ```
@@ -90,7 +90,7 @@ theirStack's filters expect canonical slugs (e.g. `"snowflake"`, not `"Snowflake
 ```bash
 # Discover canonical slugs before search
 cargo-ai orchestration action execute \
-  --action '{"kind":"connector","integrationSlug":"theirStack","actionSlug":"searchTechnologies","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"theirStack","actionSlug":"searchTechnologies"}' \
   --data '{"fields": {"keywords": "snowflake"}, "limit": 10}' \
   --wait-until-finished
 ```
@@ -129,7 +129,7 @@ For a 500-company tech-intent scan with cargo validation: 0.5 (theirStack) + 250
 
 ## Action shape
 
-`{"kind":"connector","integrationSlug":"theirStack","actionSlug":"<slug>","config":{}}`. **No `connectorUuid` in `config`.**
+`{"kind":"connector","integrationSlug":"theirStack","actionSlug":"<slug>"}`. **No `connectorUuid` in `config`.**
 
 ## Output retrieval
 

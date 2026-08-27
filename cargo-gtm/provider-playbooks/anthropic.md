@@ -37,12 +37,12 @@ Claude through a single `instruct` action — the **default judgment-tier LLM of
 
 ```bash
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"anthropic","actionSlug":"instruct","config":{"model":"claude-sonnet-4-6","advancedSettings":{"maxTokens":4096,"temperature":0}}}' \
-  --records '[{"prompt":"<substituted prompt for row 1>"},{"prompt":"<row 2>"}, ...]' \
+  --action '{"kind":"connector","integrationSlug":"anthropic","actionSlug":"instruct"}' \
+  --records '[{"model":"claude-sonnet-4-6","prompt":"<substituted prompt for row 1>","advancedSettings":{"maxTokens":4096,"temperature":0}},{"model":"claude-sonnet-4-6","prompt":"<row 2>"}, ...]' \
   --wait-until-finished
 ```
 
-`prompt` goes in each record; `model` and `advancedSettings` in `config`. Take the prompt text from the prompt library rather than authoring from scratch.
+**`model`, `prompt`, and `advancedSettings` are all *inputs*** — they go in each record (`model` and `prompt` are required), never in the action's `config`. A top-level action carries no `config` at all. Settings placed there are rejected on older backends and **silently dropped** on newer ones, which quietly bills the call at whatever the default model is. Take the prompt text from the prompt library rather than authoring from scratch.
 
 ## Input quirks
 
@@ -64,7 +64,7 @@ cargo-ai orchestration action execute-batch \
 
 ## Action shape
 
-`{"kind":"connector","integrationSlug":"anthropic","actionSlug":"instruct","config":{"model":"…","advancedSettings":{…}}}`. **No `connectorUuid` in `config`.** Costs above are the Cargo-credits rules; a workspace can instead attach its own Anthropic key (connector config takes a single required `apiKey`) and bill the provider directly.
+`{"kind":"connector","integrationSlug":"anthropic","actionSlug":"instruct"}`, with `model` (required), `prompt` (required), and `advancedSettings` per record in `--records` / `--data`. **No `connectorUuid` in `config`** — and no model settings there either; inside a workflow **node** those same fields are the node's `config`. Costs above are the Cargo-credits rules; a workspace can instead attach its own Anthropic key (connector config takes a single required `apiKey`) and bill the provider directly.
 
 ## Pairs with
 

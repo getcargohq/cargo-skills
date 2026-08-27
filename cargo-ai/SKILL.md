@@ -1,7 +1,7 @@
 ---
 name: cargo-ai
 description: "Build and configure AI agents inside Cargo — create an agent, choose its model and temperature, write its prompt, attach knowledge for retrieval (RAG), connect MCP tool servers, manage memories, and deploy releases. Triggers: \"create an agent\", \"make an agent that\", \"give the agent our docs\", \"attach this knowledge base\", \"attach this library to the agent\", \"add resources to the agent release\", \"connect an MCP server\", \"expose our tools as an MCP server\", \"use Cargo from Claude Desktop or ChatGPT\", \"change the agent model\", \"what does the agent remember\", \"deploy the agent\", \"the agent is answering wrong\". Skip when: uploading the knowledge files themselves — use cargo-content; sending the agent a message or running it over records — use cargo-orchestration."
-version: "2.2.1"
+version: "2.3.0"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -77,7 +77,8 @@ cargo-ai ai mcp-server create --name "Internal Tools"
 cargo-ai ai mcp-server update --uuid <mcp-server-uuid> --name "Updated Name"
 cargo-ai ai mcp-server remove <mcp-server-uuid>
 cargo-ai ai mcp-client connect --name "My MCP" --url https://mcp.example.com/sse
-cargo-ai mcp --server <mcp-server-uuid>    # serve a workspace MCP server over stdio
+cargo-ai mcp                               # serve the platform MCP over stdio
+cargo-ai mcp --server <mcp-server-uuid>    # serve a curated workspace MCP server instead
 cargo-ai ai memory list --scope agent --agent-uuid <uuid>
 cargo-ai ai memory update --mem0-id <id> --scope agent --agent-uuid <uuid> --content "Updated memory"
 cargo-ai ai memory remove --mem0-id <id> --scope agent --agent-uuid <uuid>
@@ -231,9 +232,9 @@ MCP (Model Context Protocol) runs both ways in Cargo, and the two surfaces are u
 |---|---|---|
 | What it is | A server **your workspace exposes**: the tools, agents, and data you choose to make callable | A connection **to someone else's** MCP server |
 | Who calls it | Any MCP client — Claude Code, Claude Desktop, Cursor, ChatGPT | Your Cargo agents, during a chat or a workflow run |
-| Wired via | `cargo-ai mcp` (stdio bridge, below) | `release update-draft --mcp-clients …` |
+| Wired via | `cargo-ai mcp --server <uuid>` (stdio bridge, below) | `release update-draft --mcp-clients …` |
 
-There is no first-party "Cargo MCP server" to install. A workspace builds its own and decides what goes in it.
+**Before building one, check whether the platform MCP already covers it.** Cargo now serves a first-party MCP at `https://mcp.getcargo.io/mcp` — every workspace member, nothing to deploy — with a small fixed toolset for operating the workspace (`whoami`, `get_usage`, `search_actions`, `get_action_schema`, `autocomplete_action`, `execute_action`, `execute_action_batch`, `get_run`, `get_batch`, `list_runs`, `list_models`, `describe_model`, `query_models`). Hosted clients (ChatGPT connectors, Claude.ai, Cursor over HTTP) point at that URL and sign in with OAuth; the consent screen picks the workspace when the user belongs to several. `ai mcp-server` is for the other job: a **curated, named** subset — this tool, that agent, this filtered model — for a client that should see exactly that and nothing else.
 
 ### Publishing a workspace MCP server
 
@@ -252,17 +253,18 @@ cargo-ai ai mcp-server remove <mcp-server-uuid>
 
 ### Serving it to a coding agent — `cargo-ai mcp`
 
-The published server reaches any stdio MCP client through the CLI, using the credentials already on the machine. **No token is copied into client config.**
+Either server reaches any stdio MCP client through the CLI, using the credentials already on the machine. **No token is copied into client config.**
 
 ```bash
-cargo-ai ai mcp-server list                              # find the server UUID
-claude mcp add cargo -- cargo-ai mcp --server <uuid>     # Claude Code / Claude Desktop
+claude mcp add cargo -- cargo-ai mcp                     # the platform MCP (no setup)
+cargo-ai ai mcp-server list                              # find a curated server's UUID
+claude mcp add cargo -- cargo-ai mcp --server <uuid>     # that curated server instead
 # Cursor, Windsurf, and other stdio clients: same command as the server entry
 ```
 
-With no `--server`, the bridge uses `CARGO_MCP_SERVER_UUID`, or the workspace's only MCP server when there is exactly one. stdout carries the MCP protocol and all logs go to stderr, so never print anything to stdout around it.
+With no `--server`, the bridge uses `CARGO_MCP_SERVER_UUID` when set, otherwise the platform `/mcp`. **This changed:** older CLIs resolved "the workspace's only MCP server" and failed with `InvalidUsage` when the workspace had none or several — a bare `cargo-ai mcp` now always has something to serve. stdout carries the MCP protocol and all logs go to stderr, so never print anything to stdout around it.
 
-**When to reach for this instead of the skills:** the skills give an agent the whole CLI; a published MCP server gives it a curated, safe subset with no shell. Use the bridge for the in-conversation lookups a workspace has already blessed, and the CLI for batches, workflows, schema changes, and anything with a cost gate. Full routing rule: [`../cargo/SKILL.md`](../cargo/SKILL.md) → "These skills vs a workspace MCP server".
+**When to reach for this instead of the skills:** the skills give an agent the whole CLI; an MCP surface gives it a bounded set with no shell. Use the bridge for in-conversation lookups and one-off actions, and the CLI for batches, workflows, schema changes, and anything with a cost gate. Full routing rule: [`../cargo/SKILL.md`](../cargo/SKILL.md) → "These skills vs Cargo's MCP surfaces".
 
 ### Consuming an external MCP server
 

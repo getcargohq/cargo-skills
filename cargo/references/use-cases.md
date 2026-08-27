@@ -8,7 +8,7 @@ Worked recipes showing which skills to load and the command sequence for common 
 
 ```
 1. orchestration action execute            → run a connector action on one record
-   --action '{"kind":"connector","integrationSlug":"clearbit","actionSlug":"company_enrich","config":{}}'
+   --action '{"kind":"connector","integrationSlug":"clearbit","actionSlug":"company_enrich"}'
    --data '{"domain":"acme.com"}' --wait-until-finished
 ```
 

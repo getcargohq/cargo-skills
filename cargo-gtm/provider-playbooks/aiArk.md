@@ -37,7 +37,7 @@ Two extractors (`fetchPeople`, `fetchCompanies`) also exist for syncing search r
 
 ```bash
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"aiArk","actionSlug":"enrichPerson","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"aiArk","actionSlug":"enrichPerson"}' \
   --records '[
     {"linkedinUrl":"https://linkedin.com/in/alicesmith"},
     {"linkedinUrl":"https://linkedin.com/in/bobjones"}
@@ -51,7 +51,7 @@ cargo-ai orchestration action execute-batch \
 
 ```bash
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"aiArk","actionSlug":"findMobilePhone","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"aiArk","actionSlug":"findMobilePhone"}' \
   --records '[
     {"linkedinUrl":"https://linkedin.com/in/alicesmith"},
     {"domain":"globex.com","name":"Bob Jones"}
@@ -65,7 +65,7 @@ Provide a `linkedinUrl`, **or** both `domain` and `name` (a domain or a name alo
 
 ```bash
 cargo-ai orchestration action execute \
-  --action '{"kind":"connector","integrationSlug":"aiArk","actionSlug":"searchCompanies","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"aiArk","actionSlug":"searchCompanies"}' \
   --data '{
     "lookalikeDomains": ["stripe.com", "adyen.com"],
     "industry": {"industry_or": ["Financial Services"]},
@@ -81,7 +81,7 @@ Billed **per returned record** — `limit` is your budget cap; size the pool fir
 
 ```bash
 cargo-ai orchestration action execute \
-  --action '{"kind":"connector","integrationSlug":"aiArk","actionSlug":"searchPeople","config":{}}' \
+  --action '{"kind":"connector","integrationSlug":"aiArk","actionSlug":"searchPeople"}' \
   --data '{
     "jobRole": {"title_or": ["VP Engineering"], "seniority_or": ["VP"]},
     "personLocation": {"location_or": ["United States"]},
@@ -137,4 +137,4 @@ Conventions inside a group:
 
 ## Action shape
 
-`{"kind":"connector","integrationSlug":"aiArk","actionSlug":"<slug>","config":{}}`. **No `connectorUuid` in `config`.** For top-level `action execute` / `execute-batch`, inputs go in `--data` (single) or `--records` (batch), **not** in the action `config`.
+`{"kind":"connector","integrationSlug":"aiArk","actionSlug":"<slug>"}`. **No `connectorUuid` in `config`.** For top-level `action execute` / `execute-batch`, inputs go in `--data` (single) or `--records` (batch), **not** in the action `config`.
