@@ -1,7 +1,7 @@
 ---
 name: cargo
 description: "Router for the Cargo CLI skill bundle — load first for anything Cargo, and whenever a task spans two Cargo domains. Explains what each skill owns, declarative workspace-as-code (cargo-cdk) vs the imperative CLI, the UUID and slug flow between skills, async polling of runs and batches, end-to-end use cases, and the gotchas that fail silently (`conjonction` spelling, run vs batch, model-uuid vs segment-uuid). Triggers: \"set up Cargo\", \"what can Cargo do\", \"which Cargo skill\", \"bootstrap my workspace\", \"I have a Cargo account\", \"cargo-ai …\", or any `cargo-ai` command whose domain you are unsure of. Skip when: the task obviously belongs to one skill — load that skill directly."
-version: "1.21.0"
+version: "1.22.0"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -28,11 +28,11 @@ metadata:
 
 # Cargo CLI — Skills Overview
 
-This repository contains 18 skills at the repo root: this **router** (`cargo`), one **onboarding skill** (`cargo-quickstart`), one **outcome skill** (`cargo-gtm`), and fifteen **capability skills**.
+This repository contains 19 skills at the repo root: this **router** (`cargo`), one **onboarding skill** (`cargo-quickstart`), one **outcome skill** (`cargo-gtm`), and sixteen **capability skills**.
 
 - **`cargo-quickstart`** — guided first-run demo. Fresh workspace → real deliverable (25 leads for the user's persona, with a cost receipt) in under two minutes, ending by saving the demo as a recurring play. Load for new users, demo/tour requests, or empty workspaces.
 - **`cargo-gtm`** — application library. The front door for any GTM task ("build a TAM list", "find 5 fintech CTOs", "monitor job changes"). Routes via internal recipes (`../cargo-gtm/recipes/*.md`) and provider playbooks (`../cargo-gtm/provider-playbooks/*.md`).
-- **Capability skills** — standard library. One per CLI domain (orchestration, storage, segmentation, connection, AI, content, context, analytics, billing, observability, hosting, cdk, mailbox management, workspace management), plus `cargo-diagnostics` (cross-domain forensics over runs, batches, and credit spend). Loaded by `cargo-gtm`, or directly when you need a specific CLI domain.
+- **Capability skills** — standard library. One per CLI domain (orchestration, storage, segmentation, connection, AI, content, context, analytics, billing, observability, hosting, cdk, mailbox management, workspace management), plus `cargo-diagnostics` (cross-domain forensics over runs, batches, and credit spend) and `cargo-mcp` (the hosted MCP server, the one surface that is not the CLI). Loaded by `cargo-gtm`, or directly when you need a specific CLI domain.
 - **`cargo-cdk`** — the declarative one. Where the other capability skills wrap **imperative** one-off `cargo-ai <domain>` calls, `cargo-cdk` defines the whole workspace as code (`define*` builders + `cargo-ai cdk deploy`) and reconciles it. It spans every resource type — see "Declarative vs imperative" below to route between it and the imperative skills.
 
 `cargo-gtm` delegates to capability skills; capability skills never reference `cargo-gtm` (one-way dependency).
@@ -249,12 +249,31 @@ Load for a specific CLI domain. The first link in each row jumps to the actual S
 | [`cargo-cdk`](../cargo-cdk/SKILL.md) ([recap](#cargo-cdk))                                                   | **Declarative — spans every resource type.** Define a whole workspace in code (`define*` builders) and deploy it with `cargo-ai cdk` (init → types → plan → deploy). Use for workspace-as-code / reproducible / version-controlled setups; see "Declarative vs imperative" above. |
 | [`cargo-mailbox-management`](../cargo-mailbox-management/SKILL.md) ([recap](#cargo-mailbox-management))        | Provision sending mailboxes Cargo owns, run warm-up and the 5→40/day send ramp, send with the `sendEmail` action, and read threads, replies, delivery events, and suppressions |
 | [`cargo-workspace-management`](../cargo-workspace-management/SKILL.md) ([recap](#cargo-workspace-management)) | Invite users, create API tokens, organize folders, manage roles, report CLI issues to management   |
+| [`cargo-mcp`](../cargo-mcp/SKILL.md) ([recap](#cargo-mcp))                                                   | Drive Cargo from the hosted MCP server at `https://mcp.getcargo.io/mcp` with no CLI install — connect a client, discover and price an action, execute one record or a batch, poll it, read models; and route between the MCP tools and the CLI |
 
 > **Agent knowledge for RAG:** **files** + **libraries** live in the `content` domain → [`cargo-content`](../cargo-content/SKILL.md); how they attach to an agent → [`cargo-ai`](../cargo-ai/SKILL.md). (Files/libraries moved out of the old `ai file …` path in CLI ≥ 1.0.19.)
 
-### These skills vs a workspace MCP server
+### These skills vs an MCP server
 
-There is no first-party "Cargo MCP server". What Cargo offers is the ability to **build one**: a workspace picks the actions and resources it wants to expose (`cargo-ai ai mcp-server create --actions … --resources …`, see [`../cargo-ai/SKILL.md`](../cargo-ai/SKILL.md)), and the CLI can serve that curated set to any stdio MCP client:
+**Three distinct things wear the name MCP here.** They share no answers, so
+establish which one is meant before replying:
+
+| | What it is | Skill |
+|---|---|---|
+| **Hosted server** | Cargo's own endpoint at `https://mcp.getcargo.io/mcp`. Thirteen platform tools (discover, price, execute, poll, read models), plus whatever this workspace published. The way to drive Cargo with no CLI installed. | [`cargo-mcp`](../cargo-mcp/SKILL.md) |
+| **Workspace server** | A curated set *this workspace* publishes (`ai mcp-server create --actions … --resources …`), served to any stdio client by `cargo-ai mcp`. | [`cargo-ai`](../cargo-ai/SKILL.md) |
+| **Agent MCP client** | Somebody else's MCP server attached *to* a Cargo agent (`release update-draft --mcp-clients`). | [`cargo-ai`](../cargo-ai/SKILL.md) |
+
+The first is new and is what "does Cargo have an MCP server?" now means. It
+authenticates by OAuth discovered from its own `401` challenge, or by a
+workspace-scoped bearer token:
+
+```bash
+claude mcp add --transport http cargo https://mcp.getcargo.io/mcp
+```
+
+The second is the curation path, and remains the right answer when a workspace
+wants to expose one approved tool rather than the whole platform:
 
 ```bash
 cargo-ai ai mcp-server list                       # find the server UUID
@@ -263,16 +282,16 @@ claude mcp add cargo -- cargo-ai mcp --server <uuid>   # Claude Code, Cursor, Cl
 
 `cargo-ai mcp` bridges over stdio using the CLI's own credentials — no token to paste into client config. With no `--server`, it uses `CARGO_MCP_SERVER_UUID` or the workspace's only MCP server.
 
-Route between the two surfaces by shape of the request:
+Route between the CLI and either MCP surface by shape of the request:
 
-| | **These skills (CLI)** | **A workspace MCP server** |
+| | **These skills (CLI)** | **An MCP server** |
 |---|---|---|
-| What it is | The whole CLI surface, every domain | Only the actions/resources this workspace chose to expose |
-| Best for | Anything at scale or with a cost gate: batches, workflows, plays, schema changes, CDK deploys, diagnostics, exports | The curated in-conversation set: look this record up, run this one approved tool |
-| Cost control | Full pilot → approval → receipt discipline ([`../cargo-gtm/references/cost-discipline.md`](../cargo-gtm/references/cost-discipline.md)) | Per-call, and bounded by what the workspace exposed |
+| What it is | The whole CLI surface, every domain | The platform runtime tools, plus whatever the workspace chose to expose |
+| Best for | Anything that builds something reusable: workflows, plays, schema changes, CDK deploys, diagnostics, exports, warehouse SQL | In-conversation execution: look this record up, enrich this list, run this one approved tool |
+| Cost control | Full pilot → approval → receipt discipline ([`../cargo-gtm/references/cost-discipline.md`](../cargo-gtm/references/cost-discipline.md)) | Per-call; `search_actions` returns each action's credit cost before you run it |
 | Reproducible | Yes — commands, plays, and CDK files are artifacts | No — a tool call leaves no artifact behind |
 
-Rule of thumb: **anything touching more than a handful of records, or that the user will want to re-run, belongs in the CLI.** Never fan an MCP tool out record-by-record over a list — that is what `orchestration action execute-batch` exists for, and it is cheaper and observable. Conversely, when the workspace has already curated a tool for a job, calling it beats hand-assembling the same thing from raw actions.
+Rule of thumb: **anything the user will want to re-run or version belongs in the CLI.** Never fan an MCP tool out record-by-record over a list — that is what `execute_action_batch` (and `orchestration action execute-batch` on the CLI) exists for, and it is cheaper and observable. Conversely, when the workspace has already curated a tool for a job, calling it beats hand-assembling the same thing from raw actions.
 
 ### CLI domains without a dedicated skill yet
 
@@ -621,6 +640,16 @@ copies into the project and adapts, not a template to fill in:
 - `workspaceManagement token create` requires `--name` (the legacy `--from-user` flag was removed). Pick a name that makes the token's purpose obvious in `token list` later.
 - Token values are only shown **once** at creation — store immediately in a secrets manager (GitHub Secrets, AWS Secrets Manager, etc.).
 - **Always send a `workspaceManagement report create`** when the CLI errors, is being used incorrectly, or you (user or agent) are struggling to make progress on a CLI task — see the section at the top of this file and `../cargo-workspace-management/references/examples/reports.md`.
+
+### cargo-mcp
+
+**Critical rules:**
+
+- **`whoami` first, every session.** The token binds the session to exactly one workspace with no override. A wrong-workspace session returns real records belonging to someone else, which reads as success.
+- **Never loop `execute_action` over a list** — `execute_action_batch` is cheaper, observable, and returns one object plus an output CSV.
+- `search_actions` returns each action's `credits[].cost`, so quote the price before running it, and sample 10–20 records before a full fan-out.
+- `query_models` is not SQL: it lists records with a limit and offset, and will not aggregate or join. Route those to `cargo-storage`.
+- The tool list varies by workspace — the endpoint serves the platform tools plus whatever that workspace published with `defineMcpServer`.
 
 ## Async polling
 

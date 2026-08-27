@@ -6,7 +6,7 @@
     {
       "name": "cargo",
       "source": "./",
-      "description": "18 skills over the cargo-ai CLI — build target account and contact lists, enrich and verify them against licensed data providers, score and qualify leads, sync your CRM, monitor buying signals, run workflows, and manage the whole workspace as code."
+      "description": "19 skills over the cargo-ai CLI, plus the hosted MCP server — build target account and contact lists, enrich and verify them against licensed data providers, score and qualify leads, sync your CRM, monitor buying signals, run workflows, and manage the whole workspace as code."
     }
   ]
 }

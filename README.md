@@ -4,7 +4,7 @@
 [![skills.sh](https://img.shields.io/badge/skills.sh-18%20skills-black)](https://www.skills.sh)
 [![License](https://img.shields.io/github/license/getcargohq/cargo-skills?color=black)](LICENSE)
 
-Seventeen agent skills that turn Claude Code, Codex, Cursor, and any [skills.sh](https://skills.sh)-compatible agent into a go-to-market engineering workstation: **build lead lists, find and verify emails and phone numbers, enrich companies and contacts through provider waterfalls, score and qualify leads, write outreach, sync to your CRM, and monitor buying signals** (job changes, funding rounds, tech-stack and hiring intent) — then make any of it a scheduled, always-on workflow.
+Nineteen agent skills that turn Claude Code, Codex, Cursor, and any [skills.sh](https://skills.sh)-compatible agent into a go-to-market engineering workstation: **build lead lists, find and verify emails and phone numbers, enrich companies and contacts through provider waterfalls, score and qualify leads, write outreach, sync to your CRM, and monitor buying signals** (job changes, funding rounds, tech-stack and hiring intent) — then make any of it a scheduled, always-on workflow.
 
 They run on the [Cargo CLI](https://www.npmjs.com/package/@cargo-ai/cli) against [Cargo](https://getcargo.ai), the AI-native revenue infrastructure: **138 integrations** (HubSpot, Salesforce, Attio, Pipedrive, Outreach, Salesloft, Lemlist, Smartlead, Instantly, Snowflake, BigQuery, Slack, Google Ads, Meta and LinkedIn audiences, and more), **50 credits-based data providers** with per-action costs documented up front, models and SQL over workspace storage, AI agents with RAG, alerting, hosted apps, and a full workspace-as-code CDK.
 
@@ -52,7 +52,7 @@ Works with Claude Code, Codex, Cursor, Windsurf, GitHub Copilot, [Hermes Agent](
 
 ### Hermes Agent
 
-[Hermes](https://github.com/NousResearch/hermes-agent) reads the same `SKILL.md` standard, so all eighteen skills work there with no Cargo-side changes. Install them whichever way suits you:
+[Hermes](https://github.com/NousResearch/hermes-agent) reads the same `SKILL.md` standard, so all nineteen skills work there with no Cargo-side changes. Install them whichever way suits you:
 
 ```bash
 # From inside Hermes, via the skills.sh source
@@ -65,7 +65,7 @@ hermes skills install getcargohq/cargo-skills/cargo-gtm
 npx skills add getcargohq/cargo-skills --agent hermes-agent
 ```
 
-The last one writes all eighteen to `.hermes/skills/` (or `~/.hermes/skills/` with `-g`). Cross-skill references resolve because the skills land as siblings — the same layout every other channel uses.
+The last one writes all nineteen to `.hermes/skills/` (or `~/.hermes/skills/` with `-g`). Cross-skill references resolve because the skills land as siblings — the same layout every other channel uses.
 
 To subscribe to the whole repo as a [tap](https://hermes-agent.nousresearch.com/docs), add it and then point it at the repo root, since these skills live at the top level rather than under `skills/`:
 
@@ -91,7 +91,7 @@ Install those **or** this pack, not both — each standalone skill defers to `ca
 
 ### Agent plugin (alternative channel — Claude Code, Codex, Cursor)
 
-The repo also installs as a native **agent plugin**: one source, three targets, sharing the same eighteen skills plus three things `skills add` can't deliver:
+The repo also installs as a native **agent plugin**: one source, three targets, sharing the same nineteen skills plus three things `skills add` can't deliver:
 
 - **An approval hook** ([`hooks/approve-cli.sh`](hooks/approve-cli.sh)) that auto-approves safe `cargo-ai` calls (reads, queries, run/batch operations) while credentials (`login`), token minting, report egress, `cdk deploy`/`destroy`, and any `remove`/`delete` always still prompt. Allow-only — it can never override a deny rule. Wired per target: `PreToolUse` (Claude Code), `PermissionRequest` (Codex), `beforeShellExecution` (Cursor).
 - **Session-lifecycle hooks** (Claude Code only): plugin-bundled `SessionStart`/`Stop`/`SessionEnd` scripts keep the CLI at the bundle's pinned version and log the session to `workspace_management.sessions` — no installer needed. They defer automatically when the installer's copies exist under `~/.claude/hooks/`, so running both never double-registers a session. Unlike the installer's, the plugin's `SessionStart` does **not** run `skills add` (the plugin owns the skills).
@@ -198,7 +198,7 @@ Then bump the `version:` field in each changed `SKILL.md` (semver, e.g. `1.0.0` 
 
 ## What this skill teaches
 
-**Cargo** connects your data models (companies, contacts, deals) to external integrations (CRMs, enrichment providers, AI agents) and runs them as automated workflows. The repo ships eighteen skills at the root — one **router skill** (`cargo`, the overview / front door for any Cargo CLI task), one **onboarding skill** (`cargo-quickstart`, the guided first-run demo), one **outcome skill** (`cargo-gtm`, the front door for any GTM task), and fifteen **capability skills** (one per CLI domain, plus the cross-domain `cargo-diagnostics`). Most capability skills wrap the **imperative** CLI (one-off `cargo-ai <domain>` operations); `cargo-cdk` is the **declarative** one — define a whole workspace in code and deploy it — and `cargo-diagnostics` sequences the run/SQL/billing surfaces into forensic runbooks (trace a run, sweep a batch for errors, profile credit spend).
+**Cargo** connects your data models (companies, contacts, deals) to external integrations (CRMs, enrichment providers, AI agents) and runs them as automated workflows. The repo ships nineteen skills at the root — one **router skill** (`cargo`, the overview / front door for any Cargo CLI task), one **onboarding skill** (`cargo-quickstart`, the guided first-run demo), one **outcome skill** (`cargo-gtm`, the front door for any GTM task), and sixteen **capability skills** (one per CLI domain, plus the cross-domain `cargo-diagnostics` and the hosted-MCP-server skill `cargo-mcp`). Most capability skills wrap the **imperative** CLI (one-off `cargo-ai <domain>` operations); `cargo-cdk` is the **declarative** one — define a whole workspace in code and deploy it — and `cargo-diagnostics` sequences the run/SQL/billing surfaces into forensic runbooks (trace a run, sweep a batch for errors, profile credit spend).
 
 ### Router — `cargo`
 
@@ -238,7 +238,7 @@ Built-in recipes:
 
 ### Capabilities
 
-The standard library. Load when you need the syntax for a specific CLI domain — plus the two cross-cutting entries: **CDK** (the declarative mode) and **Diagnostics** (forensic runbooks over the other surfaces).
+The standard library. Load when you need the syntax for a specific CLI domain — plus the three cross-cutting entries: **CDK** (the declarative mode), **Diagnostics** (forensic runbooks over the other surfaces), and **MCP** (the hosted server, the one surface that is not the CLI).
 
 | Domain            | What the agent learns                                                                                                                                              |
 | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -257,6 +257,7 @@ The standard library. Load when you need the syntax for a specific CLI domain �
 | **Workspace**     | Invite users, create and rotate API tokens, organize resources into folders, manage roles                                                                          |
 | **CDK** *(declarative)* | Define an entire workspace in code (`define*` builders) and deploy it with `cargo-ai cdk` (init → types → plan → deploy → destroy). Spans every resource type; use for workspace-as-code / reproducible / version-controlled setups |
 | **Diagnostics** *(cross-domain)* | Explain workflow behavior after the fact: trace why one run misbehaved, sweep a batch or play for errors grouped by root cause, profile where a play's credits go. Forensic runbooks over the run / orchestration-SQL / billing surfaces |
+| **MCP** *(not a CLI domain)* | Drive Cargo from the hosted MCP server at `https://mcp.getcargo.io/mcp` with no CLI installed: connect a client over OAuth or a bearer token, discover and price an action with `search_actions`, execute it over one record or a batch, poll it, read models — and route between the MCP tools and the CLI |
 
 ## What can I ask for?
 

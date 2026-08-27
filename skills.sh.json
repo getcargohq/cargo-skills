@@ -3,19 +3,25 @@
   "notGrouped": "bottom",
   "groupings": [
     {
-      "title": "Start here — router",
+      "title": "Start here \u2014 router",
       "description": "Load first for anything Cargo, and whenever a task spans two domains.",
-      "skills": ["cargo"]
+      "skills": [
+        "cargo"
+      ]
     },
     {
       "title": "Onboarding",
       "description": "Guided first run: one persona question to 25 real leads with a cost receipt, in under two minutes.",
-      "skills": ["cargo-quickstart"]
+      "skills": [
+        "cargo-quickstart"
+      ]
     },
     {
-      "title": "Outcome — go-to-market",
+      "title": "Outcome \u2014 go-to-market",
       "description": "The front door for any GTM job: sourcing, enrichment, verification, scoring, outreach, CRM sync, signal monitoring.",
-      "skills": ["cargo-gtm"]
+      "skills": [
+        "cargo-gtm"
+      ]
     },
     {
       "title": "Run and build",
@@ -29,14 +35,29 @@
       ]
     },
     {
+      "title": "Surfaces",
+      "description": "The hosted MCP server, and when to call an MCP tool instead of shelling out to the CLI.",
+      "skills": [
+        "cargo-mcp"
+      ]
+    },
+    {
       "title": "Data",
       "description": "Models, columns, records, SQL over workspace storage, and the saved filters that name an audience.",
-      "skills": ["cargo-storage", "cargo-segmentation", "cargo-connection"]
+      "skills": [
+        "cargo-storage",
+        "cargo-segmentation",
+        "cargo-connection"
+      ]
     },
     {
       "title": "AI and knowledge",
       "description": "Agents, retrieval, MCP servers, memories, and the workspace's git-backed GTM context.",
-      "skills": ["cargo-ai", "cargo-content", "cargo-context"]
+      "skills": [
+        "cargo-ai",
+        "cargo-content",
+        "cargo-context"
+      ]
     },
     {
       "title": "Ship and administer",

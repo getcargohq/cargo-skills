@@ -96,11 +96,11 @@
 {"prompt": "Which Cargo skill should I use for this?", "expect": "cargo"}
 {"prompt": "What is the UUID flow between the Cargo skills?", "expect": "cargo"}
 
-{"prompt":"Set up a sending mailbox on our outreach domain","expect":"cargo-mailbox-management","why":"Provisioning an inbox Cargo owns. The only skill with the mailboxManagement vocabulary."}
-{"prompt":"How many emails can this inbox send today?","expect":"cargo-mailbox-management","why":"The send allowance under the warm-up ramp — no other skill knows the ramp exists."}
-{"prompt":"Someone asked to be taken off our list — make sure we never email them again","expect":"cargo-mailbox-management","why":"The workspace suppression list lives in this domain, not in the GTM skill that merely gates on it."}
-{"prompt":"Did anyone reply to the emails we sent last week?","expect":"cargo-mailbox-management","why":"Replies are events on outbound messages; threads and events are read here, not through analytics."}
-{"prompt":"Warm up these inboxes before we start sending","expect":"cargo-mailbox-management","why":"start-warmup and the 45-day ramp."}
+{"prompt": "Set up a sending mailbox on our outreach domain", "expect": "cargo-mailbox-management", "why": "Provisioning an inbox Cargo owns. The only skill with the mailboxManagement vocabulary."}
+{"prompt": "How many emails can this inbox send today?", "expect": "cargo-mailbox-management", "why": "The send allowance under the warm-up ramp — no other skill knows the ramp exists."}
+{"prompt": "Someone asked to be taken off our list — make sure we never email them again", "expect": "cargo-mailbox-management", "why": "The workspace suppression list lives in this domain, not in the GTM skill that merely gates on it."}
+{"prompt": "Did anyone reply to the emails we sent last week?", "expect": "cargo-mailbox-management", "why": "Replies are events on outbound messages; threads and events are read here, not through analytics."}
+{"prompt": "Warm up these inboxes before we start sending", "expect": "cargo-mailbox-management", "why": "start-warmup and the 45-day ramp."}
 
 // Harder cases — deliberately avoid the literal trigger phrasing, so these test
 // the description's vocabulary rather than its quoted examples.
@@ -109,28 +109,31 @@
 {"prompt": "Draw the graph for this play so I can review it before deploy", "expect": "cargo-orchestration"}
 {"prompt": "Visualize this play", "expect": "cargo-orchestration"}
 {"prompt": "Show me what that run actually did, and mark where it broke", "expect": "cargo-diagnostics", "why": "A run that broke is diagnostics, even though the answer is also a diagram."}
-{"prompt":"I have a spreadsheet of 400 domains and need a decision-maker with a working email address at each one","expect":"cargo-gtm","why":"Pure job description, zero Cargo or trigger vocabulary.","tier":"hard"}
-{"prompt":"Our outbound is going to the wrong people — help me figure out who actually buys from us","expect":"cargo-gtm","tier":"hard"}
-{"prompt":"Something in the nightly pipeline produced garbage last night and I need to know what","expect":"cargo-diagnostics","why":"Paraphrase of 'why did this fail' with no shared words.","tier":"hard"}
-{"prompt":"I want a Slack ping the moment our data freshness slips","expect":"cargo-observability","tier":"hard"}
-{"prompt":"Can I keep the definition of all this in version control?","expect":"cargo-cdk","tier":"hard"}
-{"prompt":"Give my teammates a link where they can see these numbers","expect":"cargo-hosting","tier":"hard"}
-{"prompt":"Pull the finished rows down so I can hand them to the SDR team","expect":"cargo-analytics","tier":"hard"}
-{"prompt":"Am I going to run out of budget before the end of the quarter?","expect":"cargo-billing","tier":"hard"}
-{"prompt":"Only the accounts in EMEA above 500 headcount should get this treatment","expect":"cargo-segmentation","tier":"hard"}
-{"prompt":"The Attio sync is asking for credentials again","expect":"cargo-connection","tier":"hard"}
-{"prompt":"Give the assistant access to our sales collateral so it stops making things up","expect":"cargo-content","why":"Corrected after the model tier disagreed and was right: as written, the first step is getting the collateral into the workspace, which is content. Wiring an existing library onto an agent release is cargo-ai — see the next case.","tier":"hard"}
-{"prompt":"Attach the knowledge library we already uploaded to the qualification agent","expect":"cargo-ai","why":"The other side of the content/ai boundary: the library exists, so this is release wiring."}
-{"prompt":"Where should I write down what we learned about why deals stall?","expect":"cargo-context","tier":"hard"}
-{"prompt":"Fire this off across every row in the model","expect":"cargo-orchestration","tier":"hard"}
-{"prompt":"Put the onboarding PDFs somewhere the assistant can read them","expect":"cargo-content","tier":"hard"}
-{"prompt":"Rotate the key we gave to the CI pipeline","expect":"cargo-workspace-management","tier":"hard"}
+{"prompt": "I have a spreadsheet of 400 domains and need a decision-maker with a working email address at each one", "expect": "cargo-gtm", "why": "Pure job description, zero Cargo or trigger vocabulary.", "tier": "hard"}
+{"prompt": "Our outbound is going to the wrong people — help me figure out who actually buys from us", "expect": "cargo-gtm", "tier": "hard"}
+{"prompt": "Something in the nightly pipeline produced garbage last night and I need to know what", "expect": "cargo-diagnostics", "why": "Paraphrase of 'why did this fail' with no shared words.", "tier": "hard"}
+{"prompt": "I want a Slack ping the moment our data freshness slips", "expect": "cargo-observability", "tier": "hard"}
+{"prompt": "Can I keep the definition of all this in version control?", "expect": "cargo-cdk", "tier": "hard"}
+{"prompt": "Give my teammates a link where they can see these numbers", "expect": "cargo-hosting", "tier": "hard"}
+{"prompt": "Pull the finished rows down so I can hand them to the SDR team", "expect": "cargo-analytics", "tier": "hard"}
+{"prompt": "Am I going to run out of budget before the end of the quarter?", "expect": "cargo-billing", "tier": "hard"}
+{"prompt": "Only the accounts in EMEA above 500 headcount should get this treatment", "expect": "cargo-segmentation", "tier": "hard"}
+{"prompt": "The Attio sync is asking for credentials again", "expect": "cargo-connection", "tier": "hard"}
+{"prompt": "Give the assistant access to our sales collateral so it stops making things up", "expect": "cargo-content", "why": "Corrected after the model tier disagreed and was right: as written, the first step is getting the collateral into the workspace, which is content. Wiring an existing library onto an agent release is cargo-ai — see the next case.", "tier": "hard"}
+{"prompt": "Attach the knowledge library we already uploaded to the qualification agent", "expect": "cargo-ai", "why": "The other side of the content/ai boundary: the library exists, so this is release wiring."}
+{"prompt": "Where should I write down what we learned about why deals stall?", "expect": "cargo-context", "tier": "hard"}
+{"prompt": "Fire this off across every row in the model", "expect": "cargo-orchestration", "tier": "hard"}
+{"prompt": "Put the onboarding PDFs somewhere the assistant can read them", "expect": "cargo-content", "tier": "hard"}
+{"prompt": "Rotate the key we gave to the CI pipeline", "expect": "cargo-workspace-management", "tier": "hard"}
 {"prompt": "How many free credits do I get to start with?", "expect": "cargo-billing", "why": "Free-tier questions are a first-session trigger; the fact lives in billing."}
 {"prompt": "What do I get for free before I have to pay?", "expect": "cargo-billing"}
-{"prompt":"Expose our CRM tools as an MCP server so I can call them from Claude Desktop","expect":"cargo-ai","why":"The publish direction of MCP. Was previously reachable from no description at all."}
-{"prompt":"How do I use Cargo from ChatGPT?","expect":"cargo-ai","why":"An agent that does not speak skills.sh reaches Cargo through a published MCP server plus the cargo-ai mcp bridge.","tier":"hard"}
-{"prompt":"Explain this automation to someone who has never seen it — I need a picture, not JSON","expect":"cargo-orchestration","why":"No CLI vocabulary at all; the job is rendering a graph.","tier":"hard"}
-{"prompt":"Is there a skill that already builds account scoring, or do I write it from scratch?","expect":"cargo-cdk","why":"cargo-cdk gained the worked-example vocabulary: it owns the menu of gtm-skills that carry a CDK example and must catch the 'before I author it' question."}
-{"prompt":"Start from a worked example for a TAM pipeline and adapt it to our workspace","expect":"cargo-cdk","why":"'worked example' and a deployed pipeline are the standing-side words; the pack's CDK skill routes them, and its menu hands off to tam-building."}
-{"prompt":"Write me a first-touch email for these fintech CTOs","expect":"cargo-gtm","why":"Copywriting and audience, not sending infrastructure — must NOT be pulled to cargo-mailbox-management by the word email.","tier":"hard"}
-{"prompt":"What did that email-sending workflow cost us last month?","expect":"cargo-billing","why":"Credit spend is billing even when the subject is mail; the mailbox skill owns the fleet, not the invoice.","tier":"hard"}
+{"prompt": "Expose our CRM tools as an MCP server so I can call them from Claude Desktop", "expect": "cargo-ai", "why": "The publish direction of MCP. Was previously reachable from no description at all."}
+{"prompt": "How do I use Cargo from ChatGPT?", "expect": "cargo-mcp", "why": "Cargo now runs a hosted MCP server at mcp.getcargo.io/mcp, so a client with no shell connects to that rather than publishing one first. Was cargo-ai until the hosted server shipped.", "tier": "hard"}
+{"prompt": "Explain this automation to someone who has never seen it — I need a picture, not JSON", "expect": "cargo-orchestration", "why": "No CLI vocabulary at all; the job is rendering a graph.", "tier": "hard"}
+{"prompt": "Is there a skill that already builds account scoring, or do I write it from scratch?", "expect": "cargo-cdk", "why": "cargo-cdk gained the worked-example vocabulary: it owns the menu of gtm-skills that carry a CDK example and must catch the 'before I author it' question."}
+{"prompt": "Start from a worked example for a TAM pipeline and adapt it to our workspace", "expect": "cargo-cdk", "why": "'worked example' and a deployed pipeline are the standing-side words; the pack's CDK skill routes them, and its menu hands off to tam-building."}
+{"prompt": "Write me a first-touch email for these fintech CTOs", "expect": "cargo-gtm", "why": "Copywriting and audience, not sending infrastructure — must NOT be pulled to cargo-mailbox-management by the word email.", "tier": "hard"}
+{"prompt": "What did that email-sending workflow cost us last month?", "expect": "cargo-billing", "why": "Credit spend is billing even when the subject is mail; the mailbox skill owns the fleet, not the invoice.", "tier": "hard"}
+{"prompt": "Connect Cargo to Claude Desktop", "expect": "cargo-mcp", "why": "Pointing a client at the hosted server, not publishing one out of a workspace."}
+{"prompt": "What will execute_action_batch cost before I run it?", "expect": "cargo-mcp", "why": "MCP tool names are the highest-precision routing tokens for this surface."}
+{"prompt": "The Cargo MCP server is showing the wrong workspace", "expect": "cargo-mcp", "why": "Token-binds-workspace is the silent failure this skill exists to catch.", "tier": "hard"}
