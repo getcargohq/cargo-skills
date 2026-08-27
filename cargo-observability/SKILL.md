@@ -90,7 +90,7 @@ cargo-ai observability alert create \
 - `--cron` — 5-field cron **or** `@every <interval>` (e.g. `@every 30m`), always **UTC**, at most once a minute. The UI presets bottom out at 30 minutes; go tighter only with reason (every tick scans ClickHouse and can fire paid runs).
 - `--disabled` — create it paused (evaluate nothing until you `update --enabled true`).
 - `--folder <uuid>` — file it under a folder (from `cargo-workspace-management`).
-- `--actions` — optional. Omit for a silent alert. Each entry is a **configured** action: unlike `orchestration action execute`, where `config` is empty (or omitted on newer backends), an alert action **requires** `config` — that is where the templated message lives. The config is templated against the firing context (`{{alert.*}}`, `{{event.*}}`) — see [`references/alert-lifecycle.md`](references/alert-lifecycle.md) for the full variable list. Each action's target (`agentUuid`/`toolUuid`/`connectorUuid`) is validated to exist in the workspace at create time.
+- `--actions` — optional. Omit for a silent alert. Each entry is a **configured** action: unlike `orchestration action execute`, which carries no `config` at all, an alert action **requires** one — that is where the templated message lives. The config is templated against the firing context (`{{alert.*}}`, `{{event.*}}`) — see [`references/alert-lifecycle.md`](references/alert-lifecycle.md) for the full variable list. Each action's target (`agentUuid`/`toolUuid`/`connectorUuid`) is validated to exist in the workspace at create time.
 
 ### List, get, update, remove
 

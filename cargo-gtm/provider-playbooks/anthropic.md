@@ -42,7 +42,7 @@ cargo-ai orchestration action execute-batch \
   --wait-until-finished
 ```
 
-**`model`, `prompt`, and `advancedSettings` are all *inputs*** — they go in each record (`model` and `prompt` are required), never in the action's `config`. A top-level action's `config` is empty. Settings placed there are rejected on older backends and **silently dropped** on newer ones, which quietly bills the call at whatever the default model is. Take the prompt text from the prompt library rather than authoring from scratch.
+**`model`, `prompt`, and `advancedSettings` are all *inputs*** — they go in each record (`model` and `prompt` are required), never in the action's `config`. A top-level action carries no `config` at all. Settings placed there are rejected on older backends and **silently dropped** on newer ones, which quietly bills the call at whatever the default model is. Take the prompt text from the prompt library rather than authoring from scratch.
 
 ## Input quirks
 

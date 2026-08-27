@@ -79,7 +79,7 @@ cargo-ai orchestration action execute \
   }' --wait-until-finished
 ```
 
-**Every field below goes in `--data` / `--records`, never in the action's `config`** — a top-level action's `config` is empty. Older backends reject inputs placed there; newer ones silently drop them and run the action with nothing, which here means an audience created with no name or an upload that adds no members. (Inside a workflow **node** these same fields are the node's `config`.)
+**Every field below goes in `--data` / `--records`, never in the action's `config`** — a top-level action carries no `config` at all. Older backends reject inputs placed there; newer ones silently drop them and run the action with nothing, which here means an audience created with no name or an upload that adds no members. (Inside a workflow **node** these same fields are the node's `config`.)
 
 `membershipLifeSpan` is in days; `540` is the maximum and the right default for a seed list. Use a short span (30–90) only for a genuinely time-boxed retargeting pool.
 

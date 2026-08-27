@@ -138,7 +138,7 @@ See [`../../cargo-ai/SKILL.md`](../../cargo-ai/SKILL.md) for the agent surface.
 
 ## Action shape rules
 
-Same as everywhere else: `kind: "connector"` with `integrationSlug` + `actionSlug` + `config: {}`. No `connectorUuid` in config.
+Same as everywhere else: `kind: "connector"` with `integrationSlug` + `actionSlug`, and **no `config`** — a top-level action carries none, and `connectorUuid` is never nested inside one.
 
 For LLM `instruct` actions, the `model` field is in the per-record data, not in `config`:
 

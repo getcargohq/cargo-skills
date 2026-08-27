@@ -46,7 +46,7 @@ cargo-ai orchestration action execute-batch \
   --wait-until-finished
 ```
 
-**`model`, `prompt`, `advancedSettings`, and `output` are all *inputs*** — they go in each record, never in the action's `config`, which stays empty on a top-level action. Settings placed there are rejected on older backends and **silently dropped** on newer ones, so a dropped `output` turns schema-validated JSON back into free text. `responseFormat` enum: `text` (default) | `json_object` | `json_schema` (the last requires the sibling `jsonSchema` object).
+**`model`, `prompt`, `advancedSettings`, and `output` are all *inputs*** — they go in each record, never in the action's `config`, which a top-level action does not carry at all. Settings placed there are rejected on older backends and **silently dropped** on newer ones, so a dropped `output` turns schema-validated JSON back into free text. `responseFormat` enum: `text` (default) | `json_object` | `json_schema` (the last requires the sibling `jsonSchema` object).
 
 ## Input quirks
 

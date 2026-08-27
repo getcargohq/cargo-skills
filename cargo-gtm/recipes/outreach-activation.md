@@ -120,7 +120,7 @@ cargo-ai orchestration action execute-batch \
   --wait-until-finished > /tmp/personalized.json
 ```
 
-`model` is a **required input**, so it belongs in every record alongside `prompt` — the action's `config` stays empty. Put it in `config` and newer backends drop it silently, billing the call at the default model.
+`model` is a **required input**, so it belongs in every record alongside `prompt` — the action carries no `config` at all. Put it in `config` and newer backends drop it silently, billing the call at the default model.
 
 More proven prompts (subject lines, follow-ups, job-change angles): [`../references/prompt-library/index.md`](../references/prompt-library/index.md).
 

@@ -41,12 +41,12 @@ cargo-ai orchestration action execute-batch \
   --wait-until-finished
 ```
 
-**`model`, `prompt`, and `advancedSettings` are all *inputs*** — they go in each record, never in the action's `config`, which stays empty on a top-level action. Settings placed there are rejected on older backends and **silently dropped** on newer ones — and a dropped `searchContextSize` is a real cost difference here. Pipe the answers into a cheap `anthropic`/`openAi` step for structured extraction if you need parse-ready JSON downstream.
+**`model`, `prompt`, and `advancedSettings` are all *inputs*** — they go in each record, never in the action's `config`, which a top-level action does not carry at all. Settings placed there are rejected on older backends and **silently dropped** on newer ones — and a dropped `searchContextSize` is a real cost difference here. Pipe the answers into a cheap `anthropic`/`openAi` step for structured extraction if you need parse-ready JSON downstream.
 
 ## Input quirks
 
 - **The schema default model is `sonar-deep-research`** — the 5/min, research-grade model. Always set `model` explicitly; an unset model turns a 500-row batch into a ~100-minute crawl at premium depth.
-- **`searchContextSize` is a config cost lever, not just quality** — it moves the token rate up to ~1.8× (defaults to `medium`). Start `low` for one-fact lookups.
+- **`searchContextSize` is a cost lever, not just quality** (an input, alongside `model`/`prompt`) — it moves the token rate up to ~1.8× (defaults to `medium`). Start `low` for one-fact lookups.
 - **Structured output enums differ from openAi/gemini:** `output.responseFormat` is `text` (default) | `jsonSchema` (camelCase, requires sibling `jsonSchema`) | `regex` (requires sibling `regex`). There is no `json_object` mode here.
 - **Temperature is 0–2 (exclusive), default 0** — already deterministic by default, unlike openAi/gemini (default 1).
 - No `withWebSearch` flag — search is always on; that's the product.

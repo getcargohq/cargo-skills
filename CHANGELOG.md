@@ -10,7 +10,7 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
-### `cargo-ai` → 2.3.0, `cargo-orchestration` → 1.9.0, `cargo-gtm` → 1.17.0, `cargo-connection` → 1.4.0, `cargo-mcp` → 1.0.1, `cargo-mailbox-management` → 1.0.1, `cargo-context` → 1.2.2, `cargo-quickstart` → 1.0.2, `cargo-observability` → 1.0.2 — search for actions, and `config` stopped shouting
+### `cargo` → 1.23.0 (router), `cargo-ai` → 2.3.0, `cargo-orchestration` → 1.9.0, `cargo-gtm` → 1.17.0, `cargo-connection` → 1.4.0, `cargo-mcp` → 1.0.1, `cargo-mailbox-management` → 1.0.1, `cargo-context` → 1.2.2, `cargo-quickstart` → 1.0.2, `cargo-workspace-management` → 1.2.2, `cargo-observability` → 1.0.2 — search for actions, and `config` stopped shouting
 
 All of this is **shipped**: CLI **1.0.66** on npm. `orchestration action list` is new, and `config` split off the top-level action type (`Action` vs `ConfiguredAction`). One of those contradicted a sentence the bundle stated as fact; the other was being taught the wrong way round in 272 examples.
 
