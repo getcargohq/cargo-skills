@@ -39,6 +39,7 @@ const SKILL_DIRS = [
   "cargo-hosting",
   "cargo-mailbox-management",
   "cargo-workspace-management",
+  "cargo-mcp",
 ];
 
 const REQUIRED_FRONTMATTER_FIELDS = [

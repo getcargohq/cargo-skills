@@ -10,6 +10,18 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### New skill — `cargo-mcp` → 1.0.0, `cargo` → 1.22.0 (router) — Cargo has a hosted MCP server now
+
+`https://mcp.getcargo.io/mcp` is live and serves thirteen platform tools (`whoami`, `get_usage`, `search_actions`, `get_action_schema`, `autocomplete_action`, `execute_action`, `execute_action_batch`, `get_run`, `get_batch`, `list_runs`, `list_models`, `describe_model`, `query_models`) plus whatever a workspace published with `defineMcpServer`. Nothing in the bundle covered it, and the router said the opposite.
+
+- **New [`cargo-mcp`](cargo-mcp/SKILL.md)** — the sixteenth capability skill, and the only one that documents a surface that is not the CLI. Connect (OAuth discovered from the server's own `401` challenge, or a workspace-scoped bearer), the discover → price → execute → poll spine, and the routing table for when to call an MCP tool versus shelling out to `cargo-ai`.
+
+- **The router's MCP section was wrong.** It stated "There is no first-party 'Cargo MCP server'", which was true when written and is not now. Rewritten as a three-way disambiguation, because three separate things in this product are called MCP and they share no answers: the **hosted server** (this skill), a **workspace server** published with `ai mcp-server create` and served over stdio by `cargo-ai mcp` (`cargo-ai`), and an **MCP client attached to a Cargo agent** via `release update-draft --mcp-clients` (`cargo-ai`).
+
+- **Three failure modes the skill exists to catch.** The token binds a session to exactly one workspace with no override, so a misconfigured client returns real records belonging to someone else and reads as success. `execute_action` fanned out record-by-record costs more than `execute_action_batch` and leaves nothing to inspect. And `query_models` is not SQL: it lists rows with a limit and an offset, so an agent that aggregates its output silently truncates.
+
+- **Routing:** `"How do I use Cargo from ChatGPT?"` now expects `cargo-mcp` rather than `cargo-ai` in `evals/routing.jsonl`; three cases added for the new surface.
+
 ### New skill — `cargo-mailbox-management` → 1.0.0, `cargo` → 1.21.0 (router), `cargo-gtm` → 1.16.0, `cargo-cdk` → 1.2.3 — Cargo sends now
 
 `mailboxManagement` landed in the CLI ([getcargohq/cargo#5493](https://github.com/getcargohq/cargo/pull/5493), plus warm-up stats in [#5646](https://github.com/getcargohq/cargo/pull/5646)) and nothing in the bundle covered it. It is the first domain that makes Cargo **own the inbox** — provision a mailbox on a sending domain, warm it, deliver from it, and read the replies — so the gap was not one more capability skill, it was a skill whose absence let an agent send mail with no idea what it cost or what governed it.

@@ -4,12 +4,12 @@ Thanks for improving the Cargo agent skills. This repo is small and heavily lint
 
 ## What lives here
 
-Seventeen skills at the repo root, each its own directory with a `SKILL.md`:
+Nineteen skills at the repo root, each its own directory with a `SKILL.md`:
 
 - **`cargo`** — the router. Explains the graph and routes to everything else.
 - **`cargo-quickstart`** — the guided first-run demo.
 - **`cargo-gtm`** — the outcome skill: recipes, phase guides, provider playbooks.
-- **Fifteen capability skills** — one per CLI domain, plus the cross-domain `cargo-diagnostics`.
+- **Sixteen capability skills** — one per CLI domain, plus the cross-domain `cargo-diagnostics` and `cargo-mcp`, which documents the hosted MCP server rather than a CLI domain.
 
 Supporting material sits beside each `SKILL.md` in `references/`, `recipes/`, `guides/`, `provider-playbooks/`, `agents/`, and `scripts/`.
 
@@ -57,7 +57,7 @@ Rules that come out of that:
 1. **Lead with the job, not the CLI surface.** "Get data out of Cargo and measure what ran" beats "Manage analytics resources using the Cargo CLI." A user says the former; only the docs say the latter.
 2. **Trigger phrases are literal and quoted.** Write what a person types — `"how many credits do I have left"`, `"why did this fail"`, `"alert me when"` — not a category name.
 3. **Name proper nouns.** Integration and provider slugs are the highest-precision routing tokens available. They are generated into `cargo-gtm` and `cargo-connection` by `sync-trigger-slugs.ts` — refresh rather than hand-edit those lists.
-4. **Always end with `Skip when:`.** Seventeen skills compete for every prompt; the negative case is what stops the wrong one loading. Point at the skill that should win instead.
+4. **Always end with `Skip when:`.** Nineteen skills compete for every prompt; the negative case is what stops the wrong one loading. Point at the skill that should win instead.
 5. **Keep it under ~900 characters** (the generated slug lists make `cargo-gtm` and `cargo-connection` the exceptions).
 
 If you change any description, run `node .github/scripts/routing-eval.ts` and add a case to `evals/routing.jsonl` for the behavior you intended.

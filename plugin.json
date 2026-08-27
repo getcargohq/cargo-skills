@@ -2,7 +2,7 @@
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "cargo",
   "version": "1.18.0",
-  "description": "18 skills over the cargo-ai CLI — build target account and contact lists, enrich and verify them against licensed data providers, score and qualify leads, sync your CRM, monitor buying signals, run workflows, and manage the whole workspace as code.",
+  "description": "19 skills over the cargo-ai CLI, plus the hosted MCP server — build target account and contact lists, enrich and verify them against licensed data providers, score and qualify leads, sync your CRM, monitor buying signals, run workflows, and manage the whole workspace as code.",
   "author": {
     "name": "Cargo",
     "url": "https://getcargo.ai"

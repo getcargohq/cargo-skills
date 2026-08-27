@@ -1,8 +1,8 @@
 {
   "name": "cargo",
   "displayName": "Cargo",
-  "description": "Build with Cargo in Claude Code — 18 skills over the cargo-ai CLI (target lists, contact enrichment and verification from licensed data providers, lead scoring, CRM sync, signal monitoring, orchestration, storage, segments, CDK, diagnostics) plus prompt-free approval for safe cargo-ai calls.",
-  "version": "1.21.0",
+  "description": "Build with Cargo in Claude Code — 19 skills over the cargo-ai CLI, plus the hosted MCP server (target lists, contact enrichment and verification from licensed data providers, lead scoring, CRM sync, signal monitoring, orchestration, storage, segments, CDK, diagnostics) plus prompt-free approval for safe cargo-ai calls.",
+  "version": "1.22.0",
   "author": { "name": "getcargo" },
   "homepage": "https://github.com/getcargohq/cargo-skills",
   "skills": ["./"],
