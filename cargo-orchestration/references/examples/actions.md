@@ -285,7 +285,7 @@ cargo-ai orchestration action get-output-schema \
   --action '{"kind":"native","actionSlug":"<slug>"}'
 ```
 
-**When the output depends on the inputs, pass `--data`.** Some connector actions
+**When the output depends on the inputs, pass `--data`** (**CLI ≥ 1.0.67**). Some connector actions
 shape their output from what they are given — a HubSpot object type decides which
 fields come back, a Google Sheet decides the columns. `--data` takes the same
 object `action execute` does; omit it and you get the action's generic schema:

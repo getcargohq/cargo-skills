@@ -225,7 +225,8 @@ Action kinds: `tool`, `connector`, `agent`, `native`. See `references/examples/a
 >
 > **`get-output-schema` takes the same pair.** The action object from
 > `action list`, plus `--data` when the action's output depends on its inputs —
-> a HubSpot object type or a target sheet decides which fields come back.
+> a HubSpot object type or a target sheet decides which fields come back
+> (`--data` needs **CLI ≥ 1.0.67**; the config-less `--action` works from 1.0.66).
 > Workflow **nodes**, an alert's `--actions`, a play's `healthAlertActions`, and
 > an agent's or MCP server's `--actions` are where `config` still lives; that is
 > a node's configuration, not an action's input.
@@ -250,7 +251,8 @@ cargo-ai orchestration action get-output-schema \
   --action '{"kind":"connector","integrationSlug":"clearbit","actionSlug":"enrichCompany"}'
 # → {"schema": {"type": "object", "properties": {...}}}  — the JSON Schema is under the top-level "schema" key
 
-# When the output depends on the inputs, pass them exactly as `execute` takes them:
+# When the output depends on the inputs, pass them exactly as `execute` takes
+# them (--data needs CLI >= 1.0.67):
 cargo-ai orchestration action get-output-schema \
   --action '{"kind":"connector","integrationSlug":"hubspot","actionSlug":"findRecords"}' \
   --data '{"objectType":"contacts"}' 
