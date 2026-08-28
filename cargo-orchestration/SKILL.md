@@ -1,7 +1,7 @@
 ---
 name: cargo-orchestration
 description: "Make Cargo actually run something, or show what it would run — execute one connector action, run a multi-step workflow, trigger a batch across a whole segment or model, message an AI agent, build or edit a node graph, draw a workflow, tool or play as a diagram, and query the runtime tables (runs, batches, spans, records) with SQL. Triggers: \"run this on all my contacts\", \"execute the action\", \"kick off a batch\", \"build a workflow\", \"schedule a play\", \"make it run every morning\", \"ask the agent\", \"show me the workflow\", \"what does this tool do\", \"visualize this play\", \"draw the graph\", \"explain this workflow\", \"how many runs failed today\", \"what is the output schema for this action\", \"add a step that\". Skip when: explaining why a run misbehaved — use cargo-diagnostics; downloading result files — use cargo-analytics; committing the workflow as code — use cargo-cdk."
-version: "1.10.0"
+version: "1.11.0"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -40,6 +40,15 @@ Need to run something?
 ```
 
 > **Fanning out across many records (`action execute-batch`, `batch create`)? Sample first.** Run 10–20 records, report the observed cost and hit-rate, then ask the user to approve the full enrollment — quoting the **record count** and the **credit estimate**. See [Create a batch → the sample gate](#the-sample-gate).
+
+> **Every node execution costs 0.01 credits — 1 credit per 100 — whatever the node is.**
+> `branch`, `filter`, `switch`, `variables` and the rest carry no provider price, but
+> they are not free: the charge is per *execution*, so a graph's cost has two terms,
+> `(provider cost × records) + (nodes × records ÷ 100)`. On step-heavy, action-light
+> graphs the second term dominates. It shows up in **no** per-node field — not
+> `executions[].creditsUsedCount`, not `spans.execution_credits_used_count` — only in
+> `billing usage get-metrics --unit orchestration.executions`. Quote both terms in the
+> approval message ([`../cargo-gtm/references/cost-discipline.md`](../cargo-gtm/references/cost-discipline.md) §1).
 
 > **Find the action before you hand-write the JSON.** `cargo-ai orchestration
 > action list <keywords>` searches the integration catalog, Cargo native actions,

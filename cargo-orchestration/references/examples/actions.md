@@ -70,7 +70,7 @@ Notes worth knowing:
 - **`credits`** is the action's cost table when it bills — the cheapest pre-flight cost check there is. Cross-check a GTM provider's playbook (`../../../cargo-gtm/provider-playbooks/<slug>.md`) before fanning out.
 - **`autocompletes`** flags config fields that need a picked id (HubSpot object type, Slack channel, Metabase question). Resolve those to concrete values before running — over MCP that is the `autocomplete_action` tool; over the CLI, use the integration's own list actions.
 - Ranking: action slug/name > integration > description. `score` is comparable within one response only.
-- Structural native nodes (`start`, `end`, `branch`, `delay`, `filter`, `group`, `split`, `switch`, `note`) are excluded — they belong in a node graph, not in `action execute`. See `nodes.md`.
+- Structural native nodes (`start`, `end`, `branch`, `delay`, `filter`, `group`, `split`, `switch`, `note`) are excluded — they belong in a node graph, not in `action execute`. See `nodes.md`. **Excluded is not free:** they carry no provider price, but each one still bills the 0.01-credit execution charge every time it runs, like any other node ([`../troubleshooting.md`](../troubleshooting.md)).
 - `unknown command` means the CLI predates `action list` — refresh it (`npm install -g @cargo-ai/cli@…`).
 
 ---

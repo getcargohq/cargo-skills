@@ -13,10 +13,13 @@ Response:
 {
   "metrics": [
     {
-      "date": "2025-01-15T00:00:00Z",
+      "date": "2026-07-25T00:00:00.000Z",
       "items": [
-        { "slug": "enrichment", "count": 150, "groupBy": null },
-        { "slug": "ai_message", "count": 42, "groupBy": null }
+        { "slug": "integration.peopleDataLabs.action.queryPeople", "count": 174, "groupBy": null },
+        { "slug": "native.modelAsk", "count": 0.5, "groupBy": null },
+        { "slug": "success", "count": 1043, "groupBy": null },
+        { "slug": "error", "count": 32, "groupBy": null },
+        { "slug": "insert", "count": 24, "groupBy": null }
       ]
     }
   ]
@@ -24,6 +27,29 @@ Response:
 ```
 
 Each item has a `slug` (usage type) and `count`. When `--group-by` is used, `groupBy` contains the resource UUID/slug.
+
+**`count` is not always credits.** Unqualified, the array interleaves all three usage units: `integration.*` / `native.*` slugs are credits, `success` / `error` are **node executions** (credits = count / 100), `insert` is records written. Isolate one with `--unit billing.credits`, `--unit orchestration.executions`, or `--unit storage.records` — the only three accepted values.
+
+## Isolate the execution charge
+
+Every node execution bills 0.01 credits, and it is attributed to no node — this is the only place it surfaces.
+
+```bash
+cargo-ai billing usage get-metrics \
+  --from 2026-07-25 --to 2026-07-25 --unit orchestration.executions
+# → [{"slug":"error","count":32},{"slug":"success","count":1043}]
+# → 1,075 executions = 10.75 credits
+```
+
+Same day, provider spend for comparison:
+
+```bash
+cargo-ai billing usage get-metrics \
+  --from 2026-07-25 --to 2026-07-25 --unit billing.credits
+# → sum of items[].count = ~276 credits
+```
+
+Here orchestration is ~4% because the day was action-heavy. On an action-light sweep the ratio inverts and executions become the largest line item. See [`../../SKILL.md`](../../SKILL.md) → "The execution charge".
 
 ## Group by workflow
 
