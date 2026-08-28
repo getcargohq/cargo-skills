@@ -116,7 +116,7 @@ The practical substitutes, in order:
 
 1. Send to your own address first and read it in a real client — the only way to see the
    rendered HTML, the signature, and the unsubscribe footer as the recipient will.
-2. `cargo-ai orchestration action get-output-schema --action '{"kind":"native","actionSlug":"sendEmail","config":{}}'`
+2. `cargo-ai orchestration action get-output-schema --action '{"kind":"native","actionSlug":"sendEmail"}'`
    resolves the output shape for free, without sending.
 3. For a workflow graph, `cargo-ai orchestration node diagram` draws the routing for free and
    shows which nodes bill — approve the graph before deploying it.

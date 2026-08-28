@@ -85,11 +85,11 @@ cargo-ai orchestration play list
 # → Find "Enrich new companies", extract play.workflowUuid
 
 # Step 2 — Get the current draft release (contains the current node graph)
-cargo-ai orchestration draft-release get --workflow-uuid <play.workflowUuid>
+cargo-ai orchestration release get-draft --workflow-uuid <play.workflowUuid>
 # → Copy the "nodes" array and make your changes
 
 # Step 3 — Update the draft release with your new nodes
-cargo-ai orchestration draft-release update \
+cargo-ai orchestration release update-draft \
   --workflow-uuid <play.workflowUuid> \
   --nodes '[...your updated node graph...]'
 
@@ -98,16 +98,16 @@ cargo-ai orchestration node validate --nodes '[...your updated node graph...]'
 # → { "outcome": "valid" }
 
 # Step 5 — Deploy the draft release
-cargo-ai orchestration draft-release deploy \
+cargo-ai orchestration release deploy-draft \
   --workflow-uuid <play.workflowUuid> \
   --nodes '[...your updated node graph...]' \
   --form-fields 'null' \
   --description "Your release description"
 ```
 
-> **Do not skip validation.** Deploying an invalid node graph will cause runs to fail. Always run `node validate` before `draft-release deploy`.
+> **Do not skip validation.** Deploying an invalid node graph will cause runs to fail. Always run `node validate` before `release deploy-draft`.
 
-> **Do not pass `--version` to `draft-release deploy`.** The deploy-specific `--version` flag is shadowed by the global `--version` flag — passing it causes the command to print the CLI version (e.g. `1.0.11`) and exit 0 **without deploying**. Omit it and let the server auto-assign (first deploy → `1.0.0`, then `1.0.1`, etc.). Always confirm the deploy worked with `release get-deployed --workflow-uuid <uuid>` — the response should show `status: "deployed"`, not `draft`.
+> **Do not pass `--version` to `release deploy-draft`.** The deploy-specific `--version` flag is shadowed by the global `--version` flag — passing it causes the command to print the CLI version (e.g. `1.0.11`) and exit 0 **without deploying**. Omit it and let the server auto-assign (first deploy → `1.0.0`, then `1.0.1`, etc.). Always confirm the deploy worked with `release get-deployed --workflow-uuid <uuid>` — the response should show `status: "deployed"`, not `draft`.
 
 ---
 

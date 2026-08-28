@@ -64,11 +64,11 @@ cargo-ai orchestration tool list
 # → Find "Company Enrichment", extract tool.workflowUuid
 
 # Step 2 — Get the current draft release (contains the current node graph)
-cargo-ai orchestration draft-release get --workflow-uuid <tool.workflowUuid>
+cargo-ai orchestration release get-draft --workflow-uuid <tool.workflowUuid>
 # → Copy the "nodes" array and make your changes
 
 # Step 3 — Update the draft release with your new nodes
-cargo-ai orchestration draft-release update \
+cargo-ai orchestration release update-draft \
   --workflow-uuid <tool.workflowUuid> \
   --nodes '[...your updated node graph...]'
 
@@ -77,14 +77,14 @@ cargo-ai orchestration node validate --nodes '[...your updated node graph...]'
 # → { "outcome": "valid" }
 
 # Step 5 — Deploy the draft release
-cargo-ai orchestration draft-release deploy \
+cargo-ai orchestration release deploy-draft \
   --workflow-uuid <tool.workflowUuid> \
   --nodes '[...your updated node graph...]' \
   --form-fields 'null' \
   --description "Your release description"
 ```
 
-> **Do not skip validation.** Deploying an invalid node graph will cause runs to fail. Always run `node validate` before `draft-release deploy`.
+> **Do not skip validation.** Deploying an invalid node graph will cause runs to fail. Always run `node validate` before `release deploy-draft`.
 
 ---
 

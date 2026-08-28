@@ -22,6 +22,28 @@ The credits price list was hand-kept, and the first attempt to generate it read 
 
 - `stage-action-map.md` and `alternatives.md` point at the regenerated table and the new command.
 
+### `cargo` → 1.23.2 (router), `cargo-orchestration` → 1.10.0, `cargo-ai` → 2.3.1, `cargo-gtm` → 1.18.1, `cargo-storage` → 1.2.2, `cargo-mcp` → 1.0.2, `cargo-mailbox-management` → 1.0.2 — pin the CLI at 1.0.66, and five commands that never existed
+
+`cargo/cli-version` had drifted 19 releases behind npm (1.0.47 vs 1.0.66), and the bundle now documents commands that only exist in 1.0.66 — `orchestration action list` above all. The pin is what the session-start refresh installs, so leaving it meant an agent following these skills would reach for a command its CLI did not have.
+
+- **Pin bumped 1.0.47 → 1.0.66.** Checked before moving it, not after: the CLI's whole command surface was diffed across the range, and the only removals are three billing commands (`add-payment-method`, `create-setup-intent`, `create-stripe-credits-checkout-session`) that no skill documents — `update-payment-method`, which the skills do use, replaced the first of them and is still there. Everything else in the range is additive.
+
+- **`cargo-mailbox-management`'s version note was stale.** It warned that `mailbox get-warmup-stats` and the `--daily-target` default of 40 were "merged but not yet on npm". Both are live in 1.0.66. The note now says so, and keeps the older-CLI warning where it belongs: on an older CLI those subcommands print the group help instead of erroring, so a missing feature reads as a usage mistake.
+
+- **`get-output-schema` no longer asks for a `config`.** [getcargohq/cargo#5740](https://github.com/getcargohq/cargo/pull/5740) makes it take an `action` plus an optional **`--data`**, the same pair `execute` takes, so the object `action list` returns pastes into all four action commands unchanged. The gotcha row documenting the old `400` becomes a note about `--data` — which is the thing actually worth knowing, since some actions shape their output from their inputs (a HubSpot object type, a target sheet) and without it you get the generic schema. `cargo-mcp` picks up the same optional `data` on `get_action_schema`, and loses the line claiming MCP was safer than the CLI here; they now agree.
+
+- **Five documented commands that do not exist.** Found by diffing every documented command path against the installed CLI while verifying the pin — and confirmed against 1.0.47's build too, so all five were **already broken at the old pin**. This is old debt the bump surfaced rather than caused:
+
+  | Documented | Reality |
+  | --- | --- |
+  | `orchestration draft-release get / update / deploy` (18 sites) | `orchestration release get-draft / update-draft / deploy-draft` |
+  | `ai template get <slug>` (6 sites) | No such subcommand — `ai template list` already returns each template **in full** (system prompt, model, temperature, actions), so filter it by slug |
+  | `action execute --record` (5 sites) | `--data` |
+  | `storage model list --dataset-uuid` (4 sites) | `model list` takes **no options**; every model carries `datasetUuid`, so filter client-side |
+  | `storage model get-ddl --model-uuid <uuid>` | The uuid is positional: `get-ddl <uuid>` |
+
+  Each replacement was verified against `--help` on 1.0.66, including that the flags carry over to the renamed release commands and that `deploy-draft` still has the shadowed `--version` the existing warning describes. `orchestration template get` is real and was left alone — only `ai template get` was fictional.
+
 ### `cargo` → 1.23.0 (router), `cargo-ai` → 2.3.0, `cargo-orchestration` → 1.9.0, `cargo-gtm` → 1.17.0, `cargo-connection` → 1.4.0, `cargo-mcp` → 1.0.1, `cargo-mailbox-management` → 1.0.1, `cargo-context` → 1.2.2, `cargo-quickstart` → 1.0.2, `cargo-workspace-management` → 1.2.2, `cargo-observability` → 1.0.2 — search for actions, and `config` stopped shouting
 
 All of this is **shipped**: CLI **1.0.66** on npm. `orchestration action list` is new, and `config` split off the top-level action type (`Action` vs `ConfiguredAction`). One of those contradicted a sentence the bundle stated as fact; the other was being taught the wrong way round in 272 examples.

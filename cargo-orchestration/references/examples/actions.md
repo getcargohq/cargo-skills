@@ -15,7 +15,7 @@ Actions come in four kinds:
 
 `config` is where a **node** keeps its configuration; a top-level action has none — its inputs go in `--data` (single) or `--records` (batch). Omit the key on `execute` / `execute-batch`: that is the shape `action list` returns, and `"config": {}` is merely tolerated there.
 
-**`get-output-schema` is the exception — it still requires `config`.** Hand it the action object from `action list` unchanged and it fails `400 — expected record, received undefined` at `action.config`; add `"config": {}` for that command only (the examples below do). Nodes, alert `--actions`, play `healthAlertActions`, and agent / MCP-server `--actions` require it as well.
+`get-output-schema` takes the same pair — the action, plus `--data` when the output depends on the inputs (a HubSpot object type, a target sheet). Nodes, alert `--actions`, play `healthAlertActions`, and agent / MCP-server `--actions` are where `config` still belongs: it is a node's configuration, never an action's input.
 
 > **When to use actions vs workflows:** Actions are for running a **single operation** without building a workflow graph. If you need to **chain multiple operations** together (enrichment → scoring → CRM push), use `run create --nodes` or `batch create --nodes` instead. See `tools.md` for workflow examples.
 
@@ -266,23 +266,34 @@ For non-connector kinds (`tool`, `agent`, `native`) — or when you already have
 
 ```bash
 cargo-ai orchestration action get-output-schema \
-  --action '{"kind":"connector","integrationSlug":"clearbit","actionSlug":"enrichCompany","config":{}}'
+  --action '{"kind":"connector","integrationSlug":"clearbit","actionSlug":"enrichCompany"}'
 ```
 
-It accepts the same `--action` object as `action execute`, so it works for every kind:
+It accepts the same `--action` object as `action execute` — the one `action list` returns — so it works for every kind:
 
 ```bash
 # Tool action — resolves the tool workflow's output-node schema
 cargo-ai orchestration action get-output-schema \
-  --action '{"kind":"tool","toolUuid":"<tool-uuid>","config":{}}'
+  --action '{"kind":"tool","toolUuid":"<tool-uuid>"}'
 
 # Agent action — resolves the deployed release's output schema
 cargo-ai orchestration action get-output-schema \
-  --action '{"kind":"agent","agentUuid":"<agent-uuid>","config":{}}'
+  --action '{"kind":"agent","agentUuid":"<agent-uuid>"}'
 
 # Native action
 cargo-ai orchestration action get-output-schema \
-  --action '{"kind":"native","actionSlug":"<slug>","config":{}}'
+  --action '{"kind":"native","actionSlug":"<slug>"}'
+```
+
+**When the output depends on the inputs, pass `--data`.** Some connector actions
+shape their output from what they are given — a HubSpot object type decides which
+fields come back, a Google Sheet decides the columns. `--data` takes the same
+object `action execute` does; omit it and you get the action's generic schema:
+
+```bash
+cargo-ai orchestration action get-output-schema \
+  --action '{"kind":"connector","integrationSlug":"hubspot","actionSlug":"findRecords"}' \
+  --data '{"objectType":"contacts"}'
 ```
 
 ### Response

@@ -1,7 +1,7 @@
 ---
 name: cargo-orchestration
 description: "Make Cargo actually run something, or show what it would run — execute one connector action, run a multi-step workflow, trigger a batch across a whole segment or model, message an AI agent, build or edit a node graph, draw a workflow, tool or play as a diagram, and query the runtime tables (runs, batches, spans, records) with SQL. Triggers: \"run this on all my contacts\", \"execute the action\", \"kick off a batch\", \"build a workflow\", \"schedule a play\", \"make it run every morning\", \"ask the agent\", \"show me the workflow\", \"what does this tool do\", \"visualize this play\", \"draw the graph\", \"explain this workflow\", \"how many runs failed today\", \"what is the output schema for this action\", \"add a step that\". Skip when: explaining why a run misbehaved — use cargo-diagnostics; downloading result files — use cargo-analytics; committing the workflow as code — use cargo-cdk."
-version: "1.9.0"
+version: "1.10.0"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -151,7 +151,7 @@ cargo-ai orchestration action list send --kind connector --integration-slug slac
 # Single actions
 cargo-ai orchestration action execute --action '{"kind":"tool","toolUuid":"<uuid>"}' --data '{"domain":"acme.com"}'
 cargo-ai orchestration action execute-batch --action '{"kind":"connector","integrationSlug":"clearbit","actionSlug":"enrichCompany"}' --records '[{...},{...}]'
-cargo-ai orchestration action get-output-schema --action '{"kind":"connector","integrationSlug":"clearbit","actionSlug":"enrichCompany","config":{}}' # → {"schema": <JSON Schema>} without executing
+cargo-ai orchestration action get-output-schema --action '{"kind":"connector","integrationSlug":"clearbit","actionSlug":"enrichCompany"}' # → {"schema": <JSON Schema>} without executing
 
 # Workflows (chain multiple actions)
 cargo-ai orchestration run create --workflow-uuid <uuid> --data '{"company":"Acme","domain":"acme.com"}'
@@ -223,12 +223,12 @@ Action kinds: `tool`, `connector`, `agent`, `native`. See `references/examples/a
 > at all, which is exactly what `action list` hands back, so its result pastes
 > straight in. (`"config": {}` is still accepted there, harmlessly.)
 >
-> **The exception that will bite you: `get-output-schema` still *requires*
-> `config`.** Give it the same action object from `action list` and it fails
-> `400 — expected record, received undefined` at `action.config`. Add `"config": {}`
-> for that one command. Workflow **nodes**, an alert's `--actions`, a play's
-> `healthAlertActions`, and an agent's or MCP server's `--actions` require it too
-> — that is where a node's real configuration lives.
+> **`get-output-schema` takes the same pair.** The action object from
+> `action list`, plus `--data` when the action's output depends on its inputs —
+> a HubSpot object type or a target sheet decides which fields come back.
+> Workflow **nodes**, an alert's `--actions`, a play's `healthAlertActions`, and
+> an agent's or MCP server's `--actions` are where `config` still lives; that is
+> a node's configuration, not an action's input.
 >
 > **Inputs put in `config` are now dropped, not rejected.** The guard that used to
 > answer `A top-level action does not use action.config…` is gone, so the action
@@ -247,8 +247,13 @@ Action kinds: `tool`, `connector`, `agent`, `native`. See `references/examples/a
 
 ```bash
 cargo-ai orchestration action get-output-schema \
-  --action '{"kind":"connector","integrationSlug":"clearbit","actionSlug":"enrichCompany","config":{}}'
+  --action '{"kind":"connector","integrationSlug":"clearbit","actionSlug":"enrichCompany"}'
 # → {"schema": {"type": "object", "properties": {...}}}  — the JSON Schema is under the top-level "schema" key
+
+# When the output depends on the inputs, pass them exactly as `execute` takes them:
+cargo-ai orchestration action get-output-schema \
+  --action '{"kind":"connector","integrationSlug":"hubspot","actionSlug":"findRecords"}' \
+  --data '{"objectType":"contacts"}' 
 ```
 
 Actions that declare no output schema fail with `"Action has no output schema."` (non-zero exit, status 404) — that's the signal to fall back to inspecting `runContext` from a real run. Use these to:

@@ -93,11 +93,11 @@ If a `branch` node's `title` says "❌ Condition is not matched" but you expecte
 
 ```bash
 # Stage the fix without deploying (per workflow safety)
-cargo-ai orchestration draft-release update \
+cargo-ai orchestration release update-draft \
   --workflow-uuid <play.workflowUuid> --nodes '[...]'
 
 # After approval, deploy (do NOT pass --version — it collides with the global flag)
-cargo-ai orchestration draft-release deploy \
+cargo-ai orchestration release deploy-draft \
   --workflow-uuid <play.workflowUuid> --nodes '[...]' \
   --form-fields 'null' --description "Fix branch condition"
 

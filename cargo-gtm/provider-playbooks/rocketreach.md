@@ -42,7 +42,7 @@ cargo-ai orchestration action execute-batch \
 ```bash
 cargo-ai orchestration action execute \
   --action '{"kind":"connector","integrationSlug":"rocketreach","actionSlug":"lookupPerson"}' \
-  --record '{"npiNumber":1234567890}' \
+  --data '{"npiNumber":1234567890}' \
   --wait-until-finished
 ```
 

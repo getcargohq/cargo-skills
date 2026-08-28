@@ -40,7 +40,7 @@ cargo-ai orchestration action execute-batch \
 ```bash
 cargo-ai orchestration action execute \
   --action '{"kind":"connector","integrationSlug":"companyEnrich","actionSlug":"findSimilarCompanies"}' \
-  --record '{"domain":"acme.com","filters":{"country":"United States","employeeCountMin":50,"employeeCountMax":500,"industries":["Software"]},"limit":25}' \
+  --data '{"domain":"acme.com","filters":{"country":"United States","employeeCountMin":50,"employeeCountMax":500,"industries":["Software"]},"limit":25}' \
   --wait-until-finished
 ```
 

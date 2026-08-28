@@ -30,7 +30,7 @@ French-market company and contact data, anchored on the official registry: regis
 ```bash
 cargo-ai orchestration action execute \
   --action '{"kind":"connector","integrationSlug":"societeInfo","actionSlug":"search"}' \
-  --record '{"objectType":"company","limit":10,"withSite":true,"searchFields":[{"name":"query","value":"logiciel"},{"name":"where","value":"Paris"},{"name":"minStaff","value":50}]}' \
+  --data '{"objectType":"company","limit":10,"withSite":true,"searchFields":[{"name":"query","value":"logiciel"},{"name":"where","value":"Paris"},{"name":"minStaff","value":50}]}' \
   --wait-until-finished
 ```
 
@@ -41,7 +41,7 @@ cargo-ai orchestration action execute \
 ```bash
 cargo-ai orchestration action execute \
   --action '{"kind":"connector","integrationSlug":"societeInfo","actionSlug":"enrich"}' \
-  --record '{"objectType":"company","enrichFields":[{"name":"domainName","value":"acme.fr"},{"name":"minMatchScore","value":0.8}]}' \
+  --data '{"objectType":"company","enrichFields":[{"name":"domainName","value":"acme.fr"},{"name":"minMatchScore","value":0.8}]}' \
   --wait-until-finished
 ```
 
