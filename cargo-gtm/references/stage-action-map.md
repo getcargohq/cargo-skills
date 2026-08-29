@@ -233,6 +233,6 @@ Prices are **per 1k tokens**, not per record. On openAi, gemini and anthropic, `
 
 ## Notes on this map
 
-- This map is curated, not exhaustive: it carries the cheapest rungs per stage plus the routing judgement. The complete list of all **194** credits-based actions is generated from the live catalog into [`credits-cost-table.md`](credits-cost-table.md) — regenerate it with `cargo-ai orchestration action cost-table --raw`. The other 310 catalog actions (sequencer / CRM upserts, list/get/delete) consume no credits and appear in neither.
+- This map is curated, not exhaustive: it carries the cheapest rungs per stage plus the routing judgement. The complete list of all **197** credits-based actions is generated from the live catalog into [`credits-cost-table.md`](credits-cost-table.md) — regenerate it from `cargo-ai orchestration action list --kind connector` and `--kind native`, which return a `credits` array on every billed action. The other 337 catalog actions (sequencer / CRM upserts, list/get/delete) carry no provider price and appear in neither — though every node execution still bills 0.01 credits.
 - Costs are per-record at the cheapest config. Some actions have variable cost by config (e.g., `contactOut.enrich` returns 0/1/2/3 credits depending on data returned).
 - Priority stack: see `../SKILL.md` for the canonical 8-provider priority list and `../provider-playbooks/` for per-provider deep dives.

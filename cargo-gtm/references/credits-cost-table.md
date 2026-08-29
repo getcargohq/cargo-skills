@@ -1,10 +1,17 @@
 # Credits cost table
 
-Every credits-based action Cargo can run — 197 of the 534 actions exposed by 124 of the catalog's 138 integrations, plus Cargo's own native actions — sorted by cost. The other 337 actions (CRM writes, sequencer pushes, Slack sends, …) cost no credits; list them with `cargo-ai connection integration get <slug>`.
+Every credits-based action Cargo can run — 197 of the 534 actions exposed by 124 of the catalog's 138 integrations, plus Cargo's own native actions — sorted by cost. The other 337 carry no *provider* price; they are not free, because every node execution bills 0.01 credits (1 per 100) regardless. See [`../../cargo-billing/SKILL.md`](../../cargo-billing/SKILL.md) → "The execution charge".
 
 Rows whose provider is `native` are Cargo's own platform actions, run as `{"kind":"native","actionSlug":"<action>"}` with no integration; every other row runs as `{"kind":"connector","integrationSlug":"<provider>","actionSlug":"<action>"}`.
 
-**Auto-generated. Do not edit by hand** — regenerate with `cargo-ai orchestration action cost-table --raw > cargo-gtm/references/credits-cost-table.md`.
+**Generated. Do not edit by hand** — this is a snapshot of the live catalog, which is where pricing actually lives. Regenerate from `action list`, which returns a `credits` array on every billed action:
+
+```sh
+cargo-ai orchestration action list --kind connector
+cargo-ai orchestration action list --kind native
+```
+
+Omit `--limit` so both return the full set, then render one row per action. Each `credits` entry is one of three shapes: `fixed` bills `cost` per call; `unit` bills `cost` per `unit` consumed; `package` bills `cost` per block of `unitsCount` `unit`. For `unit` and `package`, `fixedCost` is a base charge that **adds to** the metered rate rather than replacing it — a search billed `0.175` `fixedCost` + `0.025` per item costs `0.2` for one item. Several entries mean the price depends on config, and each entry's `config.jsonSchema` const/enum is what selects it; those go in the per-config section at the end rather than the main table.
 
 Generated: 2026-08-28
 
