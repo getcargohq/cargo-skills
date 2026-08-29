@@ -1,7 +1,7 @@
 ---
 name: cargo-diagnostics
 description: "Explain what a Cargo run or batch actually did, after the fact — trace one run node by node, draw the graph it executed with the failing step marked, sweep a batch or play for errors grouped by root cause, and attribute credit spend down to the node and the provider. Triggers: \"why did this fail\", \"it succeeded but the output is wrong\", \"half my rows are empty\", \"why is this column blank\", \"what broke in this batch\", \"why did that cost so much\", \"which node is burning credits\", \"it worked yesterday\", \"these results look wrong\", \"it went down the wrong path\", \"this step never ran\", \"show me what the run did\". Skip when: setting up an alert for next time — use cargo-observability; just downloading the data — use cargo-analytics."
-version: "1.3.0"
+version: "1.4.0"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -65,7 +65,7 @@ Rule of thumb: start with the **sweep** when you don't yet know which run to loo
 | --- | --- |
 | [`references/run-trace.md`](references/run-trace.md) | Find a run from a symptom when you have no UUID (§ 0), then walk it end-to-end: per-node executions, `runContext` outputs, branch routing, per-node credits and timing. |
 | [`references/batch-error-sweep.md`](references/batch-error-sweep.md) | Find errored runs across a batch/play/workspace, group failures by root cause, pick exemplars, decide fix vs report. |
-| [`references/play-optimize-credits.md`](references/play-optimize-credits.md) | Attribute credit spend to workflows and nodes, then apply the cost levers in priority order. |
+| [`references/play-optimize-credits.md`](references/play-optimize-credits.md) | Attribute credit spend to workflows and nodes, then apply the cost levers in priority order. Attributes the **execution charge** separately (§ 2b) — 0.01 credits per node execution, which `creditsUsedCount` does not carry and per-node attribution therefore misses. |
 
 ## The surfaces every runbook draws on
 

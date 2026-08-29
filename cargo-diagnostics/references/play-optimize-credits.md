@@ -24,7 +24,7 @@ Map UUIDs to names with `cargo-ai orchestration play list` / `tool list`. When S
 
 ## 2. Attribute spend to nodes inside the top workflow
 
-Per-node cost lives on the run detail: each `run.executions[]` item carries `creditsUsedCount` (agent and connector nodes are non-zero, native nodes are zero — see [`troubleshooting.md`](../../cargo-orchestration/references/troubleshooting.md)). Pull 2–3 recent representative runs and average:
+Per-node cost lives on the run detail: each `run.executions[]` item carries `creditsUsedCount` — the **provider** cost, non-zero on agent and connector nodes, zero on native ones (see [`troubleshooting.md`](../../cargo-orchestration/references/troubleshooting.md)). Pull 2–3 recent representative runs and average:
 
 ```bash
 cargo-ai orchestration query execute \
@@ -47,6 +47,29 @@ cargo-ai orchestration query execute \
 
 A meaningful `error`-row credit sum means expensive nodes run **before** the failure point — reordering is a free win.
 
+## 2b. Add the execution charge — it is in none of the above
+
+`creditsUsedCount` is provider cost only. **Every node execution also bills 0.01 credits (1 per 100)**, structural natives included, and that charge is attributed to no node — so steps 1 and 2 systematically under-count, by an amount that scales with graph size rather than with spend. Attribute it separately, or a step-heavy play looks cheap right up until the invoice:
+
+```bash
+# Executions for the period, workspace-wide (admin) — credits = (success + error) / 100
+cargo-ai billing usage get-metrics --from <YYYY-MM-DD> --to <YYYY-MM-DD> --unit orchestration.executions
+
+# Per workflow, from the runtime tables (no admin needed) — agrees row-for-row
+cargo-ai orchestration query execute \
+  "SELECT workflow_uuid, count() AS executions, count() / 100 AS credits
+   FROM spans WHERE execution_started_at >= '<YYYY-MM-DD>'
+   GROUP BY workflow_uuid ORDER BY executions DESC"
+
+# Which nodes generate the executions, for the top workflow
+cargo-ai orchestration query execute \
+  "SELECT node_slug, node_kind, count() AS executions
+   FROM spans WHERE workflow_uuid = '<workflow-uuid>'
+   GROUP BY node_slug, node_kind ORDER BY executions DESC"
+```
+
+Compare the two totals before proposing a lever. If executions × 0.01 outweighs the provider sum, **the cheaper-provider levers below will not move the bill** — cut node count instead. Tool nodes are the usual reason a graph has more executions than it looks: a tool costs one execution plus every node inside its own graph.
+
 ## 3. Apply levers, cheapest-to-implement first
 
 Work down this list; the first two usually dominate. The canonical lever table is in [`../../cargo-billing/SKILL.md`](../../cargo-billing/SKILL.md) ("Cost levers"); provider prices are in [`../../cargo-gtm/references/credits-cost-table.md`](../../cargo-gtm/references/credits-cost-table.md).
@@ -59,6 +82,7 @@ Work down this list; the first two usually dominate. The canonical lever table i
 | **Stop early on failure** (`fallbackOnFailure: false`) | Downstream nodes run after an upstream miss | [`cargo-billing/SKILL.md`](../../cargo-billing/SKILL.md) |
 | **Reshape waterfall chains** — reorder by hit-rate/price, add stop-early rules | Multi-provider enrichment stages | [`waterfall-strategy.md`](../../cargo-gtm/references/waterfall-strategy.md) |
 | **Cut phone lookup from default chains** | Phone actions present without explicit user request (3–7 credits/record, ~10× email) | [`cost-discipline.md`](../../cargo-gtm/references/cost-discipline.md) §5 |
+| **Cut node count** — collapse chained `variables`, fold branch pairs into a `switch`, inline a thin tool | Step 2b shows executions × 0.01 outweighing the provider sum | [`cargo-billing/SKILL.md`](../../cargo-billing/SKILL.md) → "The execution charge" |
 
 ## 4. Prove the saving
 

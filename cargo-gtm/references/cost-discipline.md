@@ -59,11 +59,27 @@ cargo-ai billing subscription get
 # remaining = subscriptionAvailableCreditsCount - subscriptionCreditsUsedCount
 ```
 
+### The estimate has two terms, not one
+
+```
+credits = (provider cost per record × records)      # what the cost table prices
+        + (node executions per record × records / 100)  # the execution charge
+```
+
+**Every node execution bills 0.01 credits — 1 per 100 — whatever the node is.** `branch`, `filter`, `switch`, `variables` and the other structural natives carry no provider price and are still not free, and errored executions bill too. The credits cost table prices *actions*; it has no row for a step, so an estimate built from it alone omits the second term entirely.
+
+It is a rounding error on an action-heavy chain (a 2-credit `enrichContact` dwarfs the 8 steps around it) and the *whole* bill on a step-heavy, action-light one — a 12-node routing sweep over 20,000 records is 2,400 credits with no provider call in it. Two consequences for the gate above:
+
+- **Measure it on the pilot**, where it is free to observe: the sample's execution count is `length(run.executions)` per record, or `cargo-ai billing usage get-metrics --unit orchestration.executions` over the sample window (`success` + `error` are execution counts, not credits). Never estimate it from the graph you *think* ran — loops, retries, tool internals and agent steps all multiply it.
+- **Quote it in `CREDITS · SCOPE · CAP`** whenever it is more than ~10% of the total. A user approving "1,225 records ≈ 502 credits" who is then billed 640 was not given the number they approved.
+
+The charge is attributed to no node — `executions[].creditsUsedCount` is provider cost only and reads `0` on a native that billed — so it is invisible in per-node diagnostics. Full accounting: [`../../cargo-billing/SKILL.md`](../../cargo-billing/SKILL.md) → "The execution charge".
+
 ## 2) Per-run receipt (after every paid action)
 
 After **every** paid action or batch — pilot included — report:
 
-1. **Credits spent + balance remaining** — "12.4 credits spent, ~31 left."
+1. **Credits spent + balance remaining** — "12.4 credits spent, ~31 left." Use the billing figure, not your own sum of action prices: it includes the execution charge, which your arithmetic will not.
 2. **Hit-rate** — "found 34 emails of 40 contacts (85%)", per field when the action returns several ("RevOps count 67/70 · funding 31/70"). Flag rows to distrust, don't silently include them.
 3. **Estimate vs actual, with the why** — only when they diverge: "cost 7.5 credits vs 3–5 estimated: theirStack billed per returned job posting, and 12 companies had >5 postings each."
 
