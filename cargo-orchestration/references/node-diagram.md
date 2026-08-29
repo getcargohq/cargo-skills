@@ -13,7 +13,7 @@ means the pin hasn't moved yet — bump per [`../../cargo/SKILL.md`](../../cargo
 
 ## When to draw one
 
-- **At the plan gate**, before `draft-release deploy` / `cdk deploy` — the diagram
+- **At the plan gate**, before `release deploy-draft` / `cdk deploy` — the diagram
   *is* the "nodes and data flow" half of the plan ([`../../cargo/references/interaction.md`](../../cargo/references/interaction.md) §1).
 - **When explaining an existing workflow, tool, or play** — "what does this play
   do?" is one command against its `workflowUuid`.

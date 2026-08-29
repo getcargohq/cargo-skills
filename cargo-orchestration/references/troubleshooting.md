@@ -74,7 +74,20 @@ Each `executions[]` item has:
 | `nextNodeUuid`   | Where execution went next — for a `branch`, this reveals which child was taken                   |
 | `nodeChildIndex` | Index into `childrenUuids` that was followed (`0` = matched/yes, `1` = not matched/no for branch)|
 | `title`          | Human-readable **summary only** — may be truncated; do not treat as the full output              |
-| `creditsUsedCount` | Per-node cost; agent and connector nodes are non-zero, native nodes are zero                  |
+| `creditsUsedCount` | **Provider cost only** — non-zero on agent and connector nodes, zero on native ones. It does *not* include the per-execution platform charge, so summing this column under-counts what the run billed (see below) |
+
+> **`creditsUsedCount` is not the run's bill.** Every node execution also costs
+> **0.01 credits — 1 credit per 100 executions** — and that charge appears in no
+> per-node field. It applies to *every* kind, structural natives included:
+> `branch`, `filter`, `switch`, `split`, `group`, `variables`, `start`, `end`.
+> `executions[].creditsUsedCount` (and `spans.execution_credits_used_count`)
+> carry the provider cost alone; the execution charge is visible only in billing:
+> `cargo-ai billing usage get-metrics --unit orchestration.executions`, whose
+> `success` / `error` slugs count executions one-for-one. On a step-heavy,
+> action-light graph it is routinely the **largest** line item — a 10-node
+> workflow over 5,000 records is 500 credits before a single provider call.
+> Full accounting in [`../../cargo-billing/SKILL.md`](../../cargo-billing/SKILL.md)
+> → "The execution charge".
 
 `title` is a quick sanity check, not a source of truth — it can be truncated. To verify the exact data a node produced, read `runContext.<nodeSlug>` from the same response. Deep-dive into it to confirm the path you're referencing in `{{nodes.<slug>....}}` actually exists (for example, an agent's structured output is nested under `.answer`, so the right path is `{{nodes.<slug>.answer.<field>}}` and not `{{nodes.<slug>.<field>}}`).
 
@@ -93,11 +106,11 @@ If a `branch` node's `title` says "❌ Condition is not matched" but you expecte
 
 ```bash
 # Stage the fix without deploying (per workflow safety)
-cargo-ai orchestration draft-release update \
+cargo-ai orchestration release update-draft \
   --workflow-uuid <play.workflowUuid> --nodes '[...]'
 
 # After approval, deploy (do NOT pass --version — it collides with the global flag)
-cargo-ai orchestration draft-release deploy \
+cargo-ai orchestration release deploy-draft \
   --workflow-uuid <play.workflowUuid> --nodes '[...]' \
   --form-fields 'null' --description "Fix branch condition"
 

@@ -1,7 +1,7 @@
 ---
 name: cargo-billing
 description: "Understand what Cargo is costing — remaining credits, usage broken down by workflow, connector, or agent, subscription state, and invoice history. Triggers: \"how many credits do I have left\", \"what did that cost\", \"why is my bill so high\", \"am I about to run out\", \"will this fit in our budget\", \"show me my invoices\", \"how much have I spent this month\", \"what plan am I on\", \"what do I get for free\", \"how many free credits\", \"can I afford this run\", \"add a card\", \"update my payment method\", \"why was my card declined\". Needs a token with admin access. Skip when: attributing spend to specific nodes or cutting a play cost — use cargo-diagnostics."
-version: "1.1.0"
+version: "2.0.0"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -86,14 +86,17 @@ cargo-ai orchestration run create --workflow-uuid <uuid> --data '{...}'
 cargo-ai billing usage get-metrics \
   --from <today> --to <today> \
   --workflow-uuid <uuid>
-# → .totalUsage = credits consumed today for this workflow
+# → metrics[].items[] for that workflow (the response has one key, `metrics` — there is no `totalUsage`)
 ```
 
 **Step 3 — Project batch cost:**
 
 ```
-estimated_cost = credits_per_record × number_of_records
+estimated_cost = (credits_per_record × number_of_records)      # provider actions
+               + (nodes_per_record × number_of_records / 100)  # execution charge
 ```
+
+The second term is the 0.01-credit-per-execution platform charge ("The execution charge" below). A sample run measures it for free — the record's execution count is `length(run.executions)`, or one row of `--unit orchestration.executions` for the sample window. Leave it out and every step-heavy graph is under-quoted.
 
 Compare against `subscriptionAvailableCreditsCount - subscriptionCreditsUsedCount` before proceeding.
 
@@ -114,6 +117,7 @@ cargo-ai billing usage get-metrics \
 | Add `filter` nodes early in the graph | Skip ineligible records before expensive connector calls |
 | Set `fallbackOnFailure: false` | Stop the run early on failures instead of continuing to downstream nodes |
 | Reduce `maxSteps` on agent nodes | Limit how many tool calls an agent can make per record |
+| Cut node count — collapse chained `variables`, fold branch pairs into one `switch` | 0.01/execution × records; the only lever for a graph whose spend is steps, not providers |
 
 > To find out **which** node or provider dominates a play's spend before picking a lever, follow the attribution runbook in [`../cargo-diagnostics/references/play-optimize-credits.md`](../cargo-diagnostics/references/play-optimize-credits.md).
 
@@ -138,13 +142,59 @@ cargo-ai billing usage get-metrics --from <start-date> --to <end-date> --agent-u
 cargo-ai billing usage get-metrics --from <start-date> --to <end-date> --connector-uuid <uuid>
 cargo-ai billing usage get-metrics --from <start-date> --to <end-date> --integration-slug <slug>
 
-# Specify unit
-cargo-ai billing usage get-metrics --from <start-date> --to <end-date> --unit credits
+# One unit at a time — the three below are the only accepted values
+cargo-ai billing usage get-metrics --from <start-date> --to <end-date> --unit billing.credits
+cargo-ai billing usage get-metrics --from <start-date> --to <end-date> --unit orchestration.executions
+cargo-ai billing usage get-metrics --from <start-date> --to <end-date> --unit storage.records
 ```
 
 `--group-by` values: `workflow_uuid`, `connector_uuid`, `model_uuid`, `integration_slug`, `agent_uuid`.
 
 Available filters: `--workflow-uuid`, `--model-uuid`, `--connector-uuid`, `--integration-slug`, `--slug`, `--agent-uuid`. Combine with `--group-by` and `--unit`.
+
+### The three usage units
+
+`--unit` takes exactly `billing.credits`, `orchestration.executions`, or `storage.records` — anything else is a `400` that lists them. **With no `--unit`, all three come back interleaved in the same `items[]` array**, and their `count` fields are not the same quantity. Read the unit off the slug:
+
+| Unit | Slugs in `items[]` | What `count` is |
+|---|---|---|
+| `billing.credits` | `integration.<slug>.action.<action>`, `native.<action>`, `integration.<slug>.chat`, `integration.<slug>.extractor.<name>` | Credits (fractional) |
+| `orchestration.executions` | `success`, `error` | **Node executions**, counted one-for-one — not credits |
+| `storage.records` | `insert` | Records written |
+
+An unqualified call that shows `{"slug":"success","count":1043}` next to `{"slug":"integration.peopleDataLabs.action.queryPeople","count":174}` is reporting 1,043 *executions* beside 174 *credits*. Pass `--unit` whenever the number is going into an estimate.
+
+### The execution charge
+
+**Every node execution bills 0.01 credits — 1 credit per 100 executions.** It applies to every node kind and every node, including the structural natives that carry no provider price: `branch`, `filter`, `switch`, `split`, `group`, `variables`, `start`, `end`. There is no free step in a workflow.
+
+This charge is **not attributed per node**. `run get` → `executions[].creditsUsedCount` and the `spans.execution_credits_used_count` column both carry the *provider* cost alone, and read `0` on a native node that nonetheless billed. Node-by-node attribution therefore under-counts every graph, and the shortfall grows with step count, not with spend.
+
+The only surface that shows it:
+
+```bash
+cargo-ai billing usage get-metrics --from <YYYY-MM-DD> --to <YYYY-MM-DD> --unit orchestration.executions
+# → items[] = [{"slug":"success","count":<executions>}, {"slug":"error","count":<executions>}]
+# credits = (success + error) / 100
+```
+
+Cross-check against the runtime tables, which agree row-for-row:
+
+```bash
+cargo-ai orchestration query execute \
+  "SELECT execution_status, count() AS executions, count() / 100 AS credits
+   FROM spans WHERE execution_started_at >= '<YYYY-MM-DD>' GROUP BY execution_status"
+```
+
+**Why it matters for estimates.** A graph's cost has two terms:
+
+```
+credits = (provider cost per record × records) + (nodes per record × records ÷ 100)
+```
+
+The second term is invisible in the credits cost table, which prices *actions*, not *steps*. It is small next to an action-heavy play (a LinkedIn enrich on every record dwarfs its 8 steps) and dominant on step-heavy, action-light ones — a 12-node routing sweep over 20,000 records is 2,400 credits with no provider call at all. Errored executions bill too, so a graph that fails late bills its whole prefix.
+
+**Tools fan out.** A tool node is one execution *plus* every node inside the tool's own graph, each billed separately. Extracting a subgraph into a tool is a debuggability win, not a cost saving — it adds one execution per record on top of what the internals already cost. When a graph's execution count exceeds its visible node count, tool nodes are the first place to look: group by `node_slug` in `spans` to find them.
 
 ## Subscription and credits
 

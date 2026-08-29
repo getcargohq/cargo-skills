@@ -1,7 +1,7 @@
 ---
 name: cargo-ai
 description: "Build and configure AI agents inside Cargo — create an agent, choose its model and temperature, write its prompt, attach knowledge for retrieval (RAG), connect MCP tool servers, manage memories, and deploy releases. Triggers: \"create an agent\", \"make an agent that\", \"give the agent our docs\", \"attach this knowledge base\", \"attach this library to the agent\", \"add resources to the agent release\", \"connect an MCP server\", \"expose our tools as an MCP server\", \"use Cargo from Claude Desktop or ChatGPT\", \"change the agent model\", \"what does the agent remember\", \"deploy the agent\", \"the agent is answering wrong\". Skip when: uploading the knowledge files themselves — use cargo-content; sending the agent a message or running it over records — use cargo-orchestration."
-version: "2.3.0"
+version: "2.3.1"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -70,8 +70,7 @@ cargo-ai ai release get <release-uuid>
 cargo-ai ai release get-draft --agent-uuid <uuid>
 cargo-ai ai release update-draft --agent-uuid <uuid> --language-model-slug gpt-4o
 cargo-ai ai release deploy-draft --agent-uuid <uuid>
-cargo-ai ai template list
-cargo-ai ai template get <slug>
+cargo-ai ai template list                  # full detail; there is no `template get`
 cargo-ai ai mcp-server list
 cargo-ai ai mcp-server create --name "Internal Tools"
 cargo-ai ai mcp-server update --uuid <mcp-server-uuid> --name "Updated Name"
@@ -91,8 +90,10 @@ Agents are AI resources with configured instructions, a language model, actions,
 **Before creating an agent from scratch, check existing templates — they capture proven patterns for common use cases (lead research, classification, email drafting) and give you a ready-made system prompt, model, and temperature to start from:**
 
 ```bash
-cargo-ai ai template list          # browse available patterns
-cargo-ai ai template get <slug>    # inspect system prompt, model, and actions
+cargo-ai ai template list          # browse patterns — full detail, not a summary
+# there is no `template get`: `list` already returns systemPrompt, temperature,
+# languageModelSlug, actions and resources, so select the one you want
+cargo-ai ai template list | jq '.templates[] | select(.slug == "<slug>")' 
 ```
 
 ```bash
@@ -180,7 +181,7 @@ Send these payloads alongside the other fields you're updating (the endpoint rep
 
 **Agent configuration workflow:**
 
-1. **Browse templates for inspiration**: `cargo-ai ai template list` — find a template close to your use case, then `cargo-ai ai template get <slug>` to see its system prompt, model, and temperature
+1. **Browse templates for inspiration**: `cargo-ai ai template list` — it returns each template in full (system prompt, model, temperature, actions), so pick the one closest to your use case straight out of that response
 2. Create the agent: `cargo-ai ai agent create --name "..." --icon-color blue --icon-face 🤖`
 3. Get the draft release: `cargo-ai ai release get-draft --agent-uuid <uuid>`
 4. Update the draft with configured actions, resources, prompt, model: `cargo-ai ai release update-draft --agent-uuid <uuid> ...`
@@ -191,11 +192,12 @@ Send these payloads alongside the other fields you're updating (the endpoint rep
 Templates are pre-built agent configurations that capture proven patterns for common use cases. **Always check templates before designing an agent from scratch** — they give you a ready-made system prompt, recommended language model, temperature, and tool configuration that you can adopt as-is or adapt.
 
 ```bash
-# List available agent templates
+# List available agent templates — each entry is complete, so this is the only
+# call you need. There is no `template get` subcommand.
 cargo-ai ai template list
 
-# Get a template by slug — inspect its system prompt, model, and settings
-cargo-ai ai template get <slug>
+# Inspect one by slug: filter the same response
+cargo-ai ai template list | jq '.templates[] | select(.slug == "<slug>")' 
 ```
 
 Templates include a system prompt, actions, resources, and recommended model settings. Use them as a starting point and customize via `release update-draft`. See `references/examples/templates.md` for the full guide including an end-to-end example of creating an agent from a template.
