@@ -48,15 +48,15 @@ cargo-ai orchestration node validate --nodes '[...start → action → end...]'
 # → { "outcome": "valid" }
 
 # 3. Deploy the graph to the tool's workflow
-cargo-ai orchestration draft-release update \
+cargo-ai orchestration release update-draft \
   --workflow-uuid <tool.workflowUuid> \
   --nodes '[...validated nodes...]'
-cargo-ai orchestration draft-release deploy \
+cargo-ai orchestration release deploy-draft \
   --workflow-uuid <tool.workflowUuid> \
   --nodes '[...validated nodes...]' \
   --form-fields 'null' \
   --description "v1 — saved from ad-hoc session run"
-# ⚠️ Never pass --version to draft-release deploy (shadowed by the global flag —
+# ⚠️ Never pass --version to release deploy-draft (shadowed by the global flag —
 #    prints the CLI version and exits WITHOUT deploying). Confirm with:
 cargo-ai orchestration release get-deployed --workflow-uuid <tool.workflowUuid>
 # → status must be "deployed"
@@ -90,7 +90,7 @@ cargo-ai orchestration play create \
 # → Extract play.uuid and play.workflowUuid
 # (check `play create --help` for the allowed change-kind values)
 
-# 2–3. Same as Path A: validate the node graph, draft-release update + deploy
+# 2–3. Same as Path A: validate the node graph, release update-draft + deploy-draft
 #      against <play.workflowUuid>, confirm with release get-deployed.
 
 # 4. Optional: scope + periodic re-evaluation

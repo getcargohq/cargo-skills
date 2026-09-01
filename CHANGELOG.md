@@ -10,6 +10,58 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### `cargo-billing` → 2.0.0, `cargo-orchestration` → 1.11.0, `cargo-gtm` → 1.19.0, `cargo-diagnostics` → 1.4.0, `cargo` → 1.24.0 (router) — the execution charge, which the pack said did not exist
+
+A workspace's own numbers, reported back by a user: 419,183 orchestration executions against 481 credits of provider actions in one cycle, solving to **exactly 1 credit per 100 executions** — 90% of everything spent that cycle. The pack had told the agent the opposite, in three places that reinforced each other, so no amount of care with the cost table would have caught it.
+
+- **The direct source.** `cargo-orchestration/references/troubleshooting.md` described `executions[].creditsUsedCount` as *"Per-node cost; agent and connector nodes are non-zero, native nodes are zero"*. The field is real and the description was accurate about the field — but read as pricing it says branches and variables are free. `cargo-diagnostics/references/play-optimize-credits.md` restated it and cited troubleshooting.md as the authority. Both now say **provider cost only**, and carry the charge that is attributed to no node.
+
+- **The reinforcing source.** [`credits-cost-table.md`](cargo-gtm/references/credits-cost-table.md) is generated from the action catalog, which prices *actions*; structural natives (`branch`, `filter`, `switch`, `split`, `group`, `variables`, `start`, `end`) are excluded from `action list` altogether, so they appear in no price list in the repo — and "absent from the cost table" reads as free. The router's *"Everything else is free"* ([`cargo/SKILL.md`](cargo/SKILL.md)) said it outright. Corrected there and in [`actions.md`](cargo-orchestration/references/examples/actions.md): excluded from the catalog is not the same as free.
+
+- **Estimates have two terms now** — `(provider cost × records) + (nodes × records ÷ 100)`. [`cost-discipline.md`](cargo-gtm/references/cost-discipline.md) §1 gains the formula, the instruction to measure the second term on the pilot (where it is free to observe) rather than infer it from the graph, and the rule to quote it in `CREDITS · SCOPE · CAP` whenever it exceeds ~10% of the total. It is a rounding error on an action-heavy chain and the entire bill on a step-heavy one: a 12-node routing sweep over 20,000 records is 2,400 credits with no provider call in it. Receipts now take the billing figure over an agent's own sum of action prices, because that sum structurally cannot include this.
+
+- **`--unit` was documented as a value that returns `400`.** [`cargo-billing`](cargo-billing/SKILL.md) showed `--unit credits`; the flag accepts exactly `billing.credits`, `orchestration.executions`, `storage.records`. That matters beyond the typo: **with no `--unit`, all three units interleave in one `items[]` array**, so `{"slug":"success","count":1043}` sits next to `{"slug":"integration.peopleDataLabs.action.queryPeople","count":174}` — 1,043 *executions* beside 174 *credits*. `--unit orchestration.executions` is the only surface that shows the execution charge at all. New **"The execution charge"** section, a slug→unit table, and the `spans` cross-check (`SELECT execution_status, count() FROM spans`, which reconciles row-for-row).
+
+- **The example slugs were invented.** `enrichment` and `ai_message` appeared in both [`response-shapes.md`](cargo-billing/references/response-shapes.md) and [`usage-metrics.md`](cargo-billing/references/examples/usage-metrics.md); the real families are `integration.<slug>.action.<action>`, `native.<action>`, `success` / `error`, and `insert`. Both files now carry a verified response. `.totalUsage`, referenced in the batch-estimate walkthrough, does not exist either — the response has one key, `metrics`.
+
+- **New attribution step in the credit runbook.** [`play-optimize-credits.md`](cargo-diagnostics/references/play-optimize-credits.md) §2b attributes executions per workflow and per node slug, and gates the lever table on the comparison: if executions × 0.01 outweighs the provider sum, every cheaper-provider lever is noise and the only lever is node count. Tools are named as the usual reason a graph runs more nodes than it looks — a tool node costs one execution *plus* every node inside its own graph, which makes extraction a debuggability win, not a saving.
+
+**Fixed here, now that no generator owns the header:** the table used to open *"The other 337 actions … cost no credits"* — true of provider price, false of anything that runs in a workflow. It was unfixable while the CLI generated it. [`credits-cost-table.md`](cargo-gtm/references/credits-cost-table.md) now states that those actions carry no *provider* price and points at the execution charge.
+
+### `cargo` → 1.23.1 (router), `cargo-gtm` → 1.18.0 — generate the cost table, and stop omitting the native actions
+
+The credits price list was hand-kept, and the first attempt to generate it read `connection integration list` — which is connector-only. Its own header claimed *"every credits-based action in the cargo catalog"* while silently omitting every billed **native** action: `sendEmail` (0.1), `modelAsk` (0.5), `fileSearch` (0.02/1k tokens). `sendEmail` is the whole outbound send path, priced at 0.1 in `cargo-mailbox-management`, and it was missing from the canonical price list.
+
+- **Generated from `cargo-ai orchestration action list`** (`--kind connector` and `--kind native`), which spans connector, native, tool and agent — rather than `connection integration list`, where nothing can see a native action. Every billed action carries a `credits` array: `fixed` bills per call, `unit` per unit consumed, `package` per block, with `fixedCost` a base charge that **adds to** the metered rate rather than replacing it. **197** credits-based actions of the 534 the catalog exposes, up from the 145 the hand-kept table claimed and the 194 a connector-only generator found. Rows whose provider is `native` carry the `{"kind":"native","actionSlug":…}` shape in the header, since they have no integration slug to run under.
+
+- **What the hand-kept table got wrong**, now that a generated one can be diffed against it: 145 actions listed where there are 197, four prices quoted from memory, and cost columns that concatenated every tier into an unreadable comma list (`openAi.instruct` rendered 28 numbers). Per-config pricing moves into a second section instead.
+
+- **Two providers gained playbooks instead of staying unlisted**: `brightData` (Instagram / TikTok / Facebook / YouTube by URL, the catalog's only non-LinkedIn, non-X social coverage) and `proxycurl`. They were previously named as deliberate omissions, but an undocumented provider still appears in the cost table — so the acceptable-use framing is better stated than implied, and `brightData.md` opens with the consumer-targeting refusal that gates it. Only `openRouter` remains without one, and it has no credits-based actions to document.
+
+- `stage-action-map.md` and `alternatives.md` point at the regenerated table and the new command.
+
+### `cargo` → 1.23.2 (router), `cargo-orchestration` → 1.10.0, `cargo-ai` → 2.3.1, `cargo-gtm` → 1.18.1, `cargo-storage` → 1.2.2, `cargo-mcp` → 1.0.2, `cargo-mailbox-management` → 1.0.2 — pin the CLI at 1.0.66, and five commands that never existed
+
+`cargo/cli-version` had drifted 19 releases behind npm (1.0.47 vs 1.0.66), and the bundle now documents commands that only exist in 1.0.66 — `orchestration action list` above all. The pin is what the session-start refresh installs, so leaving it meant an agent following these skills would reach for a command its CLI did not have.
+
+- **Pin bumped 1.0.47 → 1.0.66.** Checked before moving it, not after: the CLI's whole command surface was diffed across the range, and the only removals are three billing commands (`add-payment-method`, `create-setup-intent`, `create-stripe-credits-checkout-session`) that no skill documents — `update-payment-method`, which the skills do use, replaced the first of them and is still there. Everything else in the range is additive.
+
+- **`cargo-mailbox-management`'s version note was stale.** It warned that `mailbox get-warmup-stats` and the `--daily-target` default of 40 were "merged but not yet on npm". Both are live in 1.0.66. The note now says so, and keeps the older-CLI warning where it belongs: on an older CLI those subcommands print the group help instead of erroring, so a missing feature reads as a usage mistake.
+
+- **`get-output-schema` no longer asks for a `config`.** [getcargohq/cargo#5740](https://github.com/getcargohq/cargo/pull/5740) makes it take an `action` plus an optional **`--data`**, the same pair `execute` takes, so the object `action list` returns pastes into all four action commands unchanged. The config-less `--action` works from the pinned 1.0.66 once that backend deploys; `--data` itself lands in CLI 1.0.67 and is marked as such wherever it appears. The gotcha row documenting the old `400` becomes a note about `--data` — which is the thing actually worth knowing, since some actions shape their output from their inputs (a HubSpot object type, a target sheet) and without it you get the generic schema. `cargo-mcp` picks up the same optional `data` on `get_action_schema`, and loses the line claiming MCP was safer than the CLI here; they now agree.
+
+- **Five documented commands that do not exist.** Found by diffing every documented command path against the installed CLI while verifying the pin — and confirmed against 1.0.47's build too, so all five were **already broken at the old pin**. This is old debt the bump surfaced rather than caused:
+
+  | Documented | Reality |
+  | --- | --- |
+  | `orchestration draft-release get / update / deploy` (18 sites) | `orchestration release get-draft / update-draft / deploy-draft` |
+  | `ai template get <slug>` (6 sites) | No such subcommand — `ai template list` already returns each template **in full** (system prompt, model, temperature, actions), so filter it by slug |
+  | `action execute --record` (5 sites) | `--data` |
+  | `storage model list --dataset-uuid` (4 sites) | `model list` takes **no options**; every model carries `datasetUuid`, so filter client-side |
+  | `storage model get-ddl --model-uuid <uuid>` | The uuid is positional: `get-ddl <uuid>` |
+
+  Each replacement was verified against `--help` on 1.0.66, including that the flags carry over to the renamed release commands and that `deploy-draft` still has the shadowed `--version` the existing warning describes. `orchestration template get` is real and was left alone — only `ai template get` was fictional.
+
 ### `cargo` → 1.23.0 (router), `cargo-ai` → 2.3.0, `cargo-orchestration` → 1.9.0, `cargo-gtm` → 1.17.0, `cargo-connection` → 1.4.0, `cargo-mcp` → 1.0.1, `cargo-mailbox-management` → 1.0.1, `cargo-context` → 1.2.2, `cargo-quickstart` → 1.0.2, `cargo-workspace-management` → 1.2.2, `cargo-observability` → 1.0.2 — search for actions, and `config` stopped shouting
 
 All of this is **shipped**: CLI **1.0.66** on npm. `orchestration action list` is new, and `config` split off the top-level action type (`Action` vs `ConfiguredAction`). One of those contradicted a sentence the bundle stated as fact; the other was being taught the wrong way round in 272 examples.

@@ -188,11 +188,13 @@ Supports `--agent-uuid`, `--limit`, `--offset`.
 }
 ```
 
-**Key fields:** `slug` (used for `template get`), `name`, `languageModelSlug`, `temperature`.
+**Key fields:** `slug` (the handle you filter this list by), `name`, `languageModelSlug`, `temperature`.
 
 **Template categories:** `prospecting`, `ops`, `enablement`, `outreach`, `expansion`, `public`, `private`.
 
-## cargo-ai ai template get
+## `cargo-ai ai template list` — one entry
+
+Each element of `templates[]` is returned in full. There is no `template get` subcommand; filter this response by `slug` instead.
 
 ```json
 {

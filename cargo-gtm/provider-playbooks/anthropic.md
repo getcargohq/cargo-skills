@@ -1,7 +1,7 @@
 ---
 provider: anthropic
 category: llm
-last-reviewed: 2026-07-09
+last-reviewed: 2026-08-20
 ---
 
 # anthropic (Anthropic)
@@ -12,14 +12,14 @@ Claude through a single `instruct` action — the **default judgment-tier LLM of
 
 | Action | Cost | Inputs | Use for |
 |---|---|---|---|
-| `instruct` | 0.2–4 / 1,000-token package (per-model tiers below) | `model` + `prompt` (required); `advancedSettings.{systemPrompt, maxTokens, temperature, withWebSearch}` | Personalization, scoring, extraction, classification steps inside enrichment pipelines. |
+| `instruct` | 0.05–4 / 1,000-token package (per-model tiers below) | `model` + `prompt` (required); `advancedSettings.{systemPrompt, maxTokens, temperature, withWebSearch}` | Personalization, scoring, extraction, classification steps inside enrichment pipelines. |
 
 ### Per-model cost tiers
 
 | Tier | Model ids | Credits / 1,000 tokens |
 |---|---|---|
-| Sonnet | `claude-sonnet-4-6`, `claude-sonnet-4-5-20250929`, `claude-sonnet-4-20250514` (schema default), `claude-3-7-sonnet-latest`, `claude-3-5-sonnet-latest` (deprecated) | 0.2 |
-| Haiku | `claude-3-5-haiku-latest` | 0.2 |
+| Haiku | `claude-3-5-haiku-latest` | **0.05** |
+| Sonnet | `claude-sonnet-5`, `claude-sonnet-4-6`, `claude-sonnet-4-5-20250929`, `claude-sonnet-4-20250514` (schema default), `claude-3-7-sonnet-latest`, `claude-3-5-sonnet-latest` (deprecated) | 0.2 |
 | Opus | `claude-opus-4-8`, `claude-opus-4-7`, `claude-opus-4-6`, `claude-opus-4-1-20250805`, `claude-opus-4-20250514` | 2 |
 | Fable | `claude-fable-5` | 4 |
 
@@ -30,7 +30,7 @@ Claude through a single `instruct` action — the **default judgment-tier LLM of
 - ✅ **Judgment-heavy steps** — positioning summaries, soft-criteria ICP scoring, long-document salience: Sonnet at 0.2/1k is the pack default (see [`../recipes/icp-discovery.md`](../recipes/icp-discovery.md)).
 - ✅ **Extraction and classification with prompt-enforced JSON** — the whole prompt library runs through `anthropic.instruct` with `temperature: 0`.
 - ✅ **Personalized outreach lines** — `temperature: 0.3`, see [`../recipes/outreach-activation.md`](../recipes/outreach-activation.md) step 5.
-- ❌ **Cheapest possible bulk** — on Cargo credits, Haiku costs the **same 0.2 as Sonnet**, so there is no intra-anthropic discount; go to `openAi` nano-tier (0.006, 33× cheaper) or `gemini` Flash for pure-volume transforms.
+- ⚠️ **Bulk inside anthropic** — Haiku 3.5 is **0.05**, a quarter of Sonnet. That makes it the right rung for high-volume classification where the prompt library's Sonnet phrasing still holds. It is still 8× `openAi` nano (0.006) and 5× `gemini` Flash (0.01), so for pure-volume transforms with no judgement in them, leave the provider.
 - ❌ **Web-grounded research answers** — `withWebSearch` exists (+0.4/call fixed), but `perplexity` is purpose-built for cited web answers.
 
 ## Pattern — batch personalization / extraction
@@ -53,7 +53,7 @@ cargo-ai orchestration action execute-batch \
 
 ## Cost traps
 
-- **500-row batch math** (≈1 package per short call): Sonnet/Haiku ≈ **100 credits**; Opus ≈ **1,000**; Fable 5 ≈ **2,000**. Opus/Fable are 10–20× Sonnet — never use them for bulk extraction or personalization; reserve them for a handful of high-stakes judgment calls.
+- **500-row batch math** (≈1 package per short call): Haiku ≈ **25 credits**; Sonnet ≈ **100**; Opus ≈ **1,000**; Fable 5 ≈ **2,000**. Opus/Fable are 10–20× Sonnet — never use them for bulk extraction or personalization; reserve them for a handful of high-stakes judgment calls.
 - **`withWebSearch` on a batch** adds 0.4 × rows of fixed cost (+200 credits on 500 rows) before any tokens — route research needs to `perplexity` or a scrape + extract instead.
 - **Token-metered, not call-metered.** Stuffing a whole scraped page into every prompt multiplies packages — truncate inputs (~3,000 words max, per the prompt-library guidance).
 

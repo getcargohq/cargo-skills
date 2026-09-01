@@ -283,12 +283,12 @@ const PACKAGE_EDITS = [
   },
   {
     file: "cargo-gtm/references/credits-cost-table.md",
-    find: "| 0 | `snitcher` | enrichment | `searchSessions` | Search and retrieve website visitor sessions with filtering options for date ran |\n",
+    find: "| 0 / item | `snitcher` | enrichment | `searchSessions` | Search and retrieve website visitor sessions with filtering options for date ranges, URLs, and referrers |\n",
     replace: "",
   },
   {
     file: "cargo-gtm/references/credits-cost-table.md",
-    find: "| 0.05 | `aiArk` | enrichment | `analyzePersonality` | Analyze a LinkedIn profile to get personality insights (OCEAN, DISC) and selling |\n",
+    find: "| 0.05 | `aiArk` | enrichment | `analyzePersonality` | Analyze a LinkedIn profile to get personality insights (OCEAN, DISC) and tailored selling and hiring guidance |\n",
     replace: "",
   },
   {
@@ -314,6 +314,11 @@ const PACKAGE_EDITS = [
   {
     file: "cargo-gtm/references/stage-action-map.md",
     find: "| snitcher | searchSessions | 0 | Free credits-tier. De-anonymize site visitors. |\n",
+    replace: "",
+  },
+  {
+    file: "cargo-gtm/references/stage-action-map.md",
+    find: "| linkedin | extractEventAttendees | 0.05 / item | Attendees of a LinkedIn event. |\n",
     replace: "",
   },
   {
@@ -418,7 +423,7 @@ const PACKAGE_EDITS = [
   },
   {
     file: "cargo-gtm/references/credits-cost-table.md",
-    find: "| 0.05 | `linkedin` | enrichment | `extractEventAttendees` | Extract the attendees of a LinkedIn event. |\n",
+    find: "| 0.05 / item | `linkedin` | enrichment | `extractEventAttendees` | Extract the attendees of a LinkedIn event. |\n",
     replace: "",
   },
   {

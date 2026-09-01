@@ -21,7 +21,7 @@ Every GTM tool exports CSV; prefer it over API scraping. Get one CSV per logical
 
 ```bash
 cargo-ai storage model list          # existing Companies / Contacts models
-cargo-ai storage model get-ddl --model-uuid <uuid>   # column slugs + types
+cargo-ai storage model get-ddl <model-uuid>   # column slugs + types
 ```
 
 Diff the CSV header against the model's columns. Create what's missing (see [`../../cargo-storage/SKILL.md`](../../cargo-storage/SKILL.md) for types):

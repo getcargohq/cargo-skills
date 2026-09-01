@@ -1,7 +1,7 @@
 ---
 name: cargo-storage
 description: "Work with the data inside a Cargo workspace — models (Companies, Contacts, Deals…), datasets, columns, relationships, records, and SQL over workspace storage. Triggers: \"what models do I have\", \"show me the schema\", \"add a column for\", \"how many contacts do I have\", \"SELECT … FROM\", \"query my companies table\", \"join contacts to companies\", \"what is the DDL\", \"set up a webhook-fed model\", \"where does this field live\", \"import this into a model\", \"unify these models\", \"merge duplicate accounts\", \"link contacts to companies\", \"set up a relationship between\". Skip when: querying run or batch telemetry rather than business data — use cargo-orchestration; naming a reusable filtered audience — use cargo-segmentation."
-version: "1.2.1"
+version: "1.2.2"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -49,8 +49,9 @@ Always list before inspecting or modifying.
 
 ```bash
 cargo-ai storage dataset list              # all datasets (uuid, slug)
-cargo-ai storage model list                # all models (uuid, name, slug, columns)
-cargo-ai storage model list --dataset-uuid <uuid>   # models in a specific dataset
+cargo-ai storage model list                # all models (uuid, name, slug, columns, datasetUuid)
+# `model list` takes no flags — filter its output instead:
+cargo-ai storage model list | jq '[.models[] | select(.datasetUuid == "<uuid>")]' 
 ```
 
 **Retrieve in the UI:** models live at `app.getcargo.io/workspaces/<WORKSPACE_UUID>/models/<MODEL_UUID>`. Get `<WORKSPACE_UUID>` from `cargo-ai whoami` under `workspace.uuid`.
@@ -77,8 +78,9 @@ Models are structured tables in your workspace (e.g. Companies, Contacts).
 # List all models
 cargo-ai storage model list
 
-# List models in a dataset
-cargo-ai storage model list --dataset-uuid <uuid>
+# List models in a dataset — every model carries `datasetUuid`, and
+# `model list` has no flags of its own, so filter client-side
+cargo-ai storage model list | jq '[.models[] | select(.datasetUuid == "<uuid>")]' 
 
 # Get a single model (includes columns)
 cargo-ai storage model get <model-uuid>

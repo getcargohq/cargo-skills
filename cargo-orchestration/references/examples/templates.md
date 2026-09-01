@@ -142,12 +142,12 @@ cargo-ai orchestration tool list
 # → Extract tool.workflowUuid
 
 # 5. Save the adapted nodes to the draft release
-cargo-ai orchestration draft-release update \
+cargo-ai orchestration release update-draft \
   --workflow-uuid <tool.workflowUuid> \
   --nodes '[...validated nodes...]'
 
 # 6. Deploy the draft release
-cargo-ai orchestration draft-release deploy \
+cargo-ai orchestration release deploy-draft \
   --workflow-uuid <tool.workflowUuid> \
   --nodes '[...validated nodes...]' \
   --form-fields 'null' \
