@@ -317,6 +317,11 @@ const PACKAGE_EDITS = [
     replace: "",
   },
   {
+    file: "cargo-gtm/references/stage-action-map.md",
+    find: "| linkedin | extractEventAttendees | 0.05 / item | Attendees of a LinkedIn event. |\n",
+    replace: "",
+  },
+  {
     file: "cargo-gtm/references/alternatives.md",
     find: "| Visitor de-anonymization | (none \u2014 niche) | snitcher.searchSessions (0) | Always for visitor ID \u2014 free credits-tier. |\n",
     replace: "",
