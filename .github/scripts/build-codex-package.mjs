@@ -116,6 +116,18 @@ const EXCLUDED_SKILLS = ["cargo-mailbox-management"];
 // the skill — company research, work-email enrichment from licensed providers,
 // scoring, CRM sync, signal monitoring — is unchanged. This is a real narrowing
 // of what the packaged skill can do, not a rewording of what it says it does.
+// A whole-file swap, for a skill this channel cannot take as written.
+// cargo-quickstart's demo pulls 25 named people; the directory rejected it under
+// "Spam mass abuse" for the same reason it rejected the two before it. The
+// override runs the same two-minute arc at the same 0.5-credit cost against
+// company-level hiring intent instead — the skill's own fallback rung 2, which
+// it already describes as "same wow, different angle". Editing this into place
+// line by line would be a dozen brittle anchors through a rewritten spine, so it
+// ships as a file. The version guard below is what keeps the copy honest.
+const PACKAGE_OVERRIDES = {
+  "cargo-quickstart/SKILL.md": ".github/package-overrides/cargo-quickstart.SKILL.md",
+};
+
 const EXCLUDED_FILES = [
   "cargo-gtm/provider-playbooks/snitcher.md",
   "cargo-gtm/provider-playbooks/forager.md",
@@ -405,6 +417,21 @@ const PACKAGE_EDITS = [
     find: "| 0.05 | `linkedin` | enrichment | `extractEventAttendees` | Extract the attendees of a LinkedIn event. |\n",
     replace: "",
   },
+  {
+    file: "cargo/SKILL.md",
+    find: "Fresh workspace \u2192 real deliverable (25 leads for the user's persona, with a cost receipt) in under two minutes",
+    replace: "Fresh workspace \u2192 real deliverable (the companies hiring for the user's persona, with a cost receipt) in under two minutes",
+  },
+  {
+    file: "cargo/SKILL.md",
+    find: "one persona question \u2192 25 leads in under two minutes \u2192 cost receipt \u2192 save as a recurring play",
+    replace: "one persona question \u2192 the companies hiring for it, in under two minutes \u2192 cost receipt \u2192 save as a recurring play",
+  },
+  {
+    file: "README.md",
+    find: "one question (\"who do you sell to?\") \u2192 25 leads matching that persona in under two minutes",
+    replace: "one question (\"who do you sell to?\") \u2192 the companies hiring for that persona in under two minutes",
+  }
 ];
 
 // Applies PACKAGE_EDITS to the staged tree. Returns what didn't match.
@@ -598,6 +625,34 @@ for (const file of ["README.md", "LICENSE"]) {
 const NUMBER_WORDS = {
   16: "sixteen", 17: "seventeen", 18: "eighteen", 19: "nineteen", 20: "twenty",
 };
+
+const frontmatterVersion = (text) => /^version:\s*"?([^"\n]+)"?/m.exec(text)?.[1]?.trim();
+
+for (const [target, source] of Object.entries(PACKAGE_OVERRIDES)) {
+  const staged = join(stageDir, "skills", target);
+  const override = join(repoRoot, source);
+  if (existsSync(staged) === false) {
+    die(`PACKAGE_OVERRIDES targets ${target}, which is not in the package`);
+  }
+  if (existsSync(override) === false) {
+    die(`PACKAGE_OVERRIDES points at ${source}, which does not exist`);
+  }
+  // The override is a hand-maintained copy of a file that will keep moving. Tie
+  // it to the repo skill's version so a bump upstream fails the build instead of
+  // silently shipping last month's demo.
+  const repoVersion = frontmatterVersion(readFileSync(staged, "utf8"));
+  const overrideVersion = frontmatterVersion(readFileSync(override, "utf8"));
+  if (repoVersion === undefined || overrideVersion === undefined) {
+    die(`could not read a version from ${target} or ${source}`);
+  }
+  if (repoVersion !== overrideVersion) {
+    die(
+      `${source} is written against version ${overrideVersion}, but ${target} is now ${repoVersion} — ` +
+        `review the upstream change, port what matters, and bump the override`,
+    );
+  }
+  cpSync(override, staged);
+}
 
 for (const rel of EXCLUDED_FILES) {
   const path = join(stageDir, "skills", rel);
