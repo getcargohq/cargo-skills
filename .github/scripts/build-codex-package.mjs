@@ -57,6 +57,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { dirname, join, resolve } from "node:path";
+import { writeAllMetadata } from "./skills-metadata.mjs";
 import { fileURLToPath } from "node:url";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
@@ -93,7 +94,7 @@ const SHORT_DESCRIPTIONS = {
   "cargo-connection":
     'Connect Cargo to an external system and find out what it can do — authenticate connectors, browse the integration catalog, and resolve the `connectorUuid` and `actionSlug` a workflow node needs. Triggers: "connect my HubSpot", "is Salesforce connected", "what integrations do you support", "can Cargo talk to <tool>", "what actions does <provider> have", "I need the connector UUID", "set up the API key for", "it is asking for credentials again", "why is this connector failing auth", "list my connectors". 138 integrations including HubSpot, Salesforce, Attio, Pipedrive, Outreach, Salesloft, Slack, Snowflake, BigQuery, Postgres, Stripe, and Google/LinkedIn ad audiences. Skip when: choosing between enrichment providers for a GTM job — use cargo-gtm and its provider playbooks.',
   "cargo-gtm":
-    "Business-to-business go-to-market work on Cargo \u2014 research accounts and buying committees, enrich and verify B2B contact records from licensed data providers, score and qualify leads, draft outreach for the user's own sequencer, sync to CRM, and monitor buying signals. Runs on audiences with a documented lawful basis, screens every contact step against a workspace-wide suppression list, and requires per-recipient relevance; the skill sends no messages itself. Triggers: \"build me a list of\", \"find 50 <title> at <segment>\", \"who works at\", \"find work emails for these accounts\", \"enrich this CSV\", \"verify these emails\", \"build a TAM\", \"who fits our ICP\", \"score these leads\", \"write a first-touch email\", \"push these to my CRM\", \"who changed jobs\", \"who just raised funding\", \"companies using <tech>\", \"who is hiring <role>\", \"find the buying committee\", \"upload this audience to Google/LinkedIn ads\". 50 licensed data providers. Skip when: a run already happened and misbehaved \u2014 use cargo-diagnostics.",
+    "Business-to-business go-to-market work on Cargo \u2014 research accounts and buying committees, enrich and verify B2B contact records from licensed data providers, score and qualify leads, draft outreach for the user's own sequencer, sync to CRM, and monitor buying signals. Runs on audiences with a documented lawful basis, screens every contact step against a workspace-wide suppression list, and requires per-recipient relevance; the skill sends no messages itself. Triggers: \"build me a list of\", \"find 50 <title> at <segment>\", \"who works at\", \"find work emails for these accounts\", \"enrich this CSV\", \"verify these emails\", \"build a TAM\", \"who fits our ICP\", \"score these leads\", \"write a first-touch email\", \"push these to my CRM\", \"who changed jobs\", \"who just raised funding\", \"companies using <tech>\", \"who is hiring <role>\", \"find the buying committee\", \"upload this audience to Google/LinkedIn ads\". Licensed B2B data providers only. Skip when: a run already happened and misbehaved \u2014 use cargo-diagnostics.",
 };
 
 // Skills held out of this package. The directory review rejected
@@ -106,6 +107,32 @@ const SHORT_DESCRIPTIONS = {
 // to pass a safety review, so the repo copies stay exactly as written for the
 // channels that do carry the skill.
 const EXCLUDED_SKILLS = ["cargo-mailbox-management"];
+
+// Capabilities dropped from cargo-gtm for this channel. Each is a person-level
+// surface that is hard to defend in a directory listing whatever the gates
+// around it: de-anonymising site visitors, inferring personality traits (OCEAN
+// /DISC) from a profile, looking up a *personal* mailbox and phone, harvesting
+// a platform's event attendees, reading a social platform's posts. The rest of
+// the skill — company research, work-email enrichment from licensed providers,
+// scoring, CRM sync, signal monitoring — is unchanged. This is a real narrowing
+// of what the packaged skill can do, not a rewording of what it says it does.
+const EXCLUDED_FILES = [
+  "cargo-gtm/provider-playbooks/snitcher.md",
+  "cargo-gtm/provider-playbooks/forager.md",
+  "cargo-gtm/provider-playbooks/x.md",
+];
+
+// Asserted against the built archive. `scope` is the path prefix the term must
+// be absent from — extractEventAttendees survives in cargo-connection, which
+// documents the catalog rather than recommending the action, and which the
+// directory already approved.
+const REMOVED_TERMS = [
+  { term: "snitcher", scope: "skills/" },
+  { term: "forager", scope: "skills/" },
+  { term: "analyzePersonality", scope: "skills/" },
+  { term: "provider-playbooks/x.md", scope: "skills/" },
+  { term: "extractEventAttendees", scope: "skills/cargo-gtm/" },
+];
 
 // Excluding a skill leaves cross-references to it in the ones that remain: a
 // router table row, an ASCII diagram box, a recap section, link targets in
@@ -207,6 +234,176 @@ const PACKAGE_EDITS = [
     file: "README.md",
     find: "and sixteen **capability skills**",
     replace: "and fifteen **capability skills**",
+  },
+  {
+    file: "cargo-gtm/SKILL.md",
+    find: "`searchPeople` / `reverseLookup` / `analyzePersonality` (0.05)",
+    replace: "`searchPeople` / `reverseLookup` (0.05)",
+  },
+  {
+    file: "cargo-gtm/SKILL.md",
+    find: " Have a **LinkedIn event URL**? `linkedin.extractEventAttendees` sources the attendee list directly.",
+    replace: "",
+  },
+  {
+    file: "cargo-gtm/SKILL.md",
+    find: ", and `analyzePersonality` (0.05) is catalog-unique",
+    replace: "",
+  },
+  {
+    file: "cargo-gtm/SKILL.md",
+    find: "- [`provider-playbooks/snitcher.md`](provider-playbooks/snitcher.md) \u2014 website-visitor identification; the recurring extractor is the cost trap.\n",
+    replace: "",
+  },
+  {
+    file: "cargo-gtm/SKILL.md",
+    find: "- [`provider-playbooks/forager.md`](provider-playbooks/forager.md) \u2014 personal-email + phone from a LinkedIn URL.\n",
+    replace: "",
+  },
+  {
+    file: "cargo-gtm/SKILL.md",
+    find: "- [`provider-playbooks/x.md`](provider-playbooks/x.md) \u2014 public X posts and profiles at 0.02 an action; a signal rung, gated by acceptable use.\n",
+    replace: "",
+  },
+  {
+    file: "cargo-gtm/references/credits-cost-table.md",
+    find: "| 0 | `snitcher` | enrichment | `searchSessions` | Search and retrieve website visitor sessions with filtering options for date ran |\n",
+    replace: "",
+  },
+  {
+    file: "cargo-gtm/references/credits-cost-table.md",
+    find: "| 0.05 | `aiArk` | enrichment | `analyzePersonality` | Analyze a LinkedIn profile to get personality insights (OCEAN, DISC) and selling |\n",
+    replace: "",
+  },
+  {
+    file: "cargo-gtm/references/credits-cost-table.md",
+    find: "| 2 | `forager` | enrichment | `findPersonalEmail` | Find a person's personal email |\n",
+    replace: "",
+  },
+  {
+    file: "cargo-gtm/references/credits-cost-table.md",
+    find: "| 2 | `forager` | enrichment | `findWorkEmail` | Find a person's work email |\n",
+    replace: "",
+  },
+  {
+    file: "cargo-gtm/references/credits-cost-table.md",
+    find: "| 5 | `forager` | enrichment | `findPhone` | Find a person's phone number |\n",
+    replace: "",
+  },
+  {
+    file: "cargo-gtm/references/stage-action-map.md",
+    find: "| forager | findPhone | 5 |   | Mid-tier. |\n",
+    replace: "",
+  },
+  {
+    file: "cargo-gtm/references/stage-action-map.md",
+    find: "| snitcher | searchSessions | 0 | Free credits-tier. De-anonymize site visitors. |\n",
+    replace: "",
+  },
+  {
+    file: "cargo-gtm/references/alternatives.md",
+    find: "| Visitor de-anonymization | (none \u2014 niche) | snitcher.searchSessions (0) | Always for visitor ID \u2014 free credits-tier. |\n",
+    replace: "",
+  },
+  {
+    file: "cargo-gtm/references/alternatives.md",
+    find: "|   |   | forager.findPhone (5) | Mid-tier. |\n",
+    replace: "",
+  },
+  {
+    file: "cargo-gtm/references/acceptable-use.md",
+    find: "- Personal-mailbox routing: [`../provider-playbooks/forager.md`](../provider-playbooks/forager.md)\n",
+    replace: "",
+  },
+  {
+    file: "cargo-gtm/provider-playbooks/FullEnrich.md",
+    find: "(e.g., from `snitcher.searchSessions` or a webform)",
+    replace: "(e.g., from a webform)",
+  },
+  {
+    file: "cargo-gtm/provider-playbooks/FullEnrich.md",
+    find: "(webforms, `snitcher.searchSessions`)",
+    replace: "(webforms)",
+  },
+  {
+    file: "cargo-gtm/provider-playbooks/aiArk.md",
+    find: "| `analyzePersonality` | **0.05** | `linkedinUrl` | Personality insights (OCEAN, DISC) + tailored **selling and hiring guidance**. Bills **0** on no match. |\n",
+    replace: "",
+  },
+  {
+    file: "cargo-gtm/provider-playbooks/aiArk.md",
+    find: "- \u2705 **Personalization signal** \u2014 `analyzePersonality` (0.05) is unique: OCEAN/DISC + selling guidance to feed the WRITE step.\n",
+    replace: "",
+  },
+  {
+    file: "cargo-gtm/provider-playbooks/aiArk.md",
+    find: "- **Personality analysis at scale \"for color\".** `analyzePersonality` earns its 0.05 on qualified, about-to-be-contacted leads feeding the WRITE step \u2014 not on a raw sourced list.\n",
+    replace: "",
+  },
+  {
+    file: "cargo-gtm/provider-playbooks/aiArk.md",
+    find: "- `analyzePersonality` \u2014 **WRITE/personalization input**, outside the credits spine's find-and-verify path.\n",
+    replace: "",
+  },
+  {
+    file: "cargo-gtm/provider-playbooks/aiArk.md",
+    find: "never schedule blanket re-enrichment; `analyzePersonality` belongs in a play's WRITE step on newly qualified rows, not on a timer (see anti-patterns).",
+    replace: "never schedule blanket re-enrichment.",
+  },
+  {
+    file: "cargo-gtm/provider-playbooks/linkedin.md",
+    find: "| `extractEventAttendees` | 0.05/item | `linkedinEventUrl`, `identityIds` (required) | Attendees of a LinkedIn event \u2192 event-based sourcing. |\n",
+    replace: "",
+  },
+  {
+    file: "cargo-gtm/guides/finding-companies-and-contacts.md",
+    find: "  \u251c\u2500 \"Find people I know who can intro\":      theSwarm.searchWarmIntrosToCompany / Person (2 cred)\n  \u2514\u2500 Visitor de-anonymization:                snitcher.searchSessions (0 cred) \u2192 cargo.matchProspect\n",
+    replace: "  \u2514\u2500 \"Find people I know who can intro\":      theSwarm.searchWarmIntrosToCompany / Person (2 cred)\n",
+  },
+  {
+    file: "cargo-gtm/guides/finding-companies-and-contacts.md",
+    find: "| **snitcher** | Anonymous website visitor identification | 0 (free credits-tier) |\n",
+    replace: "",
+  },
+  {
+    file: "cargo-gtm/recipes/custom-datapoints.md",
+    find: "**Website-visitor identification is not in that group.** `snitcher` de-anonymizes the companies browsing the seller's site, and most of them are cold \u2014 [`../provider-playbooks/snitcher.md`](../provider-playbooks/snitcher.md) calls identified visitors \"the warmest cold segment there is\" and files them in the SIGNAL stage beside job-change and funding. It belongs in a net-new schema. What it *isn't* is a sourceable attribute: you cannot fill it across a 4,100-account TAM, because it only exists for accounts that already visited. So it fails Step 4's gate on a different axis than the fields above \u2014 not \"no source at any price\" but **arrival-driven**, and only if the seller runs Snitcher's tracking script on their own site.\n\n",
+    replace: "",
+  },
+  {
+    file: "cargo-gtm/recipes/custom-datapoints.md",
+    find: "Treat it accordingly: a `last_seen` / `pages_viewed` column populated by the extractors, scored as a timing signal on the accounts that have it, and neutral (never negative) on the ones that don't \u2014 the same `Unknown`-scores-neutral rule as everywhere else, and the reason it can coexist with a sourced schema instead of skewing it. Watch the cost shape too: `searchSessions` is free, but the `fetchOrganisations` extractor bills **3 credits per identified company on every sync**, which is the most expensive line in this recipe if it is switched on for a high-traffic site without sizing the traffic first.\n\n",
+    replace: "",
+  },
+  {
+    file: "cargo-gtm/recipes/ads-audience-activation.md",
+    find: "- **Personal email is a different lookup from work email.** The standard find-email chain returns *work* addresses \u2014 including `aiArk.enrichPerson` (0.1 from a LinkedIn URL, and the right pick when a work address is enough, as it is for LinkedIn Matched Audiences). The personal mailbox needs [`forager.findPersonalEmail`](../provider-playbooks/forager.md) (2, LinkedIn URL in), which is the only action in the catalog that offers it. Reach for it only when the destination is Google Customer Match and the probe in step 5 shows work addresses matching poorly \u2014 2 credits/row is a real budget line at audience scale.\n",
+    replace: "",
+  },
+  {
+    file: "cargo/references/glossary.md",
+    find: "anonymous website visits, ",
+    replace: "",
+  },
+  {
+    file: "cargo/references/glossary.md",
+    find: ", `snitcher.searchSessions`",
+    replace: "",
+  },
+  {
+    file: "cargo/SKILL.md",
+    find: "**Already have LinkedIn URLs (or an event URL)?**",
+    replace: "**Already have LinkedIn URLs?**",
+  },
+  {
+    file: "cargo/SKILL.md",
+    find: "(`enrichProfile`/`enrichCompany` 0.25, `extractEventAttendees`)",
+    replace: "(`enrichProfile`/`enrichCompany` 0.25)",
+  },
+  {
+    file: "cargo-gtm/references/credits-cost-table.md",
+    find: "| 0.05 | `linkedin` | enrichment | `extractEventAttendees` | Extract the attendees of a LinkedIn event. |\n",
+    replace: "",
   },
 ];
 
@@ -402,6 +599,14 @@ const NUMBER_WORDS = {
   16: "sixteen", 17: "seventeen", 18: "eighteen", 19: "nineteen", 20: "twenty",
 };
 
+for (const rel of EXCLUDED_FILES) {
+  const path = join(stageDir, "skills", rel);
+  if (existsSync(path) === false) {
+    die(`EXCLUDED_FILES names ${rel}, which is not in the package`);
+  }
+  rmSync(path);
+}
+
 const editErrors = applyPackageEdits();
 if (editErrors.length > 0) {
   for (const e of editErrors) console.error(`error: ${e}`);
@@ -428,6 +633,10 @@ if (skillDirs.length !== repoSkillDirs.length) {
     if (after !== before) writeFileSync(file, after, "utf8");
   }
 }
+
+// Every staged skill-metadata.json now describes a tree that no longer exists
+// — regenerate them over what actually shipped.
+writeAllMetadata(join(stageDir, "skills"));
 
 // interface.composerIcon and interface.logo are required and must both point at
 // a square image. assets/icon.png is the Cargo product mark at 512x512.
@@ -689,6 +898,19 @@ for (const excluded of EXCLUDED_SKILLS) {
     problems.push(
       `archive still references the excluded skill ${excluded} in: ${files.join(", ")}`,
     );
+  }
+}
+
+for (const { term, scope } of REMOVED_TERMS) {
+  let hits = "";
+  try {
+    hits = execFileSync("zipgrep", ["-l", term, zipPath], { encoding: "utf8" });
+  } catch (error) {
+    hits = typeof error.stdout === "string" ? error.stdout : "";
+  }
+  const files = hits.split("\n").filter((f) => f.startsWith(scope));
+  if (files.length > 0) {
+    problems.push(`archive still references ${term} under ${scope}: ${files.join(", ")}`);
   }
 }
 
