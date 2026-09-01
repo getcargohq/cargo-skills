@@ -20,6 +20,7 @@ on:
       - "assets/**"
       - ".claude-plugin/plugin.json"
       - ".github/scripts/build-codex-package.mjs"
+      - ".github/package-overrides/**"
       - ".github/workflows/codex-package.yml"
   workflow_dispatch:
 

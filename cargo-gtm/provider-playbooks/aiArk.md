@@ -6,7 +6,7 @@ last-reviewed: 2026-07-25
 
 # aiArk (AI Ark)
 
-LinkedIn-anchored people/company data with an unusually cheap enrich-and-email combo, a personality-analysis action nothing else in the catalog has, and per-record search that bills at the bottom of the catalog. **All six actions are credits-based and run on cargo's managed connection** — no own-key connector required (unlike `apolloio`, where only two are). Category `enrichment`, sub-category list-building. Reach for it when you hold **LinkedIn URLs** (cheapest profile+email at 0.1), need a **mobile phone** cheaply (0.5 vs the 3+ phone tier), want **lookalike-company** discovery (0.01/record), or need **personality/selling guidance** for personalization. **In the priority stack** ([`../SKILL.md`](../SKILL.md) §5) as the URL-anchored enrich rung and the cheapest per-record search — but it doesn't displace the sourcing-first spine: `salesNavigator` (0.02/lead) still leads plain at-scale people sourcing, and `cargo` native still owns match-verified firmographics.
+LinkedIn-anchored people/company data with an unusually cheap enrich-and-email combo, a personality-analysis action nothing else in the catalog has, and per-record search that bills at the bottom of the catalog. **All nine actions run on cargo's managed connection** — seven credits-based, plus two free `count*` actions that size a search before it bills — no own-key connector required (unlike `apolloio`, where only two are). Category `enrichment`, sub-category list-building. Reach for it when you hold **LinkedIn URLs** (cheapest profile+email at 0.1), need a **mobile phone** cheaply (0.5 vs the 3+ phone tier), want **lookalike-company** discovery (0.01/record), or need **personality/selling guidance** for personalization. **In the priority stack** ([`../SKILL.md`](../SKILL.md) §5) as the URL-anchored enrich rung and the cheapest per-record search — but it doesn't displace the sourcing-first spine: `salesNavigator` (0.02/lead) still leads plain at-scale people sourcing, and `cargo` native still owns match-verified firmographics.
 
 ## Credits-based actions
 
@@ -18,6 +18,9 @@ LinkedIn-anchored people/company data with an unusually cheap enrich-and-email c
 | `findMobilePhone` | **0.5** | `linkedinUrl` **or** (`domain` + `name`) | Mobile phone number. Bills **0** when nothing is found. |
 | `searchPeople` | **0.05 / returned record** | contact + account filter **groups** (see below) + `limit` (default 10, max 100) | Filter-rich people search (title, seniority, department, education, skills, tenure, past company, firmographics). |
 | `searchCompanies` | **0.01 / returned record** | account filter **groups** + `lookalikeDomains` (≤5 domains/LinkedIn URLs) + `limit` (default 10, max 100) | Cheapest company search in the catalog + lookalike discovery. |
+| `enrichCompany` | **0.01** | `domain` **or** `linkedinUrl` | Full company profile. Cheapest company enrich in the catalog. |
+| `countCompanies` | **free** | same account filter **groups** as `searchCompanies` (no `limit`) | Returns `{"count": N}` — the size of the pool a search would draw from. |
+| `countPeople` | **free** | same filter **groups** as `searchPeople` (no `limit`) | Returns `{"count": N}` — pool size before paying per record. |
 
 Two extractors (`fetchPeople`, `fetchCompanies`) also exist for syncing search results straight into a model — same filter shape, bulk export up to 10,000 rows. Use them from a CDK/model-sync context; recipes here use the actions.
 
@@ -75,7 +78,7 @@ cargo-ai orchestration action execute \
   --wait-until-finished
 ```
 
-Billed **per returned record** — `limit` is your budget cap; size the pool first per [`../references/cost-discipline.md`](../references/cost-discipline.md).
+Billed **per returned record** — `limit` is your budget cap. Size the pool with `countCompanies` / `countPeople` first: they take the same filters, cost nothing, and turn the count-first rule in [`../references/cost-discipline.md`](../references/cost-discipline.md) into a free call rather than a guess.
 
 ### Pattern D — People search (filters salesNavigator can't express)
 
