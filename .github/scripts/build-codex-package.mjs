@@ -420,18 +420,28 @@ const PACKAGE_EDITS = [
   {
     file: "cargo/SKILL.md",
     find: "Fresh workspace \u2192 real deliverable (25 leads for the user's persona, with a cost receipt) in under two minutes",
-    replace: "Fresh workspace \u2192 real deliverable (the companies hiring for the user's persona, with a cost receipt) in under two minutes",
+    replace: "Fresh workspace \u2192 real deliverable (the accounts matching the user's persona, sized for free and sampled for a quarter of a credit) in under two minutes",
   },
   {
     file: "cargo/SKILL.md",
     find: "one persona question \u2192 25 leads in under two minutes \u2192 cost receipt \u2192 save as a recurring play",
-    replace: "one persona question \u2192 the companies hiring for it, in under two minutes \u2192 cost receipt \u2192 save as a recurring play",
+    replace: "one persona question \u2192 a free pool count and 25 matching accounts, in under two minutes \u2192 cost receipt \u2192 save as a recurring play",
   },
   {
     file: "README.md",
     find: "one question (\"who do you sell to?\") \u2192 25 leads matching that persona in under two minutes",
-    replace: "one question (\"who do you sell to?\") \u2192 the companies hiring for that persona in under two minutes",
-  }
+    replace: "one question (\"who do you sell to?\") \u2192 the accounts matching that persona in under two minutes",
+  },
+  {
+    file: "cargo/SKILL.md",
+    find: "The [quickstart demo](../cargo-quickstart/SKILL.md) spends about **0.5**.",
+    replace: "The [quickstart demo](../cargo-quickstart/SKILL.md) spends about **0.25**.",
+  },
+  {
+    file: "README.md",
+    find: "the [two-minute quickstart demo](#onboarding--cargo-quickstart) spends about 0.5 of them",
+    replace: "the [two-minute quickstart demo](#onboarding--cargo-quickstart) spends about 0.25 of them",
+  },
 ];
 
 // Applies PACKAGE_EDITS to the staged tree. Returns what didn't match.
