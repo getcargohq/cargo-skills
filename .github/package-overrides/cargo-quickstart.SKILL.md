@@ -47,15 +47,29 @@ The demo has a two-minute budget from answer to deliverable. On the fast path:
 Translate the persona into two things: the **title its buyer holds** (`employeeRole.employee_title_or` — companies that employ that role) and the **company shape** around it (`employeeSize`, and `industry` when the persona names one). Then count for free before paying for anything.
 
 ```bash
-# 1. Count the pool — FREE (countCompanies is fixed-cost 0). This is the demo's
-#    first beat: the user's whole addressable market, before a credit is spent.
+# Both steps retrieve the same way: execute returns a run object, the DATA comes
+# from a signed URL, and that file holds every run of the workflow — so filter on
+# the run's own _uuid. One helper, used twice.
+fetch_output() {  # $1 = the run json written by execute → prints that run's .output
+  local run_uuid workflow_uuid url
+  run_uuid=$(jq -r '.run.uuid' "$1")
+  workflow_uuid=$(jq -r '.run.workflowUuid' "$1")
+  url=$(cargo-ai orchestration run download-outputs \
+    --workflow-uuid "$workflow_uuid" --output-node-slug action --format json | jq -r '.url')
+  curl -fsS "$url" | jq --arg u "$run_uuid" '[.[] | select(._uuid==$u)][0].output'
+}
+
 FILTER='{"employeeRole": {"employee_title_or": ["<buyer title>", "<buyer title variant>"]},
          "employeeSize": {"min_employee_count": 50, "max_employee_count": 1000},
          "industry": {"industry_or": ["<industry>"]}}'
 
+# 1. Count the pool — FREE (countCompanies is fixed-cost 0). This is the demo's
+#    first beat: the user's whole addressable market, before a credit is spent.
 cargo-ai orchestration action execute \
   --action '{"kind":"connector","integrationSlug":"aiArk","actionSlug":"countCompanies"}' \
   --data "$FILTER" --wait-until-finished > /tmp/quickstart-count.json
+
+POOL=$(fetch_output /tmp/quickstart-count.json | jq -r '.count')   # e.g. 1904
 
 # 2. Pull 25 of them — 0.01/record, so this is 0.25 credits.
 cargo-ai orchestration action execute \
@@ -63,23 +77,14 @@ cargo-ai orchestration action execute \
   --data "$(jq -c '. + {limit: 25}' <<<"$FILTER")" \
   --wait-until-finished > /tmp/quickstart-run.json
 
-# 3. Fetch the output data (NOT in the execute stdout) — signed URL, then filter to THIS run
-RUN_UUID=$(jq -r '.run.uuid' /tmp/quickstart-run.json)
-WF_UUID=$(jq -r '.run.workflowUuid' /tmp/quickstart-run.json)
-curl -fsS "$(cargo-ai orchestration run download-outputs \
-  --workflow-uuid "$WF_UUID" --output-node-slug action --format json | jq -r '.url')" \
-  > /tmp/quickstart-outputs.json
-
-# 4. Show the table (the file holds ALL of the workflow's runs — filter by _uuid;
-#    each row's .output is the company array directly, fields are snake_case)
-jq -r --arg u "$RUN_UUID" \
-  '[.[] | select(._uuid==$u)][0].output[]
-   | [.name, .industry, (.employee_count|tostring),
-      ([.city,.country]|map(select(.!=null and .!=""))|join(", ")), .domain] | @tsv' \
-  /tmp/quickstart-outputs.json | column -t -s $'\t'
+# 3. Fetch the rows and show the table (fields are snake_case)
+fetch_output /tmp/quickstart-run.json > /tmp/quickstart-companies.json
+jq -r '.[] | [.name, .industry, (.employee_count|tostring),
+              ([.city,.country]|map(select(.!=null and .!=""))|join(", ")), .domain] | @tsv' \
+  /tmp/quickstart-companies.json | column -t -s $'\t'
 ```
 
-Show the table (company · industry · headcount · location · domain), not the raw JSON. **Lead with the count from step 1** — "1,904 companies match that description; here are 25 of them, for a quarter of a credit" is the demo's headline, because it reframes the 25 rows as a sample of a market rather than a list. Companies only; the demo names no individuals.
+Show the table (company · industry · headcount · location · domain), not the raw JSON. **Lead with `$POOL`** — "1,904 companies match that description; here are 25 of them, for a quarter of a credit" is the demo's headline, because it reframes the 25 rows as a sample of a market rather than a list. Companies only; the demo names no individuals.
 
 Filter notes worth knowing before you improvise:
 

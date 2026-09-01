@@ -145,6 +145,7 @@ const REMOVED_TERMS = [
   // Not just the slug: the playbook pitched the capability in prose that
   // named no action, and a slug-only check waved it through.
   { term: "personality", scope: "skills/" },
+  { term: "attendee", scope: "skills/cargo-gtm/provider-playbooks/linkedin.md" },
   { term: "provider-playbooks/x.md", scope: "skills/" },
   { term: "extractEventAttendees", scope: "skills/cargo-gtm/" },
 ];
@@ -459,6 +460,21 @@ const PACKAGE_EDITS = [
     file: "cargo-gtm/provider-playbooks/aiArk.md",
     find: "need a **mobile phone** cheaply (0.5 vs the 3+ phone tier), want **lookalike-company** discovery (0.01/record), or need **personality/selling guidance** for personalization.",
     replace: "need a **mobile phone** cheaply (0.5 vs the 3+ phone tier), or want **lookalike-company** discovery (0.01/record).",
+  },
+  {
+    file: "cargo-gtm/provider-playbooks/linkedin.md",
+    find: "- \u2705 **Engagement-based sourcing** \u2014 commenters/reactors on a competitor-topic post, event attendees: warm pools no search filter can express.",
+    replace: "- \u2705 **Engagement-based sourcing** \u2014 commenters/reactors on a competitor-topic post: warm pools no search filter can express.",
+  },
+  {
+    file: "cargo-gtm/provider-playbooks/linkedin.md",
+    find: "**Per-item billing on activity pulls.** Comments, reactions, event attendees, profile activity, and viewers bill",
+    replace: "**Per-item billing on activity pulls.** Comments, reactions, profile activity, and viewers bill",
+  },
+  {
+    file: "cargo-gtm/provider-playbooks/linkedin.md",
+    find: "Company URLs are `/company/...`, jobs `/jobs/view/...`, events `/events/...` \u2014 pass the wrong shape",
+    replace: "Company URLs are `/company/...`, jobs `/jobs/view/...` \u2014 pass the wrong shape",
   },
 ];
 
@@ -968,15 +984,33 @@ for (const entry of entries.filter((e) =>
 // The edits above are anchored to prose. This is the check that does not care
 // how they were written: if any packaged file still names an excluded skill,
 // the archive ships a link to something it does not contain.
-for (const excluded of EXCLUDED_SKILLS) {
-  let hits = "";
+// grep-family exit codes: 0 found, 1 nothing matched, >1 an actual error. Only
+// 1 means clean. Treating every throw as "no matches" — as this did — turns a
+// missing binary or an unreadable archive into a silent pass, and these sweeps
+// are the only evidence the removals took, so a sweep that did not run is a
+// build failure rather than a clean bill of health.
+const zipgrepFiles = (term) => {
   try {
-    hits = execFileSync("zipgrep", ["-l", excluded, zipPath], { encoding: "utf8" });
+    const out = execFileSync("zipgrep", ["-l", term, zipPath], { encoding: "utf8" });
+    return { files: out.split("\n").filter(Boolean) };
   } catch (error) {
-    // zipgrep exits non-zero when nothing matched; that is the good case.
-    hits = typeof error.stdout === "string" ? error.stdout : "";
+    if (error.status === 1) {
+      return { files: (error.stdout ?? "").split("\n").filter(Boolean) };
+    }
+    const why =
+      error.status === undefined
+        ? `could not run (${error.code ?? error.message})`
+        : `exited ${error.status}`;
+    return { files: [], failure: `zipgrep ${why}` };
   }
-  const files = hits.split("\n").filter(Boolean);
+};
+
+for (const excluded of EXCLUDED_SKILLS) {
+  const { files, failure } = zipgrepFiles(excluded);
+  if (failure !== undefined) {
+    problems.push(`could not verify ${excluded} left the archive: ${failure}`);
+    continue;
+  }
   if (files.length > 0) {
     problems.push(
       `archive still references the excluded skill ${excluded} in: ${files.join(", ")}`,
@@ -985,15 +1019,14 @@ for (const excluded of EXCLUDED_SKILLS) {
 }
 
 for (const { term, scope } of REMOVED_TERMS) {
-  let hits = "";
-  try {
-    hits = execFileSync("zipgrep", ["-l", term, zipPath], { encoding: "utf8" });
-  } catch (error) {
-    hits = typeof error.stdout === "string" ? error.stdout : "";
+  const { files, failure } = zipgrepFiles(term);
+  if (failure !== undefined) {
+    problems.push(`could not verify ${term} left ${scope}: ${failure}`);
+    continue;
   }
-  const files = hits.split("\n").filter((f) => f.startsWith(scope));
-  if (files.length > 0) {
-    problems.push(`archive still references ${term} under ${scope}: ${files.join(", ")}`);
+  const scoped = files.filter((f) => f.startsWith(scope));
+  if (scoped.length > 0) {
+    problems.push(`archive still references ${term} under ${scope}: ${scoped.join(", ")}`);
   }
 }
 
