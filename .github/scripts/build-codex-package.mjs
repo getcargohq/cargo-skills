@@ -142,6 +142,9 @@ const REMOVED_TERMS = [
   { term: "snitcher", scope: "skills/" },
   { term: "forager", scope: "skills/" },
   { term: "analyzePersonality", scope: "skills/" },
+  // Not just the slug: the playbook pitched the capability in prose that
+  // named no action, and a slug-only check waved it through.
+  { term: "personality", scope: "skills/" },
   { term: "provider-playbooks/x.md", scope: "skills/" },
   { term: "extractEventAttendees", scope: "skills/cargo-gtm/" },
 ];
@@ -441,6 +444,21 @@ const PACKAGE_EDITS = [
     file: "README.md",
     find: "the [two-minute quickstart demo](#onboarding--cargo-quickstart) spends about 0.5 of them",
     replace: "the [two-minute quickstart demo](#onboarding--cargo-quickstart) spends about 0.25 of them",
+  },
+  {
+    file: "cargo-gtm/provider-playbooks/aiArk.md",
+    find: "with an unusually cheap enrich-and-email combo, a personality-analysis action nothing else in the catalog has, and per-record search",
+    replace: "with an unusually cheap enrich-and-email combo and per-record search",
+  },
+  {
+    file: "cargo-gtm/provider-playbooks/aiArk.md",
+    find: "**All nine actions run on cargo's managed connection** \u2014 seven credits-based,",
+    replace: "**All eight actions run on cargo's managed connection** \u2014 six credits-based,",
+  },
+  {
+    file: "cargo-gtm/provider-playbooks/aiArk.md",
+    find: "need a **mobile phone** cheaply (0.5 vs the 3+ phone tier), want **lookalike-company** discovery (0.01/record), or need **personality/selling guidance** for personalization.",
+    replace: "need a **mobile phone** cheaply (0.5 vs the 3+ phone tier), or want **lookalike-company** discovery (0.01/record).",
   },
 ];
 
