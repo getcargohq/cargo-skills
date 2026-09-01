@@ -83,7 +83,7 @@ Show the table (company · industry · headcount · location · domain), not the
 
 Filter notes worth knowing before you improvise:
 
-- `industry_or` takes ordinary lowercase strings — `"software development"`, `"financial services"` — matching what comes back in each row's `industry`. Drop the group entirely when the persona doesn't name an industry; adding it typically halves the pool.
+- `industry_or` is enum-backed, and the members are LinkedIn-style lowercase names — `"software development"`, `"financial services"` — the same strings each row returns in its own `industry` field, so a value copied off a result always matches. Resolve anything less obvious through the `listIndustries` autocomplete instead of guessing: a non-member empties the pool rather than narrowing it. Drop the group entirely when the persona names no industry; adding it roughly halved the pool in testing.
 - Every group is nested (`_or` includes, `_not` excludes) and headcounts are numbers, not strings. Other useful groups on the same action: `technologies`, `funding`, `companyLocation`, `headcountGrowth`.
 - Rows also carry `linkedin_url`, `revenue`, `founded_year`, and `technologies` if a richer table suits the persona better.
 
