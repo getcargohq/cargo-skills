@@ -1,0 +1,15 @@
+# Plugin scanner configuration
+# https://hol.org/docs/libraries/ai-plugin-scanner/plugin-scanner/policies-and-output/
+#
+# This baseline suppresses false positives from cisco-ai-skill-scanner >= 2.0.14
+# which incorrectly flags standard Unicode typography (em dashes, arrows) as
+# "obfuscated prompt-injection instructions".
+#
+# The flagged characters are:
+# - → (rightwards arrow, U+2192) — used in "5→40/day" ramp notation
+# - — (em dash, U+2014) — standard typographic punctuation
+#
+# These are normal documentation formatting, not obfuscation attempts.
+
+[scanner]
+baseline_file = ".plugin-scanner-baseline.txt"
