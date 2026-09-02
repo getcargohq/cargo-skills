@@ -6,7 +6,7 @@ last-reviewed: 2026-07-09
 
 # rocketreach (RocketReach)
 
-Single-action person lookup: `lookupPerson` (1 credit) resolves a person **and their company** from flexible identifiers — name + employer, LinkedIn URL, email, or a US healthcare **NPI number** — returning contact channels (`emails`, `phones`, `recommended_email`, `current_work_email`), profile data, and `job_history` in one call. It's a 1-credit ENRICH fallback beside the priority stack's `apolloio.enrichPerson` (1) — and outside the stack, so reach for it only when Apollo has also missed; `cargo` native → `waterfall` still leads the default chain ([`../references/alternatives.md`](../references/alternatives.md)). The NPI input is its genuinely distinctive angle: healthcare-provider lookups the generalist stack doesn't key on.
+Single-action person lookup: `lookupPerson` (1 credit) resolves a person **and their company** from flexible identifiers — name + employer, LinkedIn URL, email, or a US healthcare **NPI number** — returning contact channels (`emails`, `phones`, `recommended_email`, `current_work_email`), profile data, and `job_history` in one call. It's a 1-credit ENRICH fallback beside the priority stack's `apolloio.enrichPerson` (1) — and outside the stack, so reach for it only when Apollo has also missed; `aiArk` → `waterfall` still leads the default chain ([`../references/alternatives.md`](../references/alternatives.md)). The NPI input is its genuinely distinctive angle: healthcare-provider lookups the generalist stack doesn't key on.
 
 ## Credits-based actions
 
@@ -16,7 +16,7 @@ Single-action person lookup: `lookupPerson` (1 credit) resolves a person **and t
 
 ## What it's for
 
-- ✅ **Fallback person enrichment** — 1 credit when a pilot shows RocketReach hits where `cargo.enrichProspectDetails` (2) / `waterfall.enrichContact` (2) miss for the niche.
+- ✅ **Fallback person enrichment** — 1 credit when a pilot shows RocketReach hits where `aiArk.enrichPerson` (0.1) / `waterfall.enrichContact` (2) miss for the niche.
 - ✅ **Healthcare-provider lookup** — `npiNumber` input plus `npi_data` in the output; no other catalog action takes an NPI.
 - ✅ **One-call person + company context** — output carries `current_employer`, `current_employer_domain`, `current_employer_linkedin_url`, and `job_history`, so a hit can also seed company enrichment and job-change checks.
 - ❌ **Sourcing or search** — lookup only; there is no people-search action here. Credits-based sourcing stays on `salesNavigator`.
@@ -62,7 +62,7 @@ cargo-ai orchestration action execute \
 
 ## Position in the waterfall
 
-- `lookupPerson` — **ENRICH (person), 1-credit fallback rung** beside `apolloio.enrichPerson` (1), behind the stack's `cargo` (2) → `waterfall` (2) → `peopleDataLabs` (3) chain; promote it per-batch only when a pilot shows better niche coverage (healthcare especially).
+- `lookupPerson` — **ENRICH (person), 1-credit fallback rung** beside `apolloio.enrichPerson` (1), behind the stack's `aiArk` (0.1) → `waterfall` (2) → `peopleDataLabs` (3) chain; promote it per-batch only when a pilot shows better niche coverage (healthcare especially).
 - Emails it surfaces flow to **VERIFY** before activation.
 
 ## Recurring use

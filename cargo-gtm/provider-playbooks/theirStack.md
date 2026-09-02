@@ -97,26 +97,27 @@ This is the unique strength of theirStack — combined tech-stack AND hiring-int
 
 ## Position in the waterfall
 
-**Primary intent-signal source** (rung 1 for hiring/tech-stack-driven sourcing); falls to `cargo.enrichBusinessTechnographics` for per-company tech detail on matched companies, and to `peopleDataLabs` when the filter needs fields theirStack lacks (funding, investors).
+**Primary intent-signal source** (rung 1 for hiring/tech-stack-driven sourcing); falls to `builtwith` for per-domain tech detail, and to `peopleDataLabs` when the filter needs fields theirStack lacks (funding, investors).
 
 ## Action shape
 
 `{"kind":"connector","integrationSlug":"theirStack","actionSlug":"<slug>"}`. **No `connectorUuid` in `config`.**
 
-## When to combine with cargo native
+## When to combine with the enrichment chain
 
-After sourcing with theirStack, **enrich with cargo** rather than running theirStack on every record. The pattern:
+After sourcing with theirStack, **enrich per company** rather than running theirStack on every record. The pattern:
 
 1. `theirStack.searchCompanies` → 500 companies matching intent (250 credits).
-2. `cargo.matchBusiness` → match each to cargo catalog (250 credits).
-3. `cargo.enrichBusinessFirmographics` + `cargo.enrichBusinessTechnographics` → fill firmographic/tech detail (750 credits combined).
+2. Dedupe against the Companies model with a `storage query execute` on `domain` (free).
+3. `aiArk.enrichCompany` → firmographics on the new ones (5 credits).
+4. `builtwith.getDomainSummary` → stack detail (free), escalating to `enrichDomain` (1) only on ambiguous rows.
 
-Total: ~1,250 credits for 500 fully-enriched companies with intent signal. Cheaper than running peopleDataLabs (3 credits/record × 3 actions = 4,500 credits).
+Total: ~255 credits for 500 fully-enriched companies with intent signal, plus 1 per row that needs the paid stack detail. Cheaper than running peopleDataLabs (3 credits/record × 3 actions = 4,500 credits).
 
 ## Recurring use
 
 Hiring intent decays in days — theirStack is **built for the monitor shape, not the one-off pull**.
 
 - **Scheduled pull:** re-run `searchJobs` / `searchCompanies` on the daily hiring-intent default, with `posted_at_max_age_days` matched to the cadence (daily → 1–2 days) so each run bills only postings that appeared since the last one, never the same window twice. Cadence table: [`../recipes/save-as-play.md`](../recipes/save-as-play.md).
-- **In-play gate:** dedup discovered companies against the Companies model via `cargo.matchBusiness` (the "combine with cargo native" pattern above) before any paid enrichment — a company re-posting the same role must not re-enter the enrich chain.
+- **In-play gate:** dedup discovered companies against the Companies model with a free `storage query execute` on `domain` (step 2 of the pattern above) before any paid enrichment — a company re-posting the same role must not re-enter the enrich chain.
 - **Postings expire; stacks don't.** `searchTechnologies`-derived tech-stack fields are slow-moving — re-pull them on demand for a batch, not on the daily intent cadence.

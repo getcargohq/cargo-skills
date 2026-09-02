@@ -1,10 +1,10 @@
 # Stage → cheapest credits-based action map
 
-Canonical reference for picking the cheapest credits-based action per GTM stage across the full 138-integration cargo catalog. Use this when the priority-stack default doesn't have what you need.
+Canonical reference for picking the cheapest credits-based action per GTM stage across the full 136-integration cargo catalog. Use this when the priority-stack default doesn't have what you need.
 
-Prices are credits/record. "Priority?" marks providers in the priority stack (salesNavigator / cargo / aiArk / waterfall / FullEnrich / apolloio / theirStack / peopleDataLabs).
+Prices are credits/record. "Priority?" marks providers in the priority stack (salesNavigator / aiArk / waterfall / FullEnrich / apolloio / theirStack / peopleDataLabs).
 
-This map is **curated** — the cheapest few rungs per stage, with the routing judgement attached. For the complete machine-generated list of all 197 credits-based actions, including per-config pricing, see [`credits-cost-table.md`](credits-cost-table.md).
+This map is **curated** — the cheapest few rungs per stage, with the routing judgement attached. For the complete machine-generated list of all 176 credits-based actions, including per-config pricing, see [`credits-cost-table.md`](credits-cost-table.md).
 
 **Size before you spend.** `aiArk.countPeople` and `aiArk.countCompanies` cost **0** and return how many records a filter matches without retrieving them. Run the count, quote it, then decide whether to pay for the search.
 
@@ -36,6 +36,7 @@ This map is **curated** — the cheapest few rungs per stage, with the routing j
 | salesNavigator | searchAccounts | 0.05 | ✅ | LinkedIn-anchored. Default at-scale. |
 | theirStack | searchCompanies | 0.5 | ✅ | Tech-stack + hiring-intent filter. |
 | oceanio | searchCompanies | 1 |   | Mid-tier. |
+| societeInfo | search (`objectType: company`) | 4 / item |   | **France only.** Registry filters nothing else has: NAF code, collective agreement, filed sales/profits, legal form. |
 | peopleDataLabs | searchCompanies / queryCompanies | 3 | ✅ | `searchCompanies` uses cargo's `{conjonction, groups, conditions}` filter shape; `queryCompanies` takes a PDL **SQL string**. Investor/funding filters require the SQL variant. |
 
 ## Sourcing — Local SMBs
@@ -54,11 +55,14 @@ This map is **curated** — the cheapest few rungs per stage, with the routing j
 | linkedin | enrichProfile | 0.25 |   | LinkedIn-anchored (no email). |
 | prospeo | enrichLinkedin | 0.5 |   | Cheapest LinkedIn URL → details. |
 | linkedin | enrichProfileFromName | 0.5 |   | Name+company → LinkedIn details. |
-| apolloio | enrichPerson | 1 (**9** with `revealPhoneNumber`) | ✅ | Niche-coverage rung — promote per-batch only when a pilot shows Apollo hits where cargo/waterfall miss. The phone flag is **9x**, not a small uplift. |
-| cargo | enrichProspectDetails | 2 | ✅ | After matchProspect. Default in priority stack. |
+| apolloio | enrichPerson | 1 (**9** with `revealPhoneNumber`) | ✅ | Niche-coverage rung — promote per-batch only when a pilot shows Apollo hits where aiArk/waterfall miss. The phone flag is **9x**, not a small uplift. |
 | waterfall | enrichContact | 2 | ✅ | Multi-source contact enrichment. |
 | peopleDataLabs | enrichPerson | 3 | ✅ | Heavyweight backfill. |
+| rocketreach | lookupPerson | 1 |   | Any identifier mix (name + employer, title, URL, email); NPI lookups for healthcare. |
 | datagma | enrichPerson | 8 |   | LinkedIn URL or work email → profile. Priced as a phone rung; use only when cheaper rungs miss. |
+| mixrank | findPerson | 4 |   | **Last rung.** The only one that resolves from a bare phone number. |
+
+**Personality / selling guidance:** `aiArk.analyzePersonality` (0.05) turns a LinkedIn profile into OCEAN + DISC traits with tailored selling notes. Nothing else in the catalog does it. It is a personalization input, not an identity field — treat the output as a hypothesis about how to write, never as a fact about the person.
 
 **From an email rather than a URL:** `aiArk.reverseLookup` (0.05) is the cheapest, then `companyEnrich.lookupPerson` (0.25, resolves the company from the domain), then `contactOut.enrich` (0–3 by config), then `datagma.enrichPersonFromPersonalEmail` (2, the only rung that takes a **personal** address — non-EU only).
 
@@ -72,12 +76,42 @@ This map is **curated** — the cheapest few rungs per stage, with the routing j
 | linkedin | enrichCompany | 0.25 |   | LinkedIn ID-based. |
 | prospeo | enrichCompany | 0.5 |   | Alt mid-tier. |
 | linkedin | enrichCompanyFromDomain | 0.5 |   | Domain → LinkedIn-anchored details. |
-| cargo | enrichBusinessFirmographics | 0.5 | ✅ | After matchBusiness. Default in priority stack. |
-| apolloio | enrichOrganization | 1 | ✅ | Apollo-anchored; the niche-coverage rung when cargo's match misses. |
+| apolloio | enrichOrganization | 1 | ✅ | Apollo-anchored; the niche-coverage rung when the cheaper rungs miss. |
 | oceanio | enrichCompany | 1 |   | Mid-tier. |
 | reverseContact | enrichCompanyFromLinkedin | 1 |   | Niche: LinkedIn URL → company. |
 | waterfall | enrichCompany | 1 | ✅ | Multi-source. |
 | peopleDataLabs | enrichCompany | 3 | ✅ | Heavyweight backfill. |
+| societeInfo | enrich | 4 |   | **France only.** Resolves to the official registry record (SIREN/SIRET). The only source for French statutory data. |
+| mixrank | findCompany | 4 |   | **Last rung.** Resolves from name, URL, or LinkedIn when everything above missed. |
+
+## Headcount & workforce
+
+The most-asked company attribute, and the one with the most sources — they answer
+different questions and are not interchangeable. The `salesNavigator.find*` calls
+key on a LinkedIn **`companyId`**, not a domain; a list without one pays 0.05/account
+through `searchAccounts` first ([`../recipes/custom-datapoints.md`](../recipes/custom-datapoints.md) prices this as an ID prerequisite).
+
+| Provider | Action | Cost | Notes |
+|---|---|---|---|
+| salesNavigator | findEmployeesCount | 0.25 | Headcount snapshot. |
+| salesNavigator | findEmployeesDistribution | 0.25 | Role / department split — the SDR:AE-ratio question. |
+| salesNavigator | findCompanyMetrics | 0.25 | Growth and trend metrics. |
+| salesNavigator | findCompanyInsights | 0.25 | Mixed company insights. |
+| companyEnrich | getWorkforce | 0.25 | Historical headcount **by department** — the only source of the time series. |
+| linkedin | findCustomHeadcount | 0.5 | "How many people matching *keyword* work there" — a headcount for a role the other actions don't bucket. |
+| linkedin | extractCompanyEmployeesInsights | 0.25 | Aggregate employee view from the LinkedIn page. |
+
+## Per-domain contact discovery
+
+Distinct from **Sourcing — Search people**: these start from one domain you already
+hold and return who is there, rather than searching a population by title. Cheap for
+a handful of contacts at a known account; wrong for building a list.
+
+| Provider | Action | Cost | Notes |
+|---|---|---|---|
+| icypeas | scanDomain | 0.1 | **Role-based** addresses only (`contact@`, `admin@`) — not named people. |
+| hunter | searchDomain | 1 | Named people at one domain, filtered by seniority / department. **Max 10 per call** — never loop it to build a list. |
+| societeInfo | search (`objectType: contact`) | 4 / item | **France only.** Contacts at one registered company, by registry number. |
 
 ## Find email
 
@@ -144,8 +178,7 @@ This map is **curated** — the cheapest few rungs per stage, with the routing j
 
 | Provider | Action | Cost | Notes |
 |---|---|---|---|
-| cargo | enrichBusinessFundingAndAcquisitions | 0.5 | Cheapest. |
-| enrichCrm | getFunding | 1 | Alternative. |
+| enrichCrm | getFunding | 1 | Only credits-based funding action in the catalog. |
 
 ## Tech-stack signal
 
@@ -154,13 +187,14 @@ This map is **curated** — the cheapest few rungs per stage, with the routing j
 | builtwith | getDomainSummary | **0** | Free tier — technology-group *counts* for a domain. Enough to bucket accounts before paying for detail. |
 | theirStack | searchTechnologies | 0.5 | Catalog-style lookup. |
 | builtwith | enrichDomain | 1 | Full stack + metadata for one domain. |
-| cargo | enrichBusinessTechnographics | 1 | Cargo-native. |
 
 ## Hiring intent
 
 | Provider | Action | Cost | Notes |
 |---|---|---|---|
 | theirStack | searchJobs | 0.5 | Default. |
+| linkedin | searchJobs | 0.5 | Same price, different index — filters are LinkedIn enums from the integration's autocompletes, not free text. |
+| linkedin | enrichJob | 0.25 | One posting URL → full job detail. The drill-down after either search. |
 
 ## Warm intros
 
@@ -183,6 +217,7 @@ Everything here is **0.05 per item returned** and needs a LinkedIn URL in hand. 
 |---|---|---|---|
 | linkedin | extractEventAttendees | 0.05 / item | Attendees of a LinkedIn event. |
 | linkedin | searchPostComments / searchPostReactions | 0.05 / item | Who engaged with a specific post. |
+| linkedin | enrichPost | 0.25 | One post URL → its content and engagement counts. Flat, not per item. |
 | linkedin | extractProfilePostActivity / extractProfileCommentActivity / extractProfileReactionActivity | 0.05 / item | What one person has been posting, commenting on, reacting to. |
 | linkedin | extractFollowers / extractPageFollowers | 0.05 / item | A profile's or page's followers. |
 | linkedin | extractProfileViewers / extractCompanyViewers | 0.05 / item | Who viewed the profile / company page. |
@@ -233,6 +268,6 @@ Prices are **per 1k tokens**, not per record. On openAi, gemini and anthropic, `
 
 ## Notes on this map
 
-- This map is curated, not exhaustive: it carries the cheapest rungs per stage plus the routing judgement. The complete list of all **197** credits-based actions is generated from the live catalog into [`credits-cost-table.md`](credits-cost-table.md) — regenerate it from `cargo-ai orchestration action list --kind connector` and `--kind native`, which return a `credits` array on every billed action. The other 337 catalog actions (sequencer / CRM upserts, list/get/delete) carry no provider price and appear in neither — though every node execution still bills 0.01 credits.
+- This map is curated, not exhaustive: it carries the cheapest rungs per stage plus the routing judgement. The complete list of all **176** credits-based actions is generated from the live catalog into [`credits-cost-table.md`](credits-cost-table.md) — regenerate it from `cargo-ai orchestration action list --kind connector` and `--kind native`, which return a `credits` array on every billed action. The other 337 catalog actions (sequencer / CRM upserts, list/get/delete) carry no provider price and appear in neither — though every node execution still bills 0.01 credits.
 - Costs are per-record at the cheapest config. Some actions have variable cost by config (e.g., `contactOut.enrich` returns 0/1/2/3 credits depending on data returned).
 - Priority stack: see `../SKILL.md` for the canonical 8-provider priority list and `../provider-playbooks/` for per-provider deep dives.

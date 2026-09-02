@@ -21,7 +21,7 @@ The right step-1 provider depends on which filter is primary:
 | Tech stack | `theirStack.searchCompanies` (with techFields) | 0.5 | Tech-stack-driven sourcing. |
 | Hiring for role X | `theirStack.searchJobs` | 0.5 | Hiring-intent signal. |
 | Local SMBs / storefronts | `serper.searchPlaces` | 1 | Google Maps-style. |
-| Already have a domain list | (skip sourcing) | — | Go straight to step 2 (dedup + enrich). |
+| Already have a domain list | (skip sourcing) | — | Go straight to step 2 (dedupe + enrich). |
 
 For combined filters (e.g. fintech in US AND running Snowflake AND hiring data engineers), do parallel queries and intersect client-side.
 
@@ -105,45 +105,59 @@ cargo-ai orchestration action execute \
   --wait-until-finished > /tmp/companies.json
 ```
 
-### Step 2 — Match against cargo's catalog (dedup + warm)
+### Step 2 — Dedupe against the workspace (free)
+
+Sourcing returns companies you may already hold. Filter them out **before** any
+paid enrichment — this is a storage read, not a paid action:
 
 ```bash
-cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"cargo","actionSlug":"matchBusiness"}' \
-  --records "$(jq -c '[.companies[] | {domain: .website}]' /tmp/companies.json)" \
-  --wait-until-finished > /tmp/matched.json
+cargo-ai storage query execute "SELECT domain FROM default.companies" > /tmp/known.json
+
+# keep only the domains the workspace doesn't already have
+jq -c --slurpfile known /tmp/known.json \
+  '[.companies[]
+    | {domain: .website, linkedinId: .linkedinId}
+    | select(.domain as $d | ($known[0].rows // [] | map(.domain)) | index($d) | not)]' \
+  /tmp/companies.json > /tmp/new-companies.json
 ```
 
-Matched rows now have a stable cargo `businessUuid` for downstream enrichment.
+`domain` is the join key for every enrichment below — no provider-side id is
+needed for those. `linkedinId` is carried through only because the optional
+contact step needs a Sales Navigator `accountId`, and **no enrichment action
+returns one**; it comes from `salesNavigator.searchAccounts` at step 1. Sourcing
+that had no LinkedIn anchor (the `peopleDataLabs` path) has no `linkedinId` to
+carry, so step 4 falls back to a per-domain title search.
 
 ### Step 3 — Enrich firmographics + signals
 
 ```bash
-# Firmographics (cheap, comprehensive)
+# Firmographics — cheapest company enrich in the catalog
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"cargo","actionSlug":"enrichBusinessFirmographics"}' \
-  --records "$(jq -c '[.results[] | {businessUuid: .businessUuid}]' /tmp/matched.json)" \
+  --action '{"kind":"connector","integrationSlug":"aiArk","actionSlug":"enrichCompany"}' \
+  --records "$(jq -c '[.[] | {domain}]' /tmp/new-companies.json)" \
   --wait-until-finished > /tmp/firmo.json
 
 # Funding signals (only worth running if funding is part of ICP)
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"cargo","actionSlug":"enrichBusinessFundingAndAcquisitions"}' \
-  --records "$(jq -c '[.results[] | {businessUuid: .businessUuid}]' /tmp/matched.json)" \
+  --action '{"kind":"connector","integrationSlug":"enrichCrm","actionSlug":"getFunding"}' \
+  --records "$(jq -c '[.[] | {domain}]' /tmp/new-companies.json)" \
   --wait-until-finished > /tmp/funding.json
 
 # Tech-stack (only worth running if technographics are part of ICP)
+# getDomainSummary is FREE — run it across the whole list first
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"cargo","actionSlug":"enrichBusinessTechnographics"}' \
-  --records "$(jq -c '[.results[] | {businessUuid: .businessUuid}]' /tmp/matched.json)" \
+  --action '{"kind":"connector","integrationSlug":"builtwith","actionSlug":"getDomainSummary"}' \
+  --records "$(jq -c '[.[] | {domain}]' /tmp/new-companies.json)" \
   --wait-until-finished > /tmp/tech.json
 ```
 
-If a company didn't match in step 2, fall back to `waterfall.enrichCompany` (1 cred):
+Rows where `aiArk.enrichCompany` came back thin escalate one rung at a time —
+`companyEnrich.enrichByDomain` (0.25), then `waterfall.enrichCompany` (1):
 
 ```bash
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"waterfall","actionSlug":"enrichCompany"}' \
-  --records '<unmatched rows>' \
+  --action '{"kind":"connector","integrationSlug":"companyEnrich","actionSlug":"enrichByDomain"}' \
+  --records '<rows from /tmp/firmo.json with empty firmographics>' \
   --wait-until-finished > /tmp/firmo-fallback.json
 ```
 
@@ -154,7 +168,7 @@ Only run if the user asked for contacts. Cap at 3-5 per company.
 ```bash
 cargo-ai orchestration action execute-batch \
   --action '{"kind":"connector","integrationSlug":"salesNavigator","actionSlug":"searchLeads"}' \
-  --records "$(jq -c '[.results[] | {filters:{accountId: .linkedinId, titles:[\"CTO\",\"VP Engineering\"]}, limit: 5}]' /tmp/matched.json)" \
+  --records "$(jq -c '[.[] | select(.linkedinId) | {filters:{accountId: .linkedinId, titles:[\"CTO\",\"VP Engineering\"]}, limit: 5}]' /tmp/new-companies.json)" \
   --wait-until-finished > /tmp/contacts.json
 ```
 
@@ -191,15 +205,15 @@ For a 500-company TAM with contacts:
 | Step | Per record | Records | Subtotal |
 |---|---|---|---|
 | 1. Source (salesNavigator.searchAccounts) | 0.05 | 500 | 25 |
-| 2. matchBusiness | 0.5 | 500 | 250 |
-| 3. enrichBusinessFirmographics | 0.5 | 500 | 250 |
-| 3. enrichBusinessFundingAndAcquisitions (optional) | 0.5 | 500 | 250 |
-| 3. enrichBusinessTechnographics (optional) | 1 | 500 | 500 |
+| 2. Dedupe against the Companies model | 0 | 500 | 0 |
+| 3. aiArk.enrichCompany | 0.01 | 500 | 5 |
+| 3. enrichCrm.getFunding (optional) | 1 | 500 | 500 |
+| 3. builtwith.getDomainSummary (optional) | 0 | 500 | 0 |
 | 4. searchLeads (3 contacts each) | 0.02 × 3 | 500 | 30 |
 | 5. FullEnrich.findEmail | 1 | 1500 | 1500 |
 | 6. waterfall.verifyEmail | 0.1 | 1500 | 150 |
 
-**Total: ~2,955 credits for 500 companies + 1,500 contacts** (~6 credits per fully-enriched contact).
+**Total: ~2,210 credits for 500 companies + 1,500 contacts** (~1.5 credits per fully-enriched contact).
 
 Cut steps the user doesn't need (skip step 3 funding/tech if not part of ICP, skip steps 4-6 if no contacts needed) to bring the cost down.
 

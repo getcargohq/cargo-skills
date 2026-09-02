@@ -10,6 +10,42 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### `cargo-gtm` → 2.1.0 — the routing surfaces answer more of the questions people actually ask
+
+Measured rather than guessed: of the 176 credits-based actions, **148 were reachable** from a routing surface (`stage-action-map.md`, the phase guides, `alternatives.md`, a recipe) and 28 were reachable only from their own provider playbook — findable if you already knew which provider to open, which is the wrong way round. This closes the gaps worth closing and leaves the rest deliberately: **154/176**.
+
+- **Headcount had no section at all.** It is the most-asked company attribute and the first row of [`custom-datapoints.md`](cargo-gtm/recipes/custom-datapoints.md)'s feasibility gate, yet none of the four `salesNavigator.find*` actions appeared anywhere in [`stage-action-map.md`](cargo-gtm/references/stage-action-map.md). New **Headcount & workforce** section carries all four plus `companyEnrich.getWorkforce` (the only historical series), `linkedin.findCustomHeadcount` (0.5 — counts by keyword, for roles the fixed buckets don't have), and the `companyId` prerequisite that makes the cheap ones cost 0.30 on a list that arrived without one.
+
+- **"Who works at this domain" was not a documented question.** Distinct from searching a population by title, and answered by `icypeas.scanDomain` (0.1, role addresses only) and `hunter.searchDomain` (1, named people, **max 10 per call**). New **Per-domain contact discovery** section, which also states the trap: looping `searchDomain` to build a list is the pitfall its own playbook warns about.
+
+- **Three rungs that existed nowhere in the routing.** `rocketreach.lookupPerson` (1) and `mixrank.findPerson`/`findCompany` (4, last rung, the only phone-keyed resolution) join Enrich; `societeInfo` joins Sourcing and Enrich as **France-only** registry access — NAF code, collective agreement, filed accounts — which nothing else in the catalog reaches.
+
+- **Hiring intent had one row.** `linkedin.searchJobs` (0.5) sits beside `theirStack.searchJobs` at the same price against a different index, and `linkedin.enrichJob` (0.25) is the per-posting drill-down after either.
+
+- **Three new data-point rows** in `custom-datapoints.md`: lookalike companies (naming `companyEnrich.findSimilarCompanies`' **1-per-returned-row** billing, since `limit: 100` is 100 credits), per-domain contact discovery, and `aiArk.analyzePersonality` — catalog-unique, and framed as an input to *how you write* rather than a stored fact about a person.
+
+- **What stays unrouted, on purpose.** The four LinkedIn engagement actions (`likePost`, `followProfile`, `visitProfile`, `commentPostComment`) — routing them as data points would undercut [`acceptable-use.md`](cargo-gtm/references/acceptable-use.md) §2's refusal to batch-blast them. Three `native` actions owned by other skills. `searchLeadsLegacy`, which its playbook prices at 300× its replacement. The `extract*Search` URL variants and the X engagement-graph drill-downs, which are finer grain on an already-routed surface, not separate questions. `sillage` and `piloterr` by decision.
+
+### `cargo-gtm` → 2.0.0, `cargo` → 1.25.0 (router), `cargo-context` → 1.3.0, `cargo-connection` → 1.4.1, `cargo-orchestration` → 1.11.1 — the `cargo` provider leaves the docs
+
+The first-party enrichment provider is no longer documented. Its playbook, its 21 priced actions, and every recipe step that led with it are gone; each one now leads with the rung the pack already named as its fallback. This is breaking for `cargo-gtm`: an agent that learned the old chains has to relearn all of them.
+
+- **The playbook is deleted** (`cargo-gtm/provider-playbooks/cargo.md`), along with its rows in `skill-metadata.json` and `.github/data/integrations.json`, and its 21 rows in [`credits-cost-table.md`](cargo-gtm/references/credits-cost-table.md). Catalog counts follow the generated data file rather than the older hand-kept figure: **136 integrations, 176 credits-based actions of 513**.
+
+- **The priority stack is seven providers, not eight.** `salesNavigator` / `aiArk` / `waterfall` / `FullEnrich` / `apolloio` / `theirStack` / `peopleDataLabs`. `aiArk` absorbs the firmographic role it was already cheapest at — `enrichCompany` is **0.01**, which [`stage-action-map.md`](cargo-gtm/references/stage-action-map.md) had listed as the catalog's cheapest company enrich while the recipes still led with a 0.5 action behind a 0.5 match step.
+
+- **Substitutions, all promoted from the documented next rung.** Firmographics → `aiArk.enrichCompany` (0.01) → `companyEnrich.enrichByDomain` (0.25) → `waterfall.enrichCompany` (1). Person → `aiArk.enrichPerson` (0.1) → `waterfall.enrichContact` (2). Funding → `enrichCrm.getFunding` (1), now stated as the catalog's **only** credits-based funding action rather than a fallback. Technographics → `builtwith.getDomainSummary` (**free**) before `builtwith.enrichDomain` (1) or `theirStack.searchTechnologies` (0.5).
+
+- **Dedupe stops being a paid step.** The `match*` actions existed to mint an id the other actions required; every replacement keys on the **domain** or a LinkedIn URL, so dedupe is now a free `storage query execute` against the workspace's own Companies / Contacts models. Recipes that spent 0.5/record to resolve an id now spend nothing.
+
+- **The event feed has no replacement, and the recipes say so.** `fetchBusinessEvents` took a `timestamp_from`; nothing in the catalog does. [`funding-watch.md`](cargo-gtm/recipes/funding-watch.md), [`re-engagement.md`](cargo-gtm/recipes/re-engagement.md) and [`lost-deal-revival.md`](cargo-gtm/recipes/lost-deal-revival.md) are rewritten as a **diff**: re-pull, compare against the stored round date, keep what moved. That makes cadence the only cost dial, so funding-watch's default drops from daily to weekly and says why — a daily sweep re-bills unchanged data six days in seven.
+
+- **Every credit budget was recomputed, not relabelled.** Build-TAM 2,955 → **2,210** for 500 companies + 1,500 contacts. Prospecting P2 821 → **107** for 200 verified prospects. ICP discovery 602 → **204** on 200 deals. Context bootstrap ~3 → **~1**. The custom-datapoints worked shortlist re-solves end to end (3.30/account, ~13,500 against a 12,000 balance) so its "the full fan-out does not fit" conclusion still follows from its own numbers.
+
+- **Two data points the removal would otherwise have dropped silently.** `enrichBusinessFinancialMetrics` and `enrichBusinessRatingsByEmployees` had no entry in the substitution table above because they are not the same case. Revenue and NAICS survive — `companyEnrich.enrichByDomain` (0.25) returns them in the same call as firmographics — so [`custom-datapoints.md`](cargo-gtm/recipes/custom-datapoints.md) gains a row saying where they live. **Employee ratings have no successor at any price**, and that recipe now says so in a row of its own rather than letting the capability vanish between versions: "valuable, no obtainable source" is a line item it already treats as legitimate, and this is one.
+
+- **CLI pin → 1.0.78** (`cargo/cli-version`, from 1.0.66).
+
 ### `cargo-billing` → 2.0.0, `cargo-orchestration` → 1.11.0, `cargo-gtm` → 1.19.0, `cargo-diagnostics` → 1.4.0, `cargo` → 1.24.0 (router) — the execution charge, which the pack said did not exist
 
 A workspace's own numbers, reported back by a user: 419,183 orchestration executions against 481 credits of provider actions in one cycle, solving to **exactly 1 credit per 100 executions** — 90% of everything spent that cycle. The pack had told the agent the opposite, in three places that reinforced each other, so no amount of care with the cost table would have caught it.

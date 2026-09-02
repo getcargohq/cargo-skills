@@ -6,7 +6,7 @@ last-reviewed: 2026-07-25
 
 # aiArk (AI Ark)
 
-LinkedIn-anchored people/company data with an unusually cheap enrich-and-email combo, a personality-analysis action nothing else in the catalog has, and per-record search that bills at the bottom of the catalog. **All nine actions run on cargo's managed connection** — seven credits-based, plus two free `count*` actions that size a search before it bills — no own-key connector required (unlike `apolloio`, where only two are). Category `enrichment`, sub-category list-building. Reach for it when you hold **LinkedIn URLs** (cheapest profile+email at 0.1), need a **mobile phone** cheaply (0.5 vs the 3+ phone tier), want **lookalike-company** discovery (0.01/record), or need **personality/selling guidance** for personalization. **In the priority stack** ([`../SKILL.md`](../SKILL.md) §5) as the URL-anchored enrich rung and the cheapest per-record search — but it doesn't displace the sourcing-first spine: `salesNavigator` (0.02/lead) still leads plain at-scale people sourcing, and `cargo` native still owns match-verified firmographics.
+LinkedIn-anchored people/company data with an unusually cheap enrich-and-email combo, a personality-analysis action nothing else in the catalog has, and per-record search that bills at the bottom of the catalog. **All nine actions run on cargo's managed connection** — seven credits-based, plus two free `count*` actions that size a search before it bills — no own-key connector required (unlike `apolloio`, where only two are). Category `enrichment`, sub-category list-building. Reach for it when you hold **LinkedIn URLs** (cheapest profile+email at 0.1), need a **mobile phone** cheaply (0.5 vs the 3+ phone tier), want **lookalike-company** discovery (0.01/record), or need **personality/selling guidance** for personalization. **In the priority stack** ([`../SKILL.md`](../SKILL.md) §5) as the URL-anchored enrich rung and the cheapest per-record search — but it doesn't displace the sourcing-first spine: `salesNavigator` (0.02/lead) still leads plain at-scale people sourcing.
 
 ## Credits-based actions
 
@@ -134,7 +134,7 @@ Conventions inside a group:
 
 ## Recurring use
 
-- **Scheduled search:** `searchCompanies` / `searchPeople` fit a weekly sourcing tool (persona/company searches → weekly; cadence table: [`../recipes/save-as-play.md`](../recipes/save-as-play.md)) — but they bill 0.01/0.05 **per returned record on every run**, so dedup results against the workspace model (`cargo.matchBusiness` / `matchProspect`) before any paid downstream node.
+- **Scheduled search:** `searchCompanies` / `searchPeople` fit a weekly sourcing tool (persona/company searches → weekly; cadence table: [`../recipes/save-as-play.md`](../recipes/save-as-play.md)) — but they bill 0.01/0.05 **per returned record on every run**, so dedup results against the workspace model (a free `storage query execute` on `domain` / `linkedin_url`) before any paid downstream node.
 - **In-play gate:** `enrichPerson` runs only where `email` is still empty; `findMobilePhone` only where the phone column is empty. Misses bill 0, but a hit on an already-filled row is pure re-spend.
 - **Stable data:** profiles and emails don't decay week to week — never schedule blanket re-enrichment; `analyzePersonality` belongs in a play's WRITE step on newly qualified rows, not on a timer (see anti-patterns).
 

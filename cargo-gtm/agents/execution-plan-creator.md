@@ -48,13 +48,14 @@ PLAN:
     Why this provider: ...
 
   Step 2 — DEDUPE
-    Provider: cargo.matchBusiness (priority)
-    Cost: 0.5 × N = X credits
+    Provider: storage query against the existing Companies model (free)
+    Cost: 0 — a read, not an action
 
   Step 3 — ENRICH (firmographics)
-    Provider: cargo.enrichBusinessFirmographics (priority)
-    Cost: 0.5 × N (matched) = X credits
-    Fallback for unmatched: waterfall.enrichCompany (1 × M = Y credits)
+    Provider: aiArk.enrichCompany (priority)
+    Cost: 0.01 × N = X credits
+    Fallback for thin/empty rows: companyEnrich.enrichByDomain (0.25 × M),
+      then waterfall.enrichCompany (1 × M2 = Y credits)
 
   ... (steps continue)
 

@@ -26,7 +26,7 @@ LinkedIn-anchored search for accounts and leads. **Cheapest sourcing in the carg
 
 - **Default sourcing path** for anything LinkedIn-shaped (industry, headcount, role, geo, posted updates).
 - **Cheap volume**: build a 5,000-company TAM for ~250 credits.
-- **LinkedIn IDs**: returned account/lead IDs slot directly into other LinkedIn-aware actions (cargo `enrichBusinessLinkedinPosts`, `theSwarm.searchWarmIntros…`, downstream LinkedIn-anchored find/enrich).
+- **LinkedIn IDs**: returned account/lead IDs slot directly into other LinkedIn-aware actions (`linkedin.enrichCompany`, `theSwarm.searchWarmIntros…`, downstream LinkedIn-anchored find/enrich).
 
 ## Common pitfalls
 

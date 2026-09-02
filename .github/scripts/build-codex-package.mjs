@@ -92,7 +92,7 @@ const SKILL_DESCRIPTION_LIMIT = LIMITS.skillDescription;
 // rather than getting silently truncated into a rejected upload.
 const SHORT_DESCRIPTIONS = {
   "cargo-connection":
-    'Connect Cargo to an external system and find out what it can do — authenticate connectors, browse the integration catalog, and resolve the `connectorUuid` and `actionSlug` a workflow node needs. Triggers: "connect my HubSpot", "is Salesforce connected", "what integrations do you support", "can Cargo talk to <tool>", "what actions does <provider> have", "I need the connector UUID", "set up the API key for", "it is asking for credentials again", "why is this connector failing auth", "list my connectors". 138 integrations including HubSpot, Salesforce, Attio, Pipedrive, Outreach, Salesloft, Slack, Snowflake, BigQuery, Postgres, Stripe, and Google/LinkedIn ad audiences. Skip when: choosing between enrichment providers for a GTM job — use cargo-gtm and its provider playbooks.',
+    'Connect Cargo to an external system and find out what it can do — authenticate connectors, browse the integration catalog, and resolve the `connectorUuid` and `actionSlug` a workflow node needs. Triggers: "connect my HubSpot", "is Salesforce connected", "what integrations do you support", "can Cargo talk to <tool>", "what actions does <provider> have", "I need the connector UUID", "set up the API key for", "it is asking for credentials again", "why is this connector failing auth", "list my connectors". 136 integrations including HubSpot, Salesforce, Attio, Pipedrive, Outreach, Salesloft, Slack, Snowflake, BigQuery, Postgres, Stripe, and Google/LinkedIn ad audiences. Skip when: choosing between enrichment providers for a GTM job — use cargo-gtm and its provider playbooks.',
   "cargo-gtm":
     "Business-to-business go-to-market work on Cargo \u2014 research accounts and buying committees, enrich and verify B2B contact records from licensed data providers, score and qualify leads, draft outreach for the user's own sequencer, sync to CRM, and monitor buying signals. Runs on audiences with a documented lawful basis, screens every contact step against a workspace-wide suppression list, and requires per-recipient relevance; the skill sends no messages itself. Triggers: \"build me a list of\", \"find 50 <title> at <segment>\", \"who works at\", \"find work emails for these accounts\", \"enrich this CSV\", \"verify these emails\", \"build a TAM\", \"who fits our ICP\", \"score these leads\", \"write a first-touch email\", \"push these to my CRM\", \"who changed jobs\", \"who just raised funding\", \"companies using <tech>\", \"who is hiring <role>\", \"find the buying committee\", \"upload this audience to Google/LinkedIn ads\". Licensed B2B data providers only. Skip when: a run already happened and misbehaved \u2014 use cargo-diagnostics.",
 };
@@ -292,6 +292,18 @@ const PACKAGE_EDITS = [
     replace: "",
   },
   {
+    file: "cargo-gtm/references/stage-action-map.md",
+    find:
+      "\n\n**Personality / selling guidance:** `aiArk.analyzePersonality` (0.05) turns a LinkedIn profile into OCEAN + DISC traits with tailored selling notes. Nothing else in the catalog does it. It is a personalization input, not an identity field \u2014 treat the output as a hypothesis about how to write, never as a fact about the person.",
+    replace: "",
+  },
+  {
+    file: "cargo-gtm/recipes/custom-datapoints.md",
+    find:
+      "| How this person is likely to buy (personality, selling notes) | `aiArk.analyzePersonality` (0.05) | 0.05 | Catalog-unique. An input to *how you write*, never a stored fact about the person |\n",
+    replace: "",
+  },
+  {
     file: "cargo-gtm/references/credits-cost-table.md",
     find: "| 2 | `forager` | enrichment | `findPersonalEmail` | Find a person's personal email |\n",
     replace: "",
@@ -378,7 +390,7 @@ const PACKAGE_EDITS = [
   },
   {
     file: "cargo-gtm/guides/finding-companies-and-contacts.md",
-    find: "  \u251c\u2500 \"Find people I know who can intro\":      theSwarm.searchWarmIntrosToCompany / Person (2 cred)\n  \u2514\u2500 Visitor de-anonymization:                snitcher.searchSessions (0 cred) \u2192 cargo.matchProspect\n",
+    find: "  \u251c\u2500 \"Find people I know who can intro\":      theSwarm.searchWarmIntrosToCompany / Person (2 cred)\n  \u2514\u2500 Visitor de-anon (identifies a COMPANY):  snitcher.searchSessions (0 cred) \u2192 salesNavigator.searchLeads there\n",
     replace: "  \u2514\u2500 \"Find people I know who can intro\":      theSwarm.searchWarmIntrosToCompany / Person (2 cred)\n",
   },
   {

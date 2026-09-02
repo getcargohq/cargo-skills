@@ -52,11 +52,11 @@ Response:
       "score": 12,
       "action": {
         "kind": "connector",
-        "integrationSlug": "cargo",
+        "integrationSlug": "aiArk",
         "actionSlug": "enrichCompany",
         "connectorUuid": "<uuid>"
       },
-      "connectors": [{ "uuid": "<uuid>", "slug": "cargo", "name": "Cargo" }],
+      "connectors": [{ "uuid": "<uuid>", "slug": "aiArk", "name": "AI Ark" }],
       "credits": [{ "...": "cost table for this action" }],
       "autocompletes": [{ "slug": "<slug>", "params": { "...": "..." } }]
     }

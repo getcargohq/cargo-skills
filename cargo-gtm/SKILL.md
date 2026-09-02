@@ -1,7 +1,7 @@
 ---
 name: cargo-gtm
-description: "Do business-to-business go-to-market work on Cargo — research accounts and buying committees, enrich and verify B2B contact records from licensed data providers, score and qualify leads, draft permission-based outreach for the user's own sequencer, sync to CRM, and monitor buying signals. Consent basis, suppression lists, and volume limits gate every step that touches a person (`references/acceptable-use.md`); bulk unsolicited messaging, purchased or scraped lists, and consumer targeting are refused. Triggers: \"build me a list of\", \"find 50 <title> at <segment>\", \"who works at\", \"find work emails for these accounts\", \"enrich this CSV\", \"verify these emails\", \"build a TAM\", \"who fits our ICP\", \"who actually buys from us\", \"what data points should we collect on accounts\", \"our outbound is reaching the wrong people\", \"score these leads\", \"write a first-touch email\", \"push these to my CRM\", \"who changed jobs\", \"who just raised funding\", \"companies using <tech>\", \"who is hiring <role>\", \"find the buying committee\", \"portfolio companies of <investor>\", \"upload this audience to Google/Meta/LinkedIn ads\". Providers: aiArk, anthropic, apolloio, bouncer, brightData, builtwith, cargo, cleon1, companyEnrich, contactOut, datagma, dropcontact, enrichCrm, enrichley, enrowio, exa, findyMail, firecrawl, forager, FullEnrich, g2, gemini, hunter, icypeas, kitt, leadMagic, linkedin, linkup, mixrank, neverBounce, oceanio, openAi, parallel, peopleDataLabs, perplexity, piloterr, prospeo, proxycurl, reverseContact, rocketreach, salesNavigator, serper, sillage, snitcher, societeInfo, theirStack, theSwarm, waterfall, x, zeroBounce. Reads phase guides, recipes, and per-provider playbooks before any paid call. Skip when: a run already happened and misbehaved — use cargo-diagnostics."
-version: "1.19.0"
+description: "Do business-to-business go-to-market work on Cargo — research accounts and buying committees, enrich and verify B2B contact records from licensed data providers, score and qualify leads, draft permission-based outreach for the user's own sequencer, sync to CRM, and monitor buying signals. Consent basis, suppression lists, and volume limits gate every step that touches a person (`references/acceptable-use.md`); bulk unsolicited messaging, purchased or scraped lists, and consumer targeting are refused. Triggers: \"build me a list of\", \"find 50 <title> at <segment>\", \"who works at\", \"find work emails for these accounts\", \"enrich this CSV\", \"verify these emails\", \"build a TAM\", \"who fits our ICP\", \"who actually buys from us\", \"what data points should we collect on accounts\", \"our outbound is reaching the wrong people\", \"score these leads\", \"write a first-touch email\", \"push these to my CRM\", \"who changed jobs\", \"who just raised funding\", \"companies using <tech>\", \"who is hiring <role>\", \"find the buying committee\", \"portfolio companies of <investor>\", \"upload this audience to Google/Meta/LinkedIn ads\". Providers: aiArk, anthropic, apolloio, bouncer, brightData, builtwith, cleon1, companyEnrich, contactOut, datagma, dropcontact, enrichCrm, enrichley, enrowio, exa, findyMail, firecrawl, forager, FullEnrich, g2, gemini, hunter, icypeas, kitt, leadMagic, linkedin, linkup, mixrank, neverBounce, oceanio, openAi, parallel, peopleDataLabs, perplexity, piloterr, prospeo, proxycurl, reverseContact, rocketreach, salesNavigator, serper, sillage, snitcher, societeInfo, theirStack, theSwarm, waterfall, x, zeroBounce. Reads phase guides, recipes, and per-provider playbooks before any paid call. Skip when: a run already happened and misbehaved — use cargo-diagnostics."
+version: "2.1.0"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -74,7 +74,7 @@ These docs encode what works, what fails, and why. They contain validated parame
 | When the task involves… | You MUST read this doc first | What it gives you |
 |---|---|---|
 | **Finding companies, finding people, building lead lists, prospecting, portfolio/VC sourcing, contact finding at known companies** | [`guides/finding-companies-and-contacts.md`](guides/finding-companies-and-contacts.md) | Provider filter schemas, cheapest-source decision tree, parallel patterns, role-based search rules, portfolio/VC shortcuts, contact-finding patterns. |
-| **Enriching companies or contacts, finding emails/phones/LinkedIn, waterfall enrichment, signal lookup (job change, funding, tech stack), coalescing data** | [`guides/enriching-and-researching.md`](guides/enriching-and-researching.md) | Waterfall patterns with fallback chains, when to use cargo-native vs waterfall vs FullEnrich vs peopleDataLabs, email/phone/LinkedIn fallback orders, signal segments, output retrieval via `run download-outputs`. |
+| **Enriching companies or contacts, finding emails/phones/LinkedIn, waterfall enrichment, signal lookup (job change, funding, tech stack), coalescing data** | [`guides/enriching-and-researching.md`](guides/enriching-and-researching.md) | Waterfall patterns with fallback chains, when to use aiArk vs waterfall vs FullEnrich vs peopleDataLabs, email/phone/LinkedIn fallback orders, signal segments, output retrieval via `run download-outputs`. |
 | **Writing first-touch outreach, personalizing messages, lead scoring, qualification, sequence design, campaign copy** | [`guides/writing-outreach.md`](guides/writing-outreach.md) + [`references/acceptable-use.md`](references/acceptable-use.md) (§3 checks, blocking) | LLM provider routing (openAi/anthropic/perplexity/gemini), prompt templates, scoring rubrics, email length/tone rules, personalization patterns — gated on basis, suppression, and per-recipient relevance. |
 | **Actually sending the drafted copy from a mailbox Cargo owns** (rather than handing off to the user's own sequencer) | [`../cargo-mailbox-management/SKILL.md`](../cargo-mailbox-management/SKILL.md) + [`references/acceptable-use.md`](references/acceptable-use.md) (§3 checks, blocking) | Provisioning and warm-up, the 5→40/day send ramp that caps volume, the `sendEmail` action (0.1 credits/send), the workspace suppression list, and replies/opens/clicks as events. |
 | **Building or modifying a recurring workflow** (cron / webhook / scheduled tool / play), designing step sequences, triggers, deploy/verify cycles | [`../cargo-orchestration/SKILL.md`](../cargo-orchestration/SKILL.md) (capability) + apply-patterns from this skill's recipes + the [provider playbook](provider-playbooks/) of **every paid node** (§11, esp. its **Recurring use** section) | Schema for tool/play workflows, node graph syntax, polling strategies, output retrieval; per-provider cadence defaults and re-billing gates. |
@@ -131,24 +131,25 @@ When a run produced a durable, repeatable result, one of the suggestions should 
 
 When a run or batch **misbehaved** — errors, missing downstream values, cost surprises — hand off to the `cargo-diagnostics` skill (`../cargo-diagnostics/SKILL.md`): sweep the batch for root causes before re-running anything paid. Interaction defaults for plan gates, shaped choices, and presenting results live in `../cargo/references/interaction.md`.
 
-## 5) Priority provider stack (recipes lead with these 8)
+## 5) Priority provider stack (recipes lead with these 7)
 
-These eight credits-based providers cover the full prospecting → enrichment → verification → signal pipeline at the lowest credit cost in the catalog. Every recipe in this skill's `recipes/` leads with this stack:
+These seven credits-based providers cover the full prospecting → enrichment → verification → signal pipeline at the lowest credit cost in the catalog. Every recipe in this skill's `recipes/` leads with this stack:
 
 | Provider | Role | Key actions (cost in credits) |
 |---|---|---|
 | **salesNavigator** | Sourcing | `searchLeads` (0.02), `searchAccounts` (0.05), `findCompanyInsights/Metrics/EmployeesCount/Distribution` (0.25 each) |
-| **cargo** (native) | Firmographic + signal intelligence | `enrichBusinessFirmographics` (0.5), `…Technographics` (1), `…FundingAndAcquisitions` (0.5), `enrichProspectDetails/LinkedinProfile/LinkedinPosts` (2), `matchBusiness/matchProspect` (0.5), 13 more |
-| **aiArk** | LinkedIn-anchored enrichment + cheapest search | `searchCompanies` (0.01/record, lookalike seeds), `searchPeople` / `reverseLookup` / `analyzePersonality` (0.05), `enrichPerson` (0.1 — profile **+ verified email**), `findMobilePhone` (0.5) |
+| **aiArk** | LinkedIn-anchored enrichment + cheapest search | `enrichCompany` (0.01 — cheapest firmographics in the catalog), `searchCompanies` (0.01/record, lookalike seeds), `searchPeople` / `reverseLookup` / `analyzePersonality` (0.05), `enrichPerson` (0.1 — profile **+ verified email**), `findMobilePhone` (0.5) |
 | **waterfall** | Multi-source enrichment + signal | `enrichContact` (2), `enrichCompany` (1), `verifyEmail` (0.1), `detectJobChange` (3), `searchProspects` (3), `findPhone` (7) |
 | **FullEnrich** | Premium contact lookup | `findEmail` (1), `findPhone` (6), `findPhoneAndEmail` (7), `reverseEmailLookup` (2) |
 | **apolloio** | Niche-coverage enrichment | `enrichPerson` (1, **3** with `revealPhoneNumber`), `enrichOrganization` (1) — the **only two** credits-based actions; its other nine need your own Apollo API key |
 | **theirStack** | Tech-stack + hiring intent | `searchTechnologies` (0.5), `searchJobs` (0.5), `searchCompanies` (0.5) |
 | **peopleDataLabs** | Heavyweight backfill | `enrichPerson` (3), `enrichCompany` (3), `searchPeople` (3), `searchCompanies` (3), `queryPeople/Companies` (3) |
 
-`aiArk` and `apolloio` sit at opposite ends of the enrich tier and are picked by **what you hold**, not by preference: `aiArk` wins whenever a **LinkedIn URL** is in hand (profile + verified email at 0.1, mobile at 0.5, both billing 0 on a miss), `apolloio` is the **1-credit niche-coverage rung** you promote per-batch when a pilot shows Apollo hits where `cargo` (2) and `waterfall` (2) miss — investor-backed and portfolio niches especially. Neither displaces `salesNavigator` for plain at-scale sourcing (0.02/lead) or `cargo` native for match-verified firmographics.
+`aiArk` and `apolloio` sit at opposite ends of the enrich tier and are picked by **what you hold**, not by preference: `aiArk` wins whenever a **LinkedIn URL** is in hand (profile + verified email at 0.1, mobile at 0.5, both billing 0 on a miss), `apolloio` is the **1-credit niche-coverage rung** you promote per-batch when a pilot shows Apollo hits where `aiArk` (0.1) and `waterfall` (2) miss — investor-backed and portfolio niches especially. Neither displaces `salesNavigator` for plain at-scale sourcing (0.02/lead).
 
-See [`provider-playbooks/`](provider-playbooks/) for per-provider deep dives — including each provider's **Recurring use** section for when the task is a monitor, play, or scheduled pull rather than a one-off. See [`references/stage-action-map.md`](references/stage-action-map.md) for the complete cheapest-action-per-stage table across the full 120-integration catalog.
+Three signal families sit outside the stack and are picked per task from [`references/stage-action-map.md`](references/stage-action-map.md): **firmographic depth** beyond `aiArk.enrichCompany` → `companyEnrich.enrichByDomain` (0.25); **funding / acquisitions** → `enrichCrm.getFunding` (1, the only credits-based funding action in the catalog); **tech stack on a known domain** → `builtwith.getDomainSummary` (free) before `builtwith.enrichDomain` (1).
+
+See [`provider-playbooks/`](provider-playbooks/) for per-provider deep dives — including each provider's **Recurring use** section for when the task is a monitor, play, or scheduled pull rather than a one-off. See [`references/stage-action-map.md`](references/stage-action-map.md) for the complete cheapest-action-per-stage table across the full 136-integration catalog.
 
 > **Already holding identifiers (not sourcing)?** The stack above leads the *sourcing-first* spine. When you already have **LinkedIn URLs**, the cheapest enrich is [`aiArk.enrichPerson`](provider-playbooks/aiArk.md) (0.1 — full profile **plus** a verified email, bills 0 when no email is found); drop to [`linkedin.enrichProfile` / `enrichCompany`](provider-playbooks/linkedin.md) (0.25) when you don't need the email, and skip `waterfall.enrichContact` entirely (it keys on email or name+company, not a URL). Need a **phone**? `aiArk.findMobilePhone` (0.5) is the first rung, not the 3–7 tier. Have a **LinkedIn event URL**? `linkedin.extractEventAttendees` sources the attendee list directly. Have **emails**? `aiArk.reverseLookup` (0.05), then `leadMagic` / `contactOut`. See `references/stage-action-map.md` for the full input-type → cheapest-action map.
 
@@ -158,15 +159,17 @@ See [`provider-playbooks/`](provider-playbooks/) for per-provider deep dives —
 1. SOURCE   → salesNavigator.searchLeads / searchAccounts            (0.02–0.05/record)
               lookalike seeds, or filters SN can't express (skills,
               education, tenure)? aiArk.searchCompanies / searchPeople (0.01–0.05/record)
-2. DEDUPE   → cargo.matchProspect / cargo.matchBusiness              (0.5/record)
+2. DEDUPE   → match against the workspace's own Companies / Contacts models
+              on domain / linkedin_url (storage SQL or a segment filter)  (free)
 3. ENRICH   → LinkedIn URL in hand? aiArk.enrichPerson (0.1) FIRST — profile + verified
               email in one call; linkedin.enrichProfile/enrichCompany (0.25) if no email needed
-              cargo.enrichBusinessFirmographics / Technographics
-              + waterfall.enrichContact / enrichCompany              (0.5–2/record)
+              aiArk.enrichCompany (0.01) for firmographics; companyEnrich.enrichByDomain
+              (0.25) on the rows that come back thin
+              + waterfall.enrichContact / enrichCompany              (1–2/record)
               + apolloio.enrichPerson / enrichOrganization on the niche residue (1/record)
-4. SIGNAL   → cargo.enrichBusinessFundingAndAcquisitions
-              + theirStack.searchJobs
-              + waterfall.detectJobChange                            (0.5–3/record)
+4. SIGNAL   → enrichCrm.getFunding                                   (1/record)
+              + theirStack.searchJobs / builtwith.getDomainSummary   (0–0.5/record)
+              + waterfall.detectJobChange                            (3/record)
 5. CONTACT  → FullEnrich.findEmail — only on rows step 3 left without
               an email (fallback peopleDataLabs)                     (1–3/record)
 6. VERIFY   → waterfall.verifyEmail                                  (0.1/record)
@@ -221,7 +224,6 @@ If a recipe fails repeatedly and the cause isn't obvious, escalate via `cargo-ai
 
 **Priority stack (recipes lead with these):**
 - [`provider-playbooks/salesNavigator.md`](provider-playbooks/salesNavigator.md) — cheapest sourcing in the catalog (0.02–0.05/record).
-- [`provider-playbooks/cargo.md`](provider-playbooks/cargo.md) — 22 native enrichment + signal actions; the `match*` actions are key for dedup.
 - [`provider-playbooks/aiArk.md`](provider-playbooks/aiArk.md) — LinkedIn-anchored people/company data: `enrichPerson` returns profile **+ verified email** at 0.1, `findMobilePhone` (0.5) is the cheapest phone rung, `searchCompanies` (0.01/record) does lookalikes, and `analyzePersonality` (0.05) is catalog-unique. All actions run on the managed connection.
 - [`provider-playbooks/waterfall.md`](provider-playbooks/waterfall.md) — swiss-army-knife: enrichment, verification, and the cargo-unique `detectJobChange` signal.
 - [`provider-playbooks/FullEnrich.md`](provider-playbooks/FullEnrich.md) — premium contact lookup; `reverseEmailLookup` is unique.
@@ -281,8 +283,8 @@ If a recipe fails repeatedly and the cause isn't obvious, escalate via `cargo-ai
 - [`references/cost-discipline.md`](references/cost-discipline.md) — the mandatory spend rules: pilot → approval gate, per-run receipts, 1.4×N over-provision, count-first sizing, provider-billing rules.
 - [`references/contact-accuracy.md`](references/contact-accuracy.md) — the deterministic QA scripts (email cull, current-role, name match, final audit) and the SEND/VERIFY/REVIEW/REMOVE verdicts.
 - [`references/prompt-library/index.md`](references/prompt-library/index.md) — ~40 named, parameterized LLM prompts (personalization, scoring, research, qualification, signal analysis, extraction). **Before authoring any enrichment/scoring prompt from scratch, grep this index** — reuse beats reinvention, and each entry carries a tested output contract. Load only the shard you need, never all of them.
-- [`references/stage-action-map.md`](references/stage-action-map.md) — cheapest credits-based action per stage across the full 120-integration catalog.
-- [`references/credits-cost-table.md`](references/credits-cost-table.md) — auto-generated cost table for all 197 credits-based actions.
+- [`references/stage-action-map.md`](references/stage-action-map.md) — cheapest credits-based action per stage across the full 136-integration catalog.
+- [`references/credits-cost-table.md`](references/credits-cost-table.md) — auto-generated cost table for all 176 credits-based actions.
 - [`references/waterfall-strategy.md`](references/waterfall-strategy.md) — canonical waterfall chains by enrichment goal (every recipe's "fallback" follows these).
 - [`references/alternatives.md`](references/alternatives.md) — provider swap-ins from the long tail when the priority stack can't serve.
 - [`references/output-retrieval.md`](references/output-retrieval.md) — `run download-outputs` patterns for fetching action data.

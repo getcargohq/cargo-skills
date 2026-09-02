@@ -54,7 +54,7 @@ LinkedIn page-level enrichment, URL resolution, and activity signals. **Cheapest
 ## What it's for
 
 - ✅ **LinkedIn URL resolution** — `findProfileUrl` (0.25) then `enrichProfile` (0.25) as the mandatory validation gate ([`../recipes/linkedin-url-lookup.md`](../recipes/linkedin-url-lookup.md)).
-- ✅ **Cheap page-level enrichment** — 0.25 vs `cargo.enrichProspectDetails` (2) when LinkedIn-anchored details are sufficient and you already have the URL ([`../references/alternatives.md`](../references/alternatives.md)).
+- ✅ **Cheap page-level enrichment** — 0.25 vs `waterfall.enrichContact` (2) when LinkedIn-anchored details are sufficient and you already have the URL ([`../references/alternatives.md`](../references/alternatives.md)). Note `aiArk.enrichPerson` (0.1) is cheaper still and returns a verified email; reach here when you specifically want the LinkedIn page fields.
 - ✅ **Engagement-based sourcing** — commenters/reactors on a competitor-topic post, event attendees: warm pools no search filter can express.
 - ✅ **Personalization signal** — a lead's recent post/comment/reaction activity feeds openers (SIGNAL stage before outreach).
 - ❌ **At-scale search** — no people/company search here; that's `salesNavigator.searchLeads` (0.02) / `searchAccounts` (0.05).
@@ -116,7 +116,7 @@ Chain with `extractSimilarCompanies` (0.25) for a cheap lookalike seed list, or 
 ## Position in the waterfall
 
 - `findProfileUrl` + `enrichProfile` — **default for the LinkedIn-URL lookup stage**; `FullEnrich.reverseEmailLookup` (2) only when all you have is an email.
-- `enrichProfile` / `enrichCompany` — **first rung of ENRICH** when the input is a LinkedIn URL; escalate to `cargo` native, then `waterfall`, then `peopleDataLabs` for non-LinkedIn fields.
+- `enrichProfile` / `enrichCompany` — **first rung of ENRICH** when the input is a LinkedIn URL; escalate to `waterfall`, then `peopleDataLabs`, for non-LinkedIn fields.
 - Posts / jobs / activity extraction — **SIGNAL stage**: engagement pools and personalization inputs; `searchJobs` sits beside `theirStack.searchJobs` (both 0.5) for hiring intent.
 - Engagement actions — post-VERIFY activation touches, outside the sourcing spine.
 

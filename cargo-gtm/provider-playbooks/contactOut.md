@@ -6,7 +6,7 @@ last-reviewed: 2026-07-09
 
 # contactOut (ContactOut)
 
-LinkedIn-URL-anchored contact info — emails and phones from a profile URL, plus a filter-based people/company search. **Mid-tier fallback**: reach for it when the priority stack (cargo native → FullEnrich → waterfall) misses, or for its free company-domain lookup.
+LinkedIn-URL-anchored contact info — emails and phones from a profile URL, plus a filter-based people/company search. **Mid-tier fallback**: reach for it when the priority stack (aiArk → FullEnrich → waterfall) misses, or for its free company-domain lookup.
 
 ## Credits-based actions
 
@@ -89,7 +89,7 @@ The `filters` array is discriminated by `name`: list-type filters (`skills`, `ed
 
 ## Position in the waterfall
 
-- Contact enrich — **mid rung** of the email/phone chain: after cargo native + FullEnrich, alongside `waterfall.enrichContact` (2); its `includePhone` tier (3) sits at the `prospeo.findPhone` price, below FullEnrich (6) and waterfall (7).
+- Contact enrich — **mid rung** of the email/phone chain: after aiArk + FullEnrich, alongside `waterfall.enrichContact` (2); its `includePhone` tier (3) sits at the `prospeo.findPhone` price, below FullEnrich (6) and waterfall (7).
 - `search` — coverage fallback when salesNavigator/icypeas miss the segment.
 
 ## Recurring use

@@ -25,7 +25,7 @@ If you're working across multiple clients in one session, prefix the workspace n
 
 ## Phase 1 — Bootstrap from public sources
 
-For the automatable seed step, use [`bootstrap-from-domain.md`](bootstrap-from-domain.md). It takes a domain, inventories existing files via `runtime browse` + `graph get` so it only fills gaps, enriches via cargo native, scrapes public sources in parallel sub-agents, and writes one file per atomic concept through `context runtime write`.
+For the automatable seed step, use [`bootstrap-from-domain.md`](bootstrap-from-domain.md). It takes a domain, inventories existing files via `runtime browse` + `graph get` so it only fills gaps, enriches via aiArk + builtwith + enrichCrm, scrapes public sources in parallel sub-agents, and writes one file per atomic concept through `context runtime write`.
 
 Once the bootstrap commit lands, open a new agent session so the seeded files load clean (rather than mixed with scratch context from the bootstrap run), then continue with Phase 2.
 

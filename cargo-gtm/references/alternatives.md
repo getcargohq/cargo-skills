@@ -2,7 +2,7 @@
 
 When the priority stack (salesNavigator / cargo / aiArk / waterfall / FullEnrich / apolloio / theirStack / peopleDataLabs) can't serve the user's criteria, swap in providers from the long tail.
 
-For every alternative, see [`stage-action-map.md`](stage-action-map.md) for the cheapest credits-based action per stage across the full 138-integration catalog.
+For every alternative, see [`stage-action-map.md`](stage-action-map.md) for the cheapest credits-based action per stage across the full 136-integration catalog.
 
 ## When to swap providers
 
@@ -32,7 +32,7 @@ Default rule: **don't swap to chase 2× cheaper if hit-rate drops 30%**. The tot
 |---|---|---|---|
 | Person enrichment (LinkedIn URL in hand) | aiArk.enrichPerson (0.1) | linkedin.enrichProfile (0.25) | When you only need LinkedIn-anchored details and no email. |
 |   |   | prospeo.enrichLinkedin (0.5) | Second opinion on a URL-anchored miss. |
-| Person enrichment (name + company) | cargo.enrichProspectDetails (2) | apolloio.enrichPerson (1, **3** with phone reveal, priority) | The niche-coverage rung — promote per-batch when a pilot shows Apollo hits where cargo/waterfall miss (investor-backed, portfolio niches). |
+| Person enrichment (name + company) | waterfall.enrichContact (2) | apolloio.enrichPerson (1, **3** with phone reveal, priority) | The niche-coverage rung — promote per-batch when a pilot shows Apollo hits where aiArk/waterfall miss (investor-backed, portfolio niches). |
 |   |   | hunter.enrichPerson (1) | Cheap mid-tier alternative. |
 | Reverse email → person | (none in priority) | FullEnrich.reverseEmailLookup (2) | Always for email → LinkedIn. |
 | Person backfill (heavyweight) | peopleDataLabs.enrichPerson (3) | (none cheaper for heavyweight) | n/a |
@@ -41,10 +41,11 @@ Default rule: **don't swap to chase 2× cheaper if hit-rate drops 30%**. The tot
 
 | Goal | Priority | Alternative | When to swap |
 |---|---|---|---|
-| Company firmographics | cargo.enrichBusinessFirmographics (0.5) | companyEnrich.enrichByDomain (0.25) | Cheaper, but less rich. Only when budget critical. |
+| Company firmographics | aiArk.enrichCompany (0.01) | companyEnrich.enrichByDomain (0.25) | Fuller field set. Promote whenever 0.01 comes back thin. |
 |   |   | linkedin.enrichCompany (0.25) | When LinkedIn-anchored details are sufficient. |
-|   |   | apolloio.enrichOrganization (1, priority) | The niche-coverage rung — when cargo's match misses and LinkedIn doesn't have it. |
-| Company technographics | cargo.enrichBusinessTechnographics (1) | theirStack.searchTechnologies (0.5) | When you want catalog-style "show me the tech list" rather than per-company enrichment. |
+|   |   | apolloio.enrichOrganization (1, priority) | The niche-coverage rung — when the cheaper rungs miss and LinkedIn doesn't have it. |
+| Company technographics | builtwith.getDomainSummary (**0**) | theirStack.searchTechnologies (0.5) | When you want catalog-style "show me the tech list" rather than per-domain detection. |
+|   |   | builtwith.enrichDomain (1) | Full stack detail on the rows the free summary left ambiguous. |
 
 ## Find email alternatives
 

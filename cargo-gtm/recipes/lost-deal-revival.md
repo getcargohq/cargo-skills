@@ -16,7 +16,7 @@ Most Closed-Lost deals stay lost. But specific lost-reason categories have speci
 | `lost_reason` | Revival trigger |
 |---|---|
 | `champion_left` / `no_decision_maker` | Original contact moved to a new company (`waterfall.detectJobChange`) — warm intro at the new account. |
-| `price` / `budget` / `no_budget` | Company raised a fresh round (`cargo.fetchBusinessEvents`). |
+| `price` / `budget` / `no_budget` | Company raised a fresh round (`enrichCrm.getFunding`, compared against the deal's close date). |
 | `wrong_time` / `timing` | A re-org or new exec hire (`salesNavigator.searchLeads` with `seniority: ["VP+", "C-Level"]` filter, joined date < 90d). |
 | `feature_gap` / `missing_feature` | Manual — replay based on your product release date vs. deal close date. |
 | `competitor_won` | Annual revisit at renewal time — check competitor satisfaction signals if available. |
@@ -67,19 +67,26 @@ jq -c '[.results[] | select(.status == "MOVED")]' /tmp/champion-changes.json > /
 
 ### Step 3b — Budget branch: detect fresh funding
 
+There is no since-timestamp event feed in the catalog, so "fresh round" is a
+**diff**: pull current funding data, then keep the accounts whose latest round
+post-dates the deal's close date.
+
 ```bash
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"cargo","actionSlug":"matchBusiness"}' \
+  --action '{"kind":"connector","integrationSlug":"enrichCrm","actionSlug":"getFunding"}' \
   --records "$(jq -c '[.[] | {domain: .account_domain}]' /tmp/lost-budget.json)" \
-  --wait-until-finished > /tmp/budget-matched.json
+  --wait-until-finished > /tmp/budget-funding.json
 
-cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"cargo","actionSlug":"fetchBusinessEvents"}' \
-  --records "$(jq -c '[.results[] | select(.business_id) | {business_id, event_types: ["funding"], since: "180d"}]' /tmp/budget-matched.json)" \
-  --wait-until-finished > /tmp/budget-events.json
-
-# Keep deals where a funding round closed AFTER the original deal lost
-jq -c '[.results[] | select((.events // []) | length > 0)]' /tmp/budget-events.json > /tmp/revive-budget.json
+# Keep deals where a funding round closed AFTER the original deal lost, and
+# carry deal_id through — step 4 merges on it and getFunding does not return it.
+jq -c --slurpfile lost /tmp/lost-budget.json '
+  ($lost[0] | map({key: .account_domain, value: .}) | from_entries) as $deal
+  | [ .results[]
+      | . as $f
+      | $deal[$f.domain]
+      | select($f.lastFundingDate > (.closed_at // "9999"))
+      | {deal_id, account_domain: $f.domain, lastFundingDate: $f.lastFundingDate} ]
+' /tmp/budget-funding.json > /tmp/revive-budget.json
 ```
 
 ### Step 3c — Timing branch: detect new exec hires at the account
@@ -104,10 +111,11 @@ Adjust the function list to match where your buyer typically sits.
 ### Step 4 — Merge into a single revive segment
 
 ```bash
-jq -c -n '
-  ([inputs[0][] | {deal_id: .deal_id, account_domain: .company_domain, revival: "champion_changed", details: .new_company}] +
-   [inputs[1][] | {deal_id: .deal_id, account_domain: .domain, revival: "fresh_funding", details: .events[0]}] +
-   [inputs[2][] | {deal_id: .deal_id, account_domain: .company_domain, revival: "new_exec", details: .leads[0]}])
+# `inputs` is a generator, not an array — slurp it before indexing.
+jq -c -n '[inputs] as $in
+  | ([$in[0][] | {deal_id: .deal_id, account_domain: .company_domain, revival: "champion_changed", details: .new_company}] +
+     [$in[1][] | {deal_id: .deal_id, account_domain: .account_domain, revival: "fresh_funding", details: {lastFundingDate: .lastFundingDate}}] +
+     [$in[2][] | {deal_id: .deal_id, account_domain: .company_domain, revival: "new_exec", details: .leads[0]}])
 ' /tmp/revive-champion.json /tmp/revive-budget.json /tmp/revive-timing.json > /tmp/lost-revival.json
 ```
 
@@ -132,9 +140,9 @@ For a 300-deal Closed-Lost cohort, scanned monthly:
 | Branch | Per record | Records (assumed 1/3 each) | Subtotal |
 |---|---|---|---|
 | `waterfall.detectJobChange` | 3 | 100 | 300 |
-| `cargo.matchBusiness` + `fetchBusinessEvents` | 0.6 | 100 | 60 |
+| `enrichCrm.getFunding` | 1 | 100 | 100 |
 | `salesNavigator.searchLeads` | 2 | 100 | 200 |
-| **Total monthly** | — | 300 | **560** |
+| **Total monthly** | — | 300 | **600** |
 
 Much cheaper than the broader [`re-engagement.md`](re-engagement.md) scan because each branch only runs on the relevant subset.
 

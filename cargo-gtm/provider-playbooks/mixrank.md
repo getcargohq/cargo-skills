@@ -6,7 +6,7 @@ last-reviewed: 2026-07-09
 
 # mixrank (Mixrank)
 
-Premium person/company enrichment — two actions, both **4 credits**, the most expensive general enrichers in the catalog (above `peopleDataLabs` at 3, `cargo.enrichProspectDetails` at 2, `waterfall.enrichCompany` at 1). Its earner is identifier flexibility: `findPerson` matches from **any** of email, phone, name (+ company), or social URL — including **phone-only reverse lookup**, which the cheaper chain doesn't do. Treat it as the last backfill rung, never the first stop.
+Premium person/company enrichment — two actions, both **4 credits**, the most expensive general enrichers in the catalog (above `peopleDataLabs` at 3, `waterfall.enrichContact` at 2, `waterfall.enrichCompany` at 1). Its earner is identifier flexibility: `findPerson` matches from **any** of email, phone, name (+ company), or social URL — including **phone-only reverse lookup**, which the cheaper chain doesn't do. Treat it as the last backfill rung, never the first stop.
 
 ## Credits-based actions
 
@@ -18,7 +18,7 @@ Premium person/company enrichment — two actions, both **4 credits**, the most 
 ## What it's for
 
 - ✅ **Reverse-phone lookup** — `findPerson` with just `phone` identifies who a number belongs to; no cheaper action in the catalog takes phone as an input key.
-- ✅ **Weak-identifier person backfill** — rows where cargo native (2) and `waterfall` missed and all you have is a name + company or a stray social URL.
+- ✅ **Weak-identifier person backfill** — rows where `aiArk` (0.1) and `waterfall` (2) missed and all you have is a name + company or a stray social URL.
 - ✅ **Company resolution from a bare name** — `findCompany` with `name` only, when there's no domain to key on (though `oceanio.enrichCompany` at 1 also takes weak identifiers — try it first).
 - ❌ **Default ENRICH rung** — at 4 credits it's 2–4× the standard chain; a 1,000-row batch through mixrank is 4,000 credits.
 - ❌ **Email/phone *finding*** — mixrank resolves *who someone is* from an identifier; to find missing emails/phones, use the CONTACT chains (`FullEnrich`, `prospeo`, …).
@@ -57,7 +57,7 @@ Stack every identifier you have per row — more keys, better match confidence a
 
 ## Position in the waterfall
 
-**ENRICH stage, last rung.** Person: `linkedin.enrichProfile` (0.25) → `cargo.enrichProspectDetails` (2) → `peopleDataLabs` (3) → **mixrank (4)**. Company: `waterfall.enrichCompany` / `oceanio.enrichCompany` (1) → `peopleDataLabs.enrichCompany` (3) → **mixrank (4)**. Promote it out of order only for the phone-keyed niche. See [`../references/stage-action-map.md`](../references/stage-action-map.md).
+**ENRICH stage, last rung.** Person: `aiArk.enrichPerson` (0.1) → `linkedin.enrichProfile` (0.25) → `waterfall.enrichContact` (2) → `peopleDataLabs` (3) → **mixrank (4)**. Company: `waterfall.enrichCompany` / `oceanio.enrichCompany` (1) → `peopleDataLabs.enrichCompany` (3) → **mixrank (4)**. Promote it out of order only for the phone-keyed niche. See [`../references/stage-action-map.md`](../references/stage-action-map.md).
 
 ## Recurring use
 

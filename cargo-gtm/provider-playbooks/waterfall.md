@@ -22,8 +22,8 @@ Multi-source enrichment with built-in fallback across multiple underlying provid
 ## What it's for
 
 - ✅ **Email verification at the cheapest tier** (0.1) — default for any verify step in the spine.
-- ✅ **Job change signal** — `detectJobChange` is the only credits-based action of its kind in the entire 138-integration catalog. Cargo-unique strength.
-- ✅ **Fallback contact / company enrichment** — when cargo native + FullEnrich miss, waterfall is the next stop before the heavyweight peopleDataLabs.
+- ✅ **Job change signal** — `detectJobChange` is the only credits-based action of its kind in the entire 136-integration catalog. Cargo-unique strength.
+- ✅ **Fallback contact / company enrichment** — when aiArk + FullEnrich miss, waterfall is the next stop before the heavyweight peopleDataLabs.
 - ✅ **Multi-identifier enrichment** — accepts LinkedIn URL, domain, name, or email. Useful when the input is weakly identified.
 
 ## Patterns
@@ -63,7 +63,7 @@ Filter to `MOVED` for outbound timing. See [`../recipes/job-change-monitoring.md
 ### Pattern C — Fallback contact enrichment
 
 ```bash
-# Only run on rows where cargo.matchProspect / enrichProspectDetails returned no data
+# Only run on rows where aiArk.enrichPerson returned no data
 cargo-ai orchestration action execute-batch \
   --action '{"kind":"connector","integrationSlug":"waterfall","actionSlug":"enrichContact"}' \
   --records '[
@@ -90,7 +90,7 @@ cargo-ai orchestration action execute-batch \
 ## Position in the waterfall
 
 - `verifyEmail` — **always the last step** of any email chain; never skipped.
-- `enrichContact` / `enrichCompany` — **second rung**, after cargo native, before peopleDataLabs.
+- `enrichContact` / `enrichCompany` — **second rung**, after aiArk, before peopleDataLabs.
 - `findPhone` — **last rung** of the phone chain (after prospeo, FullEnrich). Demote any rung that misses on the pilot's first ~10 rows for the rest of the batch.
 
 ## Recurring use

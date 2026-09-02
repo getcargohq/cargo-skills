@@ -87,7 +87,7 @@ Resolve the resulting accounts to companies and enrich from there. The search ou
 
 ## Position in the waterfall
 
-- **A signal rung, not a data rung.** It sits alongside `theirStack.searchJobs` (0.5, hiring intent) and `cargo.enrichBusinessLinkedinPosts` (2, company posts) and undercuts both on price for the narrow question of what a company said publicly.
+- **A signal rung, not a data rung.** It sits alongside `theirStack.searchJobs` (0.5, hiring intent) and `linkedin.extractProfilePostActivity` (0.05/item, LinkedIn posts) for the narrow question of what a company or person said publicly.
 - Never in front of the sourcing or contact stacks. It informs a message; it does not build a list.
 
 ## Action shape

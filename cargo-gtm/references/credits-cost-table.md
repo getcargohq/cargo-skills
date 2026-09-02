@@ -1,6 +1,6 @@
 # Credits cost table
 
-Every credits-based action Cargo can run — 197 of the 534 actions exposed by 124 of the catalog's 138 integrations, plus Cargo's own native actions — sorted by cost. The other 337 carry no *provider* price; they are not free, because every node execution bills 0.01 credits (1 per 100) regardless. See [`../../cargo-billing/SKILL.md`](../../cargo-billing/SKILL.md) → "The execution charge".
+Every credits-based action Cargo can run — 176 of the 513 actions exposed by 123 of the catalog's 136 integrations, plus Cargo's own native actions — sorted by cost. The other 337 carry no *provider* price; they are not free, because every node execution bills 0.01 credits (1 per 100) regardless. See [`../../cargo-billing/SKILL.md`](../../cargo-billing/SKILL.md) → "The execution charge".
 
 Rows whose provider is `native` are Cargo's own platform actions, run as `{"kind":"native","actionSlug":"<action>"}` with no integration; every other row runs as `{"kind":"connector","integrationSlug":"<provider>","actionSlug":"<action>"}`.
 
@@ -119,14 +119,6 @@ Generated: 2026-08-28
 | 0.3 | `bouncer` | enrichment | `verifyEmail` | Verify an email address |
 | 0.3–1 / 1k token | `perplexity` | freeform | `instruct` | Instruct prompt |
 | 0.5 | `aiArk` | enrichment | `findMobilePhone` | Find a person's mobile phone number from a LinkedIn URL, or from a company domain and a full name |
-| 0.5 | `cargo` | enrichment | `enrichBusinessFinancialMetrics` | Enrich business financial metrics |
-| 0.5 | `cargo` | enrichment | `enrichBusinessFirmographics` | Enrich business firmographics |
-| 0.5 | `cargo` | enrichment | `enrichBusinessFundingAndAcquisitions` | Enrich business funding and acquisitions |
-| 0.5 | `cargo` | enrichment | `enrichBusinessWebsiteKeywords` | Enrich business website keywords |
-| 0.5 / item | `cargo` | enrichment | `fetchBusinesses` | Fetch businesses |
-| 0.5 | `cargo` | enrichment | `fetchBusinessEvents` | Fetch business events |
-| 0.5 | `cargo` | enrichment | `fetchProspectEvents` | Fetch prospect events |
-| 0.5 / item | `cargo` | enrichment | `fetchProspects` | Fetch prospects |
 | 0.5 | `findyMail` | enrichment | `findEmail` | Retrieve email given a name and domain |
 | 0.5 | `hunter` | enrichment | `findEmail` | Find a person's email |
 | 0.5 | `leadMagic` | enrichment | `findEmail` | Find email given a name and domain |
@@ -144,15 +136,6 @@ Generated: 2026-08-28
 | 0.5–2 | `linkup` | enrichment | `search` | Search for results using Linkup |
 | 1 | `apolloio` | enrichment | `enrichOrganization` | Enrich an organization |
 | 1 | `builtwith` | enrichment | `enrichDomain` | Look up the full technology stack and metadata for a domain |
-| 1 | `cargo` | enrichment | `enrichBusinessBomboraIntent` | Enrich business with Bombora intent topics to reveal which topics companies are actively researching online |
-| 1 | `cargo` | enrichment | `enrichBusinessChallenges` | Enrich business challenges |
-| 1 | `cargo` | enrichment | `enrichBusinessCompetitiveLandscape` | Enrich business competitive landscape |
-| 1 | `cargo` | enrichment | `enrichBusinessRatingsByEmployees` | Enrich business ratings by employees |
-| 1 | `cargo` | enrichment | `enrichBusinessStrategicInsights` | Enrich business strategic insights |
-| 1 | `cargo` | enrichment | `enrichBusinessTechnographics` | Enrich business technographics |
-| 1 | `cargo` | enrichment | `enrichBusinessWebsiteChanges` | Enrich business website changes |
-| 1 | `cargo` | enrichment | `enrichBusinessWorkforceTrends` | Enrich business workforce trends |
-| 1 | `cargo` | enrichment | `fetchBusinessStatistics` | Fetch business statistics |
 | 1 / item | `companyEnrich` | enrichment | `findSimilarCompanies` | Find similar companies |
 | 1 | `datagma` | enrichment | `findEmail` | Retrieve a person's email |
 | 1 | `dropcontact` | enrichment | `findEmail` | Find a person's email using their first and last name |
@@ -178,10 +161,6 @@ Generated: 2026-08-28
 | 1 | `waterfall` | enrichment | `enrichCompany` | Retrieve company data |
 | 1–3 / item | `contactOut` | enrichment | `search` | Search person / company data from linkedin URL |
 | 1–9 | `apolloio` | enrichment | `enrichPerson` | Enrich a person |
-| 2 | `cargo` | enrichment | `enrichBusinessLinkedinPosts` | Enrich business linkedin posts |
-| 2 | `cargo` | enrichment | `enrichProspectDetails` | Enrich prospect details |
-| 2 | `cargo` | enrichment | `enrichProspectLinkedinPosts` | Enrich prospect linkedin posts |
-| 2 | `cargo` | enrichment | `enrichProspectLinkedinProfile` | Enrich prospect linkedin profile |
 | 2 | `datagma` | enrichment | `enrichPersonFromPersonalEmail` | Retrieve a person's profile from a personal email address (outside of the EU) |
 | 2 | `forager` | enrichment | `findPersonalEmail` | Find a person's personal email |
 | 2 | `forager` | enrichment | `findWorkEmail` | Find a person's work email |
