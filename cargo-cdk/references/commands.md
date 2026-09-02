@@ -7,7 +7,10 @@ All subcommands accept `--dir <path>` (the project root, default `.`) and `--jso
 
 | Command | What it does |
 |---|---|
-| `cargo-ai cdk init <directory>` | Scaffold a project from a template. `--template <blank\|full>` (default `blank`), `--list-templates`. |
+| `cargo-ai cdk init <directory>` | Scaffold a GTM repo from `getcargohq/cargo-manifest`, with the CDK project in `infra/`. `--name <name>`, `--cookbook <slug>` (install a cookbook into the new project), `--force` (write into a non-empty directory). There is no template flag: the scaffold never varies, and what varies is the cookbook layered on top. |
+| `cargo-ai cdk add cookbook/<slug>` | Copy a worked example into this project — `infra/<slug>/` plus its procedure under the skills directories. `--overwrite` (replace existing files; default skips them), `--yes`. Omit the address to choose interactively. |
+| `cargo-ai cdk add connector/<integration>` | Authorize a connector in the browser and write its `defineConnector`. `--connector-uuid <uuid>` adopts one already created there. |
+| `cargo-ai cdk cookbook list\|search\|view` | Browse the cookbooks `add` installs — `view <slug>` shows what one deploys, what it will ask you for, and its declared adaptations. |
 | `cargo-ai cdk types` | Generate per-workspace types into `.cargo-ai/` for typed config. |
 | `cargo-ai cdk plan` | Offline: compile the graph and diff against `cargo.state.json`. No API calls. |
 | `cargo-ai cdk deploy` | Create/update resources in dependency order; write state. Prompts unless `--yes`. |
@@ -40,7 +43,8 @@ All subcommands accept `--dir <path>` (the project root, default `.`) and `--jso
 ## Examples
 
 ```bash
-cargo-ai cdk init acme --template full        # scaffold
+cargo-ai cdk init acme                        # scaffold
+cargo-ai cdk add cookbook/tam-building --dir acme  # layer a worked example on
 cargo-ai cdk types --dir acme                 # type config
 cargo-ai cdk plan --dir acme                  # preview
 cargo-ai cdk deploy --dir acme --yes          # apply (non-interactive)

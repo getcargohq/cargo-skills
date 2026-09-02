@@ -93,15 +93,21 @@ function render(examples: Cookbook[]): string {
   L.push("jobs as the one-off skills there, as a deployed pipeline that keeps producing the result.");
   L.push("");
   L.push("**Every folder is self-contained** (its own models, connectors and folders; no shared");
-  L.push("foundation, no requires graph). The agent installing one copies it into the project as a");
-  L.push("sibling of what is there, reconciles it with what is already declared (an existing accounts");
-  L.push("model, an existing CRM connector), adapts it, plans, deploys on a yes, and walks its `Done");
-  L.push("when`. The code is a worked example, not a template to fill in.");
+  L.push("foundation, no requires graph). `cdk add` copies one into the project; the agent then");
+  L.push("reconciles it with what is already declared (an existing accounts model, an existing CRM");
+  L.push("connector), adapts it in place, plans, deploys on a yes, and walks its `Done when`. The");
+  L.push("code is a worked example, not a template to fill in — and not something to regenerate");
+  L.push("from the skill's prose.");
   L.push("");
   L.push("```sh");
-  L.push(`npx skills add ${REPO}/<slug>       # then say what you want; the skill carries its own procedure`);
-  L.push("cargo-ai cdk init <dir> --template blank      # only if there is no CDK project yet: the shell comes from the CLI");
+  L.push("cargo-ai cdk add cookbook/<slug>              # inside a CDK project: this is the copy step");
+  L.push("cargo-ai cdk init <dir> --cookbook <slug>     # no project yet: scaffold and install together");
+  L.push(`npx skills add ${REPO}/<slug>   # the procedure on its own, without the CDK resources`);
   L.push("```");
+  L.push("");
+  L.push("After either `cdk` command the files are in `infra/<slug>/` and `.claude/skills/<slug>/`.");
+  L.push("Start the skill at its Adapt section: its earlier steps assume you found the folder in");
+  L.push("gtm-skills and still have to place it.");
   L.push("");
   L.push("## With a skill");
   L.push("");
@@ -131,8 +137,8 @@ function render(examples: Cookbook[]): string {
   L.push("");
   L.push("**Never `cargo-ai cdk init --force` into a directory that is not empty.** It replaces the");
   L.push("project's `package.json` and reverts adapted code while `cargo.state.json` survives, so the");
-  L.push("next plan diffs a live workspace against code nobody wrote. Copy the skill folder in as a");
-  L.push("sibling instead; that is what its own procedure says.");
+  L.push("next plan diffs a live workspace against code nobody wrote. Run `cdk add cookbook/<slug>`");
+  L.push("in the project that is already there; it skips every file it would otherwise overwrite.");
   L.push("");
   return L.join("\n");
 }

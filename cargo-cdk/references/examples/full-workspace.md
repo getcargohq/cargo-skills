@@ -1,8 +1,9 @@
 # Example: a full GTM workspace end-to-end
 
-This walks the `full` template (`cargo-ai cdk init <dir> --template full`) — a
-complete, runnable Cargo workspace defined in code that exercises every resource
-type and wires them by **handle**.
+This walks a complete, runnable Cargo workspace defined in code that exercises
+every resource type and wires them by **handle**. It is a reading example, not
+something a command scaffolds: `cargo-ai cdk init` produces one repo shape, and a
+worked pipeline comes from `cargo-ai cdk add cookbook/<slug>`.
 
 ## The graph
 

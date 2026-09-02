@@ -153,21 +153,30 @@ before authoring a common GTM outcome from scratch. It is generated from gtm-ski
 `catalog.json`, so it cannot drift.
 
 **A cookbook is a worked example, not a template to fill in.** Each one declares in its `SKILL.md` what may be reshaped, what must hold or it stops
-working, and what has to be answered either way, and it carries its own procedure:
-look at the repo, `cargo-ai cdk init --template blank` if there is no CDK project yet,
-copy the folder in as a sibling and reconcile it with what is already declared, adapt,
-plan and stop, deploy on a yes, walk its `Done when`. There is no scaffolder or copy
-tool in the middle: **you place the code**, because you can see the project and a tool
-cannot.
+working, and what has to be answered either way, and it carries its own procedure.
+`cdk add` is the copy step in that procedure:
 
 ```sh
-npx skills add getcargohq/gtm-skills/tam-building    # then: "keep our TAM current"
-cargo-ai cdk init my-project --template blank        # only if there is no CDK project yet
+cargo-ai cdk add cookbook/tam-building               # inside a CDK project
+cargo-ai cdk init my-project --cookbook tam-building # no project yet: both at once
 ```
 
-**If you are mid-task and the skill is not in this session**, run the `skills add`
-above and read `.agents/skills/<slug>/SKILL.md` directly; no reload needed. To read
-one without installing, `npx skills use getcargohq/gtm-skills@<slug>` prints it.
+That writes the resources to `infra/tam-building/` and the procedure to
+`.claude/skills/tam-building/`, skipping any file it would overwrite. **Then start the
+skill at its Adapt section** — its opening steps are written for someone who found the
+folder on GitHub and still has to place it, so following them from the top scaffolds a
+second project and copies the folder in again.
+
+What is left after the copy is the part only you can do: reconcile it with what is
+already declared, adapt the copied files **in place** to the project's real shape (do not
+regenerate them from the skill's prose — the safety lives in the TypeScript), plan and
+stop, deploy on a yes, walk its `Done when`.
+
+**If you are mid-task and the skill is not in this session**, `npx skills add
+getcargohq/gtm-skills/<slug>` fetches the procedure alone and you can read
+`.agents/skills/<slug>/SKILL.md` directly; no reload needed. To read one without
+installing, `npx skills use getcargohq/gtm-skills@<slug>` prints it. Neither brings the
+CDK resources — for those you still want `cdk add`.
 
 **Routing rule: one-off versus standing.** A user who wants the list today wants
 `cargo-gtm` (or gtm-skills' one-off `build-tam-list`); a user who wants a pipeline
@@ -188,7 +197,7 @@ acceptance test, and always review `cargo-ai cdk plan` before deploying.
 
 | Recipe | Use when… |
 |---|---|
-| [`recipes/scaffold-a-workspace.md`](recipes/scaffold-a-workspace.md) | Standing up a new workspace from scratch (`init --template full` → types → plan → deploy). |
+| [`recipes/scaffold-a-workspace.md`](recipes/scaffold-a-workspace.md) | Standing up a new workspace from scratch (`init` → types → plan → deploy). |
 | [`recipes/add-connector-and-model.md`](recipes/add-connector-and-model.md) | Adding a data source + a model sourced from it, wired by handle. |
 | [`recipes/build-an-agent.md`](recipes/build-an-agent.md) | Composing a model + tool + agent (with `uses` / `models` / `tools`) and deploying. |
 | [`recipes/migrate-existing-workspace.md`](recipes/migrate-existing-workspace.md) | Bringing an already-live workspace under CDK management via `cdk import`. |

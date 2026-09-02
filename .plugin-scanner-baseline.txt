@@ -1,0 +1,47 @@
+# Plugin scanner baseline suppressions
+# https://hol.org/docs/libraries/ai-plugin-scanner/plugin-scanner/policies-and-output/
+#
+# False positives from cisco-ai-skill-scanner >= 2.0.14 flagging standard
+# Unicode typography as "obfuscated prompt-injection".
+#
+# The flagged characters are legitimate documentation formatting:
+# - → (U+2192) — arrow notation in "5→40/day"
+# - — (U+2014) — standard em dash punctuation
+#
+# Generated: 2026-09-02
+
+# cargo-observability/SKILL.md — unicode-normalization false positive
+OBFUSCATED_PROMPT_INJECTION:cargo-observability/SKILL.md
+
+# cargo-gtm/SKILL.md — unicode-confusable false positive
+OBFUSCATED_PROMPT_INJECTION:cargo-gtm/SKILL.md
+
+# cargo-gtm/provider-playbooks/brightData.md — unicode-confusable false positive
+OBFUSCATED_PROMPT_INJECTION:cargo-gtm/provider-playbooks/brightData.md
+
+# cargo-mailbox-management/SKILL.md — unicode-normalization false positive (5→40)
+OBFUSCATED_PROMPT_INJECTION:cargo-mailbox-management/SKILL.md
+
+# cargo/SKILL.md — unicode-normalization false positive
+OBFUSCATED_PROMPT_INJECTION:cargo/SKILL.md
+
+# cargo/references/prerequisites.md — unicode-normalization false positive
+OBFUSCATED_PROMPT_INJECTION:cargo/references/prerequisites.md
+
+# cargo-storage/SKILL.md — unicode-normalization false positive
+OBFUSCATED_PROMPT_INJECTION:cargo-storage/SKILL.md
+
+# cargo-storage/references/examples/ingest-webhook.md — unicode-normalization false positive
+OBFUSCATED_PROMPT_INJECTION:cargo-storage/references/examples/ingest-webhook.md
+
+# cargo-billing/SKILL.md — unicode-confusable false positive
+OBFUSCATED_PROMPT_INJECTION:cargo-billing/SKILL.md
+
+# cargo-cdk/SKILL.md — unicode-normalization false positive
+OBFUSCATED_PROMPT_INJECTION:cargo-cdk/SKILL.md
+
+# cargo-diagnostics/SKILL.md — unicode-normalization false positive
+OBFUSCATED_PROMPT_INJECTION:cargo-diagnostics/SKILL.md
+
+# cargo-context/SKILL.md — unicode-normalization false positive
+OBFUSCATED_PROMPT_INJECTION:cargo-context/SKILL.md

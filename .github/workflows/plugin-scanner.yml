@@ -29,6 +29,7 @@ jobs:
           mode: scan
           format: markdown
           output: scanner-report.md
+          config: .plugin-scanner.toml
           min_score: 80
           fail_on_severity: high
           # No `pull-requests: write` above, so the comment would fail anyway.
