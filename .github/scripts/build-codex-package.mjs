@@ -292,6 +292,18 @@ const PACKAGE_EDITS = [
     replace: "",
   },
   {
+    file: "cargo-gtm/references/stage-action-map.md",
+    find:
+      "\n\n**Personality / selling guidance:** `aiArk.analyzePersonality` (0.05) turns a LinkedIn profile into OCEAN + DISC traits with tailored selling notes. Nothing else in the catalog does it. It is a personalization input, not an identity field \u2014 treat the output as a hypothesis about how to write, never as a fact about the person.",
+    replace: "",
+  },
+  {
+    file: "cargo-gtm/recipes/custom-datapoints.md",
+    find:
+      "| How this person is likely to buy (personality, selling notes) | `aiArk.analyzePersonality` (0.05) | 0.05 | Catalog-unique. An input to *how you write*, never a stored fact about the person |\n",
+    replace: "",
+  },
+  {
     file: "cargo-gtm/references/credits-cost-table.md",
     find: "| 2 | `forager` | enrichment | `findPersonalEmail` | Find a person's personal email |\n",
     replace: "",

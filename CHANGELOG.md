@@ -10,6 +10,22 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### `cargo-gtm` → 2.1.0 — the routing surfaces answer more of the questions people actually ask
+
+Measured rather than guessed: of the 176 credits-based actions, **148 were reachable** from a routing surface (`stage-action-map.md`, the phase guides, `alternatives.md`, a recipe) and 28 were reachable only from their own provider playbook — findable if you already knew which provider to open, which is the wrong way round. This closes the gaps worth closing and leaves the rest deliberately: **154/176**.
+
+- **Headcount had no section at all.** It is the most-asked company attribute and the first row of [`custom-datapoints.md`](cargo-gtm/recipes/custom-datapoints.md)'s feasibility gate, yet none of the four `salesNavigator.find*` actions appeared anywhere in [`stage-action-map.md`](cargo-gtm/references/stage-action-map.md). New **Headcount & workforce** section carries all four plus `companyEnrich.getWorkforce` (the only historical series), `linkedin.findCustomHeadcount` (0.5 — counts by keyword, for roles the fixed buckets don't have), and the `companyId` prerequisite that makes the cheap ones cost 0.30 on a list that arrived without one.
+
+- **"Who works at this domain" was not a documented question.** Distinct from searching a population by title, and answered by `icypeas.scanDomain` (0.1, role addresses only) and `hunter.searchDomain` (1, named people, **max 10 per call**). New **Per-domain contact discovery** section, which also states the trap: looping `searchDomain` to build a list is the pitfall its own playbook warns about.
+
+- **Three rungs that existed nowhere in the routing.** `rocketreach.lookupPerson` (1) and `mixrank.findPerson`/`findCompany` (4, last rung, the only phone-keyed resolution) join Enrich; `societeInfo` joins Sourcing and Enrich as **France-only** registry access — NAF code, collective agreement, filed accounts — which nothing else in the catalog reaches.
+
+- **Hiring intent had one row.** `linkedin.searchJobs` (0.5) sits beside `theirStack.searchJobs` at the same price against a different index, and `linkedin.enrichJob` (0.25) is the per-posting drill-down after either.
+
+- **Three new data-point rows** in `custom-datapoints.md`: lookalike companies (naming `companyEnrich.findSimilarCompanies`' **1-per-returned-row** billing, since `limit: 100` is 100 credits), per-domain contact discovery, and `aiArk.analyzePersonality` — catalog-unique, and framed as an input to *how you write* rather than a stored fact about a person.
+
+- **What stays unrouted, on purpose.** The four LinkedIn engagement actions (`likePost`, `followProfile`, `visitProfile`, `commentPostComment`) — routing them as data points would undercut [`acceptable-use.md`](cargo-gtm/references/acceptable-use.md) §2's refusal to batch-blast them. Three `native` actions owned by other skills. `searchLeadsLegacy`, which its playbook prices at 300× its replacement. The `extract*Search` URL variants and the X engagement-graph drill-downs, which are finer grain on an already-routed surface, not separate questions. `sillage` and `piloterr` by decision.
+
 ### `cargo-gtm` → 2.0.0, `cargo` → 1.25.0 (router), `cargo-context` → 1.3.0, `cargo-connection` → 1.4.1, `cargo-orchestration` → 1.11.1 — the `cargo` provider leaves the docs
 
 The first-party enrichment provider is no longer documented. Its playbook, its 21 priced actions, and every recipe step that led with it are gone; each one now leads with the rung the pack already named as its fallback. This is breaking for `cargo-gtm`: an agent that learned the old chains has to relearn all of them.
