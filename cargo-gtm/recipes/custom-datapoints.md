@@ -97,7 +97,7 @@ A price here means **credits per account**, which for a row-billed action is not
 
 | What you want to know | Cheapest catalog path | Credits/account | Coverage to expect |
 |---|---|---|---|
-| Function headcount, seniority mix, SDR:AE ratio, eng-as-share-of-total | `salesNavigator.findEmployeesDistribution` | 0.25 **+ 0.05 ID** | High where a LinkedIn company page exists |
+| Function headcount, seniority mix, SDR:AE ratio, eng-as-share-of-total | `salesNavigator.findEmployeesDistribution` (0.25 **+ 0.05 ID**), or `linkedin.findCustomHeadcount` (0.5) when the role you care about isn't one of the buckets — it counts by keyword | 0.25–0.5 **+ ID** | High where a LinkedIn company page exists |
 | Headcount growth or decline | `salesNavigator.findCompanyMetrics` (0.25 **+ 0.05 ID**), or `companyEnrich.getWorkforce` (0.25 — historical headcount **by department**) | 0.25 | Medium–High |
 | Revenue band, NAICS / industry codes | `companyEnrich.enrichByDomain` (0.25) — same call also returns employees, funding and socials, so it can fill several rows at once | 0.25 | Medium — banded, not exact; private companies are estimates |
 | Tech stack | `builtwith.getDomainSummary` (**0**) first, then `builtwith.enrichDomain` (1, flat) or `theirStack.searchTechnologies` (0.5/row) | 0 to start; 1 flat, or **0.5 × rows** — cap with `limit` | Medium — detection favors client-side and vendor-declared tech; back-office tools are near-invisible |
@@ -107,6 +107,9 @@ A price here means **credits per account**, which for a row-billed action is not
 | Stated challenges, competitive landscape | `firecrawl.scrape` (0.05) → `anthropic.instruct` (0.2), or `linkup.instruct` (1, sourced) | 0.25–1 | Medium |
 | **Anything stated on one specific page** — trust center, store locator, supported currencies, integration directory, entity list | `firecrawl.scrape` (0.05) → `anthropic.instruct` haiku (0.2) | ~0.25 | Entirely determined by whether that page exists — probe it |
 | A question no structured provider carries | `linkup.instruct` (1, sourced) or `perplexity.instruct` (0.3–1) | 0.3–1 | Always answers; whether it answers *correctly* is what the probe measures |
+| Companies like these customers (lookalikes) | `aiArk.searchCompanies` with `lookalikeDomains` (0.01/row, ≤5 seeds), or `linkedin.extractSimilarCompanies` (0.25 flat). `companyEnrich.findSimilarCompanies` also exists but bills **1 per company returned** — `limit: 100` is 100 credits | 0.01 × rows, or 0.25 | Medium — seed quality decides everything; probe with 5 seeds before scaling |
+| Who works at one domain you already hold | `icypeas.scanDomain` (0.1, role addresses only) or `hunter.searchDomain` (1, named people, **max 10/call**) | 0.1–1 | Medium — this is a per-account lookup, not a list builder; looping `searchDomain` is the documented pitfall |
+| How this person is likely to buy (personality, selling notes) | `aiArk.analyzePersonality` (0.05) | 0.05 | Catalog-unique. An input to *how you write*, never a stored fact about the person |
 | Review/category presence | `piloterr.getG2ProductInfo` (0.01), `g2.enrichProduct` (1) | 0.01–1 | Low–Medium, category-dependent |
 | Employee ratings / employer reputation (Glassdoor-style) | **none** | — | No credits-based action in the catalog returns this. It is a research note, not a datapoint — say so rather than substituting a scrape that reads like the real thing |
 
