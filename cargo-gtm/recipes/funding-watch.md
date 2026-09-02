@@ -30,8 +30,9 @@ cargo-ai orchestration action execute-batch \
   --wait-until-finished > /tmp/funding.json
 
 # 3. Filter to recent rounds (last 90 days)
-jq -c '[.results[]
-  | select(.funding_rounds[]? | (.announced_date // "") > "'$(date -v-90d -u +%Y-%m-%d 2>/dev/null || date -d "90 days ago" -u +%Y-%m-%d)'")]' \
+#    Same field Pattern B diffs on — confirm it once with get-output-schema.
+jq -c --arg cutoff "$(date -v-90d -u +%Y-%m-%d 2>/dev/null || date -d '90 days ago' -u +%Y-%m-%d)" \
+  '[.results[] | select((.lastFundingDate // "") > $cutoff)]' \
   /tmp/funding.json > /tmp/recent-funded.json
 ```
 

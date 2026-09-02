@@ -22,7 +22,7 @@ Looking for PEOPLE at companies?
   ├─ Rich filters / large database:           peopleDataLabs.searchPeople / queryPeople (3 cred)
   ├─ LinkedIn-anchored:                       linkedin.findProfileUrl + linkedin.enrichProfile (0.25 cred)
   ├─ "Find people I know who can intro":      theSwarm.searchWarmIntrosToCompany / Person (2 cred)
-  └─ Visitor de-anonymization:                snitcher.searchSessions (0 cred) → aiArk.reverseLookup (0.05)
+  └─ Visitor de-anon (identifies a COMPANY):  snitcher.searchSessions (0 cred) → salesNavigator.searchLeads there
 
 Looking for INVESTOR-BACKED companies?
   └─ peopleDataLabs.queryCompanies with investor/funding filter

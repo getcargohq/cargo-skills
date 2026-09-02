@@ -378,7 +378,7 @@ const PACKAGE_EDITS = [
   },
   {
     file: "cargo-gtm/guides/finding-companies-and-contacts.md",
-    find: "  \u251c\u2500 \"Find people I know who can intro\":      theSwarm.searchWarmIntrosToCompany / Person (2 cred)\n  \u2514\u2500 Visitor de-anonymization:                snitcher.searchSessions (0 cred) \u2192 aiArk.reverseLookup (0.05)\n",
+    find: "  \u251c\u2500 \"Find people I know who can intro\":      theSwarm.searchWarmIntrosToCompany / Person (2 cred)\n  \u2514\u2500 Visitor de-anon (identifies a COMPANY):  snitcher.searchSessions (0 cred) \u2192 salesNavigator.searchLeads there\n",
     replace: "  \u2514\u2500 \"Find people I know who can intro\":      theSwarm.searchWarmIntrosToCompany / Person (2 cred)\n",
   },
   {

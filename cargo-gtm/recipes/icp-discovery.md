@@ -66,7 +66,7 @@ for src in won lost; do
     cargo-ai orchestration action execute-batch \
       --action "$(jq -nc --arg i "$slug" --arg a "$action" \
                     '{kind:"connector",integrationSlug:$i,actionSlug:$a}')" \
-      --records "$(jq -c '[.[] | {domain}]' /tmp/$src.json)" \
+      --records "$(jq -c '[.rows[] | {domain}]' /tmp/$src.json)" \
       --wait-until-finished > /tmp/$src-$action.json
   done
 done

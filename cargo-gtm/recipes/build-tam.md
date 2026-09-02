@@ -114,13 +114,19 @@ paid enrichment — this is a storage read, not a paid action:
 cargo-ai storage query execute "SELECT domain FROM default.companies" > /tmp/known.json
 
 # keep only the domains the workspace doesn't already have
-jq -c '[.companies[] | {domain: .website}]' /tmp/companies.json \
-  | jq --slurpfile known /tmp/known.json \
-       '[.[] | select(.domain as $d | ($known[0].rows // [] | map(.domain)) | index($d) | not)]' \
-  > /tmp/new-domains.json
+jq -c --slurpfile known /tmp/known.json \
+  '[.companies[]
+    | {domain: .website, linkedinId: .linkedinId}
+    | select(.domain as $d | ($known[0].rows // [] | map(.domain)) | index($d) | not)]' \
+  /tmp/companies.json > /tmp/new-companies.json
 ```
 
-`domain` is the join key for everything downstream — no provider-side id is needed.
+`domain` is the join key for every enrichment below — no provider-side id is
+needed for those. `linkedinId` is carried through only because the optional
+contact step needs a Sales Navigator `accountId`, and **no enrichment action
+returns one**; it comes from `salesNavigator.searchAccounts` at step 1. Sourcing
+that had no LinkedIn anchor (the `peopleDataLabs` path) has no `linkedinId` to
+carry, so step 4 falls back to a per-domain title search.
 
 ### Step 3 — Enrich firmographics + signals
 
@@ -128,20 +134,20 @@ jq -c '[.companies[] | {domain: .website}]' /tmp/companies.json \
 # Firmographics — cheapest company enrich in the catalog
 cargo-ai orchestration action execute-batch \
   --action '{"kind":"connector","integrationSlug":"aiArk","actionSlug":"enrichCompany"}' \
-  --records "$(cat /tmp/new-domains.json)" \
+  --records "$(jq -c '[.[] | {domain}]' /tmp/new-companies.json)" \
   --wait-until-finished > /tmp/firmo.json
 
 # Funding signals (only worth running if funding is part of ICP)
 cargo-ai orchestration action execute-batch \
   --action '{"kind":"connector","integrationSlug":"enrichCrm","actionSlug":"getFunding"}' \
-  --records "$(cat /tmp/new-domains.json)" \
+  --records "$(jq -c '[.[] | {domain}]' /tmp/new-companies.json)" \
   --wait-until-finished > /tmp/funding.json
 
 # Tech-stack (only worth running if technographics are part of ICP)
 # getDomainSummary is FREE — run it across the whole list first
 cargo-ai orchestration action execute-batch \
   --action '{"kind":"connector","integrationSlug":"builtwith","actionSlug":"getDomainSummary"}' \
-  --records "$(cat /tmp/new-domains.json)" \
+  --records "$(jq -c '[.[] | {domain}]' /tmp/new-companies.json)" \
   --wait-until-finished > /tmp/tech.json
 ```
 
@@ -162,7 +168,7 @@ Only run if the user asked for contacts. Cap at 3-5 per company.
 ```bash
 cargo-ai orchestration action execute-batch \
   --action '{"kind":"connector","integrationSlug":"salesNavigator","actionSlug":"searchLeads"}' \
-  --records "$(jq -c '[.results[] | {filters:{accountId: .linkedinId, titles:[\"CTO\",\"VP Engineering\"]}, limit: 5}]' /tmp/firmo.json)" \
+  --records "$(jq -c '[.[] | select(.linkedinId) | {filters:{accountId: .linkedinId, titles:[\"CTO\",\"VP Engineering\"]}, limit: 5}]' /tmp/new-companies.json)" \
   --wait-until-finished > /tmp/contacts.json
 ```
 

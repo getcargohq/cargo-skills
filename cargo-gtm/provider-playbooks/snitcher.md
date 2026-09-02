@@ -27,7 +27,7 @@ Both run incrementally with `autoFetch` at a minimum 30-minute interval once con
 
 - ✅ **Visitor-intent signal** — companies browsing your pricing page are the warmest cold segment there is; feed the identified-visitor segment into [`../recipes/outreach-activation.md`](../recipes/outreach-activation.md) or [`../recipes/re-engagement.md`](../recipes/re-engagement.md).
 - ✅ **Free session context** — `searchSessions` and the `fetchSessions` extractor cost nothing, so page-level context (which URLs, how often, from where) is free personalization fuel.
-- ❌ **Company enrichment** — visitor records carry basic firmographics only; run identified domains through the normal ENRICH chain (`cargo` 0.5, or `companyEnrich` 0.25) for real coverage.
+- ❌ **Company enrichment** — visitor records carry basic firmographics only; run identified domains through the normal ENRICH chain (`aiArk.enrichCompany` 0.01, then `companyEnrich` 0.25) for real coverage.
 - ❌ **Workspaces without a Snitcher account** — there's no cargo-managed data here; no tracking script, no signal.
 
 ## Patterns

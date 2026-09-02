@@ -184,12 +184,15 @@ cargo-ai orchestration action execute-batch \
 `enrichPerson` returns the verified email alongside the profile and bills 0 when
 it finds none, so step 5 below only pays for the residue it left empty.
 
-### Step 5 — Find emails (FullEnrich)
+### Step 5 — Find emails (FullEnrich) on the residue only
 
 ```bash
+# ONLY the rows step 4 left without an email — this gate is what makes the
+# budget below 60 credits instead of 200.
 cargo-ai orchestration action execute-batch \
   --action '{"kind":"connector","integrationSlug":"FullEnrich","actionSlug":"findEmail"}' \
-  --records "$(jq -c '[.results[].leads[] | {firstName, lastName, domainName: .companyDomain}]' /tmp/p2-leads.json)" \
+  --records "$(jq -c '[.results[] | select((.email // \"\") == \"\")
+                       | {firstName, lastName, domainName: .companyDomain}]' /tmp/p2-prospect-enriched.json)" \
   --wait-until-finished > /tmp/p2-emails.json
 ```
 

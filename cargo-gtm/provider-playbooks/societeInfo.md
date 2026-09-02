@@ -6,7 +6,7 @@ last-reviewed: 2026-07-09
 
 # societeInfo (Societe Info)
 
-French-market company and contact data, anchored on the official registry: registration numbers, NAF activity codes, juridical forms, conventions collectives, filed financials (`minSales` / `minProfits`). Two actions, both premium at 4 credits — `search` bills **4 per item returned**, `enrich` a fixed 4. Reach for it only when the target is a **French entity** and the generalist stack (`cargo` native → `waterfall`, 0.25–1 for companies) lacks the registry depth you need; for everything else it's 8–16× the going rate ([`../references/stage-action-map.md`](../references/stage-action-map.md)).
+French-market company and contact data, anchored on the official registry: registration numbers, NAF activity codes, juridical forms, conventions collectives, filed financials (`minSales` / `minProfits`). Two actions, both premium at 4 credits — `search` bills **4 per item returned**, `enrich` a fixed 4. Reach for it only when the target is a **French entity** and the generalist stack (`aiArk` → `companyEnrich` → `waterfall`, 0.01–1 for companies) lacks the registry depth you need; for everything else it's 8–16× the going rate ([`../references/stage-action-map.md`](../references/stage-action-map.md)).
 
 ## Credits-based actions
 
@@ -21,7 +21,7 @@ French-market company and contact data, anchored on the official registry: regis
 - ✅ **Registry-grade company resolution** — `enrich` from a domain, name + address, or LinkedIn URL to the official record (registration number and legal identity).
 - ✅ **Contacts at a registered company** — contact `search` keyed on the `registrationNumber` you got from a company search/enrich, filtered by role/level.
 - ❌ **Non-French targets** — it's a France-scoped registry source; the stack covers everything else far cheaper.
-- ❌ **Cheap firmographics on French companies** — if you don't need registry fields, `companyEnrich.enrichByDomain` (0.25) or `cargo` (0.5) suffices.
+- ❌ **Cheap firmographics on French companies** — if you don't need registry fields, `aiArk.enrichCompany` (0.01) or `companyEnrich.enrichByDomain` (0.25) suffices.
 
 ## Patterns
 

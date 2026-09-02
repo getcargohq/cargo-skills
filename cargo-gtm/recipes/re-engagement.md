@@ -57,21 +57,31 @@ cargo-ai orchestration action execute-batch \
 ### Step 3 — Check company-level events (funding / acquisition)
 
 The catalog has no since-timestamp event feed, so a "fresh" round is the
-difference between a new pull and the round date already on the record. Keep
-`last_funding_round_at` on the Companies model or this step has nothing to diff
-against and re-flags the same accounts every week.
+difference between a new pull and the round date already on the record. That
+date lives on the **Companies** model — `/tmp/stale.json` is a Contacts segment
+and does not carry it, so read it separately or the diff compares against empty
+and re-flags every account each week.
 
 ```bash
+# The stored dates — a Companies column, not a Contacts one
+cargo-ai storage query execute \
+  "SELECT domain, last_funding_round_at FROM default.companies" > /tmp/known-funding.json
+
 cargo-ai orchestration action execute-batch \
   --action '{"kind":"connector","integrationSlug":"enrichCrm","actionSlug":"getFunding"}' \
-  --records "$(jq -c '[.records[] | {domain: .company_domain}]' /tmp/stale.json)" \
+  --records "$(jq -c '[.records[] | {domain: .company_domain}] | unique' /tmp/stale.json)" \
   --wait-until-finished > /tmp/funding.json
 
-# Keep only rows whose latest round post-dates what the workspace already stored
-jq -c --slurpfile stale /tmp/stale.json '
-  ($stale[0].records | map({key: .company_domain, value: (.last_funding_round_at // "")})
-     | from_entries) as $known
-  | [ .results[] | select(.lastFundingDate > ($known[.domain] // "")) ]
+# Keep rows whose latest round post-dates the stored value, then fan the company
+# signal back out to the contacts at that company — step 5 unions on email.
+jq -c --slurpfile known /tmp/known-funding.json --slurpfile stale /tmp/stale.json '
+  ($known[0].rows | map({key: .domain, value: (.last_funding_round_at // "")}) | from_entries) as $stored
+  | [ .results[] | select((.lastFundingDate // "") > ($stored[.domain] // "")) ]
+    | map({key: .domain, value: .lastFundingDate}) | from_entries as $fresh
+  | [ $stale[0].records[]
+      | select($fresh[.company_domain])
+      | {email, signal: "company_event",
+         details: {domain: .company_domain, lastFundingDate: $fresh[.company_domain]}} ]
 ' /tmp/funding.json > /tmp/events.json
 ```
 
@@ -91,10 +101,11 @@ Only run this step when the workspace's ICP has a strong tech-stack correlation.
 ### Step 5 — Union into "revive candidates"
 
 ```bash
-jq -c -n '
-  ([inputs[0].results[] | select(.status == "MOVED") | {email, signal: "job_change", details: .new_company}] +
-   [inputs[1].results[] | select((.events // []) | length > 0) | {email, signal: "company_event", details: .events[0]}] +
-   [inputs[2].results[] | select(.matches // false) | {email, signal: "tech_match", details: .technologies}])
+# `inputs` is a generator, not an array — slurp it before indexing.
+jq -c -n '[inputs] as $in
+  | ([$in[0].results[] | select(.status == "MOVED") | {email, signal: "job_change", details: .new_company}] +
+     [$in[1][]] +
+     [$in[2].results[] | select(.matches // false) | {email, signal: "tech_match", details: .technologies}])
   | group_by(.email) | map({email: .[0].email, signals: map(.signal), details: map(.details)})
 ' /tmp/job-changes.json /tmp/events.json /tmp/tech.json > /tmp/revive-candidates.json
 ```

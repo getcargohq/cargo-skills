@@ -77,10 +77,15 @@ cargo-ai orchestration action execute-batch \
   --records "$(jq -c '[.[] | {domain: .account_domain}]' /tmp/lost-budget.json)" \
   --wait-until-finished > /tmp/budget-funding.json
 
-# Keep deals where a funding round closed AFTER the original deal lost
+# Keep deals where a funding round closed AFTER the original deal lost, and
+# carry deal_id through — step 4 merges on it and getFunding does not return it.
 jq -c --slurpfile lost /tmp/lost-budget.json '
-  ($lost[0] | map({key: .account_domain, value: .closed_at}) | from_entries) as $closed
-  | [ .results[] | select(.lastFundingDate > ($closed[.domain] // "9999")) ]
+  ($lost[0] | map({key: .account_domain, value: .}) | from_entries) as $deal
+  | [ .results[]
+      | . as $f
+      | $deal[$f.domain]
+      | select($f.lastFundingDate > (.closed_at // "9999"))
+      | {deal_id, account_domain: $f.domain, lastFundingDate: $f.lastFundingDate} ]
 ' /tmp/budget-funding.json > /tmp/revive-budget.json
 ```
 
@@ -106,10 +111,11 @@ Adjust the function list to match where your buyer typically sits.
 ### Step 4 — Merge into a single revive segment
 
 ```bash
-jq -c -n '
-  ([inputs[0][] | {deal_id: .deal_id, account_domain: .company_domain, revival: "champion_changed", details: .new_company}] +
-   [inputs[1][] | {deal_id: .deal_id, account_domain: .domain, revival: "fresh_funding", details: .events[0]}] +
-   [inputs[2][] | {deal_id: .deal_id, account_domain: .company_domain, revival: "new_exec", details: .leads[0]}])
+# `inputs` is a generator, not an array — slurp it before indexing.
+jq -c -n '[inputs] as $in
+  | ([$in[0][] | {deal_id: .deal_id, account_domain: .company_domain, revival: "champion_changed", details: .new_company}] +
+     [$in[1][] | {deal_id: .deal_id, account_domain: .account_domain, revival: "fresh_funding", details: {lastFundingDate: .lastFundingDate}}] +
+     [$in[2][] | {deal_id: .deal_id, account_domain: .company_domain, revival: "new_exec", details: .leads[0]}])
 ' /tmp/revive-champion.json /tmp/revive-budget.json /tmp/revive-timing.json > /tmp/lost-revival.json
 ```
 

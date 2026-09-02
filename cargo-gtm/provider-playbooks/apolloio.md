@@ -6,7 +6,7 @@ last-reviewed: 2026-07-09
 
 # apolloio (Apollo.io)
 
-Apollo-anchored person and organization enrichment. Only **two of its eleven actions are credits-based** — `enrichPerson` (1, or 3 with phone reveal) and `enrichOrganization` (1); everything else (searches, contact CRUD, sequences) runs **only on your own Apollo API key** connector. That credits pair is **in the priority stack** ([`../SKILL.md`](../SKILL.md) §5) as the **niche-coverage ENRICH rung** — promoted per-batch when a pilot shows Apollo hits where `cargo` (2) and `waterfall` (2) miss, its investor coverage in [`../recipes/portfolio-prospecting.md`](../recipes/portfolio-prospecting.md) being the standing example. Stack membership is not a licence to route generic enrichment here first: `cargo` native → `waterfall` still leads the default chain, and Apollo runs on the residue.
+Apollo-anchored person and organization enrichment. Only **two of its eleven actions are credits-based** — `enrichPerson` (1, or 3 with phone reveal) and `enrichOrganization` (1); everything else (searches, contact CRUD, sequences) runs **only on your own Apollo API key** connector. That credits pair is **in the priority stack** ([`../SKILL.md`](../SKILL.md) §5) as the **niche-coverage ENRICH rung** — promoted per-batch when a pilot shows Apollo hits where `aiArk` (0.1) and `waterfall` (2) miss, its investor coverage in [`../recipes/portfolio-prospecting.md`](../recipes/portfolio-prospecting.md) being the standing example. Stack membership is not a licence to route generic enrichment here first: `aiArk` → `waterfall` still leads the default chain, and Apollo runs on the residue.
 
 ## Credits-based actions
 
@@ -78,7 +78,7 @@ cargo-ai orchestration action execute-batch \
 
 ## Position in the waterfall
 
-- `enrichPerson` — **ENRICH (person), fallback rung** beside the stack's `cargo` → `waterfall` → `peopleDataLabs` chain; promote it for a batch only when the pilot shows better niche coverage.
+- `enrichPerson` — **ENRICH (person), fallback rung** beside the stack's `aiArk` → `waterfall` → `peopleDataLabs` chain; promote it for a batch only when the pilot shows better niche coverage.
 - `enrichOrganization` — **ENRICH (company), fallback rung** after `aiArk.enrichCompany` (0.01), `companyEnrich` (0.25) and `linkedin` (0.25–0.5).
 - Own-key sequence actions — post-VERIFY **activation**, outside the credits spine.
 

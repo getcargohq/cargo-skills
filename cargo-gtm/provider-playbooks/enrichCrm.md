@@ -62,7 +62,7 @@ Every hit still flows to VERIFY: free pre-cull, then `waterfall.verifyEmail` (0.
 ## Position in the waterfall
 
 - `findEmail` — **CONTACT stage, alt 1-credit rung** beside `FullEnrich` (1, default) after the 0.5 mid-tiers.
-- `enrichPerson` / `enrichCompany` — **ENRICH, fallback rungs** behind the stack (`cargo` → `waterfall` → `peopleDataLabs`).
+- `enrichPerson` / `enrichCompany` — **ENRICH, fallback rungs** behind the stack (`aiArk` → `waterfall` → `peopleDataLabs`).
 - `getFunding` — **SIGNAL (funding), sole rung**: no cheaper credits-based funding action exists.
 
 ## Recurring use

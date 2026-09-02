@@ -24,7 +24,7 @@ Mid-tier company/people search and enrichment — four actions, all 1 credit. It
 - ✅ **"People at companies like X"** — `searchPeople` accepts both filter objects: `peopleFilters` (`jobTitles`, `seniorities`, `departments`, `emailStatuses`, `keywords`, `countries`, …) AND `companiesFilters` in the same call.
 - ✅ **Dedupe-aware sourcing** — `includeDomains` / `excludeDomains` (companies) and `includeIds` / `excludeIds`, `excludeJobTitles` (people) keep already-owned records out of the paid pull.
 - ❌ **Plain industry/size/geo sourcing** — `salesNavigator.searchAccounts` (0.05) is 20× cheaper.
-- ❌ **First-stop enrichment** — the ENRICH chain leads with `cargo` native and `linkedin` (0.25); oceanio is a same-price peer of `waterfall.enrichCompany` (1), so pick by pilot coverage.
+- ❌ **First-stop enrichment** — the ENRICH chain leads with `aiArk.enrichCompany` (0.01) and `linkedin` (0.25); oceanio is a same-price peer of `waterfall.enrichCompany` (1), so pick by pilot coverage.
 
 ## Patterns
 
