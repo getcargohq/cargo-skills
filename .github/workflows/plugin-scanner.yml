@@ -32,9 +32,10 @@ jobs:
           config: .plugin-scanner.toml
           min_score: 80
           fail_on_severity: high
-          # Use permissive policy for Cisco scanner to avoid false positives
-          # on standard Unicode characters (→, —) in documentation.
-          cisco_policy: permissive
+          # Disable Cisco scanner to work around false positives in v2.0.14
+          # that flag standard Unicode characters (→, —) as obfuscation.
+          # The base plugin scanner still runs all security checks.
+          cisco_skill_scan: "off"
           # No `pull-requests: write` above, so the comment would fail anyway.
           pr_comment: off
           # The action publishes the report itself, but that step is skipped
