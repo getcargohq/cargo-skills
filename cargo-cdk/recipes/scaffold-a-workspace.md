@@ -1,19 +1,21 @@
 # Recipe: scaffold a workspace from scratch
 
-**Use when** the user wants to stand up a new Cargo workspace as code — from a
-template, reproducibly. Follow these steps as your execution plan.
+**Use when** the user wants to stand up a new Cargo workspace as code,
+reproducibly. Follow these steps as your execution plan.
 
-## 1. Scaffold from a template
+## 1. Scaffold
 
 ```bash
-cargo-ai cdk init my-workspace                    # 'blank' (minimal) — the default
-cargo-ai cdk init my-workspace --template full    # every resource type, wired up
-cargo-ai cdk init --list-templates                # see all templates
+cargo-ai cdk init my-workspace                              # the repo, empty
+cargo-ai cdk init my-workspace --cookbook tam-building      # the repo plus a worked example
 ```
 
-Use `--template full` when the user wants a worked example spanning connectors,
-models, plays, tools, agents, MCP, context, files, workers, and apps; `blank` when
-they want to start empty.
+The scaffold itself never varies — it is one GTM repo from
+`getcargohq/cargo-manifest`, with the CDK project in `infra/`. What varies is
+whether a cookbook is layered on top, so reach for `--cookbook <slug>` when the
+user wants a working pipeline to adapt rather than an empty project.
+`cargo-ai cdk cookbook list` names them; see
+[`references/cookbooks.md`](../references/cookbooks.md).
 
 ## 2. Install and authenticate
 

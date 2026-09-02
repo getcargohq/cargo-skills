@@ -26,6 +26,37 @@
     ]
   },
   {
+    "slug": "crm-enrichment",
+    "kind": "cookbook",
+    "outcome": "Keep CRM accounts filled and refresh them when they go stale: a deployed play that fills approved blank firmographics from LinkedIn and re-enrolls a record after six months.",
+    "state": "to-be-approved",
+    "chain": 3,
+    "requires": [],
+    "hasSkill": true,
+    "variations": [
+      {
+        "id": "crm",
+        "when": "The consumer uses Salesforce or Attio instead of HubSpot",
+        "trade": "Live generated types must be rechecked; a guessed flag writes or no-ops silently"
+      },
+      {
+        "id": "selected_fields",
+        "when": "The approved contract differs from the starting recommendation",
+        "trade": "Each added field expands mapping, type-review, and the \"already filled\" filter"
+      },
+      {
+        "id": "eligibility",
+        "when": "Only a governed subset should be enriched",
+        "trade": "Narrower scope reduces coverage and paid calls"
+      },
+      {
+        "id": "approved_refresh_behavior",
+        "when": "Populated fields must be refreshed after explicit approval",
+        "trade": "Refresh can overwrite CRM-authoritative values if the preview and the write disagree"
+      }
+    ]
+  },
+  {
     "slug": "tam-building",
     "kind": "cookbook",
     "outcome": "Stand up your account universe as a deployed pipeline: a Sales Navigator company search split past the 1,000 extraction cap, resolved to real domains, deduped into a shared accounts model.",

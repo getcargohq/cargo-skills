@@ -6,21 +6,28 @@ Skills in [`getcargohq/gtm-skills`](https://github.com/getcargohq/gtm-skills) th
 jobs as the one-off skills there, as a deployed pipeline that keeps producing the result.
 
 **Every folder is self-contained** (its own models, connectors and folders; no shared
-foundation, no requires graph). The agent installing one copies it into the project as a
-sibling of what is there, reconciles it with what is already declared (an existing accounts
-model, an existing CRM connector), adapts it, plans, deploys on a yes, and walks its `Done
-when`. The code is a worked example, not a template to fill in.
+foundation, no requires graph). `cdk add` copies one into the project; the agent then
+reconciles it with what is already declared (an existing accounts model, an existing CRM
+connector), adapts it in place, plans, deploys on a yes, and walks its `Done when`. The
+code is a worked example, not a template to fill in — and not something to regenerate
+from the skill's prose.
 
 ```sh
-npx skills add getcargohq/gtm-skills/<slug>       # then say what you want; the skill carries its own procedure
-cargo-ai cdk init <dir> --template blank      # only if there is no CDK project yet: the shell comes from the CLI
+cargo-ai cdk add cookbook/<slug>              # inside a CDK project: this is the copy step
+cargo-ai cdk init <dir> --cookbook <slug>     # no project yet: scaffold and install together
+npx skills add getcargohq/gtm-skills/<slug>   # the procedure on its own, without the CDK resources
 ```
+
+After either `cdk` command the files are in `infra/<slug>/` and `.claude/skills/<slug>/`.
+Start the skill at its Adapt section: its earlier steps assume you found the folder in
+gtm-skills and still have to place it.
 
 ## With a skill
 
 | Skill | Deploys | State |
 | --- | --- | --- |
 | `account-scoring` | Keep every account scored and tiered against your written ICP by a deployed agent that re-scores as accounts arrive and as the ICP changes, writing the rationale back to the CRM. | to-be-approved |
+| `crm-enrichment` | Keep CRM accounts filled and refresh them when they go stale: a deployed play that fills approved blank firmographics from LinkedIn and re-enrolls a record after six months. | to-be-approved |
 | `tam-building` | Stand up your account universe as a deployed pipeline: a Sales Navigator company search split past the 1,000 extraction cap, resolved to real domains, deduped into a shared accounts model. | to-be-approved |
 
 ## When one does not fit as written
@@ -32,6 +39,13 @@ Declared adaptations, not forks. Reach for one before concluding a skill is the 
 - `deterministic-scoring` — You need fixed cost and exact reproducibility, or an LLM judgement is not acceptable to your team. Costs: The criteria move out of the ICP markdown and into code, so they stop being reviewable by non-engineers, and you lose the rationale entirely.
 - `skip-crm-roundtrip` — You want the score on the model directly and do not need it visible in the CRM. Costs: Reps lose the score and rationale where they actually work. The native's input is untyped, so confirm the field shape on the first run.
 - `no-crm-at-all` — You have no CRM, or you do not want to hand this skill a CRM credential. Costs: Every other CRM-dependent skill you install later brings a CRM connector of its own; reuse one.
+
+**`crm-enrichment`**
+
+- `crm` — The consumer uses Salesforce or Attio instead of HubSpot. Costs: Live generated types must be rechecked; a guessed flag writes or no-ops silently.
+- `selected_fields` — The approved contract differs from the starting recommendation. Costs: Each added field expands mapping, type-review, and the "already filled" filter.
+- `eligibility` — Only a governed subset should be enriched. Costs: Narrower scope reduces coverage and paid calls.
+- `approved_refresh_behavior` — Populated fields must be refreshed after explicit approval. Costs: Refresh can overwrite CRM-authoritative values if the preview and the write disagree.
 
 **`tam-building`**
 
@@ -48,5 +62,5 @@ result is meant to keep arriving.
 
 **Never `cargo-ai cdk init --force` into a directory that is not empty.** It replaces the
 project's `package.json` and reverts adapted code while `cargo.state.json` survives, so the
-next plan diffs a live workspace against code nobody wrote. Copy the skill folder in as a
-sibling instead; that is what its own procedure says.
+next plan diffs a live workspace against code nobody wrote. Run `cdk add cookbook/<slug>`
+in the project that is already there; it skips every file it would otherwise overwrite.
