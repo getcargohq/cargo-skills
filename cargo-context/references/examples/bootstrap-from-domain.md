@@ -1,6 +1,6 @@
 # Bootstrap workspace context from a domain
 
-The prescriptive, automatable version of Phase 1 of [`lifecycle.md`](lifecycle.md). Use this when the user wants to **seed an empty (or thin) context repo from public data**, starting from nothing more than their company's domain. The recipe enriches the company via cargo native + waterfall + theirStack, scrapes public sources in parallel sub-agents, and writes one file per atomic concept through `cargo-ai context runtime write` — skipping any domain that already has content.
+The prescriptive, automatable version of Phase 1 of [`lifecycle.md`](lifecycle.md). Use this when the user wants to **seed an empty (or thin) context repo from public data**, starting from nothing more than their company's domain. The recipe enriches the company via aiArk + builtwith + enrichCrm + theirStack, scrapes public sources in parallel sub-agents, and writes one file per atomic concept through `cargo-ai context runtime write` — skipping any domain that already has content.
 
 Output: a populated `global/`, `icp/`, `persona/`, `client/`, `proof/`, `signal/` (and where evidence supports it, `alternative/`, `objection/`, `insight/`) — enough that a fresh agent session can hold a coherent conversation about the company. Phase 2 (call-driven refinement) is deliberately out of scope here — see the "What this recipe does NOT do" section.
 
@@ -13,7 +13,7 @@ Output: a populated `global/`, `icp/`, `persona/`, `client/`, `proof/`, `signal/
 ## What this recipe exercises
 
 - `cargo-ai context runtime browse` / `graph get` for the idempotency check.
-- Cargo native enrichments (`matchBusiness`, `enrichBusinessFirmographics`, `enrichBusinessTechnographics`, `enrichBusinessFundingAndAcquisitions`) for the factual spine.
+- Domain-keyed enrichments (`aiArk.enrichCompany`, `builtwith.getDomainSummary`, `enrichCrm.getFunding`) for the factual spine.
 - Parallel sub-agents for public-source scraping (website, careers, blog, news, review sites).
 - The driving agent's native LLM to synthesize each digest into typed markdown matching the per-domain template (no `cargo-ai orchestration action execute` double-hop — that pattern is for workflow node graphs, not for an agent already in the loop).
 - `cargo-ai context runtime write` to commit one file per concept.
@@ -22,7 +22,7 @@ Output: a populated `global/`, `icp/`, `persona/`, `client/`, `proof/`, `signal/
 
 Before executing, the agent needs:
 1. **`domain`** (required) — canonical domain (`acme.com`), no protocol, no path.
-2. **`companyName`** (optional) — falls back to whatever cargo native returns from `matchBusiness`.
+2. **`companyName`** (optional) — falls back to whatever `aiArk.enrichCompany` returns for the domain.
 3. **`depth`** (optional, default `standard`) — `minimal` (global + 1 icp + 2 personas), `standard` (full domain coverage), `deep` (also scrapes G2/Capterra/Reddit/HN for objections + alternatives).
 
 If `domain` is missing, ask **once** and stop. Don't guess from the user's email — workspace domain and user email often diverge.
@@ -59,30 +59,28 @@ Build a skip-list: any domain (`global/`, `icp/`, etc.) with ≥ 2 non-template 
 
 For domains that exist but are thin (1 entry), still write *new* files into them, but never `runtime edit` an existing file in bootstrap mode. Edits are for the refresh phase (see [Phase 2](lifecycle.md#phase-2--refresh-from-real-calls)), not bootstrap.
 
-### Step 3 — Enrich the seed with cargo native (factual spine)
+### Step 3 — Enrich the seed (factual spine)
 
-Run these in parallel — they give you the factual scaffolding (industry, headcount, tech stack, funding) every downstream synthesis step will cite:
+Run these in parallel — they give you the factual scaffolding (industry, headcount, tech stack, funding) every downstream synthesis step will cite. All three key on the **domain**, so there is no id-resolution step:
 
 ```bash
-# Match the domain to a cargo business_id
-cargo-ai orchestration action execute \
-  --action '{"kind":"connector","integrationSlug":"cargo","actionSlug":"matchBusiness"}' \
-  --data '{"domain":"acme.com"}' \
-  --wait-until-finished > /tmp/match.json
+DOMAIN=acme.com
 
-BUSINESS_ID=$(jq -r '.output.business_id' /tmp/match.json)
-
-# Parallel enrichments — same business_id, four different signal families
-for action in enrichBusinessFirmographics enrichBusinessTechnographics enrichBusinessFundingAndAcquisitions enrichBusinessFinancialMetrics; do
+# Parallel enrichments — same domain, three different signal families
+for pair in "aiArk:enrichCompany" "builtwith:getDomainSummary" "enrichCrm:getFunding"; do
+  slug="${pair%%:*}"; action="${pair##*:}"
   cargo-ai orchestration action execute \
-    --action "$(jq -nc --arg a "$action" '{kind:"connector",integrationSlug:"cargo",actionSlug:$a}')" \
-    --data "{\"business_id\":\"$BUSINESS_ID\"}" \
+    --action "$(jq -nc --arg i "$slug" --arg a "$action" \
+                  '{kind:"connector",integrationSlug:$i,actionSlug:$a}')" \
+    --data "{\"domain\":\"$DOMAIN\"}" \
     --wait-until-finished > /tmp/enrich-$action.json &
 done
 wait
 ```
 
-If `matchBusiness` returns no `business_id`, fall back to website scraping only (Step 4) — note in every written file's `## Source` section that firmographics were unavailable.
+Total: ~1.01 credits (`aiArk.enrichCompany` 0.01, `builtwith.getDomainSummary` free, `enrichCrm.getFunding` 1). Drop the funding call and the whole spine costs a hundredth of a credit.
+
+If every call comes back empty, fall back to website scraping only (Step 4) — note in every written file's `## Source` section that firmographics were unavailable.
 
 ### Step 4 — Scrape public sources in parallel sub-agents
 
@@ -171,16 +169,14 @@ Report to the user:
 
 | Step | Cost per call | Calls (depth=standard) | Subtotal |
 |---|---|---|---|
-| matchBusiness | 0.5 | 1 | 0.5 |
-| enrichBusinessFirmographics | 0.5 | 1 | 0.5 |
-| enrichBusinessTechnographics | 1 | 1 | 1 |
-| enrichBusinessFundingAndAcquisitions | 0.5 | 1 | 0.5 |
-| enrichBusinessFinancialMetrics | 0.5 | 1 | 0.5 |
+| aiArk.enrichCompany | 0.01 | 1 | 0.01 |
+| builtwith.getDomainSummary | 0 | 1 | 0 |
+| enrichCrm.getFunding | 1 | 1 | 1 |
 | Public-source scrapes (sub-agents) | 0 (agent LLM tokens, not Cargo credits) | 4–6 | 0 |
 | Synthesis (agent native) | 0 (agent LLM tokens, not Cargo credits) | 6–8 | 0 |
 | context runtime write | 0 | 15–30 files | 0 |
-| **Total (standard)** | | | **~3 Cargo credits** |
-| **Total (deep)** adds review-site + community sub-agents | | | **~3 Cargo credits** |
+| **Total (standard)** | | | **~1 Cargo credit** |
+| **Total (deep)** adds review-site + community sub-agents | | | **~1 Cargo credit** |
 
 Bootstrap is one-shot per workspace. Re-running is a no-op for already-seeded domains thanks to Step 2's skip-list.
 

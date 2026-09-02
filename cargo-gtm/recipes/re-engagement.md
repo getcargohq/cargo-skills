@@ -16,7 +16,7 @@ Most stale contacts will stay stale — outreach to them is wasted credits and d
 Three signals dominate B2B revival timing:
 
 1. **Job change** (`waterfall.detectJobChange`) — the contact moved to a new company. Their old relationship is now warm context for a new account.
-2. **Fresh funding / acquisition** (`cargo.fetchBusinessEvents`) — fresh budget, new initiatives, willingness to evaluate.
+2. **Fresh funding / acquisition** (`enrichCrm.getFunding`, diffed against the stored round date) — fresh budget, new initiatives, willingness to evaluate.
 3. **New tech stack or hiring pattern** (`theirStack.searchTechnologies` / `searchJobs`) — they're solving a problem your product addresses.
 
 ## Recipe
@@ -56,17 +56,23 @@ cargo-ai orchestration action execute-batch \
 
 ### Step 3 — Check company-level events (funding / acquisition)
 
-```bash
-# Match contact's company → cargo business_id, then fetch events
-cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"cargo","actionSlug":"matchBusiness"}' \
-  --records "$(jq -c '[.records[] | {domain: .company_domain}]' /tmp/stale.json)" \
-  --wait-until-finished > /tmp/matched.json
+The catalog has no since-timestamp event feed, so a "fresh" round is the
+difference between a new pull and the round date already on the record. Keep
+`last_funding_round_at` on the Companies model or this step has nothing to diff
+against and re-flags the same accounts every week.
 
+```bash
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"cargo","actionSlug":"fetchBusinessEvents"}' \
-  --records "$(jq -c '[.results[] | select(.business_id) | {business_id, event_types: ["funding","acquisition"], since: "90d"}]' /tmp/matched.json)" \
-  --wait-until-finished > /tmp/events.json
+  --action '{"kind":"connector","integrationSlug":"enrichCrm","actionSlug":"getFunding"}' \
+  --records "$(jq -c '[.records[] | {domain: .company_domain}]' /tmp/stale.json)" \
+  --wait-until-finished > /tmp/funding.json
+
+# Keep only rows whose latest round post-dates what the workspace already stored
+jq -c --slurpfile stale /tmp/stale.json '
+  ($stale[0].records | map({key: .company_domain, value: (.last_funding_round_at // "")})
+     | from_entries) as $known
+  | [ .results[] | select(.lastFundingDate > ($known[.domain] // "")) ]
+' /tmp/funding.json > /tmp/events.json
 ```
 
 ### Step 4 — (Optional) Check tech-stack / hiring intent
@@ -105,7 +111,7 @@ For continuous revival:
 
 1. Trigger: weekly cron.
 2. Source: the saved "Stale contacts" segment.
-3. Nodes: detectJobChange + fetchBusinessEvents + (optional) searchTechnologies → union → write to "Revive candidates" segment.
+3. Nodes: detectJobChange + getFunding (diffed against the stored round date) + (optional) searchTechnologies → union → write to "Revive candidates" segment.
 4. Downstream: a separate play watches the "Revive candidates" segment and triggers `outreach-activation` on new members.
 
 For play setup, see [`../../cargo-orchestration/references/examples/plays.md`](../../cargo-orchestration/references/examples/plays.md).
@@ -117,11 +123,10 @@ For a 1,000-contact stale segment, scanned weekly:
 | Step | Per record | 1,000 contacts |
 |---|---|---|
 | `waterfall.detectJobChange` | 3 | 3,000 |
-| `cargo.matchBusiness` | 0.1 | 100 |
-| `cargo.fetchBusinessEvents` | 0.5 | 500 |
+| `enrichCrm.getFunding` | 1 | 1,000 |
 | `theirStack.searchTechnologies` (optional) | 1 | 1,000 |
-| **Total weekly (without tech)** | **3.6** | **3,600** |
-| **Total weekly (with tech)** | **4.6** | **4,600** |
+| **Total weekly (without tech)** | **4** | **4,000** |
+| **Total weekly (with tech)** | **5** | **5,000** |
 
 Filter aggressively before the scan — only include contacts where revival is actually actionable (had real engagement once, valid email, ICP-fit company). Pre-filter a 10,000-contact list down to 1,000 before scanning, not after.
 

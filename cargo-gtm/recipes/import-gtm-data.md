@@ -43,7 +43,7 @@ cargo-ai workspaceManagement file upload --file ./contacts-export.csv
 # → returns s3-filename; use it as the batch input for the write-back workflow
 ```
 
-Dedupe before writing: match on `source_tool_id` first, then email, then company domain (`cargo.matchProspect` / `cargo.matchBusiness` at 0.5/record are the paid fallback — only for rows with no natural key; that spend goes through the pilot gate).
+Dedupe before writing: match on `source_tool_id` first, then email, then company domain — all three are free storage reads against the existing models. Rows with none of the three have no natural key; resolve them by enriching an identifier first (`aiArk.enrichCompany` at 0.01 from a domain, `aiArk.enrichPerson` at 0.1 from a LinkedIn URL), and that spend goes through the pilot gate.
 
 ## Step 4 — QA what actually landed (free)
 

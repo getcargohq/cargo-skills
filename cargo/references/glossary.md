@@ -163,7 +163,7 @@ The target prospect description used to filter sourcing and qualification: indus
 The degree to which a record matches the ICP. Often expressed as a 0–10 score from a scoring agent (`anthropic.instruct` or similar) over enriched record fields. See `cargo-gtm/guides/writing-outreach.md` for scoring patterns.
 
 **intent signal**
-An observable behavior suggesting a company is ready to buy: hiring for a relevant role, raising funding, adding/removing tech in their stack, posting recent LinkedIn updates, anonymous website visits, recent job changes among employees. Cargo surfaces intent signals via `cargo.enrichBusinessFunding…`, `theirStack.searchJobs`, `waterfall.detectJobChange`, `snitcher.searchSessions`, and others. Tracked as `signal/<slug>.md` files in the context repo.
+An observable behavior suggesting a company is ready to buy: hiring for a relevant role, raising funding, adding/removing tech in their stack, posting recent LinkedIn updates, anonymous website visits, recent job changes among employees. Cargo surfaces intent signals via `enrichCrm.getFunding`, `theirStack.searchJobs`, `waterfall.detectJobChange`, `snitcher.searchSessions`, and others. Tracked as `signal/<slug>.md` files in the context repo.
 
 **integration**
 The external service type — e.g. HubSpot, Clearbit, Salesforce. Defines what actions are available. A single integration can have multiple connectors (multiple authenticated accounts). Listed via `connection integration list`.
@@ -247,7 +247,7 @@ The 8 default credits-based providers used as the spine of every recipe in `carg
 An atomic proof point — one metric, quote, case fact, or benchmark — stored as `proof/<slug>.md` in the context repo. Cross-referenced from plays, objections, and decks. Keep proof entries atomic (one fact per file) so they can be filtered in the knowledge graph.
 
 **prospect**
-A person being marketed or sold to — typically resolved to a `prospect_id` via `cargo.matchProspect`. Distinct from a "lead" (which usually implies an inbound or marketing-qualified context); cargo uses "prospect" generically.
+A person being marketed or sold to. Distinct from a "lead" (which usually implies an inbound or marketing-qualified context); cargo uses "prospect" generically.
 
 **prospecting**
 The activity of finding prospects matching an ICP, enriching them with contact details and signals, and preparing them for outreach. Cargo's prospecting recipe lives at `cargo-gtm/recipes/prospecting.md`.

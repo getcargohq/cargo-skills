@@ -63,7 +63,7 @@ cargo-ai orchestration action execute \
 ## Position in the waterfall
 
 - `getDomainSummary` — **first rung for any technographic question about a known domain**, ahead of everything on price, since it is free.
-- `enrichDomain` (1) — the escalation, behind `cargo.enrichBusinessTechnographics` (1) at the same price. Prefer cargo's when you are already in a `matchBusiness` chain; prefer builtwith's when the domain is all you have.
+- `enrichDomain` (1) — the escalation behind this provider's own free `getDomainSummary`, and the catalog's per-domain tech-detail rung. `theirStack.searchTechnologies` (0.5/row) is the alternative when you want a catalog-style technology list rather than per-domain detection.
 - `findWebsitesByTechnology` — a sourcing alternative behind `theirStack.searchCompanies` (0.5).
 
 ## Action shape

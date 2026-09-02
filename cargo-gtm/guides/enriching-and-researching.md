@@ -8,14 +8,14 @@ How to enrich companies and contacts on Cargo. Covers waterfall enrichment, fall
 Goal → which provider chain?
 
 Firmographics on a known company (industry, size, geo, revenue, …)?
-  ├─ cargo.matchBusiness (0.5) → cargo.enrichBusinessFirmographics (0.5)
-  ├─ Fallback for unmatched: waterfall.enrichCompany (1) / apolloio.enrichOrganization (1)
+  ├─ aiArk.enrichCompany (0.01) — domain or LinkedIn URL, cheapest in catalog
+  ├─ Thin result: companyEnrich.enrichByDomain (0.25) — fuller field set
+  ├─ Fallback: waterfall.enrichCompany (1) / apolloio.enrichOrganization (1)
   └─ Heavy backfill: peopleDataLabs.enrichCompany (3)
 
 Contact details on a known person (title, location, social, …)?
   ├─ LinkedIn URL in hand: aiArk.enrichPerson (0.1) — profile + verified email, bills 0 on no-email
-  ├─ cargo.matchProspect (0.5) → cargo.enrichProspectDetails (2)
-  ├─ Fallback: waterfall.enrichContact (2)
+  ├─ No URL: waterfall.enrichContact (2) — keys on email or name + company
   ├─ Niche coverage (investor-backed, portfolio): apolloio.enrichPerson (1)
   └─ Heavy backfill: peopleDataLabs.enrichPerson (3)
 
@@ -40,12 +40,12 @@ Resolve a LinkedIn URL from name + company?
      See `../recipes/linkedin-url-lookup.md` for the strict-validation pattern.
 
 Funding / acquisition signals?
-  ├─ cargo.enrichBusinessFundingAndAcquisitions (0.5)
-  └─ Alt: enrichCrm.getFunding (1)
+  └─ enrichCrm.getFunding (1) — only credits-based funding action in the catalog
 
 Tech stack / hiring intent?
-  ├─ cargo.enrichBusinessTechnographics (1)
+  ├─ builtwith.getDomainSummary (0) — free, always run first on a known domain
   ├─ theirStack.searchTechnologies (0.5) for catalog-style lookup
+  ├─ builtwith.enrichDomain (1) on the rows the free summary didn't settle
   └─ theirStack.searchJobs (0.5) for hiring-intent
 
 Job change detection?
@@ -61,9 +61,9 @@ Reverse-email lookup (email → person + company)?
 When one provider misses, escalate to the next. Run each step only on the rows where the prior step came up empty.
 
 ```bash
-# Step 1 — try cargo first (cheapest + best for known companies)
+# Step 1 — try aiArk first (0.01, cheapest company enrich in the catalog)
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"cargo","actionSlug":"enrichBusinessFirmographics"}' \
+  --action '{"kind":"connector","integrationSlug":"aiArk","actionSlug":"enrichCompany"}' \
   --records '[{"domain":"acme.com"}, ... ]' \
   --wait-until-finished > /tmp/step1.json
 
@@ -82,7 +82,7 @@ cargo-ai orchestration action execute-batch \
 # Step 4 — coalesce all three into a single enriched dataset
 ```
 
-Same shape applies for person enrichment (`aiArk.enrichPerson` where a LinkedIn URL exists → `cargo.enrichProspectDetails` → `waterfall.enrichContact` → `apolloio.enrichPerson` → `peopleDataLabs.enrichPerson`) and for email lookup (`FullEnrich.findEmail` → `hunter.findEmail` → `peopleDataLabs.enrichPerson`).
+Same shape applies for person enrichment (`aiArk.enrichPerson` where a LinkedIn URL exists → `waterfall.enrichContact` → `apolloio.enrichPerson` → `peopleDataLabs.enrichPerson`) and for email lookup (`FullEnrich.findEmail` → `hunter.findEmail` → `peopleDataLabs.enrichPerson`).
 
 ## Coalesce pattern (multi-pass enrichment)
 
@@ -90,9 +90,9 @@ When enriching the same record across multiple providers, merge results column-b
 
 | Column | Prefer |
 |---|---|
-| Firmographics (industry, size, hq) | cargo > peopleDataLabs > waterfall > apolloio |
-| Funding / financials | cargo.enrichBusinessFundingAndAcquisitions > enrichCrm.getFunding |
-| Technographics | cargo.enrichBusinessTechnographics > theirStack > peopleDataLabs |
+| Firmographics (industry, size, hq) | aiArk > companyEnrich > peopleDataLabs > waterfall > apolloio |
+| Funding / financials | enrichCrm.getFunding (only source) |
+| Technographics | builtwith.getDomainSummary (free) > theirStack > builtwith.enrichDomain > peopleDataLabs |
 | Email | aiArk.enrichPerson > FullEnrich > hunter > peopleDataLabs |
 | Phone | aiArk.findMobilePhone (mobile) > FullEnrich > prospeo > waterfall |
 | LinkedIn URL | linkedin.findProfileUrl > FullEnrich.reverseEmailLookup |

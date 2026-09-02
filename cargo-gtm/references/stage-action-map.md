@@ -1,10 +1,10 @@
 # Stage → cheapest credits-based action map
 
-Canonical reference for picking the cheapest credits-based action per GTM stage across the full 138-integration cargo catalog. Use this when the priority-stack default doesn't have what you need.
+Canonical reference for picking the cheapest credits-based action per GTM stage across the full 136-integration cargo catalog. Use this when the priority-stack default doesn't have what you need.
 
-Prices are credits/record. "Priority?" marks providers in the priority stack (salesNavigator / cargo / aiArk / waterfall / FullEnrich / apolloio / theirStack / peopleDataLabs).
+Prices are credits/record. "Priority?" marks providers in the priority stack (salesNavigator / aiArk / waterfall / FullEnrich / apolloio / theirStack / peopleDataLabs).
 
-This map is **curated** — the cheapest few rungs per stage, with the routing judgement attached. For the complete machine-generated list of all 197 credits-based actions, including per-config pricing, see [`credits-cost-table.md`](credits-cost-table.md).
+This map is **curated** — the cheapest few rungs per stage, with the routing judgement attached. For the complete machine-generated list of all 176 credits-based actions, including per-config pricing, see [`credits-cost-table.md`](credits-cost-table.md).
 
 **Size before you spend.** `aiArk.countPeople` and `aiArk.countCompanies` cost **0** and return how many records a filter matches without retrieving them. Run the count, quote it, then decide whether to pay for the search.
 
@@ -54,8 +54,7 @@ This map is **curated** — the cheapest few rungs per stage, with the routing j
 | linkedin | enrichProfile | 0.25 |   | LinkedIn-anchored (no email). |
 | prospeo | enrichLinkedin | 0.5 |   | Cheapest LinkedIn URL → details. |
 | linkedin | enrichProfileFromName | 0.5 |   | Name+company → LinkedIn details. |
-| apolloio | enrichPerson | 1 (**9** with `revealPhoneNumber`) | ✅ | Niche-coverage rung — promote per-batch only when a pilot shows Apollo hits where cargo/waterfall miss. The phone flag is **9x**, not a small uplift. |
-| cargo | enrichProspectDetails | 2 | ✅ | After matchProspect. Default in priority stack. |
+| apolloio | enrichPerson | 1 (**9** with `revealPhoneNumber`) | ✅ | Niche-coverage rung — promote per-batch only when a pilot shows Apollo hits where aiArk/waterfall miss. The phone flag is **9x**, not a small uplift. |
 | waterfall | enrichContact | 2 | ✅ | Multi-source contact enrichment. |
 | peopleDataLabs | enrichPerson | 3 | ✅ | Heavyweight backfill. |
 | datagma | enrichPerson | 8 |   | LinkedIn URL or work email → profile. Priced as a phone rung; use only when cheaper rungs miss. |
@@ -72,8 +71,7 @@ This map is **curated** — the cheapest few rungs per stage, with the routing j
 | linkedin | enrichCompany | 0.25 |   | LinkedIn ID-based. |
 | prospeo | enrichCompany | 0.5 |   | Alt mid-tier. |
 | linkedin | enrichCompanyFromDomain | 0.5 |   | Domain → LinkedIn-anchored details. |
-| cargo | enrichBusinessFirmographics | 0.5 | ✅ | After matchBusiness. Default in priority stack. |
-| apolloio | enrichOrganization | 1 | ✅ | Apollo-anchored; the niche-coverage rung when cargo's match misses. |
+| apolloio | enrichOrganization | 1 | ✅ | Apollo-anchored; the niche-coverage rung when the cheaper rungs miss. |
 | oceanio | enrichCompany | 1 |   | Mid-tier. |
 | reverseContact | enrichCompanyFromLinkedin | 1 |   | Niche: LinkedIn URL → company. |
 | waterfall | enrichCompany | 1 | ✅ | Multi-source. |
@@ -144,8 +142,7 @@ This map is **curated** — the cheapest few rungs per stage, with the routing j
 
 | Provider | Action | Cost | Notes |
 |---|---|---|---|
-| cargo | enrichBusinessFundingAndAcquisitions | 0.5 | Cheapest. |
-| enrichCrm | getFunding | 1 | Alternative. |
+| enrichCrm | getFunding | 1 | Only credits-based funding action in the catalog. |
 
 ## Tech-stack signal
 
@@ -154,7 +151,6 @@ This map is **curated** — the cheapest few rungs per stage, with the routing j
 | builtwith | getDomainSummary | **0** | Free tier — technology-group *counts* for a domain. Enough to bucket accounts before paying for detail. |
 | theirStack | searchTechnologies | 0.5 | Catalog-style lookup. |
 | builtwith | enrichDomain | 1 | Full stack + metadata for one domain. |
-| cargo | enrichBusinessTechnographics | 1 | Cargo-native. |
 
 ## Hiring intent
 
@@ -233,6 +229,6 @@ Prices are **per 1k tokens**, not per record. On openAi, gemini and anthropic, `
 
 ## Notes on this map
 
-- This map is curated, not exhaustive: it carries the cheapest rungs per stage plus the routing judgement. The complete list of all **197** credits-based actions is generated from the live catalog into [`credits-cost-table.md`](credits-cost-table.md) — regenerate it from `cargo-ai orchestration action list --kind connector` and `--kind native`, which return a `credits` array on every billed action. The other 337 catalog actions (sequencer / CRM upserts, list/get/delete) carry no provider price and appear in neither — though every node execution still bills 0.01 credits.
+- This map is curated, not exhaustive: it carries the cheapest rungs per stage plus the routing judgement. The complete list of all **176** credits-based actions is generated from the live catalog into [`credits-cost-table.md`](credits-cost-table.md) — regenerate it from `cargo-ai orchestration action list --kind connector` and `--kind native`, which return a `credits` array on every billed action. The other 337 catalog actions (sequencer / CRM upserts, list/get/delete) carry no provider price and appear in neither — though every node execution still bills 0.01 credits.
 - Costs are per-record at the cheapest config. Some actions have variable cost by config (e.g., `contactOut.enrich` returns 0/1/2/3 credits depending on data returned).
 - Priority stack: see `../SKILL.md` for the canonical 8-provider priority list and `../provider-playbooks/` for per-provider deep dives.

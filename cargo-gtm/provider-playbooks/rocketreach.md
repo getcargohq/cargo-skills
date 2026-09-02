@@ -16,7 +16,7 @@ Single-action person lookup: `lookupPerson` (1 credit) resolves a person **and t
 
 ## What it's for
 
-- ✅ **Fallback person enrichment** — 1 credit when a pilot shows RocketReach hits where `cargo.enrichProspectDetails` (2) / `waterfall.enrichContact` (2) miss for the niche.
+- ✅ **Fallback person enrichment** — 1 credit when a pilot shows RocketReach hits where `aiArk.enrichPerson` (0.1) / `waterfall.enrichContact` (2) miss for the niche.
 - ✅ **Healthcare-provider lookup** — `npiNumber` input plus `npi_data` in the output; no other catalog action takes an NPI.
 - ✅ **One-call person + company context** — output carries `current_employer`, `current_employer_domain`, `current_employer_linkedin_url`, and `job_history`, so a hit can also seed company enrichment and job-change checks.
 - ❌ **Sourcing or search** — lookup only; there is no people-search action here. Credits-based sourcing stays on `salesNavigator`.

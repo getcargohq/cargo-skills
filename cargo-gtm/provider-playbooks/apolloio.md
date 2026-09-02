@@ -13,7 +13,7 @@ Apollo-anchored person and organization enrichment. Only **two of its eleven act
 | Action | Cost | Inputs | Use for |
 |---|---|---|---|
 | `enrichPerson` | 1 (**3** if `revealPhoneNumber: true`) | `parameters` object (`first_name, last_name, organization_name, email, domain, linkedin_url, id, email_md5, email_sha256`), `revealPersonalEmails`, `revealPhoneNumber` | Person enrichment when Apollo coverage beats the stack for the niche. |
-| `enrichOrganization` | 1 | `domain` (required) | Company enrichment when cargo's match misses and LinkedIn doesn't have it. |
+| `enrichOrganization` | 1 | `domain` (required) | Company enrichment when the cheaper domain rungs miss and LinkedIn doesn't have it. |
 
 ## Own-API-key actions (no credits — require your Apollo account connector)
 
@@ -31,8 +31,8 @@ These consume your Apollo plan's quota, not cargo credits — recipes stay on cr
 
 ## What it's for
 
-- ✅ **Niche-coverage person enrichment** — 1 credit when a pilot shows Apollo hits where `cargo.enrichProspectDetails` (2) / `waterfall.enrichContact` (2) miss.
-- ✅ **Domain → company fallback** — `enrichOrganization` (1) after cargo's match misses and `linkedin.enrichCompanyFromDomain` (0.5) comes back empty.
+- ✅ **Niche-coverage person enrichment** — 1 credit when a pilot shows Apollo hits where `aiArk.enrichPerson` (0.1) / `waterfall.enrichContact` (2) miss.
+- ✅ **Domain → company fallback** — `enrichOrganization` (1) after `aiArk.enrichCompany` (0.01) and `linkedin.enrichCompanyFromDomain` (0.5) come back empty.
 - ✅ **Sequencer handoff** — send verified leads into Apollo sequences via the own-key actions when the user's outbound already lives there.
 - ❌ **Sourcing on credits** — `searchPeople` / `searchOrganizations` are own-key only; credits-based sourcing is `salesNavigator` (0.02–0.05).
 
@@ -79,7 +79,7 @@ cargo-ai orchestration action execute-batch \
 ## Position in the waterfall
 
 - `enrichPerson` — **ENRICH (person), fallback rung** beside the stack's `cargo` → `waterfall` → `peopleDataLabs` chain; promote it for a batch only when the pilot shows better niche coverage.
-- `enrichOrganization` — **ENRICH (company), fallback rung** after `cargo.enrichBusinessFirmographics` (0.5) and `linkedin` (0.25–0.5).
+- `enrichOrganization` — **ENRICH (company), fallback rung** after `aiArk.enrichCompany` (0.01), `companyEnrich` (0.25) and `linkedin` (0.25–0.5).
 - Own-key sequence actions — post-VERIFY **activation**, outside the credits spine.
 
 ## Recurring use

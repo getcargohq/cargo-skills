@@ -23,7 +23,7 @@ All three bill **per item returned**, not per call. In credits mode the connecto
 - ✅ **Personalization research** — scrape a prospect's site/blog/case-study page, then extract angles with an LLM (`anthropic.instruct`) for the first-line step of [`../recipes/outreach-activation.md`](../recipes/outreach-activation.md).
 - ✅ **Niche signals no structured provider covers** — industry job boards ([`../recipes/tech-intent.md`](../recipes/tech-intent.md)), investor portfolio pages ([`../recipes/portfolio-prospecting.md`](../recipes/portfolio-prospecting.md)), "companies that mention X on their site".
 - ✅ **Cheap web search** — `search` at 0.05/result is the lowest-cost web-search rung in the sourcing map.
-- ❌ **Firmographics / tech stack at scale** — `cargo.enrichBusinessFirmographics` (0.5) and `cargo.enrichBusinessTechnographics` (1) return structured fields directly; scraping + LLM-extracting the same facts costs more end-to-end and parses worse.
+- ❌ **Firmographics / tech stack at scale** — `aiArk.enrichCompany` (0.01) and `builtwith.getDomainSummary` (**free**) return structured fields directly; scraping + LLM-extracting the same facts costs more end-to-end and parses worse.
 - ❌ **Jobs on major boards** — `theirStack.searchJobs` (0.5) already covers LinkedIn, Indeed, etc. Crawl only the niche boards theirStack misses.
 
 ## Patterns
@@ -74,7 +74,7 @@ cargo-ai orchestration action execute \
 
 ## Anti-patterns
 
-- **Scraping what a structured provider sells cheaper.** Company facts, tech stack, keywords, and website changes all exist as cargo native actions (0.5–1) with typed outputs. Scrape only for data no structured provider has.
+- **Scraping what a structured provider sells cheaper.** Company facts (`aiArk.enrichCompany`, 0.01) and tech stack (`builtwith.getDomainSummary`, free) come back typed for less than a scrape costs. Scrape only for data no structured provider has — which is genuinely where website copy, positioning changes, and page-specific claims live.
 - **Crawling per-record in a batch.** A crawl inside a 500-record workflow multiplies pages × records. Crawl once, store the result, and join it to records instead.
 
 ## Position in the waterfall

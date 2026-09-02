@@ -1,6 +1,6 @@
 # Recipe — Detect job changes in a contact segment
 
-Use this recipe when the user wants to detect job changes among a list of contacts. **The only provider in cargo's 138-integration catalog with a credits-based job-change action is `waterfall.detectJobChange`** — this recipe exists to make that capability discoverable and reusable.
+Use this recipe when the user wants to detect job changes among a list of contacts. **The only provider in cargo's 136-integration catalog with a credits-based job-change action is `waterfall.detectJobChange`** — this recipe exists to make that capability discoverable and reusable.
 
 **Trigger phrases:**
 - *"Has anyone in our customer list changed jobs?"*

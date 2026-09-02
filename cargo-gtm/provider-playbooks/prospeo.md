@@ -52,7 +52,7 @@ cargo-ai orchestration action execute-batch \
   --wait-until-finished
 ```
 
-`companyDomain` is **required** — a domain, not a company name. Rows with only a company name need domain resolution first (e.g. `cargo.matchBusiness` or `prospeo.enrichCompany`).
+`companyDomain` is **required** — a domain, not a company name. Rows with only a company name need domain resolution first (e.g. `prospeo.enrichCompany`, or `aiArk.searchCompanies` keyed on the name).
 
 ## Common pitfalls
 

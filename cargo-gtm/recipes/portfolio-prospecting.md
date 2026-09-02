@@ -46,21 +46,23 @@ For accelerator batches (e.g. YC W26), the investor field still works — accele
 
 See PDL's SQL reference for the full schema.
 
-### Step 2 — Match portfolio companies against cargo
+### Step 2 — Dedupe the portfolio against the workspace (free)
 
 ```bash
-cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"cargo","actionSlug":"matchBusiness"}' \
-  --records "$(jq -c '[.results[] | {domain: .website}]' /tmp/portfolio.json)" \
-  --wait-until-finished > /tmp/matched.json
+cargo-ai storage query execute "SELECT domain FROM default.companies" > /tmp/known.json
+
+jq -c --slurpfile known /tmp/known.json \
+  '[.results[] | {domain: .website} | select(.domain as $d
+      | ($known[0].rows // [] | map(.domain)) | index($d) | not)]' \
+  /tmp/portfolio.json > /tmp/new-portfolio.json
 ```
 
 ### Step 3 — Enrich firmographics on the portfolio
 
 ```bash
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"cargo","actionSlug":"enrichBusinessFirmographics"}' \
-  --records "$(jq -c '[.results[] | select(.business_id) | {business_id}]' /tmp/matched.json)" \
+  --action '{"kind":"connector","integrationSlug":"aiArk","actionSlug":"enrichCompany"}' \
+  --records "$(cat /tmp/new-portfolio.json)" \
   --wait-until-finished > /tmp/firmo.json
 ```
 
@@ -99,7 +101,7 @@ cargo-ai orchestration action execute-batch \
 
 ### Step 7 — Personalize outbound (optional)
 
-Use `cargo.enrichProspectDetails` to pull recent LinkedIn posts, then `anthropic.instruct` for a personalized opener referencing the investor + recent portfolio activity. See [`../guides/writing-outreach.md`](../guides/writing-outreach.md) for prompt patterns.
+Use `linkedin.extractProfilePostActivity` (0.05/item) to pull recent LinkedIn posts, then `anthropic.instruct` for a personalized opener referencing the investor + recent portfolio activity. See [`../guides/writing-outreach.md`](../guides/writing-outreach.md) for prompt patterns.
 
 ## Credit budget
 
@@ -108,12 +110,12 @@ For 200 portfolio companies × 3 contacts each = 600 prospects:
 | Step | Cost per record | Records | Subtotal |
 |---|---|---|---|
 | 1. queryCompanies (single call returning 200) | — | 1 call | 3 |
-| 2. matchBusiness | 0.5 | 200 | 100 |
-| 3. enrichBusinessFirmographics | 0.5 | 200 | 100 |
+| 2. Dedupe against the Companies model | 0 | 200 | 0 |
+| 3. aiArk.enrichCompany | 0.01 | 200 | 2 |
 | 4. searchLeads (3 contacts each) | 0.02 | 600 | 12 |
 | 5. FullEnrich.findEmail | 1 | 600 | 600 |
 | 6. waterfall.verifyEmail | 0.1 | 600 | 60 |
-| **Total** | | | **~875 credits for 600 verified contacts at 200 portfolio companies** |
+| **Total** | | | **~677 credits for 600 verified contacts at 200 portfolio companies** |
 
 ## Discovery sequence
 

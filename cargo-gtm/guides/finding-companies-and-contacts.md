@@ -13,7 +13,7 @@ Looking for COMPANIES matching ICP criteria (industry, size, geo, …)?
   ├─ Need rich filters / structured query:    peopleDataLabs.queryCompanies (3 cred)
   ├─ Tech-stack or hiring intent:             theirStack.searchCompanies / searchTechnologies / searchJobs (0.5 cred)
   ├─ Local / SMB / storefront (Maps-style):   serper.searchPlaces (1 cred)
-  ├─ Specific domain → details:               cargo.matchBusiness (0.5 cred) → cargo.enrichBusinessFirmographics
+  ├─ Specific domain → details:               aiArk.enrichCompany (0.01 cred)
   └─ Already have a domain list?              skip sourcing — go straight to enrichment
 
 Looking for PEOPLE at companies?
@@ -22,7 +22,7 @@ Looking for PEOPLE at companies?
   ├─ Rich filters / large database:           peopleDataLabs.searchPeople / queryPeople (3 cred)
   ├─ LinkedIn-anchored:                       linkedin.findProfileUrl + linkedin.enrichProfile (0.25 cred)
   ├─ "Find people I know who can intro":      theSwarm.searchWarmIntrosToCompany / Person (2 cred)
-  └─ Visitor de-anonymization:                snitcher.searchSessions (0 cred) → cargo.matchProspect
+  └─ Visitor de-anonymization:                snitcher.searchSessions (0 cred) → aiArk.reverseLookup (0.05)
 
 Looking for INVESTOR-BACKED companies?
   └─ peopleDataLabs.queryCompanies with investor/funding filter
@@ -45,7 +45,7 @@ When the user asks for "contacts at companies matching X," **always** discover t
 | **aiArk** | Cheapest company search + lookalike seeds; people filters on education / skills / tenure / past company | 0.01 (company) / 0.05 (person) |
 | **peopleDataLabs** | Structured queries (`queryPeople` / `queryCompanies`), heavy filtering, backfill when other sources miss | 3 (flat) |
 | **theirStack** | Tech-stack signals, jobs-posted signals, "everyone hiring for role X" | 0.5 |
-| **cargo** native | `matchBusiness` / `matchProspect` for dedup; `fetchProspects` / `fetchBusinesses` for catalog browsing | 0.5 |
+| **builtwith** | Tech detection on a domain you already have; `getDomainSummary` is free | 0 / 1 |
 | **icypeas** | Cheapest people/company find when minimal filters work | 0.02 |
 | **firecrawl** | Web search + scrape when no structured provider has the data | 0.05 |
 | **serper** | Google Maps-style search for local SMBs / storefronts | 1 |
@@ -85,16 +85,16 @@ Cap titles tightly — broad title filters dilute results.
 When you already have a domain list and need firmographics:
 
 ```bash
-# Match against cargo's catalog first (cheapest, most reliable for known companies)
+# Cheapest company enrich in the catalog — domain or LinkedIn URL, no match step
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"cargo","actionSlug":"matchBusiness"}' \
+  --action '{"kind":"connector","integrationSlug":"aiArk","actionSlug":"enrichCompany"}' \
   --records '[{"domain":"acme.com"},{"domain":"globex.com"}]' \
   --wait-until-finished
 
-# Then enrich the matches
+# Rows that came back thin — fuller field set at 0.25
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"cargo","actionSlug":"enrichBusinessFirmographics"}' \
-  --records '<matched output from previous step>' \
+  --action '{"kind":"connector","integrationSlug":"companyEnrich","actionSlug":"enrichByDomain"}' \
+  --records '<rows from the previous step with empty firmographics>' \
   --wait-until-finished
 ```
 

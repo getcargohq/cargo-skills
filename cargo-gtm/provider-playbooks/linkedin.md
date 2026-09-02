@@ -54,7 +54,7 @@ LinkedIn page-level enrichment, URL resolution, and activity signals. **Cheapest
 ## What it's for
 
 - ✅ **LinkedIn URL resolution** — `findProfileUrl` (0.25) then `enrichProfile` (0.25) as the mandatory validation gate ([`../recipes/linkedin-url-lookup.md`](../recipes/linkedin-url-lookup.md)).
-- ✅ **Cheap page-level enrichment** — 0.25 vs `cargo.enrichProspectDetails` (2) when LinkedIn-anchored details are sufficient and you already have the URL ([`../references/alternatives.md`](../references/alternatives.md)).
+- ✅ **Cheap page-level enrichment** — 0.25 vs `waterfall.enrichContact` (2) when LinkedIn-anchored details are sufficient and you already have the URL ([`../references/alternatives.md`](../references/alternatives.md)). Note `aiArk.enrichPerson` (0.1) is cheaper still and returns a verified email; reach here when you specifically want the LinkedIn page fields.
 - ✅ **Engagement-based sourcing** — commenters/reactors on a competitor-topic post, event attendees: warm pools no search filter can express.
 - ✅ **Personalization signal** — a lead's recent post/comment/reaction activity feeds openers (SIGNAL stage before outreach).
 - ❌ **At-scale search** — no people/company search here; that's `salesNavigator.searchLeads` (0.02) / `searchAccounts` (0.05).

@@ -22,7 +22,7 @@ The shape is different from every other provider here and that is the thing to u
 
 - ✅ **Reading detections against a named account list** — pass `companyDomains` to filter the feed to the accounts in play rather than reading everything that arrived.
 - ✅ **A free first check before any paid signal action.** It costs nothing, so on any signal question it runs first by definition.
-- ❌ **Going out and finding a signal** — nothing here searches the world. For that, `theirStack.searchJobs` (0.5) is hiring intent, `cargo.enrichBusinessFundingAndAcquisitions` (0.5) is funding, `waterfall.detectJobChange` (3) is people moving.
+- ❌ **Going out and finding a signal** — nothing here searches the world. For that, `theirStack.searchJobs` (0.5) is hiring intent, `enrichCrm.getFunding` (1) is funding, `waterfall.detectJobChange` (3) is people moving.
 - ❌ **Sourcing** — this reads a feed of accounts already detected, not a market.
 
 ## Patterns
@@ -59,7 +59,7 @@ Run `searchLeads` across the segment first. Rows that already carry a detection 
 
 ## Position in the waterfall
 
-**First rung on any signal question, unconditionally**, because it is free. Everything paid (`theirStack.searchJobs` 0.5, `cargo.enrichBusinessFundingAndAcquisitions` 0.5, `waterfall.detectJobChange` 3) runs on the residue.
+**First rung on any signal question, unconditionally**, because it is free. Everything paid (`theirStack.searchJobs` 0.5, `enrichCrm.getFunding` 1, `waterfall.detectJobChange` 3) runs on the residue.
 
 ## Action shape
 

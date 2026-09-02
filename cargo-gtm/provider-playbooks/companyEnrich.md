@@ -6,7 +6,7 @@ last-reviewed: 2026-07-09
 
 # companyEnrich (CompanyEnrich)
 
-Budget company enrichment. `enrichByDomain` (0.25) is the **cheapest company-by-domain action in the catalog** ([`../references/stage-action-map.md`](../references/stage-action-map.md)) — half the price of the stack default `cargo.enrichBusinessFirmographics` (0.5), but less rich, so [`../references/alternatives.md`](../references/alternatives.md) reserves it for budget-critical batches. `findSimilarCompanies` (1 **per company returned**) is a lookalike finder for seeding TAM expansion — the only unit-priced action here, so `limit` is the cost dial.
+Budget company enrichment. `enrichByDomain` (0.25) carries a **fuller field set than the 0.01 stack default** `aiArk.enrichCompany` ([`../references/stage-action-map.md`](../references/stage-action-map.md)), so [`../references/alternatives.md`](../references/alternatives.md) promotes it on the rows aiArk returns thin rather than running it across the whole list. `findSimilarCompanies` (1 **per company returned**) is a lookalike finder for seeding TAM expansion — the only unit-priced action here, so `limit` is the cost dial.
 
 ## Credits-based actions
 
@@ -17,9 +17,9 @@ Budget company enrichment. `enrichByDomain` (0.25) is the **cheapest company-by-
 
 ## What it's for
 
-- ✅ **Budget-critical company enrichment at scale** — a 10,000-row TAM at 0.25 is 2,500 credits vs 5,000 on the cargo default. Output covers firmographics plus `technologies`, `financial.funding` history, and a full `socials` block, so one call can serve several downstream columns.
+- ✅ **Depth on the rows the 0.01 rung left thin** — output covers firmographics plus `technologies`, `financial.funding` history, and a full `socials` block, so one call can serve several downstream columns that `aiArk.enrichCompany` leaves empty.
 - ✅ **Lookalike seeding** — `findSimilarCompanies` from a Closed-Won domain, filtered to your ICP's size/geo, feeds [`../recipes/build-tam.md`](../recipes/build-tam.md).
-- ❌ **Default enrichment when budget isn't the constraint** — the priority stack (`cargo` native → `waterfall`) has richer, match-verified data; alternatives.md: "only when budget critical".
+- ❌ **First-stop enrichment across a whole list** — `aiArk.enrichCompany` (0.01) is 25× cheaper and answers most firmographic questions; alternatives.md promotes this action on the residue, not ahead of it.
 - ❌ **Person data** — company-only provider; no contact or email actions.
 
 ## Patterns
@@ -55,18 +55,18 @@ cargo-ai orchestration action execute \
 
 ## Anti-patterns
 
-- **Running it beside the cargo default "for extra coverage".** Paying 0.25 + 0.5 per row for overlapping firmographics defeats the only reason to be here (budget). Pick one per [`../references/cost-discipline.md`](../references/cost-discipline.md).
+- **Running it beside `aiArk.enrichCompany` "for extra coverage".** Paying 0.01 + 0.25 per row for overlapping firmographics wastes the cheaper rung's whole point. Run aiArk across the list, then this one only on the rows it left empty — per [`../references/cost-discipline.md`](../references/cost-discipline.md).
 - **Using lookalikes as final TAM rows without enrichment.** Similar-company results are seeds — flow them through the normal ENRICH → dedupe path before counting them as TAM.
 
 ## Position in the waterfall
 
-- `enrichByDomain` — **ENRICH (company), budget rung**: cheapest of the chain (`companyEnrich` 0.25 → `linkedin` 0.25–0.5 → `cargo` 0.5 ✅ → `waterfall` 1 ✅ → `peopleDataLabs` 3).
+- `enrichByDomain` — **ENRICH (company), second rung**: `aiArk` 0.01 ✅ → **`companyEnrich` 0.25** → `linkedin` 0.25–0.5 → `waterfall` 1 ✅ → `peopleDataLabs` 3.
 - `findSimilarCompanies` — **SOURCE-adjacent**: lookalike expansion feeding TAM builds, upstream of ENRICH.
 
 ## Recurring use
 
-- **Scheduled lookalikes:** `findSimilarCompanies` can re-run weekly to keep a TAM growing (persona/company searches → weekly; [`../recipes/save-as-play.md`](../recipes/save-as-play.md)) — but results overlap heavily run to run and bill 1 credit **per company returned**, so keep `limit` tight and dedup against the Companies model (`cargo.matchBusiness`) before any downstream enrichment.
-- **In-play gate:** `enrichByDomain` runs only where the row's firmographic target columns are still empty — and never beside the cargo default (see anti-patterns).
+- **Scheduled lookalikes:** `findSimilarCompanies` can re-run weekly to keep a TAM growing (persona/company searches → weekly; [`../recipes/save-as-play.md`](../recipes/save-as-play.md)) — but results overlap heavily run to run and bill 1 credit **per company returned**, so keep `limit` tight and dedup against the Companies model (a free `storage query execute` on `domain`) before any downstream enrichment.
+- **In-play gate:** `enrichByDomain` runs only where the row's firmographic target columns are still empty after the 0.01 rung — never beside it (see anti-patterns).
 - **Stable data:** firmographics don't decay; a scheduled re-enrich of an existing TAM just re-bills unchanged data at 0.25/row.
 
 ## Action shape

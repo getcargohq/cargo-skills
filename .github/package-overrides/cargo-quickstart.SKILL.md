@@ -1,7 +1,7 @@
 ---
 name: cargo-quickstart
 description: "Guided first-run demo for Cargo — one persona question to the accounts that match it, with a free pool count and a cost receipt, in under two minutes, ending by saving the pull as a recurring play. Triggers: \"show me what Cargo can do\", \"give me a demo\", \"take me on a tour\", \"quickstart\", \"getting started with Cargo\", \"I just installed Cargo\", \"my workspace is empty\", \"does this actually work\". Skip when: the user has a real job to run (build an account list, enrich a CSV) — use cargo-gtm; when they want CLI reference or routing — use the cargo router skill."
-version: "1.0.2"
+version: "1.0.3"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 ---
@@ -112,7 +112,7 @@ Immediately offer to make the pull recurring — this is the step that shows wha
 
 > "Want this to run by itself? I can save this exact search as a play that runs weekly and writes new matches into a model — new `<persona>` accounts land without you asking."
 
-On yes, follow [`../cargo-gtm/recipes/save-as-play.md`](../cargo-gtm/recipes/save-as-play.md) with the demo's action + filter as the workflow body and a weekly cron. `searchCompanies` bills per returned record on every run, so dedup against the workspace model (`cargo.matchBusiness`) before any paid downstream node.
+On yes, follow [`../cargo-gtm/recipes/save-as-play.md`](../cargo-gtm/recipes/save-as-play.md) with the demo's action + filter as the workflow body and a weekly cron. `searchCompanies` bills per returned record on every run, so dedup against the workspace model (a free `storage query execute` on `domain`) before any paid downstream node.
 
 ## After the demo — route onward
 

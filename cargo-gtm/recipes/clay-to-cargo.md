@@ -60,7 +60,7 @@ Costs are credits/record and are the pack's own priority stack. Confirm each aga
 | Validate / verify email | `waterfall.verifyEmail` | 0.1 |
 | Find mobile phone | `aiArk.findMobilePhone` | 0.5 |
 | Enrich person from LinkedIn URL | `aiArk.enrichPerson` | 0.1 |
-| Enrich person from name + company | `cargo.enrichProspectDetails` | 2 |
+| Enrich person from name + company | `waterfall.enrichContact` | 2 |
 | Email → LinkedIn (reverse lookup) | `FullEnrich.reverseEmailLookup` | 2 |
 
 **`aiArk.enrichPerson` is the single highest-leverage substitution in most Clay migrations.** It returns the profile *and* a verified email for 0.1 and bills 0 when it finds none, so a Clay table that runs an email waterfall over rows that already carry LinkedIn URLs is usually paying several times over for what one 0.1 call does. Run it first, then run the finders above only on the residue.
@@ -69,14 +69,17 @@ Costs are credits/record and are the pack's own priority stack. Confirm each aga
 
 | What the Clay column does | Cargo action | Cost |
 |---|---|---|
-| Enrich company firmographics | `cargo.enrichBusinessFirmographics` | 0.5 |
-| Enrich company, budget rung | `companyEnrich.enrichByDomain` | 0.25 |
-| Tech stack / technographics | `cargo.enrichBusinessTechnographics` | 1 |
-| Funding and acquisitions | `cargo.enrichBusinessFundingAndAcquisitions` | 0.5 |
+| Enrich company firmographics | `aiArk.enrichCompany` | 0.01 |
+| Enrich company, fuller field set | `companyEnrich.enrichByDomain` | 0.25 |
+| Tech stack / technographics | `builtwith.getDomainSummary` → `enrichDomain` on the residue | 0 → 1 |
+| Funding and acquisitions | `enrichCrm.getFunding` | 1 |
 | Hiring signals | `theirStack.searchJobs` | 0.5 |
-| Resolve a company to an id before enriching | `cargo.matchBusiness` | 0.5 |
 
-`cargo.matchBusiness` runs **first** for any `cargo.enrichBusiness*` chain. A Clay table has no equivalent step, so it is the one line that appears in the Cargo version and not in the source, and it needs saying rather than quietly appearing on the bill.
+Every company action above keys on the **domain**, so a Clay company column maps
+one to one with no id-resolution step in between — nothing appears in the Cargo
+version that wasn't in the source. `builtwith.getDomainSummary` is the exception
+worth calling out in the other direction: it is free, so the technographic column
+gets cheaper on migration rather than more expensive.
 
 ### Everything else
 
@@ -152,7 +155,7 @@ Loading is ~free. Spend concentrates in three places, and all of it goes through
 | Where | Typical |
 |---|---|
 | The parity pilot | 10–20 rows × the mapped chain cost |
-| Dedupe for rows with no natural key | `cargo.matchProspect` / `cargo.matchBusiness`, 0.5/record |
+| Dedupe for rows with no natural key | free — a storage query against the existing Contacts / Companies models on `email` / `domain` / `linkedin_url` |
 | Re-verification of the imported VERIFY bucket | `waterfall.verifyEmail`, 0.1/record |
 
 The full-table run is a separate approval with its own three numbers. Getting the pilot approved is not getting the run approved.

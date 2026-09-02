@@ -53,7 +53,7 @@ Pipe the results into an LLM step (`anthropic.instruct`) to extract the fact you
 
 - **Paying per record in your head.** Cost is per **query**. Ten queries at `limit: 10` cost 10× more than one query at `limit: 100` for the same volume — always max out `limit` before adding queries.
 - **Skipping `country`/`locale` for local sourcing.** Without them Google decides the geography for you; SMB lists come back skewed. Set `country` (from the country autocomplete) and put the city in the query.
-- **Treating place results as enriched records.** `searchPlaces` output is a raw local listing — dedupe it and enrich (website → `cargo.matchBusiness` → firmographics) before it enters a model.
+- **Treating place results as enriched records.** `searchPlaces` output is a raw local listing — dedupe it against the Companies model and enrich (website → `aiArk.enrichCompany`) before it enters a model.
 
 ## Anti-patterns
 
