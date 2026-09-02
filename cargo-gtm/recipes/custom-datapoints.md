@@ -99,6 +99,7 @@ A price here means **credits per account**, which for a row-billed action is not
 |---|---|---|---|
 | Function headcount, seniority mix, SDR:AE ratio, eng-as-share-of-total | `salesNavigator.findEmployeesDistribution` | 0.25 **+ 0.05 ID** | High where a LinkedIn company page exists |
 | Headcount growth or decline | `salesNavigator.findCompanyMetrics` (0.25 **+ 0.05 ID**), or `companyEnrich.getWorkforce` (0.25 — historical headcount **by department**) | 0.25 | Medium–High |
+| Revenue band, NAICS / industry codes | `companyEnrich.enrichByDomain` (0.25) — same call also returns employees, funding and socials, so it can fill several rows at once | 0.25 | Medium — banded, not exact; private companies are estimates |
 | Tech stack | `builtwith.getDomainSummary` (**0**) first, then `builtwith.enrichDomain` (1, flat) or `theirStack.searchTechnologies` (0.5/row) | 0 to start; 1 flat, or **0.5 × rows** — cap with `limit` | Medium — detection favors client-side and vendor-declared tech; back-office tools are near-invisible |
 | Hiring intent — which roles, how many, how recent | `theirStack.searchJobs` (0.5) or `linkedin.searchJobs` (0.5) | **0.5 × postings returned** — cap with `limit` | Medium–High |
 | Funding, M&A | `enrichCrm.getFunding` | 1 | High for VC-backed, structurally absent for bootstrapped |
@@ -107,6 +108,7 @@ A price here means **credits per account**, which for a row-billed action is not
 | **Anything stated on one specific page** — trust center, store locator, supported currencies, integration directory, entity list | `firecrawl.scrape` (0.05) → `anthropic.instruct` haiku (0.2) | ~0.25 | Entirely determined by whether that page exists — probe it |
 | A question no structured provider carries | `linkup.instruct` (1, sourced) or `perplexity.instruct` (0.3–1) | 0.3–1 | Always answers; whether it answers *correctly* is what the probe measures |
 | Review/category presence | `piloterr.getG2ProductInfo` (0.01), `g2.enrichProduct` (1) | 0.01–1 | Low–Medium, category-dependent |
+| Employee ratings / employer reputation (Glassdoor-style) | **none** | — | No credits-based action in the catalog returns this. It is a research note, not a datapoint — say so rather than substituting a scrape that reads like the real thing |
 
 The `firecrawl.scrape` → `anthropic.instruct` row is the workhorse of this recipe: it is how a company-specific attribute nobody sells — *does this company publish a SOC 2 badge? how many store locations does the locator list? which currencies does checkout accept?* — becomes a real column for about a quarter of a credit. Use [`../references/prompt-library/data-extraction.md`](../references/prompt-library/data-extraction.md) → `custom-attribute-extraction` for the extract step rather than writing the prompt fresh.
 

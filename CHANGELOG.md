@@ -26,6 +26,8 @@ The first-party enrichment provider is no longer documented. Its playbook, its 2
 
 - **Every credit budget was recomputed, not relabelled.** Build-TAM 2,955 → **2,210** for 500 companies + 1,500 contacts. Prospecting P2 821 → **107** for 200 verified prospects. ICP discovery 602 → **204** on 200 deals. Context bootstrap ~3 → **~1**. The custom-datapoints worked shortlist re-solves end to end (3.30/account, ~13,500 against a 12,000 balance) so its "the full fan-out does not fit" conclusion still follows from its own numbers.
 
+- **Two data points the removal would otherwise have dropped silently.** `enrichBusinessFinancialMetrics` and `enrichBusinessRatingsByEmployees` had no entry in the substitution table above because they are not the same case. Revenue and NAICS survive — `companyEnrich.enrichByDomain` (0.25) returns them in the same call as firmographics — so [`custom-datapoints.md`](cargo-gtm/recipes/custom-datapoints.md) gains a row saying where they live. **Employee ratings have no successor at any price**, and that recipe now says so in a row of its own rather than letting the capability vanish between versions: "valuable, no obtainable source" is a line item it already treats as legitimate, and this is one.
+
 - **CLI pin → 1.0.78** (`cargo/cli-version`, from 1.0.66).
 
 ### `cargo-billing` → 2.0.0, `cargo-orchestration` → 1.11.0, `cargo-gtm` → 1.19.0, `cargo-diagnostics` → 1.4.0, `cargo` → 1.24.0 (router) — the execution charge, which the pack said did not exist
