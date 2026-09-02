@@ -42,23 +42,36 @@ There is no since-timestamp event feed in the catalog. A "new round" is detected
 by **diffing a fresh pull against what the Companies model already stores**, which
 is why `last_funding_round_at` has to be a column before the watch is worth running:
 
+This pattern stands alone — it does not depend on Pattern A's files.
+
 ```bash
-# Re-pull, then keep only rows whose latest round post-dates the stored value
+# 1. The domains to watch, and the dates the workspace already holds for them.
+#    Both sides of the diff come from the same model, so they always align.
+cargo-ai storage query execute \
+  "SELECT domain, last_funding_round_at FROM default.companies WHERE icp_tier IN ('tier-1','tier-2')" \
+  > /tmp/known-funding.json
+
+# 2. Re-pull funding for exactly those domains
 cargo-ai orchestration action execute-batch \
   --action '{"kind":"connector","integrationSlug":"enrichCrm","actionSlug":"getFunding"}' \
-  --records '[{"domain":"acme.com"},{"domain":"globex.com"}]' \
+  --records "$(jq -c '[.rows[] | {domain}]' /tmp/known-funding.json)" \
   --wait-until-finished > /tmp/fresh.json
 
-# Confirm the output field name first (free, runs nothing):
-#   cargo-ai orchestration action get-output-schema \
-#     --action '{"kind":"connector","integrationSlug":"enrichCrm","actionSlug":"getFunding","config":{}}'
-jq -c --slurpfile stored /tmp/targets.json '
-  ($stored[0].records
+# 3. Keep only rows whose latest round post-dates the stored value.
+#    Confirm the output field name first (free, runs nothing):
+#      cargo-ai orchestration action get-output-schema \
+#        --action '{"kind":"connector","integrationSlug":"enrichCrm","actionSlug":"getFunding","config":{}}'
+jq -c --slurpfile known /tmp/known-funding.json '
+  ($known[0].rows
      | map({key: .domain, value: (.last_funding_round_at // "")})
-     | from_entries) as $known
-  | [ .results[] | select(.lastFundingDate > ($known[.domain] // "")) ]
+     | from_entries) as $stored
+  | [ .results[] | select((.lastFundingDate // "") > ($stored[.domain] // "")) ]
 ' /tmp/fresh.json > /tmp/new-rounds.json
 ```
+
+A row with no stored date compares against `""` and always passes, which is the
+right behaviour on first run and the reason step 4 must write `last_funding_round_at`
+back — otherwise every run is a first run.
 
 The diff is free; the re-pull is not. That is the cost shape the cadence below is
 sized against.
