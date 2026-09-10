@@ -280,7 +280,9 @@ The `agent` action requires `advancedSettings.connectorUuid` (an AI provider con
 
 The `python` and `script` nodes receive `nodes` and `parentNodes` as context variables. The return value of the script becomes the node's output under `{{nodes.<slug>.result}}` (assign to a variable named `result` in Python; `return` a value in JS).
 
-> **Prefer built-in actions + expressions over code nodes.** Before adding a `python` or `script` node, read [`node-selection.md`](node-selection.md): most transforms belong in a `variables` node, LLM calls in the native `agent` node, API calls in the integration's connector action, and routing in `branch`/`filter`/`switch`. Reach for code only for genuine multi-step computation (prefer the JS `script` node — it ships `lodash`).
+The JS `script` node's `require()` allowlist is `axios`, `cheerio`, `crypto-js`, `date-fns`, `jsonschema`, `lodash`, `url`, `uuid`, and `zod`. Anything else throws — including `knex` (use `axios` for HTTP).
+
+> **Prefer built-in actions + expressions over code nodes.** Before adding a `python` or `script` node, read [`node-selection.md`](node-selection.md): most transforms belong in a `variables` node, LLM calls in the native `agent` node, API calls in the integration's connector action, and routing in `branch`/`filter`/`switch`. Reach for code only for genuine multi-step computation (prefer the JS `script` node).
 
 ## Examples
 

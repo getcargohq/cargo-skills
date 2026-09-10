@@ -1,7 +1,7 @@
 ---
 name: cargo-cdk
 description: "Manage a whole Cargo workspace as code — declare connectors, models, plays, tools, agents, MCP servers, segments, context, folders, files, workers, and apps in TypeScript, then reconcile them with `cargo-ai cdk` (init → types → plan → deploy), the way you would run Pulumi or the AWS CDK. Triggers: \"as code\", \"in git\", \"version-controlled\", \"reproducible\", \"Terraform for Cargo\", \"set up a whole workspace\", \"staging and production\", \"deploy from CI\", \"review this in a PR\", \"cargo.state.json\", \"scaffold from a template\", \"is there a cookbook for this\", \"start from a cookbook\". Skills with a CDK example (TAM building, account scoring, contact sourcing, routing, AI SDR, rep cockpit) live in gtm-skills; menu in references/cookbooks.md. Skip when: it is a one-off operation, a read, or an ad-hoc query — use the matching capability skill."
-version: "1.2.3"
+version: "1.2.4"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:

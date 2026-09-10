@@ -243,7 +243,9 @@ defineWorkflow(
   [`typed-config.md`](typed-config.md)); `native.*` works without a sync.
 - Control flow lowers idiomatically: `if/else` → branch, `else if` → switch,
   `for (const x of xs)` → group. `ai("…")` inline-completes; `js(({nodes}) => …)`
-  is the escape hatch for logic outside the supported subset. Flow helpers:
+  is the escape hatch for logic outside the supported subset — it runs as a
+  script node, so `require()` is limited to `axios`, `cheerio`, `crypto-js`,
+  `date-fns`, `jsonschema`, `lodash`, `url`, `uuid`, and `zod`. Flow helpers:
   `balance`, `split`, `humanReview`, `memory`.
 
 For the full workflow-authoring surface (per-call retry/fallback, the supported-JS

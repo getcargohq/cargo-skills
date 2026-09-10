@@ -43,6 +43,8 @@ still says `success`). When a value comes out blank, check the real shape with
   parsing, dedup, aggregating a `group` node's array into one object).
 - An API with no dedicated connector action.
 
-If you do need code, prefer the JS `script` node for transforms (it ships `lodash`
-for array/object work). Either way, both code nodes are sandboxed and have no
-normal logging — return your output and inspect it via `runContext`.
+If you do need code, prefer the JS `script` node. Its `require()` allowlist is
+`axios`, `cheerio`, `crypto-js`, `date-fns`, `jsonschema`, `lodash`, `url`,
+`uuid`, and `zod`. Anything else throws — including `knex` (query over HTTP with
+`axios` instead). Both code nodes are sandboxed and have no normal logging —
+return your output and inspect it via `runContext`.
