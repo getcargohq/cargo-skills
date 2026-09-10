@@ -10,6 +10,10 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### `cargo-orchestration` → 1.11.2, `cargo-cdk` → 1.2.4 — JS script node's `require` allowlist
+
+The `script` node was documented as shipping `lodash`. It also allows `axios`, `cheerio`, `crypto-js`, `date-fns`, `jsonschema`, `url`, `uuid`, and `zod`. `knex` is not available. Listed in [`references/node-selection.md`](cargo-orchestration/references/node-selection.md), [`references/nodes.md`](cargo-orchestration/references/nodes.md), and [`guides/authoring-resources.md`](cargo-cdk/guides/authoring-resources.md) next to `js()`.
+
 ### `cargo-gtm` → 2.1.0 — the routing surfaces answer more of the questions people actually ask
 
 Measured rather than guessed: of the 176 credits-based actions, **148 were reachable** from a routing surface (`stage-action-map.md`, the phase guides, `alternatives.md`, a recipe) and 28 were reachable only from their own provider playbook — findable if you already knew which provider to open, which is the wrong way round. This closes the gaps worth closing and leaves the rest deliberately: **154/176**.
