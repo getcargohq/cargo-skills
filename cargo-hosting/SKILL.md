@@ -1,7 +1,7 @@
 ---
 name: cargo-hosting
-description: "Put something on the internet from Cargo — Vite single-page apps served at https://<slug>.cargo.app and serverless edge workers that answer HTTP requests, plus the deployments that build and promote them. Triggers: \"build me a dashboard for this\", \"host this app\", \"give me a URL to share\", \"deploy this\", \"I need a webhook endpoint\", \"make it live\", \"promote to production\", \"put it on cargo.app\", \"ship a UI for my team\". Skip when: the app or worker should be declared as committed workspace code — use cargo-cdk."
-version: "1.0.1"
+description: "Put something on the internet from Cargo — Vite single-page apps served at https://<slug>.cargo.app and serverless edge workers that answer HTTP requests, plus the deployments that build and promote them. Triggers: \"build me a dashboard for this\", \"host this app\", \"give me a URL to share\", \"deploy this\", \"I need a webhook endpoint\", \"make it live\", \"promote to production\", \"put it on cargo.app\", \"ship a UI for my team\". Skip when: the app or worker should be declared as committed workspace code — use cargo-project."
+version: "1.0.2"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:

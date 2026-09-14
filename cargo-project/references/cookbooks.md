@@ -6,19 +6,19 @@ Skills in [`getcargohq/gtm-skills`](https://github.com/getcargohq/gtm-skills) th
 jobs as the one-off skills there, as a deployed pipeline that keeps producing the result.
 
 **Every folder is self-contained** (its own models, connectors and folders; no shared
-foundation, no requires graph). `cdk add` copies one into the project; the agent then
+foundation, no requires graph). `project add` copies one into the project; the agent then
 reconciles it with what is already declared (an existing accounts model, an existing CRM
 connector), adapts it in place, plans, deploys on a yes, and walks its `Done when`. The
 code is a worked example, not a template to fill in — and not something to regenerate
 from the skill's prose.
 
 ```sh
-cargo-ai cdk add cookbook/<slug>              # inside a CDK project: this is the copy step
-cargo-ai cdk init <dir> --cookbook <slug>     # no project yet: scaffold and install together
+cargo-ai project add cookbook/<slug>              # inside a CDK project: this is the copy step
+cargo-ai project init <dir> --cookbook <slug>     # no project yet: scaffold and install together
 npx skills add getcargohq/gtm-skills/<slug>   # the procedure on its own, without the CDK resources
 ```
 
-After either `cdk` command the files are in `infra/<slug>/` and `.claude/skills/<slug>/`.
+After either `project` command the files are in `infra/<slug>/` and `.claude/skills/<slug>/`.
 Start the skill at its Adapt section: its earlier steps assume you found the folder in
 gtm-skills and still have to place it.
 
@@ -60,7 +60,7 @@ skill (or `cargo-gtm`, when this pack is installed); a user who wants a pipeline
 producing it wants one of these. The same words describe both, so listen for whether the
 result is meant to keep arriving.
 
-**Never `cargo-ai cdk init --force` into a directory that is not empty.** It replaces the
+**Never `cargo-ai project init --force` into a directory that is not empty.** It replaces the
 project's `package.json` and reverts adapted code while `cargo.state.json` survives, so the
-next plan diffs a live workspace against code nobody wrote. Run `cdk add cookbook/<slug>`
+next plan diffs a live workspace against code nobody wrote. Run `project add cookbook/<slug>`
 in the project that is already there; it skips every file it would otherwise overwrite.

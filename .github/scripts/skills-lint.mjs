@@ -17,6 +17,7 @@
 import { readFileSync, readdirSync, statSync, existsSync } from "node:fs";
 import { join, relative, resolve, dirname, basename } from "node:path";
 import { checkAllMetadata } from "./skills-metadata.mjs";
+import { isRedirectSkill, redirectTarget } from "./skill-redirects.mjs";
 
 const repoRoot = resolve(process.argv[2] || ".");
 
@@ -24,7 +25,7 @@ const SKILL_DIRS = [
   "cargo",
   "cargo-quickstart",
   "cargo-gtm",
-  "cargo-cdk",
+  "cargo-project",
   "cargo-orchestration",
   "cargo-storage",
   "cargo-segmentation",
@@ -53,7 +54,8 @@ const REQUIRED_FRONTMATTER_FIELDS = [
 const KNOWN_CLI_DOMAINS = new Set([
   "ai",
   "billing",
-  "cdk",
+  "cdk", // alias of `project` since @cargo-ai/cli renamed the group
+  "project",
   "manifest", // shipped in @cargo-ai/cli 1.0.57: `manifest init`
   "doctor",
   "mcp",
@@ -347,7 +349,7 @@ function main() {
   const diskSkillDirs = readdirSync(repoRoot).filter((d) => {
     if (d.startsWith(".") || d === "node_modules") return false;
     const p = join(repoRoot, d);
-    return statSync(p).isDirectory() && existsSync(join(p, "SKILL.md"));
+    return statSync(p).isDirectory() && existsSync(join(p, "SKILL.md")) && !isRedirectSkill(p);
   });
   for (const dir of diskSkillDirs) {
     if (!SKILL_DIRS.includes(dir)) {
@@ -356,6 +358,19 @@ function main() {
         0,
         `Skill directory \`${dir}/\` exists on disk but is not listed in the linter's SKILL_DIRS — add it so it gets linted.`
       );
+    }
+  }
+  // Redirect stubs (skill-redirects.mjs) are not skills, so they are left out of
+  // the count and the router check above. They are still linted as files, and
+  // must point at a real skill.
+  for (const d of readdirSync(repoRoot)) {
+    const p = join(repoRoot, d);
+    if (d.startsWith(".") || !statSync(p).isDirectory() || !isRedirectSkill(p)) continue;
+    const skillMd = join(p, "SKILL.md");
+    lintFile(skillMd);
+    const target = redirectTarget(readFileSync(skillMd, "utf8"));
+    if (!SKILL_DIRS.includes(target)) {
+      err(skillMd, 1, `Redirect points at \`${target}\`, which is not a skill in this repo.`);
     }
   }
   const routerPath = join(repoRoot, "cargo", "SKILL.md");

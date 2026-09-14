@@ -1,6 +1,6 @@
 # Recipe: deploy from CI
 
-**Use when** the user wants `cargo-ai cdk deploy` to run non-interactively — on
+**Use when** the user wants `cargo-ai project deploy` to run non-interactively — on
 push, on merge, or on a schedule — so the workspace stays in sync with the repo.
 
 ## Prerequisites
@@ -24,7 +24,7 @@ npm ci
 cargo-ai login --token "$CARGO_API_TOKEN"
 
 # 3. Deploy — --yes is REQUIRED (no TTY to confirm at); --json for machine-readable output
-cargo-ai cdk deploy --yes --json
+cargo-ai project deploy --yes --json
 ```
 
 ## Critical CI rules
@@ -38,7 +38,7 @@ cargo-ai cdk deploy --yes --json
   creates resources writes new uuids into `cargo.state.json`; if CI doesn't commit
   them, the next run won't know they exist. Either commit the file from the CI job,
   or make deploys only ever run from a branch whose state is already current.
-- **Preview safely** with `cargo-ai cdk plan --json` (offline, no API calls) on pull
+- **Preview safely** with `cargo-ai project plan --json` (offline, no API calls) on pull
   requests, and gate `deploy` to the protected branch.
 - **Prune deliberately.** Add `--prune` only when you want CI to delete resources
   removed from code; leave it off to make deploys purely additive.
@@ -51,7 +51,7 @@ cargo-ai cdk deploy --yes --json
 - run: cargo-ai login --token "$CARGO_API_TOKEN"
   env:
     CARGO_API_TOKEN: ${{ secrets.CARGO_API_TOKEN }}
-- run: cargo-ai cdk deploy --yes --json
+- run: cargo-ai project deploy --yes --json
   env:
     HUBSPOT_API_KEY: ${{ secrets.HUBSPOT_API_KEY }}
 ```

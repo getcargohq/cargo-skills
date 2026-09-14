@@ -56,5 +56,5 @@ default branch or from the latest release, so "upgrade" is always the remedy.
 - The approval hook (`hooks/approve-cli.sh`) auto-approves only a plain
   `cargo-ai` invocation, and never one that chains, redirects, or substitutes
   another program. Login/logout, token minting, report egress, and
-  `cdk deploy`/`destroy` are gated back to the normal approval prompt, as is any
+  `project deploy`/`destroy` are gated back to the normal approval prompt, as is any
   invocation carrying a destructive verb.

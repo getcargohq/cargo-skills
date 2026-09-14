@@ -58,6 +58,7 @@ import {
 } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { writeAllMetadata } from "./skills-metadata.mjs";
+import { isRedirectSkill } from "./skill-redirects.mjs";
 import { fileURLToPath } from "node:url";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
@@ -152,7 +153,7 @@ const REMOVED_TERMS = [
 
 // Excluding a skill leaves cross-references to it in the ones that remain: a
 // router table row, an ASCII diagram box, a recap section, link targets in
-// cargo-gtm and cargo-cdk. Each is removed here, in the packaged copy only.
+// cargo-gtm and cargo-project. Each is removed here, in the packaged copy only.
 // Every `find` must match exactly once or the build fails — these are anchored
 // to prose that will drift, and a silent no-op would ship a dangling link.
 const PACKAGE_EDITS = [
@@ -217,17 +218,17 @@ const PACKAGE_EDITS = [
     replace: "The handoff target is the workspace's sequencer of choice (Outreach, Salesloft, Apollo, HubSpot Sequences, Salesforce Cadences). The recipe stops at \"send-ready variables\" and points at `cargo-ai connection integration get <slug>` for the final push.",
   },
   {
-    file: "cargo-cdk/SKILL.md",
+    file: "cargo-project/SKILL.md",
     find: "- **`defineMailbox` bills monthly, and `defineDomain` rewrites a DNS zone.** A\n  mailbox is 100\u2013160 credits *per month* for as long as it exists (`cargo-ai\n  mailboxManagement pricing get` for live figures), so a `+ create mailbox:\u2026` line\n  in the plan is a recurring charge the user approves, not a one-off. Its `domain`,\n  `username` and `type` are **create-only** \u2014 changing any of them is destroy +\n  recreate, i.e. a brand-new inbox back at the bottom of a 45-day warm-up ramp. The\n  deploy polls `refreshStatus` for up to 5 minutes waiting for `active`. On\n  `defineDomain`, `dnsRecords` is the **whole zone, not a patch**: declaring it\n  replaces every live record (including the ones the registrar wrote at purchase),\n  and omitting it leaves the zone untouched. Use `adopt: true` for a domain or\n  mailbox bought in the UI. Ramp, suppression and sending:\n  [`../cargo-mailbox-management/SKILL.md`](../cargo-mailbox-management/SKILL.md).\n",
     replace: "",
   },
   {
-    file: "cargo-cdk/references/resources.md",
+    file: "cargo-project/references/resources.md",
     find: "| `defineMailbox(slug, spec)` | Sending inbox on a domain (**monthly credit charge**) | `domain`, `type` (`google`/`shared`/`private` \u2014 no `outlook`), `username?` (defaults to slug), `firstName`, `lastName`, `signature?`, `folder?`, `adopt?` | `domain`, `folder` | `uuid` |\n",
     replace: "",
   },
   {
-    file: "cargo-cdk/references/resources.md",
+    file: "cargo-project/references/resources.md",
     find: "| `defineDomain(name, spec)` | Sending domain + its DNS zone | `adopt?`, `dnsRecords?` (**replaces the whole zone**) | \u2014 | `uuid` |\n",
     replace: "",
   },
@@ -602,11 +603,14 @@ if (typeof version !== "string" || /^\d+\.\d+\.\d+$/.test(version) === false) {
 }
 
 // A skill is any top-level directory holding a SKILL.md — the same rule
-// skills-lint and skills-metadata use, so the three can never disagree.
+// skills-lint and skills-metadata use, so the three can never disagree. A
+// redirect stub at a renamed skill's old name is not one: a fresh package has
+// no stale copy for it to overwrite.
 const repoSkillDirs = readdirSync(repoRoot, { withFileTypes: true })
   .filter((e) => e.isDirectory())
   .map((e) => e.name)
   .filter((name) => existsSync(join(repoRoot, name, "SKILL.md")))
+  .filter((name) => !isRedirectSkill(join(repoRoot, name)))
   .sort();
 
 if (repoSkillDirs.length === 0) {

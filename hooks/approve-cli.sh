@@ -29,11 +29,11 @@ allowed_helpers="jq cat head tail wc grep sort uniq column tr echo printf"
 # session data, destruction, and deploys always reach the user:
 #   - first words: credential/session commands
 #   - pairs: token minting, report egress (consent stays explicit -- reports can
-#     carry session traces), and CDK deploy/destroy
+#     carry session traces), and project deploy/destroy (plus the `cdk` alias)
 #   - tokens: destructive verbs anywhere in the invocation (`storage model
 #     remove`, `hosting app remove`, ...)
 gated_first="login logout"
-gated_pairs="workspaceManagement token,workspaceManagement report,cdk deploy,cdk destroy"
+gated_pairs="workspaceManagement token,workspaceManagement report,project deploy,project destroy,cdk deploy,cdk destroy"
 gated_tokens="remove delete destroy"
 
 # Harden: no globbing, and unset variables are errors so a typo can't silently
@@ -104,7 +104,7 @@ esac
 #   - the cargo segment is gated POSITION-INDEPENDENTLY: a credential command
 #     token (login, logout), a destructive verb token (remove, delete,
 #     destroy), or a gated adjacent pair (workspaceManagement token,
-#     workspaceManagement report, cdk deploy, cdk destroy) ANYWHERE in the
+#     workspaceManagement report, project|cdk deploy, project|cdk destroy) ANYWHERE in the
 #     segment refuses it. Positional checks alone are bypassable -- valid
 #     prefixes like `npx -p @cargo-ai/cli cargo-ai login` or a global flag
 #     with a value shift the real subcommand out of the first argument slots,
@@ -232,7 +232,7 @@ verdict="$(printf '%s' "$cmd_stripped" | awk -v helpers="$allowed_helpers" -v ga
         # Gates, anywhere in the segment: credential first-words (login,
         # logout), destructive verbs (remove, delete, destroy), and gated
         # pairs as adjacent tokens (workspaceManagement token/report,
-        # cdk deploy/destroy).
+        # project|cdk deploy/destroy).
         for (j = s2; j <= n2; j++) {
           if (ct[j] in D) exit
           if (ct[j] in G) exit

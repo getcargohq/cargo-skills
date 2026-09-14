@@ -3,7 +3,7 @@
 // Add a case whenever you change a description, so the intended behavior is pinned.
 // `why` explains what the case is guarding against; it is printed on failure.
 {"prompt": "Find me 50 VPs of Sales at Series B fintech companies and verify their emails", "expect": "cargo-gtm", "why": "The flagship prospecting request; must not be captured by storage or segmentation."}
-{"prompt": "Build a TAM list of seed-stage SaaS companies in Europe", "expect": "cargo-gtm", "why": "A list today. cargo-cdk now carries pipeline vocabulary (worked example, keep it current) and must not steal the one-off pull."}
+{"prompt": "Build a TAM list of seed-stage SaaS companies in Europe", "expect": "cargo-gtm", "why": "A list today. cargo-project now carries pipeline vocabulary (worked example, keep it current) and must not steal the one-off pull."}
 {"prompt": "Enrich this CSV with company size and funding stage", "expect": "cargo-gtm"}
 {"prompt": "Who just raised a Series A in healthtech?", "expect": "cargo-gtm", "why": "Funding-signal phrasing with no Cargo vocabulary at all."}
 {"prompt": "Show me companies hiring data engineers that also run Snowflake", "expect": "cargo-gtm"}
@@ -78,10 +78,10 @@
 {"prompt": "Deploy this app and promote it to production", "expect": "cargo-hosting"}
 {"prompt": "I need a webhook endpoint that receives form submissions", "expect": "cargo-hosting"}
 
-{"prompt": "Set up our whole workspace as code so I can review it in a PR", "expect": "cargo-cdk"}
-{"prompt": "I want this version-controlled and reproducible across staging and production", "expect": "cargo-cdk"}
-{"prompt": "Deploy the workspace definition from CI", "expect": "cargo-cdk"}
-{"prompt": "Is there something like Terraform for Cargo?", "expect": "cargo-cdk"}
+{"prompt": "Set up our whole workspace as code so I can review it in a PR", "expect": "cargo-project"}
+{"prompt": "I want this version-controlled and reproducible across staging and production", "expect": "cargo-project"}
+{"prompt": "Deploy the workspace definition from CI", "expect": "cargo-project"}
+{"prompt": "Is there something like Terraform for Cargo?", "expect": "cargo-project"}
 
 {"prompt": "Invite my teammate to the workspace", "expect": "cargo-workspace-management"}
 {"prompt": "Create an API token for CI", "expect": "cargo-workspace-management"}
@@ -113,7 +113,7 @@
 {"prompt": "Our outbound is going to the wrong people — help me figure out who actually buys from us", "expect": "cargo-gtm", "tier": "hard"}
 {"prompt": "Something in the nightly pipeline produced garbage last night and I need to know what", "expect": "cargo-diagnostics", "why": "Paraphrase of 'why did this fail' with no shared words.", "tier": "hard"}
 {"prompt": "I want a Slack ping the moment our data freshness slips", "expect": "cargo-observability", "tier": "hard"}
-{"prompt": "Can I keep the definition of all this in version control?", "expect": "cargo-cdk", "tier": "hard"}
+{"prompt": "Can I keep the definition of all this in version control?", "expect": "cargo-project", "tier": "hard"}
 {"prompt": "Give my teammates a link where they can see these numbers", "expect": "cargo-hosting", "tier": "hard"}
 {"prompt": "Pull the finished rows down so I can hand them to the SDR team", "expect": "cargo-analytics", "tier": "hard"}
 {"prompt": "Am I going to run out of budget before the end of the quarter?", "expect": "cargo-billing", "tier": "hard"}
@@ -130,8 +130,8 @@
 {"prompt": "Expose our CRM tools as an MCP server so I can call them from Claude Desktop", "expect": "cargo-ai", "why": "The publish direction of MCP. Was previously reachable from no description at all."}
 {"prompt": "How do I use Cargo from ChatGPT?", "expect": "cargo-mcp", "why": "Cargo now runs a hosted MCP server at mcp.getcargo.io/mcp, so a client with no shell connects to that rather than publishing one first. Was cargo-ai until the hosted server shipped.", "tier": "hard"}
 {"prompt": "Explain this automation to someone who has never seen it — I need a picture, not JSON", "expect": "cargo-orchestration", "why": "No CLI vocabulary at all; the job is rendering a graph.", "tier": "hard"}
-{"prompt": "Is there a skill that already builds account scoring, or do I write it from scratch?", "expect": "cargo-cdk", "why": "cargo-cdk gained the worked-example vocabulary: it owns the menu of gtm-skills that carry a CDK example and must catch the 'before I author it' question."}
-{"prompt": "Start from a worked example for a TAM pipeline and adapt it to our workspace", "expect": "cargo-cdk", "why": "'worked example' and a deployed pipeline are the standing-side words; the pack's CDK skill routes them, and its menu hands off to tam-building."}
+{"prompt": "Is there a skill that already builds account scoring, or do I write it from scratch?", "expect": "cargo-project", "why": "cargo-project gained the worked-example vocabulary: it owns the menu of gtm-skills that carry a CDK example and must catch the 'before I author it' question."}
+{"prompt": "Start from a worked example for a TAM pipeline and adapt it to our workspace", "expect": "cargo-project", "why": "'worked example' and a deployed pipeline are the standing-side words; the pack's CDK skill routes them, and its menu hands off to tam-building."}
 {"prompt": "Write me a first-touch email for these fintech CTOs", "expect": "cargo-gtm", "why": "Copywriting and audience, not sending infrastructure — must NOT be pulled to cargo-mailbox-management by the word email.", "tier": "hard"}
 {"prompt": "What did that email-sending workflow cost us last month?", "expect": "cargo-billing", "why": "Credit spend is billing even when the subject is mail; the mailbox skill owns the fleet, not the invoice.", "tier": "hard"}
 {"prompt": "Connect Cargo to Claude Desktop", "expect": "cargo-mcp", "why": "Pointing a client at the hosted server, not publishing one out of a workspace."}

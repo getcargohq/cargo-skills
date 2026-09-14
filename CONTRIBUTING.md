@@ -73,7 +73,7 @@ If you change any description, run `node .github/scripts/routing-eval.ts` and ad
 
 ## Adding a recipe or a provider playbook
 
-Recipes live in `cargo-gtm/recipes/` (or `cargo-cdk/recipes/`), playbooks in `cargo-gtm/provider-playbooks/`. Both are discovered by filename, so:
+Recipes live in `cargo-gtm/recipes/` (or `cargo-project/recipes/`), playbooks in `cargo-gtm/provider-playbooks/`. Both are discovered by filename, so:
 
 - Every recipe must appear in the `cargo-gtm/SKILL.md` recipe table **and** the README recipe table.
 - Every playbook must appear in the `cargo-gtm/SKILL.md` playbook catalog.

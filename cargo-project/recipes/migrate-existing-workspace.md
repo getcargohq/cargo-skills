@@ -4,7 +4,7 @@
 imperative CLI) and the user wants to manage them as code going forward — without
 creating duplicates.
 
-The tool is `cargo-ai cdk import <id> <uuid>`, which binds a resource's **code id**
+The tool is `cargo-ai project import <id> <uuid>`, which binds a resource's **code id**
 (`kind:slug`) to its **live uuid** in `cargo.state.json`. After import, `deploy`
 updates that resource in place instead of creating a new one.
 
@@ -36,9 +36,9 @@ cargo-ai storage model list        # find the model's uuid
 ## 3. Import each resource into state
 
 ```bash
-cargo-ai cdk import model:contacts <model-uuid> --dir my-workspace
-cargo-ai cdk import connector:hubspot <connector-uuid> --dir my-workspace
-cargo-ai cdk import agent:sdr <agent-uuid> --dir my-workspace
+cargo-ai project import model:contacts <model-uuid> --dir my-workspace
+cargo-ai project import connector:hubspot <connector-uuid> --dir my-workspace
+cargo-ai project import agent:sdr <agent-uuid> --dir my-workspace
 ```
 
 - The id is `kind:slug` — the same id the plan output uses.
@@ -50,7 +50,7 @@ cargo-ai cdk import agent:sdr <agent-uuid> --dir my-workspace
 ## 4. Verify with a plan
 
 ```bash
-cargo-ai cdk plan --dir my-workspace
+cargo-ai project plan --dir my-workspace
 ```
 
 Imported resources should show as **update** or **no-op**, not **create**. A
@@ -60,7 +60,7 @@ Imported resources should show as **update** or **no-op**, not **create**. A
 ## 5. Deploy and commit
 
 ```bash
-cargo-ai cdk deploy --dir my-workspace
+cargo-ai project deploy --dir my-workspace
 git add cargo.state.json && git commit -m "Adopt existing workspace into CDK"
 ```
 

@@ -1,16 +1,16 @@
-# Typed config — `cargo-ai cdk types`
+# Typed config — `cargo-ai project types`
 
 `defineConnector`/`defineModel` config and the `integrations.*` registry in
 workflow bodies are typed against **your workspace's real integration schemas**.
 Those types aren't bundled (they're workspace-specific) — you generate them:
 
 ```bash
-cargo-ai cdk types --dir my-workspace
+cargo-ai project types --dir my-workspace
 ```
 
 Typing is a **bonus, never a gate**: an integration you haven't synced (or a
 custom one) falls back to a loose `Record<string, unknown>`, so `deploy` works
-without ever running `cdk types`.
+without ever running `project types`.
 
 ## What it generates
 
@@ -28,12 +28,12 @@ Everything lands in `.cargo-ai/` (git-ignored):
   `registerNative` calls so those slugs are **callable at runtime** in workflow
   bodies.
 
-Re-run `cargo-ai cdk types` whenever your workspace's integrations change (added a
+Re-run `cargo-ai project types` whenever your workspace's integrations change (added a
 connector, changed an extractor).
 
 ## Wiring it into your project
 
-`cdk init` sets this up; for a hand-rolled project, two steps:
+`project init` sets this up; for a hand-rolled project, two steps:
 
 1. **Add the glob to `tsconfig.json` `include`.** A bare `.cargo-ai` (a dot-dir) is
    ignored by TypeScript — you must use an explicit glob:
@@ -54,7 +54,7 @@ connector, changed an extractor).
    in every workspace, so their types ship with the SDK. Tools and agents are not a
    registry either — reference them by handle through `defineWorkflow`'s `uses`.)
 
-## Symptoms that mean "run `cdk types`"
+## Symptoms that mean "run `project types`"
 
 - `config` on a `defineConnector` isn't autocompleting / isn't rejecting a wrong
   credential shape → types not generated (or `.cargo-ai/**/*.d.ts` not in

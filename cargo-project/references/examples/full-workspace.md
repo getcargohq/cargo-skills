@@ -2,8 +2,8 @@
 
 This walks a complete, runnable Cargo workspace defined in code that exercises
 every resource type and wires them by **handle**. It is a reading example, not
-something a command scaffolds: `cargo-ai cdk init` produces one repo shape, and a
-worked pipeline comes from `cargo-ai cdk add cookbook/<slug>`.
+something a command scaffolds: `cargo-ai project init` produces one repo shape, and a
+worked pipeline comes from `cargo-ai project add cookbook/<slug>`.
 
 ## The graph
 
@@ -81,22 +81,22 @@ export const sdr = defineAgent("sdr", {
 cd my-workspace && npm install
 
 cargo-ai login                 # authenticate + select the workspace
-cargo-ai cdk types             # type defineConnector/defineModel config against this workspace
+cargo-ai project types             # type defineConnector/defineModel config against this workspace
 export HUBSPOT_API_KEY=...      # matches secret("HUBSPOT_API_KEY")
 
-cargo-ai cdk plan
+cargo-ai project plan
 # → lists every resource as create / update / no-op, in dependency order:
 #   create connector:hubspot, create connector:open_ai (adopt), create folder:crm-models, …
 
-cargo-ai cdk deploy
+cargo-ai project deploy
 # → creates each in order, writing cargo.state.json after each resource.
 #   Workers/apps build server-side (slower). Live URLs appear as webhook.url / dashboard.url.
 
 git add cargo.state.json && git commit -m "Deploy full workspace"
 ```
 
-Re-run `cargo-ai cdk deploy` after editing a file — only the changed resource is
-applied. Tear it all down with `cargo-ai cdk destroy --all`.
+Re-run `cargo-ai project deploy` after editing a file — only the changed resource is
+applied. Tear it all down with `cargo-ai project destroy --all`.
 
 Secrets referenced with `secret("HUBSPOT_API_KEY")` resolve from the environment at
 deploy time and stay out of the content hash — only `{hash, uuid, outputs}` land in

@@ -51,15 +51,15 @@ point at a specific dataset.
 ## 3. Type the config (optional but recommended)
 
 ```bash
-cargo-ai cdk types    # now `config` on both builders type-checks against HubSpot's schema
+cargo-ai project types    # now `config` on both builders type-checks against HubSpot's schema
 ```
 
 ## 4. Deploy
 
 ```bash
 export HUBSPOT_API_KEY=...
-cargo-ai cdk plan       # shows: create connector:hubspot, create model:contacts
-cargo-ai cdk deploy
+cargo-ai project plan       # shows: create connector:hubspot, create model:contacts
+cargo-ai project deploy
 git add cargo.state.json && git commit -m "Add HubSpot connector + contacts model"
 ```
 

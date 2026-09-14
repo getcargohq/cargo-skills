@@ -179,4 +179,4 @@ billing stops — there is no pause. Threads, messages, and events already recor
 readable; the suppression list is workspace-wide and is unaffected.
 
 If the mailbox was declared with CDK's `defineMailbox`, remove it there instead and
-`cargo-ai cdk deploy`, or the next deploy will provision it again.
+`cargo-ai project deploy`, or the next deploy will provision it again.

@@ -37,8 +37,8 @@ OBFUSCATED_PROMPT_INJECTION:cargo-storage/references/examples/ingest-webhook.md
 # cargo-billing/SKILL.md — unicode-confusable false positive
 OBFUSCATED_PROMPT_INJECTION:cargo-billing/SKILL.md
 
-# cargo-cdk/SKILL.md — unicode-normalization false positive
-OBFUSCATED_PROMPT_INJECTION:cargo-cdk/SKILL.md
+# cargo-project/SKILL.md — unicode-normalization false positive
+OBFUSCATED_PROMPT_INJECTION:cargo-project/SKILL.md
 
 # cargo-diagnostics/SKILL.md — unicode-normalization false positive
 OBFUSCATED_PROMPT_INJECTION:cargo-diagnostics/SKILL.md

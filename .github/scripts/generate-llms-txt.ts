@@ -13,6 +13,7 @@
 import { readdirSync, readFileSync, writeFileSync, existsSync, statSync } from "node:fs";
 import { join, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { isRedirectSkill } from "./skill-redirects.mjs";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const outPath = join(repoRoot, "llms.txt");
@@ -53,7 +54,7 @@ function collectSkills(): Skill[] {
   const skills: Skill[] = [];
   for (const entry of readdirSync(repoRoot)) {
     const skillMd = join(repoRoot, entry, "SKILL.md");
-    if (statSync(join(repoRoot, entry), { throwIfNoEntry: false })?.isDirectory() && existsSync(skillMd)) {
+    if (statSync(join(repoRoot, entry), { throwIfNoEntry: false })?.isDirectory() && existsSync(skillMd) && !isRedirectSkill(join(repoRoot, entry))) {
       skills.push(parseFrontmatter(skillMd));
     }
   }
@@ -133,7 +134,7 @@ function render(skills: Skill[]): string {
 
   const recipes = [
     ...collectDocs("cargo-gtm", "recipes", "A step-by-step GTM playbook."),
-    ...collectDocs("cargo-cdk", "recipes", "A step-by-step workspace-as-code playbook."),
+    ...collectDocs("cargo-project", "recipes", "A step-by-step workspace-as-code playbook."),
   ];
   const recipeLines = recipes
     .map((r) => `- [${r.slug}](${repoUrl}/blob/main/${r.path}): ${r.summary}`)

@@ -1,11 +1,11 @@
 /**
- * Keeps cargo-cdk aware of the cookbooks in getcargohq/gtm-skills: the skills
+ * Keeps cargo-project aware of the cookbooks in getcargohq/gtm-skills: the skills
  * that carry a worked cookbook, the same jobs as the one-off skills there
  * as a deployed pipeline an agent adapts into a project.
  *
  * WHY THIS EXISTS
  *
- * `cargo-cdk/SKILL.md` used to tell the agent to go read a menu on GitHub,
+ * `cargo-project/SKILL.md` used to tell the agent to go read a menu on GitHub,
  * mid-task, which an agent may simply not do. When it does not, it authors from
  * scratch an outcome that was already written. The menu has to be a local file.
  *
@@ -29,7 +29,7 @@ import { fileURLToPath } from "node:url";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const snapshotPath = join(repoRoot, ".github/data/cookbooks.json");
-const referencePath = join(repoRoot, "cargo-cdk/references/cookbooks.md");
+const referencePath = join(repoRoot, "cargo-project/references/cookbooks.md");
 const REPO = "getcargohq/gtm-skills";
 const CATALOG_URL = `https://raw.githubusercontent.com/${REPO}/main/catalog.json`;
 
@@ -93,19 +93,19 @@ function render(examples: Cookbook[]): string {
   L.push("jobs as the one-off skills there, as a deployed pipeline that keeps producing the result.");
   L.push("");
   L.push("**Every folder is self-contained** (its own models, connectors and folders; no shared");
-  L.push("foundation, no requires graph). `cdk add` copies one into the project; the agent then");
+  L.push("foundation, no requires graph). `project add` copies one into the project; the agent then");
   L.push("reconciles it with what is already declared (an existing accounts model, an existing CRM");
   L.push("connector), adapts it in place, plans, deploys on a yes, and walks its `Done when`. The");
   L.push("code is a worked example, not a template to fill in — and not something to regenerate");
   L.push("from the skill's prose.");
   L.push("");
   L.push("```sh");
-  L.push("cargo-ai cdk add cookbook/<slug>              # inside a CDK project: this is the copy step");
-  L.push("cargo-ai cdk init <dir> --cookbook <slug>     # no project yet: scaffold and install together");
+  L.push("cargo-ai project add cookbook/<slug>              # inside a CDK project: this is the copy step");
+  L.push("cargo-ai project init <dir> --cookbook <slug>     # no project yet: scaffold and install together");
   L.push(`npx skills add ${REPO}/<slug>   # the procedure on its own, without the CDK resources`);
   L.push("```");
   L.push("");
-  L.push("After either `cdk` command the files are in `infra/<slug>/` and `.claude/skills/<slug>/`.");
+  L.push("After either `project` command the files are in `infra/<slug>/` and `.claude/skills/<slug>/`.");
   L.push("Start the skill at its Adapt section: its earlier steps assume you found the folder in");
   L.push("gtm-skills and still have to place it.");
   L.push("");
@@ -135,9 +135,9 @@ function render(examples: Cookbook[]): string {
   L.push("producing it wants one of these. The same words describe both, so listen for whether the");
   L.push("result is meant to keep arriving.");
   L.push("");
-  L.push("**Never `cargo-ai cdk init --force` into a directory that is not empty.** It replaces the");
+  L.push("**Never `cargo-ai project init --force` into a directory that is not empty.** It replaces the");
   L.push("project's `package.json` and reverts adapted code while `cargo.state.json` survives, so the");
-  L.push("next plan diffs a live workspace against code nobody wrote. Run `cdk add cookbook/<slug>`");
+  L.push("next plan diffs a live workspace against code nobody wrote. Run `project add cookbook/<slug>`");
   L.push("in the project that is already there; it skips every file it would otherwise overwrite.");
   L.push("");
   return L.join("\n");
@@ -159,7 +159,7 @@ if (process.argv.includes("--check")) {
     : "";
   if (current !== rendered) {
     console.error(
-      "cargo-cdk/references/cookbooks.md is stale.\n  Run: node .github/scripts/sync-cookbooks.ts",
+      "cargo-project/references/cookbooks.md is stale.\n  Run: node .github/scripts/sync-cookbooks.ts",
     );
     process.exit(1);
   }
