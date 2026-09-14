@@ -140,11 +140,11 @@ Once parity passes, the chain becomes a play ([`save-as-play.md`](save-as-play.m
 Then offer the part Clay has no answer to at all:
 
 ```bash
-cargo-ai cdk init
-cargo-ai cdk plan          # a diffed resource tree; runs with no Cargo credentials at all
+cargo-ai project init
+cargo-ai project plan          # a diffed resource tree; runs with no Cargo credentials at all
 ```
 
-A Clay table is a spreadsheet: no diff, no review, no rollback, and the person who built it is the only one who knows why a column is there. Declared in `cargo-cdk`, the same table is a file that goes through a pull request. `plan` needs no credentials, so the user can see exactly what they would deploy before committing to anything; `deploy` is the only credential-gated step in the sequence. Full flow in [`../../cargo-cdk/SKILL.md`](../../cargo-cdk/SKILL.md).
+A Clay table is a spreadsheet: no diff, no review, no rollback, and the person who built it is the only one who knows why a column is there. Declared in `cargo-project`, the same table is a file that goes through a pull request. `plan` needs no credentials, so the user can see exactly what they would deploy before committing to anything; `deploy` is the only credential-gated step in the sequence. Full flow in [`../../cargo-project/SKILL.md`](../../cargo-project/SKILL.md).
 
 Say this out loud when the parity table lands. It is the argument the cost comparison cannot make, and it is the one that does not erode when a provider changes its price.
 

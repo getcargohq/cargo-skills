@@ -11,15 +11,15 @@ For every flag, see [`../references/commands.md`](../references/commands.md).
 
 ```bash
 # Offline: compile the graph and diff against cargo.state.json. No API calls.
-cargo-ai cdk plan --dir my-workspace
+cargo-ai project plan --dir my-workspace
 
 # Create/update resources in dependency order; write cargo.state.json.
-cargo-ai cdk deploy --dir my-workspace          # prompts for confirmation
-cargo-ai cdk deploy --dir my-workspace --yes    # non-interactive (CI)
+cargo-ai project deploy --dir my-workspace          # prompts for confirmation
+cargo-ai project deploy --dir my-workspace --yes    # non-interactive (CI)
 
 # Tear down.
-cargo-ai cdk destroy --dir my-workspace --target model:contacts   # one resource
-cargo-ai cdk destroy --dir my-workspace --all                     # everything in state
+cargo-ai project destroy --dir my-workspace --target model:contacts   # one resource
+cargo-ai project destroy --dir my-workspace --all                     # everything in state
 ```
 
 Re-running `deploy` only changes what changed — an unchanged workspace is a no-op.
@@ -38,7 +38,7 @@ have no slug (unlike connectors and models, which self-heal by slug). Losing sta
 orphans those resources. If it happens, re-establish a link with `import` (below).
 
 Git-ignore the generated types and the CDK's working files (but **not**
-`cargo.state.json`). `cargo-ai cdk init` scaffolds this:
+`cargo.state.json`). `cargo-ai project init` scaffolds this:
 
 ```gitignore
 .cargo-ai/
@@ -61,7 +61,7 @@ that would make a typo destructive. To also remove resources that are in state b
 no longer in code:
 
 ```bash
-cargo-ai cdk deploy --dir my-workspace --prune
+cargo-ai project deploy --dir my-workspace --prune
 ```
 
 Prune deletes in reverse dependency order (dependents before their dependencies).
@@ -74,8 +74,8 @@ A resource can change outside the CDK (someone edits an agent in the Cargo UI).
 The CDK captures a fingerprint of each resource at deploy and compares on refresh:
 
 ```bash
-cargo-ai cdk refresh --dir my-workspace          # read-only: report what drifted
-cargo-ai cdk deploy  --dir my-workspace --refresh # re-read live, re-apply your code over drift
+cargo-ai project refresh --dir my-workspace          # read-only: report what drifted
+cargo-ai project deploy  --dir my-workspace --refresh # re-read live, re-apply your code over drift
 ```
 
 `refresh` reports resources changed or deleted out-of-band; `deploy --refresh`
@@ -87,7 +87,7 @@ To bring an already-live resource under CDK management, bind it into state by
 mapping its **code id** to its **live uuid**:
 
 ```bash
-cargo-ai cdk import model:contacts 6f0c8e2a-… --dir my-workspace
+cargo-ai project import model:contacts 6f0c8e2a-… --dir my-workspace
 ```
 
 The code id is `kind:slug` (e.g. `connector:hubspot`, `model:contacts`,
@@ -103,7 +103,7 @@ by matching slug; uuid-only kinds (play, agent, capacity, territory, segment) ne
 wrong, restore the snapshot:
 
 ```bash
-cargo-ai cdk rollback --dir my-workspace
+cargo-ai project rollback --dir my-workspace
 ```
 
 This restores the state file — it does not undo live API changes already made;

@@ -43,7 +43,7 @@ export const enrich = defineTool("enrich", {
 });
 ```
 
-> `integrations.*` is typed and callable only after `cargo-ai cdk types` (it reads
+> `integrations.*` is typed and callable only after `cargo-ai project types` (it reads
 > your workspace's integrations). `native.*` works without it. See
 > [`../guides/typed-config.md`](../guides/typed-config.md).
 
@@ -79,11 +79,11 @@ raw connector action with
 ## 4. Deploy
 
 ```bash
-cargo-ai cdk types      # so integrations.* in the workflow body typecheck
-cargo-ai cdk plan       # orders: connector → tool (+ its workflow) → model → agent
-cargo-ai cdk deploy
+cargo-ai project types      # so integrations.* in the workflow body typecheck
+cargo-ai project plan       # orders: connector → tool (+ its workflow) → model → agent
+cargo-ai project deploy
 git add cargo.state.json && git commit -m "Add SDR agent"
 ```
 
 Because `agent:sdr` has no slug, `cargo.state.json` is the **only** handle on it —
-commit it, or the next deploy can't find it (recover with `cdk import agent:sdr <uuid>`).
+commit it, or the next deploy can't find it (recover with `project import agent:sdr <uuid>`).

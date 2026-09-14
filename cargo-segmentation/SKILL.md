@@ -1,7 +1,7 @@
 ---
 name: cargo-segmentation
 description: "Define and use segments — named, saved filters over a Cargo model that become the audience for a batch run, a play trigger, or an export. Triggers: \"build a segment of\", \"filter my contacts where\", \"who matches this criteria\", \"save this as a list\", \"how many companies match\", \"the Closed-Won segment\", \"everyone who has not been emailed\", \"target only accounts that\", \"what is in this segment\", \"narrow this down to\". Filter JSON uses `conjonction` (not `conjunction`) — misspelling it fails silently. Skip when: running something over the segment — use cargo-orchestration; exporting its rows — use cargo-analytics; ad-hoc SQL over the model — use cargo-storage."
-version: "1.0.0"
+version: "1.0.1"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -167,7 +167,7 @@ Segments are an input, not an outcome. Once one exists:
 - **Export it** — [`../cargo-analytics/SKILL.md`](../cargo-analytics/SKILL.md) (`segment download` needs `--model-uuid`, *not* `--segment-uuid` — a frequent 400).
 - **Watch it** — alert when the audience empties, stalls, or spikes: [`../cargo-observability/SKILL.md`](../cargo-observability/SKILL.md).
 - **Act on it as GTM** — signal segments (job change, funding, tech intent) drive the recipes in [`../cargo-gtm/SKILL.md`](../cargo-gtm/SKILL.md).
-- **Declare it as code** — `defineSegment` in [`../cargo-cdk/SKILL.md`](../cargo-cdk/SKILL.md) when the audience should live in git.
+- **Declare it as code** — `defineSegment` in [`../cargo-project/SKILL.md`](../cargo-project/SKILL.md) when the audience should live in git.
 
 ## Gotchas
 

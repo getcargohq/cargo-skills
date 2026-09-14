@@ -24,7 +24,7 @@ const SKILL_DIRS = [
   "cargo",
   "cargo-quickstart",
   "cargo-gtm",
-  "cargo-cdk",
+  "cargo-project",
   "cargo-orchestration",
   "cargo-storage",
   "cargo-segmentation",
@@ -53,7 +53,8 @@ const REQUIRED_FRONTMATTER_FIELDS = [
 const KNOWN_CLI_DOMAINS = new Set([
   "ai",
   "billing",
-  "cdk",
+  "cdk", // alias of `project` since @cargo-ai/cli renamed the group
+  "project",
   "manifest", // shipped in @cargo-ai/cli 1.0.57: `manifest init`
   "doctor",
   "mcp",

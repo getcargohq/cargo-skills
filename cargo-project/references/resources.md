@@ -57,7 +57,7 @@ export const leads = defineModel("leads", {
 
 - **`defineConnector` `config`** is a per-integration shape — a discriminated union
   for auth (e.g. HubSpot `method: "privateApp" | "oauth"`). `secret()` is accepted
-  only on credential/encryption fields. Run `cargo-ai cdk types` to type it (see
+  only on credential/encryption fields. Run `cargo-ai project types` to type it (see
   [`../guides/typed-config.md`](../guides/typed-config.md)).
 - **`adopt: true`** on `defineConnector` links an existing authenticated connector
   by slug instead of creating one — for OAuth/key connectors you can't declare.
@@ -85,7 +85,7 @@ export const leads = defineModel("leads", {
   error, not a silent `{}`). Prefer the typed helpers `alertConnectorAction({ ref:
   slack.actions.postMessage, config })` / `alertToolAction({ ref: enrich, config })` —
   `config` is checked against the action/tool input schema (connector schemas need
-  `cargo-ai cdk types` to have run) — or a bare `{ ref: agent, config, release?,
+  `cargo-ai project types` to have run) — or a bare `{ ref: agent, config, release?,
   waitUntilFinished? }`. Every `config` leaf accepts a `{{ … }}` template
   (`{{event.value}}`, `{{alert.name}}`, `{{alert.url}}`, …) interpolated against the
   firing context. Like a play, an alert has **no author-set wire slug** — its identity

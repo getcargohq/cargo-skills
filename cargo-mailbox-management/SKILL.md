@@ -1,7 +1,7 @@
 ---
 name: cargo-mailbox-management
-description: "Send mail from inboxes Cargo owns — provision mailboxes on a sending domain, run provider warm-up and the 5→40/day send ramp, deliver with the `sendEmail` action, and read back threads, replies, delivery events, and the workspace suppression list. Triggers: \"set up a sending mailbox\", \"provision inboxes for outbound\", \"warm up this mailbox\", \"how many sends do I have left today\", \"send this from Cargo\", \"did they reply\", \"who unsubscribed\", \"suppress this recipient\", \"take me off your list\", \"never email them again\", \"what do mailboxes cost\", \"my mailbox is stuck pending\". A mailbox is a recurring monthly credit charge, and every send is gated on basis, suppression, and relevance. Skip when: writing the copy or building the audience — use cargo-gtm; the mailbox belongs in git — use cargo-cdk."
-version: "1.0.2"
+description: "Send mail from inboxes Cargo owns — provision mailboxes on a sending domain, run provider warm-up and the 5→40/day send ramp, deliver with the `sendEmail` action, and read back threads, replies, delivery events, and the workspace suppression list. Triggers: \"set up a sending mailbox\", \"provision inboxes for outbound\", \"warm up this mailbox\", \"how many sends do I have left today\", \"send this from Cargo\", \"did they reply\", \"who unsubscribed\", \"suppress this recipient\", \"take me off your list\", \"never email them again\", \"what do mailboxes cost\", \"my mailbox is stuck pending\". A mailbox is a recurring monthly credit charge, and every send is gated on basis, suppression, and relevance. Skip when: writing the copy or building the audience — use cargo-gtm; the mailbox belongs in git — use cargo-project."
+version: "1.0.3"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -304,7 +304,7 @@ For the inbox itself, **prefer CDK** — the `mailbox create` help says so, and 
 a mailbox is long-lived infrastructure with a monthly cost, which is exactly what belongs in
 git and in a plan you can review. `defineMailbox` (with `defineDomain` for the sending domain)
 covers it; `adopt: true` binds a mailbox bought in the web app instead of provisioning a second
-one. See [`../cargo-cdk/SKILL.md`](../cargo-cdk/SKILL.md) and "Declarative vs imperative" in
+one. See [`../cargo-project/SKILL.md`](../cargo-project/SKILL.md) and "Declarative vs imperative" in
 [`../cargo/SKILL.md`](../cargo/SKILL.md).
 
 Use this skill's imperative commands for one-off provisioning, and for everything CDK does not

@@ -10,7 +10,7 @@ expects an encryption envelope, and `secret("ENV_VAR")` produces it. Fix:
 config: { method: "privateApp", accessToken: secret("HUBSPOT_API_KEY") }, // not a bare string
 ```
 
-Run `cargo-ai cdk types` so the config type-checks against the real schema at
+Run `cargo-ai project types` so the config type-checks against the real schema at
 author time and surfaces the required shape (see
 [`../guides/typed-config.md`](../guides/typed-config.md)). The deploy error now also
 surfaces the API's structured detail (which field, the reason) — read past the
@@ -23,7 +23,7 @@ The CDK refuses to send a literal `${NAME}` to the API. Export it first:
 
 ```bash
 export NAME=...
-cargo-ai cdk deploy
+cargo-ai project deploy
 ```
 
 ## Deploy refuses: workspace mismatch
@@ -40,10 +40,10 @@ Run `cdk` commands from the project root, or pass `--dir <project-root>` explici
 
 ## `integrations.<slug>` is `any` / not callable, or `config` isn't type-checked
 
-Types aren't generated or aren't wired in. Run `cargo-ai cdk types`, ensure
+Types aren't generated or aren't wired in. Run `cargo-ai project types`, ensure
 `tsconfig.json` `include` has the explicit glob `".cargo-ai/**/*.d.ts"` (a bare
 `.cargo-ai` dot-dir is ignored by TypeScript), and `import "./.cargo-ai/cargo-register.js";`
-at the top of workflow modules that use `integrations.*`. Re-run `cdk types` after
+at the top of workflow modules that use `integrations.*`. Re-run `project types` after
 changing workspace integrations.
 
 ## `could not parse the workflow body`
@@ -65,14 +65,14 @@ Ensure the worker bundle dir has a built `index.js` (+ `manifest.json`,
 
 Plays and agents have no slug, so `cargo.state.json` is the only link to them.
 **Commit the state file.** If it's lost, find the live uuid via the matching
-capability skill and rebind: `cargo-ai cdk import agent:<slug> <uuid>`. Never
+capability skill and rebind: `cargo-ai project import agent:<slug> <uuid>`. Never
 delete `cargo.state.json` to "start clean" — you'll orphan every play/agent it
 tracked.
 
 ## `plan` shows `create` for a resource that already exists
 
 Its `kind:slug` id didn't match state. Either the slug in the `define*` changed, or
-you migrated a workspace without importing — bind it: `cargo-ai cdk import <kind:slug> <uuid>`
+you migrated a workspace without importing — bind it: `cargo-ai project import <kind:slug> <uuid>`
 (see [`../recipes/migrate-existing-workspace.md`](../recipes/migrate-existing-workspace.md)).
 
 ## Still stuck

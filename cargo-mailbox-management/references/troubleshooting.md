@@ -11,8 +11,8 @@ UUID, and `domainManagement` has an API but **no `cargo-ai` commands**. Two ways
 
 - **Web app** — open the sending domain in Cargo and take the UUID from the URL.
 - **CDK** — declare it with `defineDomain` (`adopt: true` for a domain already bought in the
-  app), `cargo-ai cdk deploy`, and read the UUID back from `cargo.state.json`. See
-  [`../../cargo-cdk/SKILL.md`](../../cargo-cdk/SKILL.md).
+  app), `cargo-ai project deploy`, and read the UUID back from `cargo.state.json`. See
+  [`../../cargo-project/SKILL.md`](../../cargo-project/SKILL.md).
 
 Say this to the user rather than guessing a UUID, and file it:
 

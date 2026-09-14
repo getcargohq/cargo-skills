@@ -239,7 +239,7 @@ defineWorkflow(
 - **`uses.<key>(input)`** calls a referenced tool/agent; it's typed to that
   resource's input and returns a `Ref` you can dot-access (`enriched.company`).
 - **`integrations.<slug>.<action>({…})`** calls a connector action. The
-  `integrations` registry is **empty until you run `cargo-ai cdk types`** (see
+  `integrations` registry is **empty until you run `cargo-ai project types`** (see
   [`typed-config.md`](typed-config.md)); `native.*` works without a sync.
 - Control flow lowers idiomatically: `if/else` → branch, `else if` → switch,
   `for (const x of xs)` → group. `ai("…")` inline-completes; `js(({nodes}) => …)`

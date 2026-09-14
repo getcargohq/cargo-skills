@@ -64,7 +64,7 @@
       "description": "Hosted apps and edge workers, sending mailboxes, workspace-as-code, members, tokens, and folders.",
       "skills": [
         "cargo-hosting",
-        "cargo-cdk",
+        "cargo-project",
         "cargo-mailbox-management",
         "cargo-workspace-management"
       ]

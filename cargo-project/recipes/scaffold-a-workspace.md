@@ -6,15 +6,15 @@ reproducibly. Follow these steps as your execution plan.
 ## 1. Scaffold
 
 ```bash
-cargo-ai cdk init my-workspace                              # the repo, empty
-cargo-ai cdk init my-workspace --cookbook tam-building      # the repo plus a worked example
+cargo-ai project init my-workspace                              # the repo, empty
+cargo-ai project init my-workspace --cookbook tam-building      # the repo plus a worked example
 ```
 
 The scaffold itself never varies — it is one GTM repo from
 `getcargohq/cargo-manifest`, with the CDK project in `infra/`. What varies is
 whether a cookbook is layered on top, so reach for `--cookbook <slug>` when the
 user wants a working pipeline to adapt rather than an empty project.
-`cargo-ai cdk cookbook list` names them; see
+`cargo-ai project cookbook list` names them; see
 [`references/cookbooks.md`](../references/cookbooks.md).
 
 ## 2. Install and authenticate
@@ -28,7 +28,7 @@ cargo-ai whoami                        # confirm the selected workspace
 ## 3. (Optional) Generate typed config
 
 ```bash
-cargo-ai cdk types                     # types config against this workspace's integrations
+cargo-ai project types                     # types config against this workspace's integrations
 ```
 
 Not required to deploy, but it makes `defineConnector`/`defineModel` config and
@@ -49,8 +49,8 @@ A missing env var fails the deploy with an unresolved `${NAME}` placeholder.
 ## 5. Plan, then deploy
 
 ```bash
-cargo-ai cdk plan                      # offline diff — review what will be created
-cargo-ai cdk deploy                    # create everything, write cargo.state.json
+cargo-ai project plan                      # offline diff — review what will be created
+cargo-ai project deploy                    # create everything, write cargo.state.json
 ```
 
 `deploy` prompts for confirmation. Review the plan output first; it lists each
@@ -64,15 +64,15 @@ git add cargo.state.json && git commit -m "Deploy initial workspace"
 
 `cargo.state.json` is the link from code to the deployed resources — and the only
 handle on deployed plays/agents. Commit it. The `.gitignore` scaffolded by
-`cdk init` already excludes `.cargo-ai/`, the lock, backup, and audit files.
+`project init` already excludes `.cargo-ai/`, the lock, backup, and audit files.
 
 ## 7. Iterate
 
-Edit `define*` files, then `cargo-ai cdk plan` → `cargo-ai cdk deploy` again — only
+Edit `define*` files, then `cargo-ai project plan` → `cargo-ai project deploy` again — only
 what changed is applied. To tear the workspace back down:
 
 ```bash
-cargo-ai cdk destroy --all
+cargo-ai project destroy --all
 ```
 
 See [`../guides/authoring-resources.md`](../guides/authoring-resources.md) to add

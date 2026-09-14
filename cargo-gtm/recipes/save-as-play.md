@@ -113,7 +113,7 @@ Play mechanics (batch data kinds, `playNotCompatible`, monitoring): [`../../carg
 
 ## Managing the workspace as code?
 
-If the workspace is CDK-managed (`cargo-ai cdk` — resources defined in TypeScript and deployed via plan/deploy), don't create the play imperatively: add it as a `definePlay`/`defineTool` in the CDK project instead, so it's versioned with the rest of the infra. An imperatively-created play in a CDK workspace is drift.
+If the workspace is CDK-managed (`cargo-ai project` — resources defined in TypeScript and deployed via plan/deploy), don't create the play imperatively: add it as a `definePlay`/`defineTool` in the CDK project instead, so it's versioned with the rest of the infra. An imperatively-created play in a CDK workspace is drift.
 
 ## Close the loop
 

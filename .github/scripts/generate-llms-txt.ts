@@ -133,7 +133,7 @@ function render(skills: Skill[]): string {
 
   const recipes = [
     ...collectDocs("cargo-gtm", "recipes", "A step-by-step GTM playbook."),
-    ...collectDocs("cargo-cdk", "recipes", "A step-by-step workspace-as-code playbook."),
+    ...collectDocs("cargo-project", "recipes", "A step-by-step workspace-as-code playbook."),
   ];
   const recipeLines = recipes
     .map((r) => `- [${r.slug}](${repoUrl}/blob/main/${r.path}): ${r.summary}`)
