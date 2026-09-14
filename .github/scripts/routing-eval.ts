@@ -42,6 +42,7 @@
 import { readdirSync, readFileSync, existsSync, statSync, appendFileSync } from "node:fs";
 import { join, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { isRedirectSkill } from "./skill-redirects.mjs";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const verbose = process.argv.includes("--verbose");
@@ -121,6 +122,8 @@ function loadSkills(): Skill[] {
     const skillMd = join(skillsRoot, entry, "SKILL.md");
     if (!statSync(join(skillsRoot, entry), { throwIfNoEntry: false })?.isDirectory()) continue;
     if (!existsSync(skillMd)) continue;
+    // A redirect stub left at a renamed skill's old name is not a routing target.
+    if (isRedirectSkill(join(skillsRoot, entry))) continue;
     const lines = readFileSync(skillMd, "utf8").split("\n");
     let name = "";
     let description = "";

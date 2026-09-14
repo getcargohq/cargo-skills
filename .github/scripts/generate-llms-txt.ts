@@ -13,6 +13,7 @@
 import { readdirSync, readFileSync, writeFileSync, existsSync, statSync } from "node:fs";
 import { join, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { isRedirectSkill } from "./skill-redirects.mjs";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const outPath = join(repoRoot, "llms.txt");
@@ -53,7 +54,7 @@ function collectSkills(): Skill[] {
   const skills: Skill[] = [];
   for (const entry of readdirSync(repoRoot)) {
     const skillMd = join(repoRoot, entry, "SKILL.md");
-    if (statSync(join(repoRoot, entry), { throwIfNoEntry: false })?.isDirectory() && existsSync(skillMd)) {
+    if (statSync(join(repoRoot, entry), { throwIfNoEntry: false })?.isDirectory() && existsSync(skillMd) && !isRedirectSkill(join(repoRoot, entry))) {
       skills.push(parseFrontmatter(skillMd));
     }
   }

@@ -58,6 +58,7 @@ import {
 } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { writeAllMetadata } from "./skills-metadata.mjs";
+import { isRedirectSkill } from "./skill-redirects.mjs";
 import { fileURLToPath } from "node:url";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
@@ -602,11 +603,14 @@ if (typeof version !== "string" || /^\d+\.\d+\.\d+$/.test(version) === false) {
 }
 
 // A skill is any top-level directory holding a SKILL.md — the same rule
-// skills-lint and skills-metadata use, so the three can never disagree.
+// skills-lint and skills-metadata use, so the three can never disagree. A
+// redirect stub at a renamed skill's old name is not one: a fresh package has
+// no stale copy for it to overwrite.
 const repoSkillDirs = readdirSync(repoRoot, { withFileTypes: true })
   .filter((e) => e.isDirectory())
   .map((e) => e.name)
   .filter((name) => existsSync(join(repoRoot, name, "SKILL.md")))
+  .filter((name) => !isRedirectSkill(join(repoRoot, name)))
   .sort();
 
 if (repoSkillDirs.length === 0) {

@@ -15,7 +15,7 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 `@cargo-ai/cli` renamed `cargo-ai cdk` to `cargo-ai project` and kept `cdk` as an alias. The skill follows: `cargo-cdk/` is now [`cargo-project/`](cargo-project/SKILL.md), and every command example says `cargo-ai project …`. Unchanged on purpose: the `@cargo-ai/cdk` package and its imports, `npx @cargo-ai/cdk`, `cargo.state.json`, and the `define*` builders.
 
 - **Needs the CLI release that ships the `project` group.** An older CLI answers `unknown command`; `cargo/cli-version` moves with it.
-- **No redirect is left at the old name.** Anything that loads `cargo-cdk` by name finds nothing, including the CLI's agent handoff until it asks for `cargo-project`.
+- **`cargo-cdk` → 2.0.0 is a redirect to `cargo-project`.** `npx skills add` never deletes an installed skill that disappeared upstream, so a plain rename would have left every existing install with a frozen `cargo-cdk` routing next to `cargo-project`. The next refresh overwrites that copy with a pointer, and a CLI that still hands off to `cargo-cdk` lands on it. It is marked with `metadata.redirect` ([`skill-redirects.mjs`](.github/scripts/skill-redirects.mjs)), so the skill count, routing evals, `llms.txt` and the Codex package skip it.
 - **The approval hook gates `project deploy` and `project destroy`** alongside the `cdk` forms. Without the new pairs, the renamed deploy would have been auto-approved.
 - Patch bumps for the links and command examples that pointed at the old skill: `cargo` → 1.25.1, `cargo-gtm` → 2.1.1, `cargo-hosting` → 1.0.2, `cargo-mailbox-management` → 1.0.3, `cargo-mcp` → 1.0.3, `cargo-observability` → 1.0.3, `cargo-orchestration` → 1.11.3, `cargo-segmentation` → 1.0.1.
 
