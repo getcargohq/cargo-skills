@@ -105,7 +105,14 @@ function render(examples: Cookbook[]): string {
   L.push(`npx skills add ${REPO}/<slug>   # the procedure on its own, without the CDK resources`);
   L.push("```");
   L.push("");
-  L.push("After either `project` command the files are in `infra/<slug>/` and `.claude/skills/<slug>/`.");
+  L.push("After either `project` command the files are in `infra/<slug>/`, helper scripts (if the");
+  L.push("cookbook ships any) in `scripts/<slug>/`, and the procedure in both `.claude/skills/<slug>/`");
+  L.push("and `.agents/skills/<slug>/` — written twice because Claude Code discovers project skills");
+  L.push("only under `.claude/skills/`, while Cursor, Codex and Gemini read `.agents/skills/`. They are");
+  L.push("copies, not symlinks, so **if you edit a cookbook's procedure, edit both.** The `infra/` and");
+  L.push("`scripts/` halves are written once: resources are loaded by path, and a second copy would");
+  L.push("register everything twice. Scripts live outside `infra/` so the resource loader never");
+  L.push("imports them.");
   L.push("Start the skill at its Adapt section: its earlier steps assume you found the folder in");
   L.push("gtm-skills and still have to place it.");
   L.push("");

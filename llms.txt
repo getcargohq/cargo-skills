@@ -69,7 +69,7 @@ Step-by-step playbooks for a specific job. An agent loads the parent skill, then
 - [build-an-agent](https://github.com/getcargohq/cargo-skills/blob/main/cargo-project/recipes/build-an-agent.md): Use when the user wants an AI agent with a data model, a tool, and an LLM
 - [deploy-from-ci](https://github.com/getcargohq/cargo-skills/blob/main/cargo-project/recipes/deploy-from-ci.md): Use when the user wants cargo-ai project deploy to run non-interactively — on
 - [migrate-existing-workspace](https://github.com/getcargohq/cargo-skills/blob/main/cargo-project/recipes/migrate-existing-workspace.md): Use when a workspace already has live resources (built in the UI or the
-- [scaffold-a-workspace](https://github.com/getcargohq/cargo-skills/blob/main/cargo-project/recipes/scaffold-a-workspace.md): Use when the user wants to stand up a new Cargo workspace as code,
+- [scaffold-a-project](https://github.com/getcargohq/cargo-skills/blob/main/cargo-project/recipes/scaffold-a-project.md): Use when the user wants to stand up a new Cargo project — the repo that
 
 ## Provider playbooks
 

@@ -19,8 +19,8 @@ per-call options).
 | `defineModel(slug, spec)` | Table sourced from a connector's dataset | `dataset`, `extractSlug`, `config`, `schedule?`, `folder?` | `dataset` (connector/dataset), `folder` | `uuid` |
 | `defineTool(slug, spec)` | Tool backed by a workflow | `workflow`, `description?`, `emojiSlug?`, `triggers?`, `folder?` | `folder` | `uuid` |
 | `definePlay(slug, spec)` | Per-row automation over a model | `model`, `workflow`, `changeKinds`, `runCreationRule`, `schedule`, `folder?` | `model`, `folder` | `uuid` |
-| `defineAgent(slug, spec)` | AI agent | `connector`, `languageModel`, `systemPrompt`, `models?`, `tools?`, `subAgents?`, `connectorActions?`, `capabilities?`, `maxSteps?`, `triggers?`, `evaluator?`, `color?`, `folder?` | `connector`, `models`, `tools`, `subAgents`, `folder` | `uuid` |
-| `defineMcpServer(slug, spec)` | MCP endpoint bundling resources | `description?`, `tools?`, `agents?`, `models?`, `folder?` | `tools`, `agents`, `models`, `folder` | `uuid` |
+| `defineAgent(slug, spec)` | AI agent | `connector`, `languageModel`, `systemPrompt`, `models?`, `tools?`, `subAgents?`, `connectorActions?`, `capabilities?`, `maxSteps?`, `triggers?`, `evaluator?`, `color?`, `folder?`, `harness?`, `repository?` | `connector`, `models`, `tools`, `subAgents`, `folder` | `uuid` |
+| `defineMcpServer(slug, spec)` | MCP endpoint bundling resources | `name?`, `description?`, `uses?` (tools, agents, models, connector + native actions in one array), `capabilities?`, `folder?` | everything in `uses`; `folder` | `uuid` |
 | `defineFolder(slug, spec)` | Per-kind folder | `kind`, `name`, `parent?` | `parent` | `uuid` |
 | `defineFile(slug, spec)` | Content file from a local path | `path`, `name`, `folder?` | `folder` | `uuid` |
 | `defineContext(spec)` | Workspace context repo (singleton) | `dir?`, `files?` | — | `uuid` |
@@ -36,6 +36,34 @@ per-call options).
 `defineWorkflow(slug, { input, output, uses? }, build)` is re-exported from
 `@cargo-ai/cdk` for `defineTool`/`definePlay` bodies — see
 [`../guides/authoring-resources.md`](../guides/authoring-resources.md).
+
+## Capabilities
+
+`capabilities` on `defineAgent` **and** on `defineMcpServer` (the latter since
+`@cargo-ai/cdk` 1.0.70) takes either a bare slug or a `{ slug, config }` object —
+`capabilities: ["webSearch"]` and `capabilities: [{ slug: "webSearch", config: {} }]`
+are the same thing. The nine slugs:
+
+`sandbox` · `memory` · `context` · `app` · `document` · `webSearch` · `model` ·
+`file` · `documentationSearch`
+
+On the CLI the same field is a JSON array:
+`cargo-ai ai mcp-server create --capabilities '[{"slug":"webSearch","config":{}}]'`.
+
+## Coding-agent agents (`harness`)
+
+An agent with a `harness` is a **coding** agent: it clones a git repository into a
+sandbox and works in it. `harness` takes `claudeCode`, `codex`, `openCode` or
+`deepAgents`. (`harnessSlug` is the deprecated spelling; both normalize to the same
+spec field, so renaming it is not a diff.)
+
+**Omit `repository` to bind the project's own repo.** `plan`/`deploy` read the git
+origin of the checkout they run in and fill `repository`, `defaultBranch` and
+`rootDirectory`, taking `connector` from the project's GitHub `defineConnector`.
+Declared fields always win, so a partial object is completed the same way — and the
+resolved values are what the plan prints and what the content hash covers. With no
+`repository` at all and no harness binding, a harness turn provisions an empty
+sandbox scoped to the chat.
 
 ## Ref helpers
 

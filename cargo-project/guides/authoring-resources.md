@@ -154,7 +154,7 @@ export const playbook = defineFile("playbook", {
   name: "SDR Playbook",
 });
 
-// Context — the workspace's git-backed GTM knowledge base as code. Singleton;
+// Context — the workspace's git-backed GTM knowledge base, declared here. Singleton;
 // additive (files added in the UI are left in place).
 export const context = defineContext({ dir: "context" });
 ```

@@ -1,7 +1,7 @@
 ---
 name: cargo-analytics
 description: "Get data out of Cargo and measure what ran — download a run output, export a segment or model to CSV or JSON, and pull run and batch success and error counts. Triggers: \"download the results\", \"export this to CSV\", \"give me the file\", \"how many succeeded\", \"what is my error rate\", \"send me the enriched list\", \"get the output of that run\", \"how many records did it write\". Skip when: asking why something failed or where credits went — use cargo-diagnostics; asking about credits, plans, or invoices — use cargo-billing."
-version: "1.5.0"
+version: "1.6.0"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -188,6 +188,8 @@ cargo-ai orchestration run download-outputs \
 ```
 
 To find the `output-node-slug`: `cargo-ai orchestration release get <release-uuid>` → look at `nodes[].slug`. The terminal output node is typically named `output` or `end`. Without `--limit`, the file covers **every** matching run of the workflow, so pass one when you only need a sample.
+
+**Per record instead of per run:** `cargo-ai orchestration record download-outputs` takes the same `--workflow-uuid` / `--output-node-slug` and emits one row per **record**. It pages with `--limit` and `--offset` (CLI ≥ 1.0.90) — the way to export a set too large for a single file is to walk it in fixed slices (`--limit 1000 --offset 0`, then `--offset 1000`, …) rather than requesting everything at once. `run download-outputs` pages the same way, over runs.
 
 ### Getting the full `runContext` for several runs
 

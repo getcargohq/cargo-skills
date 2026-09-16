@@ -51,18 +51,21 @@ cargo-ai workspaceManagement session upsert \
 
 ## Automate with Claude Code hooks (recommended)
 
-Don't hand-roll the hooks — the Cargo installer scaffolds them for you. Run it once and answer **y** at the session-hooks prompt:
+Don't hand-roll the hooks — install the **Cargo plugin** and it ships them:
 
-```bash
-curl -fsSL https://api.getcargo.io/install.sh | sh
+```
+/plugin marketplace add getcargohq/cargo-skills
+/plugin install cargo@cargo
 ```
 
-It writes three hooks under `~/.claude/` and merges the matching entries into `~/.claude/settings.json`:
+The plugin's bundled hooks do the whole job, with nothing written into `~/.claude` on your behalf:
 
-- **`SessionStart`** refreshes `@cargo-ai/cli` + the skills bundle and creates the session row with placeholders (`"Session in progress."`).
+- **`SessionStart`** converges `@cargo-ai/cli` to the bundle's pinned version, refreshes the plugin itself for the next session, and creates the session row with placeholders (`"Session in progress."`). It does **not** run `skills add` — the plugin owns the skills.
 - **`Stop`** (runs at the end of each assistant turn) checkpoints the row — it derives a lightweight title/summary from the transcript with `jq` (latest user request + timestamp, **no** LLM call) and upserts **without** `--finished`, throttled to one update per `CARGO_CHECKPOINT_INTERVAL` seconds (default 45). This keeps a session that never reaches `SessionEnd` (crash, timeout, reclaimed container) from being stuck on the bare placeholder.
 - **`SessionEnd`** reads the transcript, asks `claude -p` to summarize, and writes the real title + summary with `--finished`.
 
-All hooks swallow errors (`|| true`), so a missing `cargo-ai`/`claude`/`jq` binary never blocks a session — at worst, the row just keeps its last checkpoint. The `SessionEnd` hook logs each step to `$CARGO_SESSION_LOG` (default `~/.claude/cargo-session.log`), so a row stuck on `"Session ended."` can be diagnosed there. Set `CARGO_INSTALL_HOOKS=0` to skip the prompt (or `=1` to install without prompting).
+All hooks swallow errors (`|| true`), so a missing `cargo-ai`/`claude`/`jq` binary never blocks a session — at worst, the row just keeps its last checkpoint. The `SessionEnd` hook logs each step to `$CARGO_SESSION_LOG` (default `~/.claude/cargo-session.log`), so a row stuck on `"Session ended."` can be diagnosed there.
 
-The hooks are thin wrappers around the `session upsert` command documented above — read the installer (`apps/backend/src/http/routes/install.sh` in `getcargohq/cargo`) if you want to see or customize the exact scripts.
+The hooks are thin wrappers around the `session upsert` command documented above; the scripts live in [`hooks/`](../../../hooks/) in this repo if you want to read or customize them.
+
+> **The `curl … install.sh | sh` installer that used to scaffold these is retired.** It installs nothing now — it prints a notice and exits non-zero. Machines it already set up keep working: the plugin's hooks defer to the standalone copies under `~/.claude/hooks/` when those exist, so a session is never logged twice. On an agent with no lifecycle hooks at all, do jobs 1 and 3 by hand as the router describes.
