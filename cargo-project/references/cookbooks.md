@@ -18,13 +18,14 @@ cargo-ai project init <dir> --cookbook <slug>     # no project yet: scaffold and
 npx skills add getcargohq/gtm-skills/<slug>   # the procedure on its own, without the CDK resources
 ```
 
-After either `project` command the files are in `infra/<slug>/`, helper scripts (if the cookbook
-ships any) in `scripts/<slug>/`, and the procedure in both `.claude/skills/<slug>/` and
-`.agents/skills/<slug>/` — written twice because Claude Code discovers project skills only under
-`.claude/skills/`, while Cursor, Codex and Gemini read `.agents/skills/`. They are copies, not
-symlinks, so **if you edit a cookbook's procedure, edit both.** The `infra/` and `scripts/` halves
-are written once: resources are loaded by path, and a second copy would register everything twice.
-Scripts live outside `infra/` so the resource loader never imports them.
+After either `project` command the files are in `infra/<slug>/`, helper scripts (if the
+cookbook ships any) in `scripts/<slug>/`, and the procedure in both `.claude/skills/<slug>/`
+and `.agents/skills/<slug>/` — written twice because Claude Code discovers project skills
+only under `.claude/skills/`, while Cursor, Codex and Gemini read `.agents/skills/`. They are
+copies, not symlinks, so **if you edit a cookbook's procedure, edit both.** The `infra/` and
+`scripts/` halves are written once: resources are loaded by path, and a second copy would
+register everything twice. Scripts live outside `infra/` so the resource loader never
+imports them.
 Start the skill at its Adapt section: its earlier steps assume you found the folder in
 gtm-skills and still have to place it.
 
