@@ -252,3 +252,36 @@ For the full workflow-authoring surface (per-call retry/fallback, the supported-
 table, toolchain requirements), that lives in the `@cargo-ai/workflow-sdk` docs —
 `defineWorkflow` is re-exported from `@cargo-ai/cdk`, so you import it from the one
 package.
+
+## Asserting the graph without deploying (`resetRegistry` / `resources`)
+
+`define*` calls register into a module-level registry. `@cargo-ai/cdk` exports the
+two functions that read it, so a resource graph can be asserted in plain Node
+with no workspace, no credentials, and no `plan`:
+
+```ts
+import assert from "node:assert/strict";
+import { resetRegistry, resources } from "@cargo-ai/cdk";
+
+resetRegistry();
+await import(`../infra/index.ts?contract=${Date.now()}`); // cache-bust for re-runs
+
+const all = resources(); // [{ id, kind, slug, spec }, …]
+const mailboxes = all.filter((r) => r.kind === "mailbox");
+assert.ok(mailboxes.every((m) => m.spec.signature), "every sender needs a signature");
+```
+
+Two things this is the right tool for:
+
+- **Invariants a type cannot express.** "No domain declares `dnsRecords`", "the
+  mailbox count equals domains times senders", "every sender resolves to a real
+  person". Run it in CI and the rule holds across every later edit.
+- **Proving a refactor changed nothing.** Dump `resources()` before and after,
+  diff the JSON, and a deprecation rename or an extracted helper is either
+  byte-identical or it is not. `plan` answers the same question but needs a live
+  workspace and shows you a diff against deployed state rather than against the
+  previous code.
+
+`resetRegistry()` before each load, or a second import stacks onto the first and
+every count is wrong. The query-string cache-bust matters whenever one process
+loads the same file twice.

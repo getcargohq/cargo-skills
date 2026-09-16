@@ -10,6 +10,16 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### `cargo-mailbox-management` → 1.1.0, `cargo-project` → 2.1.0 — the domain half of a sending fleet
+
+The pack documented mailboxes thoroughly and sending domains barely. `domainManagement` has no CLI surface, so the gap was invisible: nothing said how to price a domain, how many mailboxes to put on one, or what `defineDomain` can configure without replacing a zone.
+
+- **New [`cargo-mailbox-management/references/sending-domains.md`](cargo-mailbox-management/references/sending-domains.md).** The `GET /v1/domainManagement/domains/search` availability and pricing call (undocumented until now, and `priceCredits: null` means not purchasable, not free); sizing domains by blast radius rather than capacity, since a flagged domain takes every mailbox on it; never sending from the primary domain; forwarding the apex so a lookalike is not a parked page; the `none` → `quarantine` → `reject` DMARC progression and why enforcing early blackholes your own mail invisibly; naming rules; and the two cost shapes, one-time-plus-renewal against recurring-monthly.
+- **`defineDomain`'s spec was incomplete.** [`cargo-project/references/resources.md`](cargo-project/references/resources.md) listed only `adopt?` and `dnsRecords?`, so the only documented way to configure a zone was the one that replaces it. `redirectUrl`, `dmarcEmail` and `dmarcPolicy` are additive, shipped in `@cargo-ai/cdk` 1.0.77, and are now in the table and in the `defineDomain` note in [`cargo-project/SKILL.md`](cargo-project/SKILL.md).
+- **New section in [`cargo-project/guides/authoring-resources.md`](cargo-project/guides/authoring-resources.md): asserting the graph without deploying.** `resetRegistry()` and `resources()` are exported and were documented nowhere. They are how you assert an invariant a type cannot express, and how you prove a refactor changed nothing by diffing the resolved specs.
+
+Deliberately not added: the 5→40/day ramp, the `warmupStatus` machine, and `dailySendLimit` clamping already live in [`warmup-and-allowance.md`](cargo-mailbox-management/references/warmup-and-allowance.md) in more detail than the source material had.
+
 ### `cargo-project` → 2.0.0 (was `cargo-cdk`) — the `cdk` command group is now `project`
 
 `@cargo-ai/cli` renamed `cargo-ai cdk` to `cargo-ai project` and kept `cdk` as an alias. The skill follows: `cargo-cdk/` is now [`cargo-project/`](cargo-project/SKILL.md), and every command example says `cargo-ai project …`. Unchanged on purpose: the `@cargo-ai/cdk` package and its imports, `npx @cargo-ai/cdk`, `cargo.state.json`, and the `define*` builders.
