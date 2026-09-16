@@ -1,7 +1,7 @@
 # Recipe: build an agent (model + tool + agent)
 
 **Use when** the user wants an AI agent with a data model, a tool, and an LLM
-connector — all as code. Everything wires by handle, so the CDK deploys in
+connector — all declared in the project. Everything wires by handle, so the CDK deploys in
 dependency order.
 
 ## 1. The LLM connector

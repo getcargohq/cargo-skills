@@ -21,7 +21,7 @@ playbook (file)   webhook (worker)   dashboard (app)   context (repo)
 ## Project layout
 
 ```
-my-workspace/
+acme-gtm/
   package.json            # depends on @cargo-ai/cdk + zod
   tsconfig.json           # include: ["**/*.ts", ".cargo-ai/**/*.d.ts"]
   .gitignore              # .cargo-ai/, cargo.state.lock, cargo.state.bak.json, cargo.state.audit.jsonl
@@ -78,7 +78,7 @@ export const sdr = defineAgent("sdr", {
 ## Deploy walkthrough
 
 ```bash
-cd my-workspace && npm install
+cd acme-gtm && npm install
 
 cargo-ai login                 # authenticate + select the workspace
 cargo-ai project types             # type defineConnector/defineModel config against this workspace

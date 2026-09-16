@@ -18,7 +18,7 @@ metadata:
     homepage: https://github.com/getcargohq/cargo-skills
 ---
 
-# Cargo project — declarative workspace-as-code
+# Cargo project — a Cargo workspace, declared in a repo
 
 Use this skill to define a Cargo workspace in TypeScript (`define*` builders from
 `@cargo-ai/cdk`) and reconcile it to live infrastructure with `cargo-ai project deploy`.
@@ -26,6 +26,17 @@ It is the **declarative** counterpart to the imperative capability skills: inste
 of running one CLI command per resource, you write the whole graph once and deploy
 it repeatably, with a **deploy state** — held in your workspace, pointed at by a
 committed `cargo.state.json` — linking your code to what Cargo created.
+
+> **"Project" and "workspace" are two different things — keep them apart.** A
+> **workspace** is the Cargo tenant you sign into: it holds the models, connectors,
+> agents, mailboxes and credits, and it is what `login --workspace-name` selects and
+> what `whoami` reports. A **project** is the *repo* that declares resources and
+> deploys them into a workspace: it is what `project init` scaffolds, what
+> `cargo.state.json` points from, and what `--dir` locates. One project deploys into
+> one workspace at a time — the workspace guard refuses a deploy when the state's
+> workspace isn't the selected one — and the same project reaches a dev and a prod
+> workspace through a different deploy state each. Say "project" for the repo, and
+> don't name a project directory `my-workspace`.
 
 ## Bootstrap
 
@@ -207,10 +218,10 @@ acceptance test, and always review `cargo-ai project plan` before deploying.
 
 | Recipe | Use when… |
 |---|---|
-| [`recipes/scaffold-a-workspace.md`](recipes/scaffold-a-workspace.md) | Standing up a new workspace from scratch (`init` → types → plan → deploy). |
+| [`recipes/scaffold-a-project.md`](recipes/scaffold-a-project.md) | Standing up a new project from scratch (`init` → types → plan → deploy). |
 | [`recipes/add-connector-and-model.md`](recipes/add-connector-and-model.md) | Adding a data source + a model sourced from it, wired by handle. |
 | [`recipes/build-an-agent.md`](recipes/build-an-agent.md) | Composing a model + tool + agent (with `uses` / `models` / `tools`) and deploying. |
-| [`recipes/migrate-existing-workspace.md`](recipes/migrate-existing-workspace.md) | Bringing an already-live workspace under CDK management via `project import`. |
+| [`recipes/migrate-existing-workspace.md`](recipes/migrate-existing-workspace.md) | Bringing an already-live workspace under a project via `project import`. |
 | [`recipes/deploy-from-ci.md`](recipes/deploy-from-ci.md) | Deploying non-interactively from CI (token auth + committed state). |
 
 ## 6) Critical rules

@@ -6,7 +6,7 @@
     {
       "path": "SKILL.md",
       "kind": "entrypoint",
-      "title": "Cargo project — declarative workspace-as-code"
+      "title": "Cargo project — a Cargo workspace, declared in a repo"
     },
     {
       "path": "guides/authoring-resources.md",
@@ -41,12 +41,12 @@
     {
       "path": "recipes/migrate-existing-workspace.md",
       "kind": "recipe",
-      "title": "Recipe: bring an existing workspace under CDK management"
+      "title": "Recipe: bring an existing workspace under a project"
     },
     {
-      "path": "recipes/scaffold-a-workspace.md",
+      "path": "recipes/scaffold-a-project.md",
       "kind": "recipe",
-      "title": "Recipe: scaffold a workspace from scratch"
+      "title": "Recipe: scaffold a project from scratch"
     },
     {
       "path": "references/commands.md",
@@ -74,5 +74,5 @@
       "title": "Troubleshooting"
     }
   ],
-  "contentHash": "6b47f045bacd32c734f751dd3876e287eef97f44b93f314d0925b774ed5deadb"
+  "contentHash": "ca0227114795708042d2f35bfbe6b4581e781a2b8d19a1fb84fe6bb36f5e0131"
 }

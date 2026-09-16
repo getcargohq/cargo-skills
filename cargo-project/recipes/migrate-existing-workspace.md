@@ -1,8 +1,8 @@
-# Recipe: bring an existing workspace under CDK management
+# Recipe: bring an existing workspace under a project
 
 **Use when** a workspace already has live resources (built in the UI or the
-imperative CLI) and the user wants to manage them as code going forward — without
-creating duplicates.
+imperative CLI) and the user wants to manage them from a project going forward —
+without creating duplicates.
 
 The tool is `cargo-ai project import <id> <uuid>`, which binds a resource's **code id**
 (`kind:slug`) to its **live uuid** in this project's deploy state. After import, `deploy`
@@ -36,9 +36,9 @@ cargo-ai storage model list        # find the model's uuid
 ## 3. Import each resource into state
 
 ```bash
-cargo-ai project import model:contacts <model-uuid> --dir my-workspace
-cargo-ai project import connector:hubspot <connector-uuid> --dir my-workspace
-cargo-ai project import agent:sdr <agent-uuid> --dir my-workspace
+cargo-ai project import model:contacts <model-uuid> --dir acme-gtm
+cargo-ai project import connector:hubspot <connector-uuid> --dir acme-gtm
+cargo-ai project import agent:sdr <agent-uuid> --dir acme-gtm
 ```
 
 - The id is `kind:slug` — the same id the plan output uses.
@@ -52,7 +52,7 @@ cargo-ai project import agent:sdr <agent-uuid> --dir my-workspace
 ## 4. Verify with a plan
 
 ```bash
-cargo-ai project plan --dir my-workspace
+cargo-ai project plan --dir acme-gtm
 ```
 
 Imported resources should show as **update** or **no-op**, not **create**. A
@@ -62,7 +62,7 @@ Imported resources should show as **update** or **no-op**, not **create**. A
 ## 5. Deploy and commit
 
 ```bash
-cargo-ai project deploy --dir my-workspace
+cargo-ai project deploy --dir acme-gtm
 git add cargo.state.json && git commit -m "Adopt existing workspace into CDK"
 ```
 

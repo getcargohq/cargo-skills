@@ -83,6 +83,26 @@ pin refused to install. [`cargo/cli-version`](cargo/cli-version) → **1.0.96**.
   the bare palette. Reference-only by intent — but flagging that `doctor` beats hand-checking the
   pin and `start --continue demo` is the CLI's own quickstart.
 
+**Project ≠ workspace.** #5869 was a two-part terminology decision — *"Say 'a Cargo project', not
+'as code'"* — and only the scaffold text came across on the first pass. A **workspace** is the
+tenant you sign into (models, connectors, credits; `login --workspace-name`); a **project** is the
+repo that declares resources and deploys them into one. The pack used "workspace" for both, most
+visibly in a recipe that scaffolded a repo into a directory called `my-workspace` while the next
+line selected "the target workspace".
+
+- `recipes/scaffold-a-workspace.md` → [`recipes/scaffold-a-project.md`](cargo-project/recipes/scaffold-a-project.md):
+  it scaffolds a repo, not a tenant. All references are internal, so no redirect stub is needed
+  (unlike the skill rename in #128).
+- `migrate-existing-workspace.md` **keeps its name** — the thing being migrated really is a
+  workspace. What was wrong was the destination: "under CDK management" → "under a project".
+- The H1 `declarative workspace-as-code` and five other "as code" phrases in the pack's own voice
+  are gone. "as code" / "in git" / "set up a whole workspace" **stay** in the `description`
+  triggers and the when-to-load list: those are what users type, and routing matches on them.
+- Example directories are `acme-gtm`, not `my-workspace`.
+- New up-front note in [`cargo-project/SKILL.md`](cargo-project/SKILL.md) defining the two words
+  and the one-project-one-workspace-at-a-time rule the workspace guard enforces — the fix for the
+  confusion coming back.
+
 Deliberately not added: `project state remove` and the 10-state cap enforcement are on the CLI's
 default branch but **not** in 1.0.96 (the CDK README documents `remove` ahead of its release), so
 the skill documents `list|create|bind` and says so. Nor the hosting build-sandbox keep-alive — an

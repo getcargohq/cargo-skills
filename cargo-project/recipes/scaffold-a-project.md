@@ -1,17 +1,18 @@
-# Recipe: scaffold a workspace from scratch
+# Recipe: scaffold a project from scratch
 
-**Use when** the user wants to stand up a new Cargo workspace as code,
-reproducibly. Follow these steps as your execution plan.
+**Use when** the user wants to stand up a new Cargo **project** — the repo that
+declares resources and deploys them into a workspace — reproducibly. Follow these
+steps as your execution plan.
 
 ## 1. Scaffold
 
 ```bash
-cargo-ai project init my-workspace                              # the repo, empty
-cargo-ai project init my-workspace --cookbook tam-building      # the repo plus a worked example
+cargo-ai project init acme-gtm                              # the repo, empty
+cargo-ai project init acme-gtm --cookbook tam-building      # the repo plus a worked example
 ```
 
 The scaffold itself never varies — it is one GTM repo from
-`getcargohq/cargo-manifest`, with the CDK project in `infra/`. What varies is
+`getcargohq/cargo-manifest`, with the resources it deploys in `infra/`. What varies is
 whether a cookbook is layered on top, so reach for `--cookbook <slug>` when the
 user wants a working pipeline to adapt rather than an empty project.
 `cargo-ai project cookbook list` names them; see
@@ -20,9 +21,9 @@ user wants a working pipeline to adapt rather than an empty project.
 ## 2. Install and authenticate
 
 ```bash
-cd my-workspace && npm install         # pulls @cargo-ai/cdk + zod
-cargo-ai login                         # authenticate + select the target workspace
-cargo-ai whoami                        # confirm the selected workspace
+cd acme-gtm && npm install   # pulls @cargo-ai/cdk + zod
+cargo-ai login               # authenticate + select the workspace to deploy INTO
+cargo-ai whoami              # confirm the selected workspace
 ```
 
 ## 3. (Optional) Generate typed config

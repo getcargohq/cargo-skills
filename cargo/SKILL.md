@@ -636,7 +636,7 @@ against the workspace) → author `define*` files → `project plan` (offline di
   **Recurring use** section) before `project deploy` — a deployed play re-bills its
   nodes on every scheduled run.
 
-**Recipes shipped:** `recipes/scaffold-a-workspace.md`, `add-connector-and-model.md`,
+**Recipes shipped:** `recipes/scaffold-a-project.md`, `add-connector-and-model.md`,
 `build-an-agent.md`, `migrate-existing-workspace.md`, `deploy-from-ci.md`.
 
 **Cookbooks:** ~20 pre-written GTM outcomes (TAM building,
