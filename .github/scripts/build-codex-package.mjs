@@ -219,7 +219,7 @@ const PACKAGE_EDITS = [
   },
   {
     file: "cargo-project/SKILL.md",
-    find: "- **`defineMailbox` bills monthly, and `defineDomain` rewrites a DNS zone.** A\n  mailbox is 100\u2013160 credits *per month* for as long as it exists (`cargo-ai\n  mailboxManagement pricing get` for live figures), so a `+ create mailbox:\u2026` line\n  in the plan is a recurring charge the user approves, not a one-off. Its `domain`,\n  `username` and `type` are **create-only** \u2014 changing any of them is destroy +\n  recreate, i.e. a brand-new inbox back at the bottom of a 45-day warm-up ramp. The\n  deploy polls `refreshStatus` for up to 5 minutes waiting for `active`. On\n  `defineDomain`, `dnsRecords` is the **whole zone, not a patch**: declaring it\n  replaces every live record (including the ones the registrar wrote at purchase),\n  and omitting it leaves the zone untouched. Use `adopt: true` for a domain or\n  mailbox bought in the UI. Ramp, suppression and sending:\n  [`../cargo-mailbox-management/SKILL.md`](../cargo-mailbox-management/SKILL.md).\n",
+    find: "- **`defineMailbox` bills monthly, and `defineDomain` rewrites a DNS zone.** A\n  mailbox is 100\u2013160 credits *per month* for as long as it exists (`cargo-ai\n  mailboxManagement pricing get` for live figures), so a `+ create mailbox:\u2026` line\n  in the plan is a recurring charge the user approves, not a one-off. Its `domain`,\n  `username` and `type` are **create-only** \u2014 changing any of them is destroy +\n  recreate, i.e. a brand-new inbox back at the bottom of a 45-day warm-up ramp. The\n  deploy polls `refreshStatus` for up to 5 minutes waiting for `active`. On\n  `defineDomain`, `dnsRecords` is the **whole zone, not a patch**: declaring it\n  replaces every live record (including the ones the registrar wrote at purchase),\n  and omitting it leaves the zone untouched. `redirectUrl`, `dmarcEmail` and\n  `dmarcPolicy` are **additive** and are the supported way to configure a zone\n  without replacing it, so reach for `dnsRecords` only when you mean to own every\n  record. Use `adopt: true` for a domain or mailbox bought in the UI. Ramp,\n  suppression and sending:\n  [`../cargo-mailbox-management/SKILL.md`](../cargo-mailbox-management/SKILL.md).\n",
     replace: "",
   },
   {
@@ -229,7 +229,7 @@ const PACKAGE_EDITS = [
   },
   {
     file: "cargo-project/references/resources.md",
-    find: "| `defineDomain(name, spec)` | Sending domain + its DNS zone | `adopt?`, `dnsRecords?` (**replaces the whole zone**) | \u2014 | `uuid` |\n",
+    find: "| `defineDomain(name, spec)` | Sending domain + its DNS zone | `adopt?`, `dnsRecords?` (**replaces the whole zone**), `redirectUrl?`, `dmarcEmail?` (`rua=`), `dmarcPolicy?` (`p=`: `none`/`quarantine`/`reject`) | \u2014 | `uuid` |\n",
     replace: "",
   },
   {

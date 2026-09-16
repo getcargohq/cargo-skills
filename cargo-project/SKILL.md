@@ -267,7 +267,8 @@ acceptance test, and always review `cargo-ai project plan` before deploying.
   and omitting it leaves the zone untouched. `redirectUrl`, `dmarcEmail` and
   `dmarcPolicy` are **additive** and are the supported way to configure a zone
   without replacing it, so reach for `dnsRecords` only when you mean to own every
-  record. Use `adopt: true` for a domain or mailbox bought in the UI. Ramp, suppression and sending:
+  record. Use `adopt: true` for a domain or mailbox bought in the UI. Ramp,
+  suppression and sending:
   [`../cargo-mailbox-management/SKILL.md`](../cargo-mailbox-management/SKILL.md).
 - **Route CDK-managed resources into a clearly-labelled folder.** Set `folder:` on
   each builder so everything CDK owns lands in a dedicated folder whose name signals
