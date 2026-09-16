@@ -143,31 +143,41 @@ The Cargo CLI and these skills ship updates regularly. The bundle pins the CLI v
 
 ### Claude Code
 
-The Cargo installer wires this up for you. Run it once and answer **y** at the plugin prompt:
+Install the [**Cargo plugin**](#agent-plugin-alternative-channel--claude-code-codex-cursor) above
+(`/plugin marketplace add getcargohq/cargo-skills`, then `/plugin install cargo@cargo`) and the
+bundled hooks keep everything current automatically: every new Claude Code session (1) converges
+`@cargo-ai/cli` to the pin and refreshes the plugin itself for the next session, (2) checkpoints the
+session row each turn so progress is captured even if the session never ends cleanly, and (3) logs
+the session to `workspace_management.sessions` with an AI-generated title and summary at the end.
+All hooks swallow errors, so a missing `cargo-ai`/`claude`/`jq` binary never blocks a session.
 
-```bash
-curl -fsSL https://api.getcargo.io/install.sh | sh
+If you would rather have the agent do the whole setup — install the CLI, sign you in, and install
+the skills for whichever agent it is — paste this to Claude Code, Codex or Cursor:
+
+```
+Install Cargo by following https://api.getcargo.io/INSTALL.md
 ```
 
-This pipes a network-fetched script straight into a shell, which is worth exactly as
-much trust as you place in Cargo. The script is not obfuscated. To read the exact bytes
-you run, download once and execute that file — fetching twice (`| less`, then `| sh`)
-proves nothing, since the second request can be served different content:
+That URL serves a short install skill the agent reads and executes itself. Nothing is written into
+`~/.claude` on your behalf, and you can read the exact instructions first with
+`curl -fsSL https://api.getcargo.io/INSTALL.md`.
+
+Doing it by hand is three commands:
 
 ```bash
-curl -fsSL https://api.getcargo.io/install.sh -o cargo-install.sh
-less cargo-install.sh
-sh cargo-install.sh
+npm install -g @cargo-ai/cli
+cargo-ai login --email you@company.com   # emailed code, no browser
+cargo-ai whoami
 ```
 
-Everything it does is also doable by hand: `npm install -g @cargo-ai/cli` plus the
-[plugin install](#agent-plugin-alternative-channel--claude-code-codex-cursor) above.
+> **The `curl … install.sh | sh` bootstrap is retired.** The old one-liner installed the CLI and
+> scaffolded hooks; it now only prints a notice and exits non-zero, so a pinned copy fails loudly
+> instead of appearing to succeed. Use the plugin, the `INSTALL.md` paste, or the three commands
+> above. (Older installer versions scaffolded standalone `SessionStart`/`Stop`/`SessionEnd` hooks
+> under `~/.claude/hooks/`; the plugin's hooks defer to those when present, so an old machine keeps
+> working until you remove them.)
 
-It installs the CLI (at the bundle's pinned version) and the **Cargo plugin**, whose bundled hooks then keep everything current automatically: every new Claude Code session (1) converges `@cargo-ai/cli` to the pin and refreshes the plugin itself for the next session, (2) checkpoints the session row each turn so progress is captured even if the session never ends cleanly, and (3) logs the session to `workspace_management.sessions` with an AI-generated title and summary at the end. All hooks swallow errors, so a missing `cargo-ai`/`claude`/`jq` binary never blocks a session. Set `CARGO_INSTALL_HOOKS=0` to skip the prompt — the installer then falls back to `skills add` and scaffolds nothing.
-
-(Older installer versions scaffolded standalone `SessionStart`/`Stop`/`SessionEnd` hooks under `~/.claude/hooks/` instead; the plugin's hooks defer to those when present, and re-running the installer migrates them away.)
-
-Without the installer, the `cargo` router skill still instructs the agent to refresh CLI + skills at the start of every session ([see `cargo/SKILL.md`](cargo/SKILL.md)) — that works out of the box, just without the hard enforcement and session logging the hooks provide.
+Without the plugin, the `cargo` router skill still instructs the agent to refresh CLI + skills at the start of every session ([see `cargo/SKILL.md`](cargo/SKILL.md)) — that works out of the box, just without the hard enforcement and session logging the hooks provide.
 
 ### OpenClaw
 

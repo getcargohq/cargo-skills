@@ -1,7 +1,7 @@
 ---
 name: cargo-connection
 description: "Connect Cargo to an external system and find out what it can do — authenticate connectors, browse the integration catalog, and resolve the `connectorUuid` and `actionSlug` a workflow node needs. Triggers: \"connect my HubSpot\", \"is Salesforce connected\", \"what integrations do you support\", \"can Cargo talk to <tool>\", \"what actions does <provider> have\", \"I need the connector UUID\", \"set up the API key for\", \"it is asking for credentials again\", \"why is this connector failing auth\", \"list my connectors\". Integrations: amplemarket, amplitude, attio, bigQuery, calendly, closecom, contrast, csv, customerio, dbt, emailBison, expandi, googleAds, googleSheets, heyReach, http, hubspot, hubspotMcp, instantly, instantlyV2, intercom, jira, kitt, lemlist, lgm, linkedinAds, linkedinMatchedAudience, livestorm, manus, marketo, metabase, microsoftTeams, mixpanel, netsuite, netsuiteSoap, notionMcp, octave, onesignal, outreach, pipedrive, postgresql, redshift, resend, rift, salesforce, salesforceMcp, salesloft, Sendgrid, sillage, slack, smartlead, snowflake, sql, stripe, and 82 more. Skip when: choosing between enrichment providers for a GTM job — use cargo-gtm and its provider playbooks."
-version: "1.4.1"
+version: "1.5.0"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -72,6 +72,13 @@ cargo-ai connection integration list --search "hubspot"   # search by name
 cargo-ai connection integration get <slug>                # one integration's actions + input schemas
 cargo-ai connection native-integration get                # built-in Cargo actions only (NOT third-party)
 ```
+
+> **Deprecated integrations still appear in the catalog.** `integration list` returns them with
+> `isDeprecated: true` and a display name ending in `(deprecated)`. Existing connectors keep
+> working — deprecation breaks nothing — but never wire a *new* workflow to one. Two were
+> deprecated in CLI 1.0.92, the self-referential `cargo` integration among them. Read the flag
+> rather than keeping a list: check `isDeprecated` before proposing any integration you found by
+> browsing instead of by `action list`.
 
 ### Which action search?
 

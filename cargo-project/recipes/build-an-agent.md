@@ -85,5 +85,7 @@ cargo-ai project deploy
 git add cargo.state.json && git commit -m "Add SDR agent"
 ```
 
-Because `agent:sdr` has no slug, `cargo.state.json` is the **only** handle on it —
-commit it, or the next deploy can't find it (recover with `project import agent:sdr <uuid>`).
+Because `agent:sdr` has no slug, the deploy state is the **only** handle on it — so commit
+the `cargo.state.json` pointer, or the next deploy can't find the state that names it
+(recover the pointer with `project state bind <uuid>`, or the single resource with
+`project import agent:sdr <uuid>`).

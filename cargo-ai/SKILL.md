@@ -1,7 +1,7 @@
 ---
 name: cargo-ai
 description: "Build and configure AI agents inside Cargo — create an agent, choose its model and temperature, write its prompt, attach knowledge for retrieval (RAG), connect MCP tool servers, manage memories, and deploy releases. Triggers: \"create an agent\", \"make an agent that\", \"give the agent our docs\", \"attach this knowledge base\", \"attach this library to the agent\", \"add resources to the agent release\", \"connect an MCP server\", \"expose our tools as an MCP server\", \"use Cargo from Claude Desktop or ChatGPT\", \"change the agent model\", \"what does the agent remember\", \"deploy the agent\", \"the agent is answering wrong\". Skip when: uploading the knowledge files themselves — use cargo-content; sending the agent a message or running it over records — use cargo-orchestration."
-version: "2.3.1"
+version: "2.4.0"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -251,7 +251,13 @@ cargo-ai ai mcp-server remove <mcp-server-uuid>
 
 - **Actions** take `kind: "tool"` **or** `kind: "agent"` — an agent can be exposed as a callable MCP tool, not just a tool. `waitUntilFinished` controls whether the call blocks on the run.
 - **Resources** take `kind: "model"` (a filtered, column-selected view of a model — keep `isReadOnly: true` unless the client is meant to write) or `kind: "file"` (workspace files by UUID, see [`../cargo-content/SKILL.md`](../cargo-content/SKILL.md)).
-- `update` replaces `--actions` / `--resources` wholesale rather than merging — read the current server with `mcp-server list` and pass the full array back.
+- **Capabilities** (`--capabilities`, CLI ≥ 1.0.86) expose Cargo's own built-in tools on the server, alongside your actions and resources. JSON array of `{slug, config}`:
+  ```bash
+  cargo-ai ai mcp-server create --name "Research" \
+    --capabilities '[{"slug":"webSearch","config":{}}]'
+  ```
+  The nine slugs are `sandbox`, `memory`, `context`, `app`, `document`, `webSearch`, `model`, `file`, and `documentationSearch` — the same set an **agent** release takes in its own `--capabilities`, which is why the examples above pass `'[]'` rather than omitting it. In a CDK project the same field accepts a bare slug (`capabilities: ["webSearch"]`).
+- `update` replaces `--actions` / `--resources` / `--capabilities` wholesale rather than merging — read the current server with `mcp-server list` and pass the full array back.
 
 ### Serving it to a coding agent — `cargo-ai mcp`
 

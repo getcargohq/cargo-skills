@@ -27,15 +27,54 @@ Re-running `deploy` only changes what changed — an unchanged workspace is a no
 otherwise adopts a slug-addressable match (connector/model) that already exists,
 otherwise creates.
 
-## `cargo.state.json` — commit it
+## The deploy state, and the pointer you commit
 
-`deploy` writes `cargo.state.json`: the link from your code to the resources Cargo
-created. It records only `{hash, uuid, outputs}` per resource — **never secret
-values**.
+A project's **deploy state** is the link from your code to the resources Cargo
+created. It lives **in your workspace**; the repo commits only a pointer to it:
 
-**Commit it.** It is the *only* handle on a deployed **play** or **agent**, which
-have no slug (unlike connectors and models, which self-heal by slug). Losing state
-orphans those resources. If it happens, re-establish a link with `import` (below).
+```json
+{ "stateUuid": "8f2c…" }
+```
+
+`cargo-ai project init` creates the state and writes that `cargo.state.json`, so the
+pointer is in the scaffold commit. The state records only uuids, hashes and outputs
+per resource — **never secret values**.
+
+**Commit the pointer.** Without the uuid a fresh checkout cannot find its state, and
+a deploy will *not* quietly create a replacement — that would orphan everything the
+old state tracks. The state is still the only handle on a deployed **play**,
+**agent** or **alert**, which have no slug (unlike connectors and models, which
+self-heal by slug). If the pointer is lost, recover it with `state bind` below, or
+re-establish links one resource at a time with `import`.
+
+### One state per repo, ten per workspace
+
+```bash
+cargo-ai project state list            # every state in this workspace, and which one this project is on
+cargo-ai project state create          # create one for this project and write the pointer
+cargo-ai project state bind <uuid>     # point cargo.state.json at an existing state
+```
+
+`state create` takes `--force` to create a new state even though `cargo.state.json`
+already names one, and `--json` to print the created state. `state list` takes
+`--json`. All of them take `--dir <path>`.
+
+Deleting a state (`state remove <uuid>`, which drops the state without touching the
+live resources it tracked) is documented in the CDK README but is **not** in CLI
+1.0.96 — it ships in the next release.
+
+### Migrating a pre-remote-state project
+
+A project scaffolded before states moved to the workspace has the resource map
+**inline** in `cargo.state.json`, and keeps deploying against that file for as long
+as you leave it there. Nothing migrates behind your back.
+
+`cargo-ai project state create` is what moves it: the map goes onto a new workspace
+state, the file becomes a pointer, and you commit it. Coordinate before you do —
+a teammate who deploys after the migration but before pulling the new pointer is
+deploying from a state that no longer exists.
+
+### Git-ignore the working files
 
 Git-ignore the generated types and the CDK's working files (but **not**
 `cargo.state.json`). `cargo-ai project init` scaffolds this:
@@ -44,6 +83,7 @@ Git-ignore the generated types and the CDK's working files (but **not**
 .cargo-ai/
 cargo.state.lock
 cargo.state.bak.json
+cargo.state.cache.json
 cargo.state.audit.jsonl
 ```
 

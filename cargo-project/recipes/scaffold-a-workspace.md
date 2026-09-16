@@ -50,7 +50,7 @@ A missing env var fails the deploy with an unresolved `${NAME}` placeholder.
 
 ```bash
 cargo-ai project plan                      # offline diff — review what will be created
-cargo-ai project deploy                    # create everything, write cargo.state.json
+cargo-ai project deploy                    # create everything, record it in the deploy state
 ```
 
 `deploy` prompts for confirmation. Review the plan output first; it lists each
@@ -62,9 +62,12 @@ resource as create / update / no-op.
 git add cargo.state.json && git commit -m "Deploy initial workspace"
 ```
 
-`cargo.state.json` is the link from code to the deployed resources — and the only
-handle on deployed plays/agents. Commit it. The `.gitignore` scaffolded by
-`project init` already excludes `.cargo-ai/`, the lock, backup, and audit files.
+The **deploy state** is the link from code to the deployed resources — and the only
+handle on deployed plays/agents. It lives in your workspace; `cargo.state.json` is the
+committed pointer to it (`{"stateUuid": "…"}`), written by `project init`, so this
+commit is usually just confirming it is tracked. Commit it: without the uuid a fresh
+checkout cannot find its state. The `.gitignore` scaffolded by `project init` already
+excludes `.cargo-ai/`, the lock, cache, backup, and audit files.
 
 ## 7. Iterate
 

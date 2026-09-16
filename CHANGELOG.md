@@ -10,6 +10,85 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### `cargo` → 1.26.0, `cargo-project` → 3.0.0, + 6 skills — catch up to CLI 1.0.96
+
+The pin sat at `1.0.78` while the CLI shipped to `1.0.96`. That gap was not just missing
+reference: the `project` command group landed in **1.0.94**, so since the `cargo-cdk` →
+`cargo-project` rename every documented `cargo-ai project …` example was pointing at a CLI the
+pin refused to install. [`cargo/cli-version`](cargo/cli-version) → **1.0.96**.
+
+**Two things the pack was actively getting wrong:**
+
+- **The `curl … install.sh | sh` bootstrap is retired and the docs still recommended it.** The
+  endpoint now prints a notice and exits non-zero — deliberately, so a pinned copy fails loudly
+  instead of appearing to succeed. Replaced in [`README.md`](README.md) and
+  [`cargo-workspace-management/references/examples/sessions.md`](cargo-workspace-management/references/examples/sessions.md)
+  with the plugin install (which carries the session hooks anyway) and the agent-driven
+  `https://api.getcargo.io/INSTALL.md` paste. The router's "never run that installer" paragraph
+  became a rule about a command that no longer exists; it now says installing is the user's call
+  and points at the plugin.
+- **`cargo.state.json` is a pointer, not the state** (`@cargo-ai/cdk` 1.0.73). The deploy state
+  moved into the workspace; the repo commits `{"stateUuid": "…"}`. The skill still described the
+  file as the resource map, which is the pre-migration shape. "Commit it" survives — for a
+  different reason — and the new `project state list|create|bind`, the 10-live-states cap, the
+  opt-in migration for older projects, and `cargo.state.cache.json` in the ignore block are now
+  documented in [`cargo-project/SKILL.md`](cargo-project/SKILL.md) and
+  [`guides/deploy-and-state.md`](cargo-project/guides/deploy-and-state.md). Losing the pointer is
+  now recoverable with `state bind` rather than an orphan story.
+
+**`cargo-project` → 3.0.0** (major: the state model and the run-location rule both reversed)
+
+- **Four subcommands were missing:** `check` (validate with no state — the CI/editor subset of
+  `plan`), `info` (what is here, never fails; also what bare `cargo-ai project` does inside a
+  project), `pull` (generate `define*` from a live workspace **and adopt it**, with the full
+  `--types` list), and `state`.
+- **"Run commands from the project root" was wrong since 1.0.83.** Commands walk up to the
+  package root, then down to `infra/`. The rule is now the reason resources live in `infra/`
+  rather than at the root: the loader imports every `.ts` under the directory it is given, and the
+  root holds `scripts/`, whose files would run on import.
+- **A third config helper.** `workspaceEnv("NAME")` is a pointer resolved server-side on every
+  use, so rotation lands with no redeploy; `secret()` reads your environment at deploy time;
+  `env()` enters the content hash on purpose. Both `secret()` and `workspaceEnv()` are accepted at
+  secret-typed positions **only**, and a resource's own `env` block rejects a pointer.
+- **A rotated `secret()` does not land on a plain deploy.** Excluding it from the content hash is
+  what stops rotation reading as drift, and is also why nothing re-applies. `deploy --refresh`.
+- **`capabilities` and `harness`.** The nine capability slugs, the bare-slug shorthand, and
+  `capabilities` on `defineMcpServer` (not just `defineAgent`); `harness` as
+  `claudeCode`/`codex`/`openCode`/`deepAgents`, and that **omitting `repository` binds the
+  project's own repo** from the checkout's git origin.
+- Cookbook layout: `scripts/<slug>/` alongside `infra/<slug>/`, and the procedure written to both
+  `.claude/skills/` and `.agents/skills/` — copies, so edit both. Plus a `zod` peer-dependency
+  entry in troubleshooting (`^4.4.3`, one copy, `npm ls zod`).
+
+**The rest**
+
+- **`cargo-workspace-management` → 1.3.0** — new **Environment variables** section:
+  `envVar list|create|update|remove`, injected into every worker, app and agent. `--value` is
+  optional on `create` (it reads the env var of the same name, keeping the value out of shell
+  history), `--secret` is write-only, and `update` takes the **uuid**, not the key.
+- **`cargo-ai` → 2.4.0** — `--capabilities` was only ever shown as `'[]'`, with the valid slugs
+  documented nowhere. Now the nine slugs, on both agent releases and MCP servers (CLI ≥ 1.0.86),
+  and `update` replaces the array wholesale.
+- **`cargo-mailbox-management` → 1.2.0** — the `listEmailEvents` native action (CLI ≥ 1.0.86), so
+  a play can branch on whether someone replied. Notes that the wire value is `opened` though the
+  UI says "Viewed", and repeats that `bounced` still has no producer.
+- **`cargo-orchestration` → 1.12.0, `cargo-analytics` → 1.6.0** — `record download-outputs`, the
+  record-grained sibling of `run download-outputs`, was undocumented; it pages with
+  `--limit`/`--offset` (CLI ≥ 1.0.90), which is how you export a set too large for one file.
+- **`cargo-connection` → 1.5.0** — deprecated integrations still appear in the catalog with
+  `isDeprecated: true`; two were deprecated in 1.0.92 and existing connectors keep working. Reads
+  the flag rather than carrying a list.
+- **`cargo` → 1.26.0** — a **Top-level commands outside every domain** table: `doctor` (version vs
+  latest, the skills pin, credentials, reachability), `start`/`onboard`, `ask`, `book-demo`, and
+  the bare palette. Reference-only by intent — but flagging that `doctor` beats hand-checking the
+  pin and `start --continue demo` is the CLI's own quickstart.
+
+Deliberately not added: `project state remove` and the 10-state cap enforcement are on the CLI's
+default branch but **not** in 1.0.96 (the CDK README documents `remove` ahead of its release), so
+the skill documents `list|create|bind` and says so. Nor the hosting build-sandbox keep-alive — an
+infra fix with no surface change; the skills already say builds are async and must be polled.
+
+
 ### `cargo-mailbox-management` → 1.1.0, `cargo-project` → 2.1.0 — the domain half of a sending fleet
 
 The pack documented mailboxes thoroughly and sending domains barely. `domainManagement` has no CLI surface, so the gap was invisible: nothing said how to price a domain, how many mailboxes to put on one, or what `defineDomain` can configure without replacing a zone.

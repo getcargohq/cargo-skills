@@ -35,8 +35,11 @@ state file per environment.
 
 ## `.cargo-ai/` or `cargo.state.json` landed in the wrong directory
 
-`npx`/`cargo-ai` resolve from the **nearest `package.json`**, not your shell's cwd.
-Run `cdk` commands from the project root, or pass `--dir <project-root>` explicitly.
+On CLI ≥ 1.0.83 this should not happen from inside the repo: commands walk **up** to
+the package root where `@cargo-ai/cdk` is declared, then back **down** to the resource
+directory (`infra/`). If the files still land somewhere unexpected, you are either on
+an older CLI, outside the repo entirely, or in a tree with no `@cargo-ai/cdk` in any
+parent `package.json`. Pass `--dir <project-root>` explicitly.
 
 ## `integrations.<slug>` is `any` / not callable, or `config` isn't type-checked
 
@@ -63,11 +66,26 @@ Ensure the worker bundle dir has a built `index.js` (+ `manifest.json`,
 
 ## A play or agent got orphaned (state lost)
 
-Plays and agents have no slug, so `cargo.state.json` is the only link to them.
-**Commit the state file.** If it's lost, find the live uuid via the matching
-capability skill and rebind: `cargo-ai project import agent:<slug> <uuid>`. Never
-delete `cargo.state.json` to "start clean" — you'll orphan every play/agent it
-tracked.
+Plays, agents and alerts have no slug, so the deploy state is the only link to them.
+
+**If you lost the `cargo.state.json` pointer** but the state still exists in the
+workspace, this is recoverable without touching resources: `cargo-ai project state list`
+shows every state in the workspace, then `cargo-ai project state bind <uuid>` repoints
+the repo at the right one. Commit the restored pointer.
+
+**If the state itself is gone**, find each live uuid via the matching capability skill
+and rebind one at a time: `cargo-ai project import agent:<slug> <uuid>`.
+
+Never delete `cargo.state.json` to "start clean" — on a pre-remote-state project that
+is the resource map itself, and on a current one it is the only record of which of the
+workspace's states is yours.
+
+## `zod` errors, or schemas that should match don't
+
+`@cargo-ai/cdk` takes **zod as a peer dependency** (`^4.4.3`, since `@cargo-ai/cdk`
+1.0.76) precisely so a project resolves exactly one copy. Two copies in the tree give
+you two different `z` identities and schemas built with one won't satisfy the other.
+Check with `npm ls zod` — one entry, on a `4.x` matching the peer range.
 
 ## `plan` shows `create` for a resource that already exists
 

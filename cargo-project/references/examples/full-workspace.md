@@ -89,7 +89,7 @@ cargo-ai project plan
 #   create connector:hubspot, create connector:open_ai (adopt), create folder:crm-models, …
 
 cargo-ai project deploy
-# → creates each in order, writing cargo.state.json after each resource.
+# → creates each in order, recording each in the workspace-held deploy state.
 #   Workers/apps build server-side (slower). Live URLs appear as webhook.url / dashboard.url.
 
 git add cargo.state.json && git commit -m "Deploy full workspace"
@@ -100,4 +100,5 @@ applied. Tear it all down with `cargo-ai project destroy --all`.
 
 Secrets referenced with `secret("HUBSPOT_API_KEY")` resolve from the environment at
 deploy time and stay out of the content hash — only `{hash, uuid, outputs}` land in
-`cargo.state.json`, never secret values.
+the deploy state, never secret values. (`cargo.state.json` itself holds just the
+`stateUuid` pointer.)

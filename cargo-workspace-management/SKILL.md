@@ -1,7 +1,7 @@
 ---
 name: cargo-workspace-management
 description: "Administer a Cargo workspace and talk back to the Cargo team — invite and manage members, mint and rotate API tokens, organize plays, tools, and agents into folders, inspect roles, upload batch input files, and file reports. Triggers: \"invite my teammate\", \"create an API token for CI\", \"who has access\", \"organize these into folders\", \"rotate that token\", \"upload this CSV for a batch\" — and for feedback: \"report this bug to Cargo\", \"send feedback to the Cargo team\", \"this CLI command is broken\", \"share this session with Cargo\", \"request a feature\". Most commands need a token with admin access. Skip when: the question is about credits, plans, or invoices — use cargo-billing."
-version: "1.2.2"
+version: "1.3.0"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -66,6 +66,8 @@ cargo-ai workspaceManagement folder list
 cargo-ai workspaceManagement folder create --name <name> --emoji-slug <slug> --kind <kind>
 cargo-ai workspaceManagement report create --title <title> --description <description>
 cargo-ai workspaceManagement session upsert --session-id <id> --title <title> --summary <summary> [--finished]
+cargo-ai workspaceManagement envVar list
+cargo-ai workspaceManagement envVar create --key <KEY> [--value <v>] [--secret]
 ```
 
 ## Current user and workspace
@@ -204,6 +206,43 @@ cargo-ai workspaceManagement session upsert \
 - Calling `upsert` twice with the same `--session-id` updates the same row — `title`, `summary`, and `finished_at` are overwritten.
 
 Returns the upserted session as JSON. The [Cargo installer](https://github.com/getcargohq/cargo-skills#staying-current) wires SessionStart + Stop + SessionEnd hooks that call this command automatically: SessionStart writes a placeholder, the per-turn Stop hook checkpoints the row (no `--finished`), and SessionEnd writes the transcript-driven AI summary with `--finished` — see [`references/examples/sessions.md`](references/examples/sessions.md).
+
+## Environment variables
+
+Workspace environment variables are **injected into every worker, app and agent** in
+the workspace. One catalog, read server-side on every use — so rotating a value here
+reaches everything that references it with no redeploy.
+
+```bash
+cargo-ai workspaceManagement envVar list
+
+# Create. Omit --value to read it from the environment variable of the same name.
+cargo-ai workspaceManagement envVar create \
+  --key OPENAI_API_KEY \
+  --value sk-... \
+  --secret \
+  --description "Used by the enrichment worker"
+
+# Update. Omit --value to keep the stored one.
+cargo-ai workspaceManagement envVar update <uuid> --value <new> --description <text>
+
+cargo-ai workspaceManagement envVar remove <uuid>
+```
+
+- **`--secret` encrypts the value at rest and it is never returned again** — `list`
+  and `update` will not echo it back. Use it for credentials; use `--no-secret` on
+  `update` to turn a variable back into plain text (which re-exposes it to `list`).
+- **`--value` is optional on `create`.** Omitted, the CLI reads the environment
+  variable of the same name from your shell, so `export OPENAI_API_KEY=… &&
+  cargo-ai workspaceManagement envVar create --key OPENAI_API_KEY --secret` keeps the
+  value out of your shell history and out of this command line.
+- **`update` takes the uuid, not the key.** Get it from `envVar list`.
+
+**From a CDK project**, reference an entry with `workspaceEnv("NAME")` rather than
+copying the value into code — it is a pointer resolved server-side on every use.
+`secret("NAME")` is the other option and means something different (read from *your*
+environment at deploy time). See
+[`../cargo-project/SKILL.md`](../cargo-project/SKILL.md) → Critical rules.
 
 ## Workspace files
 

@@ -1,7 +1,7 @@
 ---
 name: cargo-orchestration
 description: "Make Cargo actually run something, or show what it would run — execute one connector action, run a multi-step workflow, trigger a batch across a whole segment or model, message an AI agent, build or edit a node graph, draw a workflow, tool or play as a diagram, and query the runtime tables (runs, batches, spans, records) with SQL. Triggers: \"run this on all my contacts\", \"execute the action\", \"kick off a batch\", \"build a workflow\", \"schedule a play\", \"make it run every morning\", \"ask the agent\", \"show me the workflow\", \"what does this tool do\", \"visualize this play\", \"draw the graph\", \"explain this workflow\", \"how many runs failed today\", \"what is the output schema for this action\", \"add a step that\". Skip when: explaining why a run misbehaved — use cargo-diagnostics; downloading result files — use cargo-analytics; committing the workflow as code — use cargo-project."
-version: "1.11.3"
+version: "1.12.0"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -419,6 +419,8 @@ Also supports `--actions`, `--resources`, `--language-model-slug`, `--temperatur
 
 Records are individual items processed by a workflow. Use these commands to list, count, download, or cancel records within a workflow.
 
+`record download-outputs` is the **record**-grained sibling of `run download-outputs`: one row per record rather than per run. It pages with `--limit` / `--offset` (CLI ≥ 1.0.90), which is how you export a set too large for one file — walk it in fixed slices rather than asking for everything and timing out.
+
 ```bash
 # List records for a workflow
 cargo-ai orchestration record list --workflow-uuid <uuid> --limit 50
@@ -431,6 +433,12 @@ cargo-ai orchestration record count --workflow-uuid <uuid>
 
 # Download records as a file
 cargo-ai orchestration record download --workflow-uuid <uuid>
+
+# Download one output node's data, per record, paging through a large set
+cargo-ai orchestration record download-outputs \
+  --workflow-uuid <uuid> \
+  --output-node-slug <slug> \
+  --limit 1000 --offset 2000
 
 # Get per-node execution metrics
 cargo-ai orchestration record get-metrics --workflow-uuid <uuid>

@@ -1,7 +1,7 @@
 ---
 name: cargo
 description: "Router for the Cargo CLI skill bundle — load first for anything Cargo, and whenever a task spans two Cargo domains. Explains what each skill owns, declarative workspace-as-code (cargo-project) vs the imperative CLI, the UUID and slug flow between skills, async polling of runs and batches, end-to-end use cases, and the gotchas that fail silently (`conjonction` spelling, run vs batch, model-uuid vs segment-uuid). Triggers: \"set up Cargo\", \"what can Cargo do\", \"which Cargo skill\", \"bootstrap my workspace\", \"I have a Cargo account\", \"cargo-ai …\", or any `cargo-ai` command whose domain you are unsure of. Skip when: the task obviously belongs to one skill — load that skill directly."
-version: "1.25.1"
+version: "1.26.0"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -76,9 +76,15 @@ All commands output JSON to stdout. Failed commands exit non-zero and return `{"
 
 ## Every Cargo session has three jobs
 
-> **Automated on Claude Code.** Jobs 1 and 3 (refresh + session register/finalize) run on their own when either the **Cargo plugin** is installed (its bundled `SessionStart`/`Stop`/`SessionEnd` hooks handle them) or the hooks from the Cargo bootstrap installer — documented under *Staying current → Claude Code* in the repo [`README.md`](../README.md) — are present. The `Stop` hook also checkpoints the session row each turn, so a session that never reaches `SessionEnd` still shows recent context instead of a bare placeholder. Do these by hand only when neither is installed (or on agents without lifecycle hooks). Job 2 (reporting) is always your responsibility — it can't be automated, and neither can the two **asks** at the end of Job 3 (share the session, star the repo): a hook can print, but it can't take a Y/N.
+> **Automated on Claude Code.** Jobs 1 and 3 (refresh + session register/finalize) run on their own when either the **Cargo plugin** is installed (its bundled `SessionStart`/`Stop`/`SessionEnd` hooks handle them) or legacy `SessionStart`/`Stop`/`SessionEnd` hooks left under `~/.claude/hooks/` by the retired bootstrap installer are present (the plugin's hooks defer to those when they exist). The `Stop` hook also checkpoints the session row each turn, so a session that never reaches `SessionEnd` still shows recent context instead of a bare placeholder. Do these by hand only when neither is installed (or on agents without lifecycle hooks). Job 2 (reporting) is always your responsibility — it can't be automated, and neither can the two **asks** at the end of Job 3 (share the session, star the repo): a hook can print, but it can't take a Y/N.
 >
-> **Never run that installer on the user's behalf without asking.** Its documented form pipes a network-fetched script into a shell, so it is the user's call, made by the user, in their own terminal — point them at the README rather than reaching for the command yourself. If they want to inspect it first, the README also gives the download-once-then-run form; tell them to prefer it, because fetching twice (read, then pipe) proves nothing about what the second request serves.
+> **Installing Cargo is the user's call, not an action you take.** The `curl … install.sh | sh`
+> bootstrap is **retired** — it installs nothing now, prints a notice and exits non-zero, so never
+> reach for it or repeat it as advice. Point the user at the plugin install in the repo
+> [`README.md`](../README.md). An agent asked to do the setup itself follows
+> `https://api.getcargo.io/INSTALL.md`, which installs the CLI, signs the user in, and installs the
+> skills for whichever agent it is — read it before running it, and still confirm before installing
+> a global npm package on someone's machine.
 
 ### 1. At session start — refresh and register
 
@@ -303,6 +309,24 @@ The CLI exposes several domains that no capability skill wraps yet. Reach for th
 | `system-of-record` | System-of-record, client, and log operations. |
 | `revenue-organization` | Allocations, capacities, members, territories (revenue/territory planning). |
 | `user-management` | Current-user operations with no workspace context. |
+
+### Top-level commands outside every domain
+
+Five commands sit at the root of the CLI rather than under a domain, and no skill wraps them.
+They are listed here so you recognize them when a user names one — not as a routing target:
+
+| Command | What it is |
+| --- | --- |
+| `cargo-ai doctor` | Diagnoses the setup in one JSON object: installed version vs latest, the **skills-bundle pin**, credentials, and API reachability. Exits with the most severe failure. The fastest answer to "why is this command not working" before you start reading skills. |
+| `cargo-ai start` (alias `onboard`) | Signs the user in if needed, then continues into one of: a coding agent (`--continue claude\|cursor\|codex\|gemini`), `code` to scaffold a project, `cli` for the palette, or `demo` for the guided tour. Takes `--email`/`--code`/`--oauth`, `--workspace-name`, `--directory`, `--icp`. |
+| `cargo-ai ask` | Chat in the terminal. Defaults to **Claude Code on this machine** against the working directory (`--dir`); `--agent-uuid` attaches a workspace agent to that same local session. `--print` gives one turn as JSON on stdout, `--continue` reopens the last chat. Also reachable as `cargo-ai --chat`. |
+| `cargo-ai book-demo` | Opens the calendar to book a demo with Cargo sales. `--no-open` prints the URL instead. |
+| `cargo-ai` (bare) | The interactive palette, when the terminal can render it. Inside a CDK project, bare `cargo-ai project` does `info`; outside one it does `init`. |
+
+Two of these overlap work the skills describe by hand: `doctor` is a better first step than
+hand-checking the pin, and `start --continue demo` is the CLI's own version of the
+[`cargo-quickstart`](../cargo-quickstart/SKILL.md) tour. Prefer the skill when you want control
+over what gets spent; prefer the command when the user just wants it done.
 
 ---
 
@@ -585,18 +609,25 @@ entire Cargo workspace in TypeScript (`defineConnector`/`defineModel`/`defineAge
 it to live infra with `cargo-ai project`. Spans **every** resource type, so it overlaps
 every imperative capability skill — route with "Declarative vs imperative" above.
 
-**Lifecycle:** `project init` (scaffold from a template) → `project types` (type config
+**Lifecycle:** `project init` (scaffold from `getcargohq/cargo-manifest` — context, cadence
+and evals, with the resources it deploys in `infra/`) → `project types` (type config
 against the workspace) → author `define*` files → `project plan` (offline diff) →
 `project deploy` (create/update, write state) → `project destroy`. Plus `refresh` (drift),
-`import` (adopt existing), `rollback`.
+`import` (adopt existing), `pull` (generate `define*` from a live workspace and adopt it),
+`rollback`, `check` (validate, no state), `info` (what is here), `state` (inspect/repoint).
 
 **Critical rules:**
 
-- **Commit `cargo.state.json`** — it links code to created resources and is the
-  *only* handle on deployed plays/agents (no slug); losing it orphans them.
+- **Commit `cargo.state.json`** — but know it is a **pointer** (`{"stateUuid": "…"}`),
+  not the state. The deploy state lives in the workspace and is the *only* handle on
+  deployed plays/agents/alerts (no slug); lose the pointer and `project state bind`
+  recovers it, lose the state and they orphan. `project state list|create|bind`.
 - **Wire by handle, not `.uuid`** — pass a `define*` handle or `xxRef("uuid")`.
-- **Secrets** go through `secret("ENV_VAR")` — resolved at deploy, never written to
-  state or the content hash. Export the env var first.
+- **Three value helpers, not one.** `secret("ENV_VAR")` reads *your* environment at
+  deploy and stays out of state and the content hash (so a rotated secret needs
+  `deploy --refresh` to actually land); `env("ENV_VAR")` enters the hash on purpose;
+  `workspaceEnv("NAME")` is a pointer the server re-reads on every use, so rotating it
+  in the workspace needs no redeploy.
 - **`--yes`** is required for non-interactive `deploy`/`destroy` (CI).
 - **Run `cargo-ai project types`** after workspace integrations change so config
   type-checks; typing is a bonus, deploy works without it.

@@ -5,7 +5,7 @@ imperative CLI) and the user wants to manage them as code going forward — with
 creating duplicates.
 
 The tool is `cargo-ai project import <id> <uuid>`, which binds a resource's **code id**
-(`kind:slug`) to its **live uuid** in `cargo.state.json`. After import, `deploy`
+(`kind:slug`) to its **live uuid** in this project's deploy state. After import, `deploy`
 updates that resource in place instead of creating a new one.
 
 ## 1. Write the `define*` for the resource
@@ -45,7 +45,9 @@ cargo-ai project import agent:sdr <agent-uuid> --dir my-workspace
 - **Slug-addressable kinds** (connector, model) can also self-adopt on the next
   `deploy` by matching slug, so `import` is optional for them. **Uuid-only kinds**
   (play, agent, capacity, territory, segment) have no slug — `import` is the only
-  way to bind them, and the only way to recover if `cargo.state.json` is ever lost.
+  way to bind them one at a time. If you lost only the *pointer*, `project state list`
+  then `project state bind <uuid>` recovers everything at once; `import` is for when the
+  state itself is gone.
 
 ## 4. Verify with a plan
 
