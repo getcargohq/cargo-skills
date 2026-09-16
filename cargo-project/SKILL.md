@@ -1,7 +1,7 @@
 ---
 name: cargo-project
 description: "Manage a whole Cargo workspace as code — declare connectors, models, plays, tools, agents, MCP servers, segments, context, folders, files, workers, and apps in TypeScript, then reconcile them with `cargo-ai project` (init → types → plan → deploy), the way you would run Pulumi or the AWS CDK. Triggers: \"as code\", \"in git\", \"version-controlled\", \"reproducible\", \"Terraform for Cargo\", \"set up a whole workspace\", \"staging and production\", \"deploy the workspace from CI\", \"review this in a PR\", \"cargo.state.json\", \"scaffold from a template\", \"is there a cookbook for this\", \"start from a cookbook\". Skills with a CDK example (TAM building, account scoring, contact sourcing, routing, AI SDR, rep cockpit) live in gtm-skills; menu in references/cookbooks.md. Skip when: it is a one-off operation, a read, or an ad-hoc query — use the matching capability skill."
-version: "2.0.0"
+version: "2.1.0"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -264,8 +264,11 @@ acceptance test, and always review `cargo-ai project plan` before deploying.
   deploy polls `refreshStatus` for up to 5 minutes waiting for `active`. On
   `defineDomain`, `dnsRecords` is the **whole zone, not a patch**: declaring it
   replaces every live record (including the ones the registrar wrote at purchase),
-  and omitting it leaves the zone untouched. Use `adopt: true` for a domain or
-  mailbox bought in the UI. Ramp, suppression and sending:
+  and omitting it leaves the zone untouched. `redirectUrl`, `dmarcEmail` and
+  `dmarcPolicy` are **additive** and are the supported way to configure a zone
+  without replacing it, so reach for `dnsRecords` only when you mean to own every
+  record. Use `adopt: true` for a domain or mailbox bought in the UI. Ramp,
+  suppression and sending:
   [`../cargo-mailbox-management/SKILL.md`](../cargo-mailbox-management/SKILL.md).
 - **Route CDK-managed resources into a clearly-labelled folder.** Set `folder:` on
   each builder so everything CDK owns lands in a dedicated folder whose name signals
