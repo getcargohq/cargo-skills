@@ -203,7 +203,7 @@ With `--wait-until-finished`:
 
 ## Retry configuration
 
-Add a `retry` object to the action for automatic retries on transient failures:
+Add a `retry` object to the action for automatic retries on transient failures. `initialInterval` is in seconds, not milliseconds:
 
 ```bash
 cargo-ai orchestration action execute \
@@ -211,7 +211,7 @@ cargo-ai orchestration action execute \
     "kind":"connector",
     "integrationSlug":"clearbit",
     "actionSlug":"enrichCompany",
-    "retry":{"maximumAttempts":3,"initialInterval":1000,"backoffCoefficient":2}
+    "retry":{"maximumAttempts":3,"initialInterval":1,"backoffCoefficient":2}
   }' \
   --data '{"domain":"acme.com"}' \
   --wait-until-finished

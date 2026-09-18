@@ -147,7 +147,7 @@ For transient failures (rate limits, timeouts), add a `retry` config to the node
   "kind": "connector",
   "retry": {
     "maximumAttempts": 3,
-    "initialInterval": 1000,
+    "initialInterval": 1,
     "backoffCoefficient": 2
   },
   ...
@@ -155,7 +155,7 @@ For transient failures (rate limits, timeouts), add a `retry` config to the node
 ```
 
 - `maximumAttempts` — how many times to try before marking the node as failed
-- `initialInterval` — milliseconds before the first retry
+- `initialInterval` — seconds before the first retry. **Not milliseconds** — `1` is one second, `30` is thirty seconds.
 - `backoffCoefficient` — multiplier for each subsequent retry interval (2 = exponential backoff)
 
 Use `fallbackOnFailure: true` if you want execution to continue to the next node even when all retries are exhausted.

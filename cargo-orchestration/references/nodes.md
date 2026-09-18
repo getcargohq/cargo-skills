@@ -41,7 +41,7 @@ Every node in the `--nodes` JSON array has these fields:
 | `fallbackOnFailure` | yes      | Continue to the next node even if this one fails                           |
 | `position`          | yes      | `{"x": 0, "y": 0}` — layout only, no runtime effect                        |
 | `fallbackChildUuid` | no       | UUID of a fallback node to run on failure                                  |
-| `retry`             | no       | `{"maximumAttempts": 3, "initialInterval": 1000, "backoffCoefficient": 2}` |
+| `retry`             | no       | `{"maximumAttempts": 3, "initialInterval": 1, "backoffCoefficient": 2}` (`initialInterval` is seconds, not milliseconds) |
 | `name`              | no       | Display name                                                               |
 | `description`       | no       | Description                                                                |
 
