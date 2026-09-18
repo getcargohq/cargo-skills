@@ -10,6 +10,10 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### `cargo-orchestration` → 1.12.1 — retry `initialInterval` is seconds
+
+The engine sleeps `initialInterval * 1000` milliseconds. The skill called that field milliseconds and the copy-paste examples used `1000`, so an agent following them waited ~17 minutes for a one-second retry (and 8 hours for `30000`). [`references/polling.md`](cargo-orchestration/references/polling.md), [`references/nodes.md`](cargo-orchestration/references/nodes.md), and [`references/examples/actions.md`](cargo-orchestration/references/examples/actions.md) now say seconds and use `1`.
+
 ### `cargo` → 1.26.0, `cargo-project` → 3.0.0, + 6 skills — catch up to CLI 1.0.96
 
 The pin sat at `1.0.78` while the CLI shipped to `1.0.96`. That gap was not just missing
