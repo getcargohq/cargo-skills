@@ -10,6 +10,19 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### `cargo-hosting` → 1.1.0, `cargo` → 1.26.1, `cargo-workspace-management` → 1.3.1 — worker env vars, secrets, local dev, CORS
+
+From a migration report ([#134](https://github.com/getcargohq/cargo-skills/issues/134)). Each gap cost the reporter 15–30 minutes, and most of them had a working path the skill never mentioned:
+
+- **Worker env vars and secrets.** The skill said workers "have no `env` subcommand" and stopped there. [`cargo-hosting/SKILL.md`](cargo-hosting/SKILL.md) now documents the three sources (platform bindings, workspace env vars via the existing `workspaceManagement envVar` CLI, and per-worker entries via CDK `defineWorker({ env })` or `POST /v1/hosting/env-vars`), with worker entries overriding workspace ones. It also covers the override order and the fact that **values bind at promote**, so a change needs a new deploy + promote.
+- **`CARGO_API_TOKEN` is never injected.** It now has its own setup step, plus a troubleshooting entry for the `Missing CARGO_API_TOKEN` error.
+- **Caught errors leave no stack.** `createWorker()` already ships `console.*` and uncaught stacks to the logs. A route that sanitizes its error response has to `console.error(err)` first. Reading logs through `POST /v1/hosting/logs/list` is documented.
+- **App → worker is cross-origin.** Documented with a `hono/cors` snippet and a `VITE_` env var for the worker URL, in place of a hardcoded global.
+- **Worker entrypoints.** The four accepted names are listed, and `.mjs` is called out as not accepted.
+- **Local dev.** The `npm run dev` harness both templates ship (`dev.ts`) was undocumented.
+- **URLs and slugs were wrong.** The live host is `<slug>-<workspace prefix>.<root>`, apps and workers have different roots (`*.app.getcargo.run` / `*.worker.getcargo.run` in production), and slugs are unique per workspace, not globally. The skill, glossary, router, README, and response shapes claimed `<slug>.cargo.app` with globally unique slugs.
+- [`cargo-workspace-management`](cargo-workspace-management/SKILL.md) said workspace env vars are read live everywhere with "no redeploy". That holds for agents and CDK `workspaceEnv()` pointers but not for hosted workers and apps, which capture values at deploy.
+
 ### `cargo-orchestration` → 1.12.1 — retry `initialInterval` is seconds
 
 The engine sleeps `initialInterval * 1000` milliseconds. The skill called that field milliseconds and the copy-paste examples used `1000`, so an agent following them waited ~17 minutes for a one-second retry (and 8 hours for `30000`). [`references/polling.md`](cargo-orchestration/references/polling.md), [`references/nodes.md`](cargo-orchestration/references/nodes.md), and [`references/examples/actions.md`](cargo-orchestration/references/examples/actions.md) now say seconds and use `1`.

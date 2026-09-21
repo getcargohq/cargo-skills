@@ -1,6 +1,6 @@
 # App examples
 
-Apps are Vite single-page apps served on `https://<slug>.cargo.app`, scaffolded from `@cargo-ai/app-sdk`.
+Apps are Vite single-page apps served on `https://<slug>-<workspace prefix>.app.getcargo.run` in production (read the exact host from `url`), scaffolded from `@cargo-ai/app-sdk`.
 
 ## Scaffold → create → deploy → promote (end to end)
 
@@ -9,9 +9,9 @@ Apps are Vite single-page apps served on `https://<slug>.cargo.app`, scaffolded 
 cargo-ai hosting app init ./territories --list-templates
 cargo-ai hosting app init ./territories --template territories-overview --name "Territories"
 
-# 2. Create the workspace slot. --slug is the live subdomain → must be globally unique.
+# 2. Create the workspace slot. --slug is unique per workspace; the host adds a workspace suffix.
 cargo-ai hosting app create --name "Territories" --slug territories
-# → { "uuid": "<app-uuid>", "slug": "territories", "url": "https://territories.cargo.app", ... }
+# → { "uuid": "<app-uuid>", "slug": "territories", "url": "https://territories-1a2b3c4d.app.getcargo.run", ... }
 
 # 3. (optional) Develop locally — write the .env.local the app needs, then run Vite
 cargo-ai hosting app env <app-uuid> > ./territories/.env.local
@@ -24,7 +24,7 @@ cargo-ai hosting deployment create --app-uuid <app-uuid> --source ./territories
 # 5. Poll until the build is terminal
 cargo-ai hosting deployment get <deployment-uuid>
 
-# 6. Promote to make it live at https://territories.cargo.app
+# 6. Promote to make it live at the app's `url`
 cargo-ai hosting deployment promote --uuid <deployment-uuid>
 
 # 7. Confirm what's live

@@ -1,7 +1,7 @@
 ---
 name: cargo
 description: "Router for the Cargo CLI skill bundle — load first for anything Cargo, and whenever a task spans two Cargo domains. Explains what each skill owns, declarative workspace-as-code (cargo-project) vs the imperative CLI, the UUID and slug flow between skills, async polling of runs and batches, end-to-end use cases, and the gotchas that fail silently (`conjonction` spelling, run vs batch, model-uuid vs segment-uuid). Triggers: \"set up Cargo\", \"what can Cargo do\", \"which Cargo skill\", \"bootstrap my workspace\", \"I have a Cargo account\", \"cargo-ai …\", or any `cargo-ai` command whose domain you are unsure of. Skip when: the task obviously belongs to one skill — load that skill directly."
-version: "1.26.0"
+version: "1.26.1"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -251,7 +251,7 @@ Load for a specific CLI domain. The first link in each row jumps to the actual S
 | [`cargo-ai`](../cargo-ai/SKILL.md) ([recap](#cargo-ai))                                                     | Create and configure agents, configure releases, attach knowledge for RAG, manage MCP servers and memories |
 | [`cargo-content`](../cargo-content/SKILL.md) ([recap](#cargo-content))                                      | Upload and organize knowledge files, build native/connector-backed knowledge libraries for RAG (the `content` domain) |
 | [`cargo-context`](../cargo-context/SKILL.md) ([recap](#cargo-context))                                      | Browse/read/write/edit the workspace's git-backed GTM context repo, run commands in its runtime sandbox, inspect the knowledge graph |
-| [`cargo-hosting`](../cargo-hosting/SKILL.md) ([recap](#cargo-hosting))                                      | Scaffold, deploy, and promote hosted apps (Vite SPAs on `*.cargo.app`) and edge workers (serverless HTTP handlers), and manage their deployments |
+| [`cargo-hosting`](../cargo-hosting/SKILL.md) ([recap](#cargo-hosting))                                      | Scaffold, deploy, and promote hosted apps (Vite SPAs) and edge workers (serverless HTTP handlers), manage their deployments, and give workers env vars and secrets |
 | [`cargo-project`](../cargo-project/SKILL.md) ([recap](#cargo-project))                                                   | **Declarative — spans every resource type.** Define a whole workspace in code (`define*` builders) and deploy it with `cargo-ai project` (init → types → plan → deploy). Use for workspace-as-code / reproducible / version-controlled setups; see "Declarative vs imperative" above. |
 | [`cargo-mailbox-management`](../cargo-mailbox-management/SKILL.md) ([recap](#cargo-mailbox-management))        | Provision sending mailboxes Cargo owns, run warm-up and the 5→40/day send ramp, send with the `sendEmail` action, and read threads, replies, delivery events, and suppressions |
 | [`cargo-workspace-management`](../cargo-workspace-management/SKILL.md) ([recap](#cargo-workspace-management)) | Invite users, create API tokens, organize folders, manage roles, report CLI issues to management   |
@@ -589,11 +589,13 @@ See `../cargo-ai/SKILL.md` for model and temperature guidance by use case.
 
 ### cargo-hosting
 
-**Lifecycle:** `init` (local scaffold) → `create` (slot + globally-unique slug) → `deployment create` (build+upload) → `deployment promote` (go live).
+**Lifecycle:** `init` (local scaffold) → `create` (slot + workspace-unique slug) → `deployment create` (build+upload) → `deployment promote` (go live).
 
 **Critical rules:**
 
-- `--slug` is the live subdomain — **globally unique within the hosting domain**.
+- `--slug` is unique **per workspace**; the live host is `<slug>-<workspace prefix>.<root>`, and apps and workers have different roots. Read `url` from `get` instead of composing it. App → worker calls are therefore **cross-origin**: the worker must answer CORS.
+- **`CARGO_API_TOKEN` is never injected.** `createCargoApi` throws without it. Mint a token and store it as a secret env var: workspace-wide with `workspaceManagement envVar create --secret`, or per worker via CDK `defineWorker({ env })` / `POST /v1/hosting/env-vars`, since the `hosting` CLI has no env command at 1.0.96. Env vars bind at promote, so **redeploy + promote after any change**.
+- A worker `catch` that returns a sanitized error must `console.error(err)` first. Only uncaught errors reach the logs with a stack.
 - **Deploying ≠ going live.** `deployment create` builds; the URL only moves on `deployment promote`. `deployment get-promoted` shows what's live.
 - `--source` is the **package root**, not `dist/` — the build (`npm ci && vite build` for apps, bundling for workers) runs server-side.
 - Builds are async — poll `deployment get` until terminal before promoting.

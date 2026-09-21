@@ -19,7 +19,7 @@ A string identifier for a specific action on a workflow node. Present on both `k
 An AI resource with configured instructions, a language model, and optional actions. Created and configured via `cargo-ai`. Used in workflows as a `kind: "agent"` node, or messaged directly via `cargo-orchestration`.
 
 **app (Cargo Hosting)**
-A hosted Vite single-page app served on `https://<slug>.cargo.app`, built on `@cargo-ai/app-sdk` (Vite + refine, with `getCargoEnv()` / `useCargoApi()` wired to the workspace). Scaffolded with `hosting app init`, registered as a slot with `hosting app create` (which sets the globally-unique `--slug`), shipped via a **deployment**. Managed in the **`cargo-hosting`** skill. Distinct from a **worker** (a UI-less edge HTTP handler).
+A hosted Vite single-page app served on `https://<slug>-<workspace prefix>.app.getcargo.run` (the `url` field is authoritative), built on `@cargo-ai/app-sdk` (Vite + refine, with `getCargoEnv()` / `useCargoApi()` wired to the workspace). Scaffolded with `hosting app init`, registered as a slot with `hosting app create` (which sets the `--slug`, unique per workspace), shipped via a **deployment**. Managed in the **`cargo-hosting`** skill. Distinct from a **worker** (a UI-less edge HTTP handler).
 
 **appUuid**
 The UUID of a Cargo Hosting app, returned by `hosting app create`. Passed as `--app-uuid` to deployment commands (`deployment create|list|get-promoted`), mutually exclusive with `--worker-uuid`.
@@ -150,7 +150,7 @@ The set of activities for finding, qualifying, and engaging prospects: sourcing,
 ## H
 
 **hosting**
-The CLI domain (`cargo-ai hosting …`) for Cargo Hosting — **apps** (Vite SPAs on `*.cargo.app`), **workers** (serverless edge HTTP handlers), and the **deployments** that ship and promote them. The lifecycle is `init` (local scaffold) → `create` (slot + globally-unique slug) → `deployment create` (build+upload) → `deployment promote` (go live). Documented in the **`cargo-hosting`** skill.
+The CLI domain (`cargo-ai hosting …`) for Cargo Hosting — **apps** (Vite SPAs), **workers** (serverless edge HTTP handlers), and the **deployments** that ship and promote them. The lifecycle is `init` (local scaffold) → `create` (slot + workspace-unique slug) → `deployment create` (build+upload) → `deployment promote` (go live). Documented in the **`cargo-hosting`** skill.
 
 ---
 
