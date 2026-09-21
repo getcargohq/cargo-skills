@@ -115,7 +115,7 @@ app.use(
 
 Register it **before** the routes it covers so preflight `OPTIONS` requests are answered. List exact origins, taking the app's from `hosting app get <app-uuid>` → `url`, rather than `*` when the worker holds a workspace token.
 
-**2. The app gets the worker URL from an env var, not a hardcoded global.** An app's build receives every **non-secret, `VITE_`-prefixed** env var (workspace-level, or app-level via `POST /v1/hosting/env-vars` with `"kind":"app"`) in `.env.production`:
+**2. The app gets the worker URL from an env var, not a hardcoded global.** An app's build receives every env var with a **public prefix** (`VITE_` for a Vite app; `NEXT_PUBLIC_`, `PUBLIC_` and the others work too), whether workspace-level or app-level (`POST /v1/hosting/env-vars` with `"kind":"app"`):
 
 ```bash
 cargo-ai workspaceManagement envVar create --key VITE_MY_API_URL \
@@ -126,7 +126,7 @@ cargo-ai workspaceManagement envVar create --key VITE_MY_API_URL \
 const res = await fetch(`${import.meta.env.VITE_MY_API_URL}/api/data`);
 ```
 
-Redeploy the app after setting it, because the value is baked into the build. Never put a secret in a `VITE_` variable: the Vite bundle is public, and secret entries are excluded from the app build for that reason.
+Redeploy the app after setting it, because the value is baked into the build. App env vars can't be secret. The API rejects `isSecret` for apps, and secret workspace entries never reach an app build, because the bundle is public. That is exactly why the token stays in the worker.
 
 ## Logging errors
 

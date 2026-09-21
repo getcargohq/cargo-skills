@@ -22,7 +22,10 @@ cargo-ai hosting deployment get-promoted --app-uuid <app-uuid>   # verify what's
 
 ## `deployment create` build fails
 
-The build runs server-side in a sandbox (`npm ci && vite build` for apps, entrypoint bundling for workers). A failed build usually means:
+The build runs server-side in a sandbox (`npm ci --ignore-scripts` then the app's `build` script, or the framework default, for apps; entrypoint bundling for workers). A failed build usually means:
+
+- **The app's own `build` script failed.** If `package.json` declares one, Cargo runs it verbatim, including any `tsc` pass, `--mode`, or `prebuild`/`postbuild` hook. Run `npm run build` locally first.
+- **No `index.html` in the output directory.** Output must land in the detected framework's directory (`dist` for Vite/Astro/undetected, `out` for Next.js, `build` for SvelteKit/CRA, `public` for Gatsby, `.output/public` for Nuxt).
 
 - **`--source` points at the wrong directory.** Pass the **package root** (where `package.json` lives), not a pre-built `dist/`.
 - **`npm ci` can't resolve the lockfile.** Ensure `package-lock.json` is present and in sync with `package.json`, and that it isn't in the ignore list.
@@ -68,7 +71,23 @@ Don't debug this by shipping an endpoint that echoes `Object.keys(c.env)`. The l
 
 ## Browser blocks the app's calls to the worker (CORS)
 
-Apps and workers are served from different root domains, so every app → worker call is cross-origin and preflighted. Add `hono/cors` middleware on the worker for the app's exact origin (from `hosting app get` → `url`) plus your local dev origin, registered before the routes. Pass the worker URL to the app as a non-secret `VITE_` env var, not a hardcoded global. Full snippet: [`examples/workers.md`](examples/workers.md#calling-a-worker-from-an-app).
+Apps and workers are served from different root domains, so every app → worker call is cross-origin and preflighted. Add `hono/cors` middleware on the worker for the app's exact origin (from `hosting app get` → `url`) plus your local dev origin, registered before the routes. Pass the worker URL to the app as a public-prefixed env var (`VITE_…` for a Vite app), not a hardcoded global. Full snippet: [`examples/workers.md`](examples/workers.md#calling-a-worker-from-an-app).
+
+## Build went green but my prerender step didn't run
+
+If Cargo can't use the declared `build` script (unparseable `package.json`, empty script, non-string entry), it falls back to the framework default without failing. The build log names the reason: `No usable \`build\` script (…); running … instead`.
+
+## `secretNotSupportedForApp` / CDK "must be a plain string"
+
+App env vars are compiled into a public bundle, so they cannot be secret. Move the credential to a worker, and have the app call that worker.
+
+## `App environment variables must start with a recognized prefix`
+
+App keys need a public prefix: `VITE_`, `NEXT_PUBLIC_`, `PUBLIC_`, `NUXT_PUBLIC_`, `GATSBY_` or `REACT_APP_`.
+
+## My public app isn't showing up in search
+
+The default host and every deployment preview send `X-Robots-Tag: noindex`, so attach a custom domain (`POST /v1/hosting/custom-domains`, then `refresh-status` until `active`). Serve prerendered HTML at `.html` paths and submit the sitemap. Apps on `CargoRefineApp` require a login and can't be indexed at all. Full checklist: `SKILL.md` → Custom domains and search indexing.
 
 ## Removing an app/worker took its deployments too
 

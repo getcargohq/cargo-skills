@@ -113,7 +113,7 @@ A logical grouping of models in the Cargo workspace. Similar to a schema or fold
 Data Definition Language. In Cargo context, the result of `storage model get-ddl <uuid>` — contains the SQL table name, column definitions, and SQL dialect (`language`). Run when you need column types or the SQL dialect; `storage query execute` and `storage query download` reference tables by `<datasetSlug>.<modelSlug>` directly.
 
 **deployment (Cargo Hosting)**
-One build+upload of a local source directory to a hosting **app** or **worker**, created with `hosting deployment create --source <pkg-root>` (the backend runs `npm ci && vite build` for apps, or bundles the entrypoint for workers). A deployment is **not live until promoted** — `hosting deployment promote` points the subdomain at it, and `hosting deployment get-promoted` shows what's currently live. Managed in the **`cargo-hosting`** skill.
+One build+upload of a local source directory to a hosting **app** or **worker**, created with `hosting deployment create --source <pkg-root>` (the backend runs the app's own `build` script, or the detected framework's default such as `vite build`, for apps, or bundles the entrypoint for workers). A deployment is **not live until promoted** — `hosting deployment promote` points the subdomain at it, and `hosting deployment get-promoted` shows what's currently live. Managed in the **`cargo-hosting`** skill.
 
 **deploymentUuid**
 The UUID returned by `hosting deployment create`. Poll it with `hosting deployment get <uuid>` until the build status is terminal, then pass it to `hosting deployment promote --uuid`.

@@ -10,7 +10,7 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
-### `cargo-hosting` → 1.1.0, `cargo` → 1.26.1, `cargo-workspace-management` → 1.3.1 — worker env vars, secrets, local dev, CORS
+### `cargo-hosting` → 1.1.0, `cargo` → 1.26.1, `cargo-workspace-management` → 1.3.1 — worker env vars, secrets, local dev, CORS, app builds, custom domains
 
 From a migration report ([#134](https://github.com/getcargohq/cargo-skills/issues/134)). Each gap cost the reporter 15–30 minutes, and most of them had a working path the skill never mentioned:
 
@@ -21,6 +21,11 @@ From a migration report ([#134](https://github.com/getcargohq/cargo-skills/issue
 - **Worker entrypoints.** The four accepted names are listed, and `.mjs` is called out as not accepted.
 - **Local dev.** The `npm run dev` harness both templates ship (`dev.ts`) was undocumented.
 - **URLs and slugs were wrong.** The live host is `<slug>-<workspace prefix>.<root>`, apps and workers have different roots (`*.app.getcargo.run` / `*.worker.getcargo.run` in production), and slugs are unique per workspace, not globally. The skill, glossary, router, README, and response shapes claimed `<slug>.cargo.app` with globally unique slugs.
+- **App builds, app env vars, custom domains and indexing** (written against [cargo#5552](https://github.com/getcargohq/cargo/pull/5552)):
+  - Apps now build with their own `package.json` `build` script, which owns the whole build. Without one, the detected framework's default runs: Vite (also the fallback), Next.js static export, Astro, SvelteKit, Nuxt, Gatsby or CRA, each with its own output dir.
+  - App env vars accept any public prefix (`VITE_`, `NEXT_PUBLIC_`, `PUBLIC_`, …) and **cannot be secret** (`secretNotSupportedForApp`; CDK `defineApp` throws on `secret()`).
+  - Cargo-owned hosts send `X-Robots-Tag: noindex`, so an app is indexable only on a custom domain. That is attached through `POST /v1/hosting/custom-domains`, and app custom domains now actually route.
+  - New `public-site` template.
 - [`cargo-workspace-management`](cargo-workspace-management/SKILL.md) said workspace env vars are read live everywhere with "no redeploy". That holds for agents and CDK `workspaceEnv()` pointers but not for hosted workers and apps, which capture values at deploy.
 
 ### `cargo-orchestration` → 1.12.1 — retry `initialInterval` is seconds

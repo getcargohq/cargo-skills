@@ -597,7 +597,9 @@ See `../cargo-ai/SKILL.md` for model and temperature guidance by use case.
 - **`CARGO_API_TOKEN` is never injected.** `createCargoApi` throws without it. Mint a token and store it as a secret env var: workspace-wide with `workspaceManagement envVar create --secret`, or per worker via CDK `defineWorker({ env })` / `POST /v1/hosting/env-vars`, since the `hosting` CLI has no env command at 1.0.96. Env vars bind at promote, so **redeploy + promote after any change**.
 - A worker `catch` that returns a sanitized error must `console.error(err)` first. Only uncaught errors reach the logs with a stack.
 - **Deploying ≠ going live.** `deployment create` builds; the URL only moves on `deployment promote`. `deployment get-promoted` shows what's live.
-- `--source` is the **package root**, not `dist/` — the build (`npm ci && vite build` for apps, bundling for workers) runs server-side.
+- `--source` is the **package root**, not `dist/` — the build runs server-side: the app's own `build` script if `package.json` declares one (it owns the whole build), otherwise the detected framework's default (`vite build`, `next build`, …); bundling for workers.
+- App env vars need a public prefix (`VITE_`, `NEXT_PUBLIC_`, …), are compiled into a public bundle, and **cannot be secret** (`secretNotSupportedForApp`).
+- Cargo-owned hosts send `X-Robots-Tag: noindex`; an app is indexable only on a custom domain (`POST /v1/hosting/custom-domains`) with prerendered HTML.
 - Builds are async — poll `deployment get` until terminal before promoting.
 - `--app-uuid` / `--worker-uuid` are mutually exclusive on deployment commands; `remove` cascades to deployments.
 - Folders come from [`cargo-workspace-management`](#cargo-workspace-management); `--folder-uuid null` moves to root.

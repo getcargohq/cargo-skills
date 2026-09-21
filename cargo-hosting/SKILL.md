@@ -1,6 +1,6 @@
 ---
 name: cargo-hosting
-description: "Put something on the internet from Cargo — hosted Vite single-page apps and serverless edge workers that answer HTTP requests, plus the deployments that build and promote them, the env vars and secrets a worker reads, and running a worker locally. Triggers: \"build me a dashboard for this\", \"host this app\", \"give me a URL to share\", \"deploy this\", \"I need a webhook endpoint\", \"make it live\", \"promote to production\", \"ship a UI for my team\", \"give my worker an API token\", \"set a secret on the worker\", \"Missing CARGO_API_TOKEN\", \"my app cannot call my worker\", \"run the worker locally\". Skip when: the app or worker should be declared as committed workspace code — use cargo-project."
+description: "Put something on the internet from Cargo — hosted web apps (Vite by default, other static frameworks detected) and serverless edge workers that answer HTTP requests, plus the deployments that build and promote them, the env vars and secrets a worker reads, running a worker locally, and custom domains and search indexing for public sites. Triggers: \"build me a dashboard for this\", \"host this app\", \"give me a URL to share\", \"deploy this\", \"I need a webhook endpoint\", \"make it live\", \"promote to production\", \"ship a UI for my team\", \"give my worker an API token\", \"set a secret on the worker\", \"Missing CARGO_API_TOKEN\", \"my app cannot call my worker\", \"run the worker locally\", \"put it on my own domain\", \"make the site indexable by Google\". Skip when: the app or worker should be declared as committed workspace code — use cargo-project."
 version: "1.1.0"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
@@ -22,7 +22,7 @@ metadata:
 
 **Cargo Hosting** runs two kinds of workspace-scoped resources, plus the deployments that ship them:
 
-- **App** — a Vite single-page app served on its own subdomain (see [URLs](#urls)), built on `@cargo-ai/app-sdk` (Vite + refine + shadcn primitives, with `getCargoEnv()` / `useCargoApi()` wired to the workspace).
+- **App** — a static front end (a Vite single-page app by default; Next.js static export, Astro, SvelteKit, Nuxt, Gatsby and Create React App are detected too) served on its own subdomain (see [URLs](#urls)). The templates are built on `@cargo-ai/app-sdk` (Vite + refine + shadcn primitives, with `getCargoEnv()` / `useCargoApi()` wired to the workspace).
 - **Worker** — a serverless HTTP handler that runs on the edge (`fetch(request, env)`), built on `@cargo-ai/worker-sdk` (auto OpenAPI 3.1 spec at `/openapi.json`, Swagger UI at `/docs`).
 - **Deployment** — one build+upload of a local source directory to an app or worker. A deployment is **not live until it's promoted**.
 
@@ -56,7 +56,7 @@ init (local scaffold) → create (slot + slug) → deployment create (build+uplo
 1. **Scaffold** a local project from a template — `hosting app init <dir>` / `hosting worker init <dir>`.
 2. **Create the slot** in the workspace — `hosting app create --name --slug` → `appUuid` (or `workerUuid`). The `--slug` becomes part of the subdomain and must be unique within the workspace.
 3. **(optional) Wire local dev** — for an app, `hosting app env <appUuid>` prints the `.env.local` lines a local copy needs (Cargo OAuth + workspace + app UUID + API URL). For a worker, `npm run dev` in the scaffold (see [Run a worker locally](#run-a-worker-locally)). A worker that calls the Cargo API also needs a `CARGO_API_TOKEN` secret before its first deploy (see [Worker env vars and secrets](#worker-env-vars-and-secrets)).
-4. **Deploy** — `hosting deployment create --app-uuid <uuid> --source <dir>` uploads the source; the backend runs `npm ci && vite build` (apps) or bundles the entrypoint (workers) in a sandbox. Returns a `deploymentUuid`.
+4. **Deploy** — `hosting deployment create --app-uuid <uuid> --source <dir>` uploads the source. The backend then builds it in a sandbox: for an app, `npm ci --ignore-scripts` followed by the app's own `build` script, or the framework's default build if there is none (see [App builds](#app-builds)); for a worker, it bundles the entrypoint. Returns a `deploymentUuid`.
 5. **Promote** — `hosting deployment promote --uuid <deploymentUuid>` points the live URL at that build.
 
 Deploys build asynchronously — **poll `hosting deployment get <uuid>`** until the status is terminal before promoting (see [Async polling](#async-polling)).
@@ -93,7 +93,54 @@ cargo-ai hosting app update --uuid <app-uuid> --folder-uuid null   # move to wor
 cargo-ai hosting app remove <app-uuid>                             # also removes its deployments
 ```
 
-Templates: `blank` (minimal starting point) and `territories-overview` (read-only territories grid demoing `useCargoApi()` + react-query). Run `app init <dir> --list-templates` for the current list.
+Templates: `blank` (minimal starting point), `territories-overview` (read-only territories grid demoing `useCargoApi()` + react-query), and `public-site` (a public, indexable site that prerenders every route from its own build script and ships `robots.txt` + `sitemap.xml`). Run `app init <dir> --list-templates` for the current list.
+
+### App builds
+
+**If `package.json` declares a `build` script, Cargo runs it, and that script owns the whole build.** Cargo runs nothing before or after it, so the script must produce the client bundle as well as anything extra, such as prerendered HTML. Without a `build` script, the detected framework's default command runs:
+
+| Framework (detected from dependencies) | Default build | Output dir | Public env prefix |
+|---|---|---|---|
+| Vite, and anything undetected | `vite build` | `dist` | `VITE_` |
+| Next.js (static export) | `next build` | `out` | `NEXT_PUBLIC_` |
+| Astro | `astro build` | `dist` | `PUBLIC_` |
+| SvelteKit | `svelte-kit build` | `build` | `PUBLIC_` |
+| Nuxt | `nuxt generate` | `.output/public` | `NUXT_PUBLIC_` |
+| Gatsby | `gatsby build` | `public` | `GATSBY_` |
+| Create React App | `react-scripts build` | `build` | `REACT_APP_` |
+
+- **Output must land in that framework's output directory and contain an `index.html`**, or the build fails. Unknown paths fall back to that shell.
+- **Whatever the build script does now runs on every deploy.** That includes a `tsc` pass, a different `--mode`, and `prebuild`/`postbuild` hooks. A script that fails there fails the deploy. The live deployment keeps serving, because promotion only follows a successful build.
+- **A `build` script Cargo can't use falls back silently.** That covers an unparseable `package.json`, an empty script, or a non-string entry. The deploy still goes green, and only the build log says why, so check it when a prerender step seems to have been skipped.
+- **Platform values are injected under every public prefix.** A Vite app reads `VITE_CARGO_API_URL` and a Next.js app reads `NEXT_PUBLIC_CARGO_API_URL`. When a `build` script is used, they are also passed as real process env vars, so a plain-Node prerender step sees them. User env values are redacted from build logs.
+
+### App env vars are public
+
+An app reads only env vars whose key starts with a **public prefix**: `VITE_`, `NEXT_PUBLIC_`, `PUBLIC_`, `NUXT_PUBLIC_`, `GATSBY_` or `REACT_APP_`. Any of these prefixes works whatever the framework. They come from workspace env vars and from app-level entries (`POST /v1/hosting/env-vars` with `"kind":"app"`, or CDK `defineApp({ env })`). Every one of them is compiled into a bundle anyone can download. For that reason:
+
+- **App env vars cannot be secret.** The API rejects `isSecret: true` with `secretNotSupportedForApp`, CDK `defineApp` throws on a `secret()` value, and secret workspace entries never reach an app build. Credentials belong in a worker that the app calls.
+- Keys matching a platform key under any prefix (`*_CARGO_API_URL`, `*_CARGO_WORKSPACE_UUID`, `*_APP_BASE_PATH`, …) are reserved.
+- Values are baked in at build time, so a change needs a new deploy + promote.
+
+### Custom domains and search indexing
+
+**Cargo-owned hosts are `noindex`.** The default `*.app.getcargo.run` host and every `deployment-<uuid>` preview answer with `X-Robots-Tag: noindex`, so **an app only becomes indexable on a custom domain**. No CLI command attaches one at CLI 1.0.96, so use the API:
+
+```bash
+curl -X POST https://api.getcargo.io/v1/hosting/custom-domains \
+  -H "authorization: Bearer $CARGO_API_TOKEN" -H "content-type: application/json" \
+  -d '{"kind":"app","appUuid":"<uuid>","hostname":"www.example.com"}'
+# → DNS records to add: certificate validation records + a cnameTarget for the hostname
+curl -X POST https://api.getcargo.io/v1/hosting/custom-domains/<domain-uuid>/refresh-status \
+  -H "authorization: Bearer $CARGO_API_TOKEN"                                   # repeat until status is "active"
+```
+
+- The hostname needs **at least three labels**, so attach `www.example.com`, not `example.com`.
+- Workers take custom domains too (`"kind":"worker","workerUuid":…`). Separate hostnames are still separate origins, so app → worker CORS still applies.
+- **Indexing also needs real HTML per URL.** Prerender in the `build` script (the `public-site` template shows how). Link prerendered routes as `.html` paths: `/about.html` serves the prerendered file, while `/about` falls back to the SPA shell. Ship `public/robots.txt` + `public/sitemap.xml`, and put a title, description, canonical and Open Graph tags in each prerendered head.
+- **A hosted app never returns a 404.** An unknown path serves the SPA shell with a `200`, so a client-side not-found view should set `<meta name="robots" content="noindex">` itself.
+- **Apps built on `CargoRefineApp` require a Cargo login** and cannot be indexed. A public site renders its own tree.
+- Nothing is submitted to search engines for you. Submit the sitemap in Search Console.
 
 ## Workers
 
@@ -123,7 +170,7 @@ A worker reads configuration from `c.env.KEY` (Hono context) or the `env` argume
 | Source | Set with | Reaches |
 |---|---|---|
 | **Platform bindings** | automatic | `CARGO_API_URL`, `CARGO_WORKSPACE_UUID`, `CARGO_WORKER_UUID` |
-| **Workspace env vars** | `cargo-ai workspaceManagement envVar create --key K [--secret]` | every worker **and** app in the workspace |
+| **Workspace env vars** | `cargo-ai workspaceManagement envVar create --key K [--secret]` | every worker in the workspace (apps get only the non-secret, public-prefixed ones) |
 | **Worker env vars** | `defineWorker({ env })` in CDK, or `POST /v1/hosting/env-vars` (no `hosting` CLI command at CLI 1.0.96) | that worker only, and a worker entry overrides a workspace entry with the same key |
 
 **`CARGO_API_TOKEN` is not injected.** `createCargoApi(c.env)` throws `Missing CARGO_API_TOKEN…` until you provide one. Mint a workspace API token and store it as a secret before the first deploy:
@@ -197,7 +244,9 @@ cargo-ai hosting deployment promote --uuid <deployment-uuid>
 - **Env var changes need a new deploy + promote.** Values are bound at promote and non-secrets are compiled into the bundle, so editing a variable changes nothing until the next deployment is live.
 - **Log before you sanitize.** Only uncaught errors reach the logs with a stack. A `catch` that returns a friendly message must `console.error(err)` first, or the cause is gone.
 - **Deploying ≠ going live.** `deployment create` builds and uploads; the URL only changes when you `deployment promote` that deployment. Use `deployment get-promoted` to see what's live now.
-- **`--source` is the package root, not `dist/`.** The build runs in a Cargo sandbox: `npm ci && vite build` for apps, entrypoint bundling for workers. Shipping a pre-built `dist/` will not work.
+- **`--source` is the package root, not `dist/`.** The build runs in a Cargo sandbox: `npm ci --ignore-scripts` then the app's `build` script (or the framework default) for apps, entrypoint bundling for workers. Shipping a pre-built `dist/` will not work.
+- **App env vars are public and never secret.** They are compiled into the bundle, and `isSecret` is rejected. Put credentials in a worker.
+- **Cargo-owned hosts are `noindex`.** A public site needs a custom domain (API only at 1.0.96) and prerendered HTML to be indexed.
 - **Builds are async** — poll `deployment get` until terminal before promoting (see below).
 - **`--app-uuid` / `--worker-uuid` are mutually exclusive** on `deployment create`, `deployment list`, and `deployment get-promoted`. Pass exactly one.
 - **`remove` cascades** — removing an app or worker also removes all of its deployments.

@@ -1,6 +1,6 @@
 # App examples
 
-Apps are Vite single-page apps served on `https://<slug>-<workspace prefix>.app.getcargo.run` in production (read the exact host from `url`), scaffolded from `@cargo-ai/app-sdk`.
+Apps are static front ends (Vite single-page apps by default; other frameworks are detected, see `SKILL.md` → App builds) served on `https://<slug>-<workspace prefix>.app.getcargo.run` in production (read the exact host from `url`), scaffolded from `@cargo-ai/app-sdk`.
 
 ## Scaffold → create → deploy → promote (end to end)
 
@@ -17,7 +17,8 @@ cargo-ai hosting app create --name "Territories" --slug territories
 cargo-ai hosting app env <app-uuid> > ./territories/.env.local
 cd ./territories && npm install && npm run dev
 
-# 4. Build & upload (source = package root, not dist/). The backend runs `npm ci && vite build`.
+# 4. Build & upload (source = package root, not dist/). The backend runs `npm ci --ignore-scripts`,
+#    then the app's `build` script (or the framework default, `vite build` here).
 cargo-ai hosting deployment create --app-uuid <app-uuid> --source ./territories
 # → { "uuid": "<deployment-uuid>", "status": "...", ... }
 
@@ -50,6 +51,18 @@ cargo-ai hosting app env <app-uuid> > ./my-app/.env.local
 # Point at a different API (e.g. a staging environment)
 cargo-ai hosting app env <app-uuid> --api-url https://api.staging.getcargo.io > ./my-app/.env.local
 ```
+
+## A public, indexable site
+
+```bash
+cargo-ai hosting app init ./site --template public-site --name "Example"
+# edit the www.example.com canonicals, robots.txt and sitemap.xml to your real domain FIRST
+cargo-ai hosting app create --name "Example" --slug site
+cargo-ai hosting deployment create --app-uuid <app-uuid> --source ./site   # runs the template's prerendering build script
+# poll, promote, then attach a custom domain (API) — the default host is noindex
+```
+
+The template's `build` script prerenders each route to `<route>.html`. Link pages by those `.html` paths, because extension-less paths fall back to the SPA shell. See `SKILL.md` → Custom domains and search indexing for the domain attach and the checklist.
 
 ## Rename, move, remove
 

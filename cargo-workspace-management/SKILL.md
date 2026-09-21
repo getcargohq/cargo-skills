@@ -217,8 +217,8 @@ catalog, but *when* it is read depends on the consumer:
   use, so rotating it takes effect with no redeploy.
 - **Hosted workers and apps capture values at deploy time.** A worker's bindings are
   attached when a deployment is promoted, and non-secret values are compiled into its
-  bundle. An app receives only non-secret `VITE_`-prefixed entries, baked into its Vite
-  build. After a change, **run `hosting deployment create` + `promote` again**. See
+  bundle. An app receives only non-secret entries with a public prefix (`VITE_`,
+  `NEXT_PUBLIC_`, …), baked into its build. After a change, **run `hosting deployment create` + `promote` again**. See
   [`../cargo-hosting/SKILL.md`](../cargo-hosting/SKILL.md) → Worker env vars and secrets.
 
 ```bash
