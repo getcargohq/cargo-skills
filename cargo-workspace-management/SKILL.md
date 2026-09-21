@@ -1,7 +1,7 @@
 ---
 name: cargo-workspace-management
 description: "Administer a Cargo workspace and talk back to the Cargo team — invite and manage members, mint and rotate API tokens, organize plays, tools, and agents into folders, inspect roles, upload batch input files, and file reports. Triggers: \"invite my teammate\", \"create an API token for CI\", \"who has access\", \"organize these into folders\", \"rotate that token\", \"upload this CSV for a batch\" — and for feedback: \"report this bug to Cargo\", \"send feedback to the Cargo team\", \"this CLI command is broken\", \"share this session with Cargo\", \"request a feature\". Most commands need a token with admin access. Skip when: the question is about credits, plans, or invoices — use cargo-billing."
-version: "1.3.0"
+version: "1.3.1"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -210,8 +210,16 @@ Returns the upserted session as JSON. The [Cargo installer](https://github.com/g
 ## Environment variables
 
 Workspace environment variables are **injected into every worker, app and agent** in
-the workspace. One catalog, read server-side on every use — so rotating a value here
-reaches everything that references it with no redeploy.
+the workspace, and a worker- or app-level entry with the same key overrides them. One
+catalog, but *when* it is read depends on the consumer:
+
+- **Agents, and CDK `workspaceEnv("NAME")` pointers**, read the value server-side on each
+  use, so rotating it takes effect with no redeploy.
+- **Hosted workers and apps capture values at deploy time.** A worker's bindings are
+  attached when a deployment is promoted, and non-secret values are compiled into its
+  bundle. An app receives only non-secret entries with a public prefix (`VITE_`,
+  `NEXT_PUBLIC_`, …), baked into its build. After a change, **run `hosting deployment create` + `promote` again**. See
+  [`../cargo-hosting/SKILL.md`](../cargo-hosting/SKILL.md) → Worker env vars and secrets.
 
 ```bash
 cargo-ai workspaceManagement envVar list

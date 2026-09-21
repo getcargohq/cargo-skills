@@ -8,7 +8,7 @@ A deployment is one build+upload of a local source directory to an app or worker
 ## Create a deployment
 
 ```bash
-# App: backend runs `npm ci && vite build` in a sandbox
+# App: backend runs `npm ci --ignore-scripts` then the app's `build` script (or the framework default) in a sandbox
 cargo-ai hosting deployment create --app-uuid <app-uuid> --source ./my-app
 
 # Worker: backend bundles the entrypoint

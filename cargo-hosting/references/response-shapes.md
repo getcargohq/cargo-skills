@@ -11,7 +11,7 @@ JSON response structures for the `hosting` domain. All commands output JSON to s
   "name": "My App",
   "description": null,
   "slug": "my-app",
-  "url": "https://my-app.cargo.app",
+  "url": "https://my-app-1a2b3c4d.app.getcargo.run",
   "userUuid": "...",
   "folderUuid": null,
   "promotedDeployment": null,
@@ -39,7 +39,7 @@ A deployment is a discriminated union on `kind` (`"app"` | `"worker"`). Shared f
   "appUuid": "app-uuid",
   "workspaceUuid": "...",
   "status": "success",
-  "url": "https://my-app.cargo.app",
+  "url": "https://deployment-deployment-uuid.app.getcargo.run",
   "sourceS3Path": "...",
   "bundleS3Path": "...",
   "buildLogS3Filename": "...",
@@ -61,6 +61,7 @@ A deployment is a discriminated union on `kind` (`"app"` | `"worker"`). Shared f
 **Key fields:**
 
 - `uuid` — pass to `deployment promote --uuid`.
+- `url` — this deployment's own preview host (`deployment-<uuid>.<root>`), reachable before promotion. The live URL is the app's/worker's `url`.
 - `appUuid` / `workerUuid` — exactly one is set, matching `kind`.
 - **`status`** — one of `"pending"`, `"building"`, `"success"`, `"error"`, `"cancelled"`. **Terminal** at `success` / `error` / `cancelled`; only a `success` deployment is worth promoting.
 - `errorMessage` — populated when `status` is `error`; `buildLogS3Filename` points at the build log for diagnosing a failed build.
