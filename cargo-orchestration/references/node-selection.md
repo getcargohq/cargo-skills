@@ -107,6 +107,14 @@ still says `success`). When a value comes out blank, check the real shape with
 `cargo-ai orchestration run get <run-uuid>` → `runContext.<slug>` (node outputs
 *are* returned by the CLI) and fix the path.
 
+A second silent trap: **ISO date strings arrive in expressions as `Date` objects.**
+`String(nodes.start.seen_at)` gives `"Tue Sep 01 2026 10:00:00 GMT+0000 …"`, not
+`"2026-09-01T10:00:00Z"`, so a regex or `.slice(0, 10)` on it quietly misses. Normalize
+first: `v instanceof Date ? v.toISOString() : String(v || "")`. Test an expression
+against sample data before deploying with `cargo-ai expression eval evaluate
+--expression '{"kind":"templateExpression","expression":"{{…}}","instructTo":"none","fromRecipe":false}'
+--variables '{"nodes":{…}}'` (free, runs nothing).
+
 ## When a code or HTTP node is genuinely warranted
 
 - Multi-step computation that no expression or native node expresses (messy
