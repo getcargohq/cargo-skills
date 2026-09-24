@@ -245,6 +245,26 @@ The `end` node's `variables` array defines the workflow output. Each variable ha
 
 Same shape as `end` variables, but the output is available to downstream nodes via `{{nodes.<slug>.<name>}}`.
 
+### Storage
+
+Read and write Cargo models from inside a workflow. Use these, **not** an HTTP call to
+the model's `/records/ingest` webhook: that URL is for systems outside Cargo, and
+calling it from a node costs an HTTP node, a payload script, and a token in a header.
+
+| actionSlug    | Purpose                                         | childrenCount | Config                                                                                     |
+| ------------- | ----------------------------------------------- | -------- | ------------------------------------------------------------------------------------------ |
+| `modelUpsert` | Update the matching record, or insert one       | 1        | `{"modelUuid", "matchingColumnSlug", "matchingValue", "mappings": [{"columnSlug", "value"}]}` |
+| `modelUpdate` | Update matching records only                    | 1        | Same as `modelUpsert`                                                                      |
+| `modelInsert` | Insert a new record                             | 1        | `{"modelUuid", "mappings": [{"columnSlug", "value"}]}`                                     |
+| `modelRemove` | Remove matching records                         | 1        | `{"modelUuid", "matchingColumnSlug", "matchingValue"}`                                     |
+| `modelSearch` | Read records (filter, sort, limit)              | 1        | `{"modelUuid", "filter"?, "sort"?, "limit"?, "selectedColumnSlugs"?}`                      |
+
+Each mapping `value` (and `matchingValue`) is a template expression, so values come
+straight from upstream nodes with no prep step. `mappings` targets the model's own
+columns; `customMappings` (same shape) targets its custom columns. A null
+`matchingValue` fails the node without writing. All of them output an array of
+records.
+
 ### Flow control
 
 | actionSlug | Purpose               | childrenCount | Config                                                      |
@@ -254,9 +274,9 @@ Same shape as `end` variables, but the output is available to downstream nodes v
 
 The `group` node iterates over `items`, running the child subgraph once per item. Each iteration can access the current item via `{{nodes.start.value}}` (for simple values) or `{{nodes.start.<field>}}` (for object items). Use `{{parentNodes.<slug>.<field>}}` to reference the parent run's data.
 
-> **Reading group results downstream:** the group node's output is an **array**, one entry per iteration, where each entry is that iteration's final (`end`) node output. Access it by index: `{{nodes.<groupSlug>[0].<field>}}`. There is **no `.results` wrapper** — `{{nodes.<groupSlug>.results[0]...}}` does not work — and arrow-function array methods like `{{nodes.<groupSlug>.map(x => x.field)}}` are not supported in template expressions. To collapse the array into one value, use a `script` node with `lodash` (or a `python` node). See [`node-selection.md`](node-selection.md) → "Group node results".
+> **Reading group results downstream:** the group node's output is an **array**, one entry per iteration, where each entry is that iteration's final (`end`) node output. Access it by index: `{{nodes.<groupSlug>[0].<field>}}`. There is **no `.results` wrapper**, so `{{nodes.<groupSlug>.results[0]...}}` does not work. To collapse the array into one value, use an expression: `{{nodes.<groupSlug>.map(x => x.field).filter(Boolean).join(", ")}}` or `.reduce(...)` works inline, with no code node.
 
-> **`delay` and context:** prior node outputs are **not** lost across a `delay` — the full run context is checkpointed and restored, so `{{nodes.<slug>...}}` still resolves after the delay regardless of node kind. The checkpoint is JSON, though, so values you read after a delay must be JSON-serializable. Materialize anything you need post-delay into a `variables` node (plain strings/numbers/objects) before the delay rather than relying on a `python` node's `result`. See [`node-selection.md`](node-selection.md) → "What survives a `delay` boundary".
+> **`delay` and context:** prior node outputs are **not** lost across a `delay` — the full run context is checkpointed and restored, so `{{nodes.<slug>...}}` still resolves after the delay regardless of node kind. The checkpoint is JSON, though, so values you read after a delay must be JSON-serializable. Materialize anything you need post-delay into a `variables` node (plain strings/numbers/objects) before the delay rather than relying on a `python` node's `result`.
 
 **Group sub-graph (`_nodes`):** The `_nodes` array inside the group's config defines the internal workflow executed for each item. It follows the **exact same rules** as a top-level node graph:
 
@@ -282,7 +302,7 @@ The `python` and `script` nodes receive `nodes` and `parentNodes` as context var
 
 The JS `script` node's `require()` allowlist is `axios`, `cheerio`, `crypto-js`, `date-fns`, `jsonschema`, `lodash`, `url`, `uuid`, and `zod`. Anything else throws — including `knex` (use `axios` for HTTP).
 
-> **Prefer built-in actions + expressions over code nodes.** Before adding a `python` or `script` node, read [`node-selection.md`](node-selection.md): most transforms belong in a `variables` node, LLM calls in the native `agent` node, API calls in the integration's connector action, and routing in `branch`/`filter`/`switch`. Reach for code only for genuine multi-step computation (prefer the JS `script` node).
+> **Use a code node only when you need one.** A template expression is inline JavaScript, so a small transformation goes in `{{ }}` in the field that needs it. Before adding a `python` or `script` node, read [`node-selection.md`](node-selection.md).
 
 ## Examples
 
@@ -517,12 +537,15 @@ cargo-ai orchestration run create \
   ]'
 ```
 
-### Python node: custom data transformation
+### Variables node: custom data transformation
+
+Reshaping fields (trim, lowercase, split, pick a default) is a `variables` node, not a
+code node. Each variable is one expression:
 
 ```bash
 cargo-ai orchestration run create \
   --workflow-uuid <tool.workflowUuid> \
-  --data '{"name":"ACME CORP","domain":"  Acme.COM  "}' \
+  --data '{"name":"ACME CORP","email":"  Jane@Acme.COM  "}' \
   --nodes '[
     {
       "uuid":"a1a1a1a1-a1a1-4a1a-aa1a-a1a1a1a1a1a1","slug":"start","kind":"native","actionSlug":"start",
@@ -530,9 +553,12 @@ cargo-ai orchestration run create \
       "position":{"x":0,"y":0}
     },
     {
-      "uuid":"a2a2a2a2-a2a2-4a2a-aa2a-a2a2a2a2a2a2","slug":"normalize","kind":"native","actionSlug":"python",
+      "uuid":"a2a2a2a2-a2a2-4a2a-aa2a-a2a2a2a2a2a2","slug":"normalize","kind":"native","actionSlug":"variables",
       "config":{
-        "script":"name = nodes[\"start\"][\"name\"]\ndomain = nodes[\"start\"][\"domain\"]\nresult = {\"name\": name.strip().title(), \"domain\": domain.strip().lower()}"
+        "variables":[
+          {"name":"name","type":"string","value":{"kind":"templateExpression","expression":"{{nodes.start.name.trim()}}","instructTo":"none","fromRecipe":false}},
+          {"name":"domain","type":"string","value":{"kind":"templateExpression","expression":"{{nodes.start.email.trim().toLowerCase().split('@')[1]}}","instructTo":"none","fromRecipe":false}}
+        ]
       },
       "childrenUuids":["a3a3a3a3-a3a3-4a3a-aa3a-a3a3a3a3a3a3"],"fallbackOnFailure":false,
       "position":{"x":0,"y":166}
@@ -541,8 +567,8 @@ cargo-ai orchestration run create \
       "uuid":"a3a3a3a3-a3a3-4a3a-aa3a-a3a3a3a3a3a3","slug":"end","kind":"native","actionSlug":"end",
       "config":{
         "variables":[
-          {"name":"name","type":"string","value":{"kind":"templateExpression","expression":"{{nodes.normalize.result.name}}","instructTo":"none","fromRecipe":false}},
-          {"name":"domain","type":"string","value":{"kind":"templateExpression","expression":"{{nodes.normalize.result.domain}}","instructTo":"none","fromRecipe":false}}
+          {"name":"name","type":"string","value":{"kind":"templateExpression","expression":"{{nodes.normalize.name}}","instructTo":"none","fromRecipe":false}},
+          {"name":"domain","type":"string","value":{"kind":"templateExpression","expression":"{{nodes.normalize.domain}}","instructTo":"none","fromRecipe":false}}
         ]
       },
       "childrenUuids":[],"fallbackOnFailure":false,
@@ -551,7 +577,10 @@ cargo-ai orchestration run create \
   ]'
 ```
 
-Python scripts receive `nodes` and `parentNodes` dicts. Set `result` to define the node output, accessible via `{{nodes.<slug>.result}}`.
+Downstream nodes read `{{nodes.normalize.<name>}}` directly, with no `.result` wrapper.
+Keep `python` / `script` for the cases in [`node-selection.md`](node-selection.md) →
+"When a code or HTTP node is genuinely warranted". Those nodes receive `nodes` and
+`parentNodes` and expose their output under `{{nodes.<slug>.result}}`.
 
 ### Group node: loop over items
 

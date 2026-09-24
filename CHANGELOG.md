@@ -10,6 +10,15 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### `cargo-orchestration` → 1.13.0, `cargo-storage` → 1.2.3, `cargo` → 1.26.2 — use a code node only when you need one
+
+Users reported that agent-built workflows were full of JavaScript nodes. One exported graph had 67 nodes, 20 of them `script` and 15 raw HTTP. Most of those scripts did a small transformation for the next node (build a payload, trim a field), or repeated the same prep on each branch. A template expression does that inline.
+
+- [`references/node-selection.md`](cargo-orchestration/references/node-selection.md) now opens with an explicit build order: **(1) a dedicated action, found with `action list`, (2) an expression for the glue, (3) HTTP only if no action exists, (4) a `script` node only if an expression can't do it.** The same order is in the `cargo-orchestration` and `cargo` SKILL.md callouts. The guide is built around the fact that **a template expression is inline JavaScript**, so a small transformation goes in `{{ }}` in the field that needs it. A value several nodes share goes in one `variables` node above any `branch`, and a `script` node is only for genuinely multi-step logic. It also covers two expression traps: ISO strings arrive as `Date` objects, and `cargo-ai expression eval evaluate` tests an expression for free.
+- [`references/nodes.md`](cargo-orchestration/references/nodes.md) said arrow-function array methods (`.map(x => …)`) don't work in expressions and told agents to collapse a `group` result with a `script` node. Both claims are wrong: expressions run in a full V8 isolate, and `.map`/`.filter`/`.reduce` work inline. It also linked to two `node-selection.md` sections that didn't exist; those links are removed.
+- The native `modelUpsert` / `modelInsert` / `modelUpdate` / `modelRemove` / `modelSearch` actions were undocumented, so agents wrote to models through the `/records/ingest` webhook: an HTTP node, a payload script, and an API token in a header. `nodes.md` now has a **Storage** table, and [`cargo-storage`](cargo-storage/SKILL.md) says the webhook is for systems outside Cargo.
+- The `nodes.md` "Python node: custom data transformation" example is now a `variables` node.
+
 ### `cargo-hosting` → 1.1.1 — unblock the plugin scanner
 
 The custom-domain snippet added in 1.1.0 called `curl` on a literal `https://api.getcargo.io/…` URL. The plugin scanner flags any `curl` to a literal URL in a SKILL.md as HIGH, which failed the `plugin-scanner` check on `main` and on every PR. The snippet now reads the base URL from `cargo-ai whoami` into `$CARGO_API_BASE`, the same pattern `cargo-ai` and `cargo-storage` use. The behavior is unchanged.

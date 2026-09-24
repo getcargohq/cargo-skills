@@ -1,7 +1,7 @@
 ---
 name: cargo-orchestration
 description: "Make Cargo actually run something, or show what it would run — execute one connector action, run a multi-step workflow, trigger a batch across a whole segment or model, message an AI agent, build or edit a node graph, draw a workflow, tool or play as a diagram, and query the runtime tables (runs, batches, spans, records) with SQL. Triggers: \"run this on all my contacts\", \"execute the action\", \"kick off a batch\", \"build a workflow\", \"schedule a play\", \"make it run every morning\", \"ask the agent\", \"show me the workflow\", \"what does this tool do\", \"visualize this play\", \"draw the graph\", \"explain this workflow\", \"how many runs failed today\", \"what is the output schema for this action\", \"add a step that\". Skip when: explaining why a run misbehaved — use cargo-diagnostics; downloading result files — use cargo-analytics; committing the workflow as code — use cargo-project."
-version: "1.12.1"
+version: "1.13.0"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -69,11 +69,14 @@ Need to run something?
 
 > **Terminology:** An orchestration **tool** is a saved on-demand workflow (listed via `tool list`). An **action** is a single operation you execute without building a workflow — it can embed a saved orchestration tool (`kind: "tool"`), call a third-party connector (`kind: "connector"`), invoke an AI agent (`kind: "agent"`), or run a built-in platform operation (`kind: "native"`).
 
-> **Composing a node graph? Prefer built-in actions + expressions.** Use the
-> actions Cargo already provides plus template expressions; avoid `python`,
-> `script` (JS), and raw HTTP nodes unless you truly have no alternative. Reshape
-> data → `variables`; call an LLM and get parsed JSON → native `agent` node; call an
-> API → the integration's dedicated **connector action**; route → `branch`/`filter`/`switch`.
+> **Composing a node graph? Build it from dedicated actions + expressions, in this order:**
+> 1. **A dedicated action.** Search first with `action list <keywords>` (free): connector
+>    actions, native actions (`agent`, `modelUpsert`, `branch`, `group`…), tools.
+> 2. **An expression** for the glue. It's inline JavaScript in the field that needs the
+>    value: reshaping, payloads, conditions, arrays.
+> 3. **HTTP**, only if step 1 found no action for that API.
+> 4. **A `script` node**, only if the logic can't fit in an expression.
+>
 > See **`references/node-selection.md`**.
 
 > **Show the graph, don't describe it.** Before deploying a draft, and whenever
@@ -98,7 +101,7 @@ Need to run something?
 > `references/examples/segments.md` — segment fetch and filter examples
 > `references/nodes.md` — full node creation guide (kinds, native actions, expressions, validation, routing)
 > `references/node-diagram.md` — **draw a node graph as a Mermaid flowchart** (`node diagram`): every source (workflow / draft / release / run / raw nodes), marking paid nodes, highlighting a failing node, and why diagrams key on `uuid` rather than `slug`
-> `references/node-selection.md` — **how to pick the right node and avoid unnecessary `python` nodes** (decision table, native LLM `agent` node, template-expression limits, the silent-undefined footgun, inspecting node data via `runContext`, Pyodide sandbox limits, what survives a `delay`, group result access)
+> `references/node-selection.md` — **build from dedicated actions + expressions** (action → expression → HTTP → `script`, in that order): expressions are inline JavaScript, where the logic goes (inline in one field, a shared `variables` node, or a `script`), native actions to prefer over code/HTTP, and expression traps (silent empty paths, ISO strings arriving as `Date`, testing with `expression eval`)
 > `references/filter-syntax.md` — complete filter condition reference
 > `references/polling.md` — async polling patterns, error handling, retry strategies
 > `references/response-shapes.md` — full JSON response structures
