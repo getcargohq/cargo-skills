@@ -10,6 +10,10 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### `cargo-hosting` → 1.1.1 — unblock the plugin scanner
+
+The custom-domain snippet added in 1.1.0 called `curl` on a literal `https://api.getcargo.io/…` URL. The plugin scanner flags any `curl` to a literal URL in a SKILL.md as HIGH, which failed the `plugin-scanner` check on `main` and on every PR. The snippet now reads the base URL from `cargo-ai whoami` into `$CARGO_API_BASE`, the same pattern `cargo-ai` and `cargo-storage` use. The behavior is unchanged.
+
 ### `cargo-hosting` → 1.1.0, `cargo` → 1.26.1, `cargo-workspace-management` → 1.3.1 — worker env vars, secrets, local dev, CORS, app builds, custom domains
 
 From a migration report ([#134](https://github.com/getcargohq/cargo-skills/issues/134)). Each gap cost the reporter 15–30 minutes, and most of them had a working path the skill never mentioned:
