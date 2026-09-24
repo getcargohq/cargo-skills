@@ -1,7 +1,7 @@
 ---
 name: cargo-hosting
 description: "Put something on the internet from Cargo — hosted web apps (Vite by default, other static frameworks detected) and serverless edge workers that answer HTTP requests, plus the deployments that build and promote them, the env vars and secrets a worker reads, running a worker locally, and custom domains and search indexing for public sites. Triggers: \"build me a dashboard for this\", \"host this app\", \"give me a URL to share\", \"deploy this\", \"I need a webhook endpoint\", \"make it live\", \"promote to production\", \"ship a UI for my team\", \"give my worker an API token\", \"set a secret on the worker\", \"Missing CARGO_API_TOKEN\", \"my app cannot call my worker\", \"run the worker locally\", \"put it on my own domain\", \"make the site indexable by Google\". Skip when: the app or worker should be declared as committed workspace code — use cargo-project."
-version: "1.1.0"
+version: "1.1.1"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -127,11 +127,12 @@ An app reads only env vars whose key starts with a **public prefix**: `VITE_`, `
 **Cargo-owned hosts are `noindex`.** The default `*.app.getcargo.run` host and every `deployment-<uuid>` preview answer with `X-Robots-Tag: noindex`, so **an app only becomes indexable on a custom domain**. No CLI command attaches one at CLI 1.0.96, so use the API:
 
 ```bash
-curl -X POST https://api.getcargo.io/v1/hosting/custom-domains \
+CARGO_API_BASE=$(cargo-ai whoami | jq -r '.baseUrl')   # https://api.getcargo.io in production
+curl -X POST "$CARGO_API_BASE/v1/hosting/custom-domains" \
   -H "authorization: Bearer $CARGO_API_TOKEN" -H "content-type: application/json" \
   -d '{"kind":"app","appUuid":"<uuid>","hostname":"www.example.com"}'
 # → DNS records to add: certificate validation records + a cnameTarget for the hostname
-curl -X POST https://api.getcargo.io/v1/hosting/custom-domains/<domain-uuid>/refresh-status \
+curl -X POST "$CARGO_API_BASE/v1/hosting/custom-domains/<domain-uuid>/refresh-status" \
   -H "authorization: Bearer $CARGO_API_TOKEN"                                   # repeat until status is "active"
 ```
 
