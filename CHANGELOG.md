@@ -10,13 +10,14 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
-### `cargo-orchestration` → 1.13.0, `cargo-storage` → 1.2.3, `cargo` → 1.26.2 — stop building workflows out of `script` nodes
+### `cargo-orchestration` → 1.13.0, `cargo-storage` → 1.2.3, `cargo` → 1.26.2 — use a code node only when you need one
 
-Users reported that agent-built workflows were full of JavaScript nodes. One exported graph had 67 nodes, 20 of them `script` and 15 raw HTTP. 26 of those 35 existed only to write a ledger row on each branch: a `script` built a JSON string, then an HTTP node POSTed it to the workspace's own `/records/ingest` webhook with an API token hardcoded in the header. Three more were one prep `script` copied onto three branches. The skills explained part of it and agent habit explained the rest:
+Users reported that agent-built workflows were full of JavaScript nodes. One exported graph had 67 nodes, 20 of them `script` and 15 raw HTTP. Most of those scripts did a small transformation for the next node (build a payload, trim a field), or repeated the same prep on each branch. A template expression does that inline.
 
-- **The native model-write actions were undocumented.** `modelUpsert`, `modelInsert`, `modelUpdate`, `modelRemove` and `modelSearch` were never mentioned, so the only write path an agent had seen was the ingest webhook. [`references/nodes.md`](cargo-orchestration/references/nodes.md) now has a **Storage** table (config shapes from the backend action schemas), and [`cargo-storage`](cargo-storage/SKILL.md) says the webhook is for systems outside Cargo, not for workflows.
-- **Nothing said a node's input takes expressions directly.** [`references/node-selection.md`](cargo-orchestration/references/node-selection.md) gains **Hard rules**: never add a node to prepare another node's input, write to models natively, compute shared values above a `branch`, don't guard missing paths in code, and justify every `script`/`python`/HTTP node before deploying. It also gains worked examples of an inline HTTP `bodyJson` (`{{JSON.stringify(...)}}` per value, the form Cargo's own templates use) and a `modelUpsert` node.
-- **The reference example taught the anti-pattern.** The `nodes.md` "Python node: custom data transformation" example, which trimmed and lowercased two fields in code, is now a `variables` node.
+- [`references/node-selection.md`](cargo-orchestration/references/node-selection.md) is rewritten around one principle: **a template expression is inline JavaScript**, so a small transformation goes in `{{ }}` in the field that needs it. A value several nodes share goes in one `variables` node above any `branch`, and a `script` node is only for genuinely multi-step logic. It also covers two expression traps: ISO strings arrive as `Date` objects, and `cargo-ai expression eval evaluate` tests an expression for free.
+- [`references/nodes.md`](cargo-orchestration/references/nodes.md) said arrow-function array methods (`.map(x => …)`) don't work in expressions and told agents to collapse a `group` result with a `script` node. Both claims are wrong: expressions run in a full V8 isolate, and `.map`/`.filter`/`.reduce` work inline. It also linked to two `node-selection.md` sections that didn't exist; those links are removed.
+- The native `modelUpsert` / `modelInsert` / `modelUpdate` / `modelRemove` / `modelSearch` actions were undocumented, so agents wrote to models through the `/records/ingest` webhook: an HTTP node, a payload script, and an API token in a header. `nodes.md` now has a **Storage** table, and [`cargo-storage`](cargo-storage/SKILL.md) says the webhook is for systems outside Cargo.
+- The `nodes.md` "Python node: custom data transformation" example is now a `variables` node.
 
 ### `cargo-hosting` → 1.1.1 — unblock the plugin scanner
 

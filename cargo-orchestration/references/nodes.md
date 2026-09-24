@@ -263,8 +263,7 @@ Each mapping `value` (and `matchingValue`) is a template expression, so values c
 straight from upstream nodes with no prep step. `mappings` targets the model's own
 columns; `customMappings` (same shape) targets its custom columns. A null
 `matchingValue` fails the node without writing. All of them output an array of
-records. Worked example: [`node-selection.md`](node-selection.md) → "Write to a Cargo
-model natively".
+records.
 
 ### Flow control
 
@@ -275,9 +274,9 @@ model natively".
 
 The `group` node iterates over `items`, running the child subgraph once per item. Each iteration can access the current item via `{{nodes.start.value}}` (for simple values) or `{{nodes.start.<field>}}` (for object items). Use `{{parentNodes.<slug>.<field>}}` to reference the parent run's data.
 
-> **Reading group results downstream:** the group node's output is an **array**, one entry per iteration, where each entry is that iteration's final (`end`) node output. Access it by index: `{{nodes.<groupSlug>[0].<field>}}`. There is **no `.results` wrapper** — `{{nodes.<groupSlug>.results[0]...}}` does not work — and arrow-function array methods like `{{nodes.<groupSlug>.map(x => x.field)}}` are not supported in template expressions. To collapse the array into one value, use a `script` node with `lodash` (or a `python` node). See [`node-selection.md`](node-selection.md) → "Group node results".
+> **Reading group results downstream:** the group node's output is an **array**, one entry per iteration, where each entry is that iteration's final (`end`) node output. Access it by index: `{{nodes.<groupSlug>[0].<field>}}`. There is **no `.results` wrapper**, so `{{nodes.<groupSlug>.results[0]...}}` does not work. To collapse the array into one value, use an expression: `{{nodes.<groupSlug>.map(x => x.field).filter(Boolean).join(", ")}}` or `.reduce(...)` works inline, with no code node.
 
-> **`delay` and context:** prior node outputs are **not** lost across a `delay` — the full run context is checkpointed and restored, so `{{nodes.<slug>...}}` still resolves after the delay regardless of node kind. The checkpoint is JSON, though, so values you read after a delay must be JSON-serializable. Materialize anything you need post-delay into a `variables` node (plain strings/numbers/objects) before the delay rather than relying on a `python` node's `result`. See [`node-selection.md`](node-selection.md) → "What survives a `delay` boundary".
+> **`delay` and context:** prior node outputs are **not** lost across a `delay` — the full run context is checkpointed and restored, so `{{nodes.<slug>...}}` still resolves after the delay regardless of node kind. The checkpoint is JSON, though, so values you read after a delay must be JSON-serializable. Materialize anything you need post-delay into a `variables` node (plain strings/numbers/objects) before the delay rather than relying on a `python` node's `result`.
 
 **Group sub-graph (`_nodes`):** The `_nodes` array inside the group's config defines the internal workflow executed for each item. It follows the **exact same rules** as a top-level node graph:
 
@@ -303,7 +302,7 @@ The `python` and `script` nodes receive `nodes` and `parentNodes` as context var
 
 The JS `script` node's `require()` allowlist is `axios`, `cheerio`, `crypto-js`, `date-fns`, `jsonschema`, `lodash`, `url`, `uuid`, and `zod`. Anything else throws — including `knex` (use `axios` for HTTP).
 
-> **Prefer built-in actions + expressions over code nodes.** Before adding a `python` or `script` node, read [`node-selection.md`](node-selection.md): most transforms belong in a `variables` node, LLM calls in the native `agent` node, API calls in the integration's connector action, and routing in `branch`/`filter`/`switch`. Reach for code only for genuine multi-step computation (prefer the JS `script` node).
+> **Use a code node only when you need one.** A template expression is inline JavaScript, so a small transformation goes in `{{ }}` in the field that needs it. Before adding a `python` or `script` node, read [`node-selection.md`](node-selection.md).
 
 ## Examples
 

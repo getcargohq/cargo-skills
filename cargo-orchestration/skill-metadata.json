@@ -56,7 +56,7 @@
     {
       "path": "references/node-selection.md",
       "kind": "reference",
-      "title": "Prefer built-in actions + expressions over code/HTTP nodes"
+      "title": "Use a code node only when you need one"
     },
     {
       "path": "references/nodes.md",
@@ -79,5 +79,5 @@
       "title": "Troubleshooting"
     }
   ],
-  "contentHash": "dfdfd45fbdb2fe4e01aae8b3b347e503692fef17659d7ac043f629380a492685"
+  "contentHash": "4ddc26ba5f6f6c9c718d79ec940232290d93471c0812935a3cddf73700bf4f43"
 }

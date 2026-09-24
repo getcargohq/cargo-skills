@@ -69,17 +69,13 @@ Need to run something?
 
 > **Terminology:** An orchestration **tool** is a saved on-demand workflow (listed via `tool list`). An **action** is a single operation you execute without building a workflow — it can embed a saved orchestration tool (`kind: "tool"`), call a third-party connector (`kind: "connector"`), invoke an AI agent (`kind: "agent"`), or run a built-in platform operation (`kind: "native"`).
 
-> **Composing a node graph? Prefer built-in actions + expressions.** Use the
-> actions Cargo already provides plus template expressions; avoid `python`,
-> `script` (JS), and raw HTTP nodes unless you truly have no alternative. Reshape
-> data → `variables`; call an LLM and get parsed JSON → native `agent` node; call an
-> API → the integration's dedicated **connector action**; route → `branch`/`filter`/`switch`;
-> write a row to a Cargo model → native **`modelUpsert`** (never an HTTP call to its
-> `/records/ingest` webhook). **Never add a `script` node just to build the next node's
-> input:** every input, HTTP `bodyJson` included, takes expressions directly. Put
-> shared prep in one `variables` node *above* a `branch`, not copied onto each path.
-> Before deploying, justify every `script`/`python`/HTTP node in one line, or replace it.
-> See **`references/node-selection.md`** → "Hard rules".
+> **Composing a node graph? Use a code node only when you need one.** A template
+> expression is inline JavaScript, so a small transformation (reshape a field, build a
+> body, check a list, map an array) goes in `{{ }}` in the field that needs it, not in
+> its own `script` or `python` node. A value several nodes share goes in one
+> `variables` node above any `branch`. Also prefer native actions: an LLM call → the
+> `agent` node, an API → its connector action, writing a Cargo model → `modelUpsert`,
+> a routing decision → `branch`/`filter`/`switch`. See **`references/node-selection.md`**.
 
 > **Show the graph, don't describe it.** Before deploying a draft, and whenever
 > the user asks what a workflow or play does, draw it:
@@ -103,7 +99,7 @@ Need to run something?
 > `references/examples/segments.md` — segment fetch and filter examples
 > `references/nodes.md` — full node creation guide (kinds, native actions, expressions, validation, routing)
 > `references/node-diagram.md` — **draw a node graph as a Mermaid flowchart** (`node diagram`): every source (workflow / draft / release / run / raw nodes), marking paid nodes, highlighting a failing node, and why diagrams key on `uuid` rather than `slug`
-> `references/node-selection.md` — **how to pick the right node and avoid unnecessary `python` nodes** (decision table, native LLM `agent` node, template-expression limits, the silent-undefined footgun, inspecting node data via `runContext`, Pyodide sandbox limits, what survives a `delay`, group result access)
+> `references/node-selection.md` — **use a code node only when you need one**: expressions are inline JavaScript, where the logic goes (inline in one field, a shared `variables` node, or a `script`), native actions to prefer over code/HTTP, and expression traps (silent empty paths, ISO strings arriving as `Date`, testing with `expression eval`)
 > `references/filter-syntax.md` — complete filter condition reference
 > `references/polling.md` — async polling patterns, error handling, retry strategies
 > `references/response-shapes.md` — full JSON response structures
