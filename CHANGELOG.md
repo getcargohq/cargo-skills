@@ -10,6 +10,14 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### `cargo-orchestration` → 1.13.0, `cargo-storage` → 1.2.3, `cargo` → 1.26.2 — stop building workflows out of `script` nodes
+
+Users reported that agent-built workflows were full of JavaScript nodes. One exported graph had 67 nodes, 20 of them `script` and 15 raw HTTP. 26 of those 35 existed only to write a ledger row on each branch: a `script` built a JSON string, then an HTTP node POSTed it to the workspace's own `/records/ingest` webhook with an API token hardcoded in the header. Three more were one prep `script` copied onto three branches. The skills explained part of it and agent habit explained the rest:
+
+- **The native model-write actions were undocumented.** `modelUpsert`, `modelInsert`, `modelUpdate`, `modelRemove` and `modelSearch` were never mentioned, so the only write path an agent had seen was the ingest webhook. [`references/nodes.md`](cargo-orchestration/references/nodes.md) now has a **Storage** table (config shapes from the backend action schemas), and [`cargo-storage`](cargo-storage/SKILL.md) says the webhook is for systems outside Cargo, not for workflows.
+- **Nothing said a node's input takes expressions directly.** [`references/node-selection.md`](cargo-orchestration/references/node-selection.md) gains **Hard rules**: never add a node to prepare another node's input, write to models natively, compute shared values above a `branch`, don't guard missing paths in code, and justify every `script`/`python`/HTTP node before deploying. It also gains worked examples of an inline HTTP `bodyJson` (`{{JSON.stringify(...)}}` per value, the form Cargo's own templates use) and a `modelUpsert` node.
+- **The reference example taught the anti-pattern.** The `nodes.md` "Python node: custom data transformation" example, which trimmed and lowercased two fields in code, is now a `variables` node.
+
 ### `cargo-hosting` → 1.1.1 — unblock the plugin scanner
 
 The custom-domain snippet added in 1.1.0 called `curl` on a literal `https://api.getcargo.io/…` URL. The plugin scanner flags any `curl` to a literal URL in a SKILL.md as HIGH, which failed the `plugin-scanner` check on `main` and on every PR. The snippet now reads the base URL from `cargo-ai whoami` into `$CARGO_API_BASE`, the same pattern `cargo-ai` and `cargo-storage` use. The behavior is unchanged.

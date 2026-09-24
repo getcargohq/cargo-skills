@@ -1,7 +1,7 @@
 ---
 name: cargo-storage
 description: "Work with the data inside a Cargo workspace — models (Companies, Contacts, Deals…), datasets, columns, relationships, records, and SQL over workspace storage. Triggers: \"what models do I have\", \"show me the schema\", \"add a column for\", \"how many contacts do I have\", \"SELECT … FROM\", \"query my companies table\", \"join contacts to companies\", \"what is the DDL\", \"set up a webhook-fed model\", \"where does this field live\", \"import this into a model\", \"unify these models\", \"merge duplicate accounts\", \"link contacts to companies\", \"set up a relationship between\". Skip when: querying run or batch telemetry rather than business data — use cargo-orchestration; naming a reusable filtered audience — use cargo-segmentation."
-version: "1.2.2"
+version: "1.2.3"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -123,6 +123,12 @@ BASE=$(cargo-ai whoami | jq -r '.baseUrl')
 TOKEN=$(cargo-ai workspaceManagement token list | jq -r '.tokens[0].token')
 echo "$BASE/v1/models/$MODEL_UUID/records/ingest?token=$TOKEN"
 ```
+
+**Not for workflows.** A Cargo workflow writes to a model with the native
+`modelUpsert` / `modelInsert` action (see `cargo-orchestration` →
+`references/nodes.md` → "Storage"). An HTTP node calling this URL costs an extra node,
+a payload script, and an API token pasted into the node config. The webhook is for
+systems outside Cargo.
 
 Check the extractor's mode first — when it reports `"autoIngest": true` (calendly,
 smartlead, instantlyV2, heyReach, cargo signals) Cargo registers the

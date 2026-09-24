@@ -1,7 +1,7 @@
 ---
 name: cargo-orchestration
 description: "Make Cargo actually run something, or show what it would run — execute one connector action, run a multi-step workflow, trigger a batch across a whole segment or model, message an AI agent, build or edit a node graph, draw a workflow, tool or play as a diagram, and query the runtime tables (runs, batches, spans, records) with SQL. Triggers: \"run this on all my contacts\", \"execute the action\", \"kick off a batch\", \"build a workflow\", \"schedule a play\", \"make it run every morning\", \"ask the agent\", \"show me the workflow\", \"what does this tool do\", \"visualize this play\", \"draw the graph\", \"explain this workflow\", \"how many runs failed today\", \"what is the output schema for this action\", \"add a step that\". Skip when: explaining why a run misbehaved — use cargo-diagnostics; downloading result files — use cargo-analytics; committing the workflow as code — use cargo-project."
-version: "1.12.1"
+version: "1.13.0"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -73,8 +73,13 @@ Need to run something?
 > actions Cargo already provides plus template expressions; avoid `python`,
 > `script` (JS), and raw HTTP nodes unless you truly have no alternative. Reshape
 > data → `variables`; call an LLM and get parsed JSON → native `agent` node; call an
-> API → the integration's dedicated **connector action**; route → `branch`/`filter`/`switch`.
-> See **`references/node-selection.md`**.
+> API → the integration's dedicated **connector action**; route → `branch`/`filter`/`switch`;
+> write a row to a Cargo model → native **`modelUpsert`** (never an HTTP call to its
+> `/records/ingest` webhook). **Never add a `script` node just to build the next node's
+> input:** every input, HTTP `bodyJson` included, takes expressions directly. Put
+> shared prep in one `variables` node *above* a `branch`, not copied onto each path.
+> Before deploying, justify every `script`/`python`/HTTP node in one line, or replace it.
+> See **`references/node-selection.md`** → "Hard rules".
 
 > **Show the graph, don't describe it.** Before deploying a draft, and whenever
 > the user asks what a workflow or play does, draw it:
