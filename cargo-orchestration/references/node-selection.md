@@ -1,4 +1,18 @@
-# Use a code node only when you need one
+# Build from dedicated actions + expressions
+
+**Build every step from dedicated actions + expressions, in this order:**
+
+1. **A dedicated action.** Search first with `cargo-ai orchestration action list <keywords>`
+   (free). It covers connector actions, native actions (`agent`, `modelUpsert`, `branch`,
+   `group`…) and workspace tools, and returns a ready-to-paste `action` object.
+2. **An expression** for the glue between actions. It's inline JavaScript in the field
+   that needs the value, so it covers reshaping, payloads, conditions and arrays.
+3. **HTTP**, only if step 1 found no action for that API. Its body is still an expression.
+4. **A `script` node**, only if the logic can't fit in an expression.
+
+HTTP + `script` is the last resort, not the default.
+
+## Expressions are inline JavaScript
 
 **A template expression is inline JavaScript.** Whatever you write inside `{{ }}` runs
 in a full JavaScript engine, in the field that needs the value. So a small
@@ -38,7 +52,7 @@ An HTTP body is a JSON template, so each value goes in with `JSON.stringify`:
 A `script` node that only assembles a value for the next node is the pattern to avoid.
 The next node's field can hold that expression directly.
 
-## Reach for the native action before code or HTTP
+## Common cases: the dedicated action to use
 
 | Instead of… | Use |
 | --- | --- |

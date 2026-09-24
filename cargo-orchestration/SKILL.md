@@ -69,13 +69,15 @@ Need to run something?
 
 > **Terminology:** An orchestration **tool** is a saved on-demand workflow (listed via `tool list`). An **action** is a single operation you execute without building a workflow — it can embed a saved orchestration tool (`kind: "tool"`), call a third-party connector (`kind: "connector"`), invoke an AI agent (`kind: "agent"`), or run a built-in platform operation (`kind: "native"`).
 
-> **Composing a node graph? Use a code node only when you need one.** A template
-> expression is inline JavaScript, so a small transformation (reshape a field, build a
-> body, check a list, map an array) goes in `{{ }}` in the field that needs it, not in
-> its own `script` or `python` node. A value several nodes share goes in one
-> `variables` node above any `branch`. Also prefer native actions: an LLM call → the
-> `agent` node, an API → its connector action, writing a Cargo model → `modelUpsert`,
-> a routing decision → `branch`/`filter`/`switch`. See **`references/node-selection.md`**.
+> **Composing a node graph? Build it from dedicated actions + expressions, in this order:**
+> 1. **A dedicated action.** Search first with `action list <keywords>` (free): connector
+>    actions, native actions (`agent`, `modelUpsert`, `branch`, `group`…), tools.
+> 2. **An expression** for the glue. It's inline JavaScript in the field that needs the
+>    value: reshaping, payloads, conditions, arrays.
+> 3. **HTTP**, only if step 1 found no action for that API.
+> 4. **A `script` node**, only if the logic can't fit in an expression.
+>
+> See **`references/node-selection.md`**.
 
 > **Show the graph, don't describe it.** Before deploying a draft, and whenever
 > the user asks what a workflow or play does, draw it:
@@ -99,7 +101,7 @@ Need to run something?
 > `references/examples/segments.md` — segment fetch and filter examples
 > `references/nodes.md` — full node creation guide (kinds, native actions, expressions, validation, routing)
 > `references/node-diagram.md` — **draw a node graph as a Mermaid flowchart** (`node diagram`): every source (workflow / draft / release / run / raw nodes), marking paid nodes, highlighting a failing node, and why diagrams key on `uuid` rather than `slug`
-> `references/node-selection.md` — **use a code node only when you need one**: expressions are inline JavaScript, where the logic goes (inline in one field, a shared `variables` node, or a `script`), native actions to prefer over code/HTTP, and expression traps (silent empty paths, ISO strings arriving as `Date`, testing with `expression eval`)
+> `references/node-selection.md` — **build from dedicated actions + expressions** (action → expression → HTTP → `script`, in that order): expressions are inline JavaScript, where the logic goes (inline in one field, a shared `variables` node, or a `script`), native actions to prefer over code/HTTP, and expression traps (silent empty paths, ISO strings arriving as `Date`, testing with `expression eval`)
 > `references/filter-syntax.md` — complete filter condition reference
 > `references/polling.md` — async polling patterns, error handling, retry strategies
 > `references/response-shapes.md` — full JSON response structures
