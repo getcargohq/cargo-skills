@@ -10,6 +10,12 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### `cargo` → 1.27.0 — nine silent traps from a production build, two stale rows fixed
+
+Collected while building a revenue engine in a production workspace between 2026-06 and 2026-09. Every one fails silently: the call succeeds and the result is wrong. Added to [`references/gotchas.md`](cargo/references/gotchas.md): the `--version 1.2.3` form that deploys nothing (verified on CLI 1.0.47), `update-draft` replacing rather than patching, an open editor tab overwriting a CLI draft, the two causes behind "Unable to retrieve language model", the missing output-schema flag on agent releases, where custom columns hide, `modelInsert` writing an empty row, `UNION ALL` and `NULLS LAST` in storage SQL, and batches returning fewer answers than records.
+
+Two existing rows were wrong and are corrected. `context runtime execute` does not discard changes: tracked edits are auto-committed to the default branch, per the command's own help. Group-result expressions do support arrow-callback array methods, as the previous release established for `nodes.md`; the gotchas row still said they did not.
+
 ### `cargo-orchestration` → 1.13.0, `cargo-storage` → 1.2.3, `cargo` → 1.26.2 — use a code node only when you need one
 
 Users reported that agent-built workflows were full of JavaScript nodes. One exported graph had 67 nodes, 20 of them `script` and 15 raw HTTP. Most of those scripts did a small transformation for the next node (build a payload, trim a field), or repeated the same prep on each branch. A template expression does that inline.
