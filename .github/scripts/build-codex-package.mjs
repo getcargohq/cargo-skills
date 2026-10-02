@@ -120,7 +120,7 @@ const EXCLUDED_SKILLS = ["cargo-mailbox-management"];
 // A whole-file swap, for a skill this channel cannot take as written.
 // cargo-quickstart's demo pulls 25 named people; the directory rejected it under
 // "Spam mass abuse" for the same reason it rejected the two before it. The
-// override runs the same two-minute arc at the same 0.5-credit cost against
+// override runs the same two-minute arc for ~0.25 credits (upstream: ~5) against
 // company-level hiring intent instead — the skill's own fallback rung 2, which
 // it already describes as "same wow, different angle". Editing this into place
 // line by line would be a dozen brittle anchors through a rewritten spine, so it
@@ -456,12 +456,12 @@ const PACKAGE_EDITS = [
   },
   {
     file: "cargo/SKILL.md",
-    find: "The [quickstart demo](../cargo-quickstart/SKILL.md) spends about **0.5**.",
+    find: "The [quickstart demo](../cargo-quickstart/SKILL.md) spends about **5**.",
     replace: "The [quickstart demo](../cargo-quickstart/SKILL.md) spends about **0.25**.",
   },
   {
     file: "README.md",
-    find: "the [two-minute quickstart demo](#onboarding--cargo-quickstart) spends about 0.5 of them",
+    find: "the [two-minute quickstart demo](#onboarding--cargo-quickstart) spends about 5 of them",
     replace: "the [two-minute quickstart demo](#onboarding--cargo-quickstart) spends about 0.25 of them",
   },
   {
