@@ -6,7 +6,7 @@ last-reviewed: 2026-08-20
 
 # proxycurl (ProxyCurl)
 
-Two actions over LinkedIn-derived data: `enrich` (**1 credit fixed**) and `search` (**1 credit per item returned**). Both are expensive for what they do — `salesNavigator.searchLeads` sources at 0.02/record and `aiArk.enrichPerson` returns a profile *plus a verified email* at 0.1.
+Two actions over LinkedIn-derived data: `enrich` (**1 credit fixed**) and `search` (**1 credit per item returned**). Both are expensive for what they do — `salesNavigator.searchLeads` sources at 0.2/record and `aiArk.enrichPerson` returns a profile *plus a verified email* at 0.1.
 
 So the whole playbook is one question: **does this need a filter no cheaper rung can express?** Usually it doesn't — `aiArk.searchPeople` (0.05/record) already filters on education, degree, school, skills, tenure in role, total experience, and the employer's funding. Check there first; the list of things only proxycurl can do is short.
 
@@ -31,7 +31,7 @@ Rate limited to 300 calls per minute.
 - **Absolute date bounds on role start** — `current_role_before` / `current_role_after` ("started this role after 2026-05-01"), where `aiArk` expresses tenure as a *duration* (`min/max_current_job_years`). Use proxycurl when the boundary is a date, aiArk when it is a length.
 - **Seat resolution without a URL** — `enrich --object-type role` (`role` + `company_name`) answers "who holds this title here" from nothing but the seat.
 
-Everything else has a cheaper home. **Education** (`education`, `school_id_or`, `degree_or`), **skills**, **tenure length**, **total experience**, and the **employer's funding** are all `aiArk.searchPeople` filters at **0.05/record** — 20x cheaper. Title, company, seniority, geography and headcount are `salesNavigator.searchLeads` at **0.02** — 50x cheaper.
+Everything else has a cheaper home. **Education** (`education`, `school_id_or`, `degree_or`), **skills**, **tenure length**, **total experience**, and the **employer's funding** are all `aiArk.searchPeople` filters at **0.05/record** — 20x cheaper. Title, company, seniority, geography and headcount are `salesNavigator.searchLeads` at **0.2** — 5x cheaper.
 
 ## Cost math before you run anything
 
@@ -117,13 +117,13 @@ cargo-ai orchestration action execute \
 
 ## Anti-patterns
 
-- **proxycurl as the default sourcing rung.** 1/record against `salesNavigator.searchLeads` at 0.02 and `icypeas.findPeople` at 0.02/100. A 500-lead pull is 500 credits here and 10 there.
+- **proxycurl as the default sourcing rung.** 1/record against `salesNavigator.searchLeads` at 0.2 and `icypeas.findPeople` at 0.02/100. A 500-lead pull is 500 credits here and 100 there.
 - **Per-row `enrich` across a segment.** 1 credit a row where `aiArk.enrichPerson` is 0.1 and also returns a verified email. Only defensible where the row has no LinkedIn URL and no email — and even then, price `waterfall.enrichContact` (2, multi-source) against it.
 - **Emailing straight off a `search`.** These are attribute matches, not a qualified audience. The basis/suppression/relevance checks in [`../references/acceptable-use.md`](../references/acceptable-use.md) §3 still gate the outreach step — an alumni filter is not a lawful basis.
 
 ## Position in the waterfall
 
-- **People search:** last rung on price — behind `salesNavigator.searchLeads` (0.02), `icypeas.findPeople` (0.02/100), `aiArk.searchPeople` (0.05), `contactOut.search` (1–3), and level with `apolloio.searchPeople` (1 enriched). It moves to **first** only for profile free-text, LinkedIn groups/interests/languages, an absolute role-start date, or list-membership exclusion.
+- **People search:** last rung on price — behind `icypeas.findPeople` (0.02/100), `aiArk.searchPeople` (0.05), `salesNavigator.searchLeads` (0.2), `contactOut.search` (1–3), and level with `apolloio.searchPeople` (1 enriched). It moves to **first** only for profile free-text, LinkedIn groups/interests/languages, an absolute role-start date, or list-membership exclusion.
 - **Person enrich:** behind `aiArk.enrichPerson` (0.1), `linkedin.enrichProfile` (0.25), `waterfall.enrichContact` (2 multi-source); ahead of `peopleDataLabs.enrichPerson` (3) and `leadMagic.enrichProfile` (3) on price. Its edge is filter-based resolution when there is no URL.
 
 ## Action shape

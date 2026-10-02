@@ -29,7 +29,7 @@ Two filter shapes — pick the right one:
 - ✅ **Investor / funding / VC-portfolio sourcing**: `queryCompanies` SQL with a `WHERE` clause on PDL's investor / funding fields — salesNavigator can't express this.
 - ✅ **Complex multi-axis filters** that salesNavigator's UI-style filters can't combine: e.g., "fintech in EMEA AND Series B+ AND > 100 engineers AND running Snowflake".
 - ✅ **Heavyweight backfill**: after `aiArk.enrichPerson/Company` and `waterfall.enrich*` both return empty, peopleDataLabs is the deepest source in the catalog.
-- ❌ **Cheap at-scale sourcing**: 3 cred is 60–150× more expensive than salesNavigator (0.02–0.05). Don't default here for volume work.
+- ❌ **Cheap at-scale sourcing**: 3 cred is 15× more expensive than salesNavigator (0.2), and 60–300× more than aiArk (0.01–0.05). Don't default here for volume work.
 
 ## Patterns
 

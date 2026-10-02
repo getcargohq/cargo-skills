@@ -6,7 +6,7 @@ last-reviewed: 2026-07-25
 
 # aiArk (AI Ark)
 
-LinkedIn-anchored people/company data with an unusually cheap enrich-and-email combo, a personality-analysis action nothing else in the catalog has, and per-record search that bills at the bottom of the catalog. **All nine actions run on cargo's managed connection** — seven credits-based, plus two free `count*` actions that size a search before it bills — no own-key connector required (unlike `apolloio`, where only two are). Category `enrichment`, sub-category list-building. Reach for it when you hold **LinkedIn URLs** (cheapest profile+email at 0.1), need a **mobile phone** cheaply (0.5 vs the 3+ phone tier), want **lookalike-company** discovery (0.01/record), or need **personality/selling guidance** for personalization. **In the priority stack** ([`../SKILL.md`](../SKILL.md) §5) as the URL-anchored enrich rung and the cheapest per-record search — but it doesn't displace the sourcing-first spine: `salesNavigator` (0.02/lead) still leads plain at-scale people sourcing.
+LinkedIn-anchored people/company data with an unusually cheap enrich-and-email combo, a personality-analysis action nothing else in the catalog has, and per-record search that bills at the bottom of the catalog. **All nine actions run on cargo's managed connection** — seven credits-based, plus two free `count*` actions that size a search before it bills — no own-key connector required (unlike `apolloio`, where only two are). Category `enrichment`, sub-category list-building. Reach for it when you hold **LinkedIn URLs** (cheapest profile+email at 0.1), need a **mobile phone** cheaply (0.5 vs the 3+ phone tier), want **lookalike-company** discovery (0.01/record), or need **personality/selling guidance** for personalization. **In the priority stack** ([`../SKILL.md`](../SKILL.md) §5) as the URL-anchored enrich rung and the cheapest per-record search — but it doesn't displace the sourcing-first spine: `salesNavigator` (0.2/lead) still leads LinkedIn-native people sourcing.
 
 ## Credits-based actions
 
@@ -32,7 +32,7 @@ Two extractors (`fetchPeople`, `fetchCompanies`) also exist for syncing search r
 - ✅ **Rich people search** — `searchPeople` filters on education, skills, tenure windows, seniority, department, and past company that `salesNavigator` can't express, at 0.05/record.
 - ✅ **Reverse lookup** — `reverseLookup` (0.05) turns a stray email or phone back into a profile.
 - ✅ **Personalization signal** — `analyzePersonality` (0.05) is unique: OCEAN/DISC + selling guidance to feed the WRITE step.
-- ❌ **Generic at-scale sourcing** — for plain industry/size/geo lead lists, `salesNavigator.searchLeads` (0.02) is still cheaper per record.
+- ✅ **Cheaper at-scale people sourcing** — at 0.05/record, `searchPeople` is 4× cheaper than `salesNavigator.searchLeads` (0.2). Pilot both when the list is plain title/industry/size/geo: SN still wins where LinkedIn-native filters (function, seniority codes, `recentUpdates`) matter.
 
 ## Patterns
 

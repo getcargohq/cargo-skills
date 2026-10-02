@@ -1,7 +1,7 @@
 ---
 name: cargo-quickstart
 description: "Guided first-run demo for Cargo — one persona question to 25 real leads with a cost receipt in under two minutes, ending by saving the pull as a recurring play. Triggers: \"show me what Cargo can do\", \"give me a demo\", \"take me on a tour\", \"quickstart\", \"getting started with Cargo\", \"I just installed Cargo\", \"my workspace is empty\", \"does this actually work\". Skip when: the user has a real job to run (build a list, enrich a CSV, find emails) — use cargo-gtm; when they want CLI reference or routing — use the cargo router skill."
-version: "1.0.3"
+version: "1.0.4"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -22,7 +22,7 @@ metadata:
 
 One guided demo: pull ~25 fresh leads matching a buyer persona the user picks, show the cost receipt, then save the pull as a recurring play. The point is not the list — it's that in minute 3 the user owns a running system, not a one-off result.
 
-**A new account starts with 100 free credits — no card.** This demo spends about **0.5** of them. Say that out loud before the first paid call ("this costs about half a credit of your 100 free ones"): it converts the moment from *a purchase decision* into *a look around*, which is the whole job of a quickstart. Never let a new user think the demo is why they'd run out.
+**A new account starts with 100 free credits — no card.** This demo spends about **5** of them. Say that out loud before the first paid call ("this costs about 5 of your 100 free credits"): it converts the moment from *a purchase decision* into *a look around*, which is the whole job of a quickstart. Never let a new user think the demo is why they'd run out.
 
 ## Bootstrap
 
@@ -51,7 +51,7 @@ The demo has a two-minute budget from answer to deliverable. On the fast path:
 
 - **No discovery detours.** Do not run `cargo-ai --version`, `cargo-ai whoami`, `connection connector list`, or any exploratory command first. Auth problems will surface as errors on the first real call — handle them then.
 - **One command block per step**, no narration between commands.
-- **Paid work is capped at ~1 credit total.** The demo uses the cheapest sourcing action in the catalog (`salesNavigator.searchLeads`, 0.02/record → 25 records ≈ 0.5 credits). Nothing else paid runs without asking.
+- **Paid work is capped at ~5 credits total.** The demo uses LinkedIn-native people search (`salesNavigator.searchLeads`, 0.2/record → 25 records ≈ 5 credits). Nothing else paid runs without asking.
 - **Never dead-end.** Every step has a fallback (ladder below). If a rung fails, drop one rung silently and keep moving.
 
 ## Fast path
@@ -60,7 +60,7 @@ Translate the persona into a `searchLeads` filter (quote the exact title phrase 
 
 ```bash
 # 1. Execute — returns a run object; note run.uuid and run.workflowUuid.
-#    searchLeads returns a 25-row page minimum (limit below 25 still bills 25 × 0.02 = 0.5 credits).
+#    searchLeads returns a 25-row page minimum (limit below 25 still bills 25 × 0.2 = 5 credits).
 cargo-ai orchestration action execute \
   --action '{"kind":"connector","integrationSlug":"salesNavigator","actionSlug":"searchLeads"}' \
   --data '{"keywords": "\"<persona title phrase>\"", "limit": 25}' \
@@ -84,16 +84,16 @@ Show the table (name · title · company · recently-hired), not the raw JSON. `
 
 ### Fallback ladder (on auth/error, drop a rung — don't stop)
 
-1. `salesNavigator.searchLeads` (0.02/record) — primary.
+1. `salesNavigator.searchLeads` (0.2/record) — primary.
 2. `theirStack.searchJobs` (0.5) — reframe as "companies hiring your persona right now" (job postings for the persona's title). Same wow, different angle.
-3. `waterfall.searchProspects` (3/record) — **exceeds the ~1-credit demo cap, so this rung asks first**: "The two cheap sources aren't connected; I can pull 5 matches via waterfall for ~15 credits instead — run it, or connect Sales Navigator first (free)?" Run only on an explicit yes, with `limit` capped at 5.
+3. `waterfall.searchProspects` (3/record) — **exceeds the ~5-credit demo cap, so this rung asks first**: "The two cheap sources aren't connected; I can pull 5 matches via waterfall for ~15 credits instead — run it, or connect Sales Navigator first (free)?" Run only on an explicit yes, with `limit` capped at 5.
 4. Nothing connected at all → run the free path: `cargo-ai connection integration list | head`, show what *could* be wired, and offer to connect one (browser auth) — the demo resumes after.
 
 ## The receipt (mandatory, verbatim discipline)
 
 The demo is itself the pilot from [`../cargo-gtm/references/cost-discipline.md`](../cargo-gtm/references/cost-discipline.md). Close it with a receipt:
 
-- Credits spent + balance remaining (`cargo-ai billing subscription get` — remaining = `subscriptionAvailableCreditsCount − subscriptionCreditsUsedCount`). For a brand-new account, frame it against the **100 free starting credits** rather than as a bare number — "0.5 spent, 99.5 of your 100 free credits left" lands very differently from "99.5 credits remaining".
+- Credits spent + balance remaining (`cargo-ai billing subscription get` — remaining = `subscriptionAvailableCreditsCount − subscriptionCreditsUsedCount`). For a brand-new account, frame it against the **100 free starting credits** rather than as a bare number — "5 spent, 95 of your 100 free credits left" lands very differently from "95 credits remaining".
 - Hit-rate: "25 of 25 returned" (or what actually came back, and which rows look off).
 
 ## Minute 3 — save it as a play
