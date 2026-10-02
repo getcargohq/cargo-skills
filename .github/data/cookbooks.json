@@ -1,5 +1,153 @@
 [
   {
+    "slug": "call-capture",
+    "kind": "cookbook",
+    "outcome": "Every call the team records is collected into the cadence layer each morning, scribed into a log entry, and — once a claim repeats — promoted into the context knowledge layer, as one reviewable pull request against your GTM repo. Nine recorders ship; a tenth is one adapter file.",
+    "state": "to-be-approved",
+    "chain": 4,
+    "requires": [],
+    "hasSkill": true,
+    "variations": [
+      {
+        "id": "notes-not-transcripts",
+        "when": "The repo is growing faster than you want, or your recorder's AI notes are genuinely good",
+        "trade": "You lose the verbatim record, so the scribe can no longer quote and nobody can check a summary against what was actually said. Notes are already an interpretation; scribing them is interpreting an interpretation"
+      },
+      {
+        "id": "raise-the-bar",
+        "when": "Your context is filling with claims that turn out to be one customer's opinion",
+        "trade": "The knowledge layer lags the field by weeks. A real, fast-moving objection sits unwritten while it is costing you deals"
+      },
+      {
+        "id": "widen-the-cap",
+        "when": "The backfill queue is not draining — the pull request reports a remainder that never falls",
+        "trade": "The pull request stops being reviewable, which is the whole control. A diff nobody reads is an auto-merge with extra steps"
+      },
+      {
+        "id": "internal-calls-too",
+        "when": "You want deal reviews, onboardings and retros in the record as well as customer calls",
+        "trade": "Volume roughly doubles and the signal thins: internal calls restate what customers said, so the repetition bar counts the same occurrence twice and promotes it as if two customers had said it"
+      },
+      {
+        "id": "two-recorders",
+        "when": "You are mid-migration between recorders, or sales records on one and CS on another",
+        "trade": "Deduplication is per-recorder, because the ids are. A call both tools recorded is captured twice and scribed as two entries, and the repetition bar then counts one conversation as two occurrences and promotes it as if two customers had said it"
+      }
+    ],
+    "stage": "Context"
+  },
+  {
+    "slug": "web-capture",
+    "kind": "cookbook",
+    "outcome": "Each Monday the company's own website, its competitors' pages and recent news about both land in context/ as one pull request: the first run seeds positioning, offerings, an inferred ICP with a disqualifier, competitors, clients and proof; every run after adds a dated note of what changed (pricing, a launch, funding, a customer) and never edits an existing file.",
+    "state": "to-be-approved",
+    "chain": 12,
+    "requires": [],
+    "hasSkill": true,
+    "variations": [
+      {
+        "id": "more_pages",
+        "when": "Product, solution or docs pages say what is sold better than the home page",
+        "trade": "One more URL billed on every read, more candidate changes for the agent to read, and the 20-URL cap"
+      },
+      {
+        "id": "daily",
+        "when": "The company or a competitor ships several times a week",
+        "trade": "Five times the reads, and most days open no pull request"
+      },
+      {
+        "id": "slack_digest",
+        "when": "The team does not watch pull requests",
+        "trade": "One more connector to keep authorized, and a channel to choose"
+      },
+      {
+        "id": "deeper_news",
+        "when": "The `lite` search misses coverage the team knows about",
+        "trade": "The next rung of the processor price ladder on every run; read it live before switching"
+      }
+    ],
+    "stage": "Context"
+  },
+  {
+    "slug": "win-loss-review",
+    "kind": "cookbook",
+    "outcome": "Every month the CRM's closed deals are audited and what they say lands in context/ as one pull request: the ICP verified against won versus lost with a disqualifier, dated insights with counts and denominators, objections from recorded lost reasons, and a client file per closed-won account; a five-line Slack digest says what changed. Never edits a persona, nor the ICP after the first pass.",
+    "state": "to-be-approved",
+    "chain": 13,
+    "requires": [],
+    "hasSkill": true,
+    "variations": [
+      {
+        "id": "another_crm",
+        "when": "The deals live in Salesforce or Attio",
+        "trade": "Field names vary per org, so the queries are rewritten against the live schema and the first pass is checked by eye"
+      },
+      {
+        "id": "deal_contacts",
+        "when": "Titles at won accounts are too broad, and the team wants the titles on the deals only",
+        "trade": "One more column to keep in sync with the extractor's naming, and a query to re-check if the extractor changes it"
+      },
+      {
+        "id": "raise_the_verify_line",
+        "when": "Twenty wins is too few to separate won from lost in your market (long cycles, few deals)",
+        "trade": "More months land in hypothesis mode, and the files assert less"
+      },
+      {
+        "id": "wider_window",
+        "when": "Your sales cycle is longer than a year, or last year was not representative",
+        "trade": "Older deals describe an older market, and a two-year window on a company that repositioned last spring verifies the old ICP"
+      },
+      {
+        "id": "quarterly",
+        "when": "Fewer than ten deals close a month and the digest is mostly \"nothing new\"",
+        "trade": "A lost reason that recurs in month one is written in month three. The append-only rule means nothing is lost, only late"
+      },
+      {
+        "id": "no_digest",
+        "when": "The team reads pull requests and does not want a Slack post",
+        "trade": "The pull request is the only surface, and a monthly pull request nobody is pinged about is a monthly pull request nobody opens"
+      }
+    ],
+    "stage": "Context"
+  },
+  {
+    "slug": "tam-building",
+    "kind": "cookbook",
+    "outcome": "Stand up your account universe as a deployed pipeline: an AI Ark company search shaped by your ICP, sized for free before it bills, then tiered A / B / C / disqualified by an agent that reads your rubric from the workspace context and web-searches the evidence the sourced row does not carry.",
+    "state": "to-be-approved",
+    "chain": 2,
+    "requires": [],
+    "hasSkill": true,
+    "variations": [
+      {
+        "id": "lookalike-sourcing",
+        "when": "Your best customers describe the ICP better than any facet does, which is usual before a segment is written down",
+        "trade": "The pool is shaped by the seeds rather than by anything written down, so it drifts from `icp.md` and `countCompanies` becomes the only way to see what you asked for"
+      },
+      {
+        "id": "refresh-cadence",
+        "when": "The market moves and a one-time source goes stale",
+        "trade": "Every run re-bills every returned record, including the rows you already have: a monthly refresh buys the handful of new companies at the price of the whole pool"
+      },
+      {
+        "id": "promote-to-shared-accounts",
+        "when": "The project already has an `accounts` model that scoring, routing, and signals all read",
+        "trade": "One more resource and one more dedupe key to keep true; a row that cannot resolve to that key has to be dropped rather than written, or it forks into duplicates the first time it appears elsewhere"
+      },
+      {
+        "id": "sales-navigator-source",
+        "when": "Your market is expressed better by LinkedIn's facet taxonomy than by AI Ark's filter groups",
+        "trade": "Sales Nav returns no domain, so you add a resolution step of two credited calls per company; and its extraction cap forces splitting one market search into sub-searches and recounting each"
+      },
+      {
+        "id": "deterministic-tiering",
+        "when": "The rubric turns out to be thresholds (headcount band, industry, funding stage) with no judgment in it",
+        "trade": "You lose the rationale a rep reads and the web-verified evidence, which is most of what makes a tier trusted rather than obeyed"
+      }
+    ],
+    "stage": "Fundamentals"
+  },
+  {
     "slug": "account-scoring",
     "kind": "cookbook",
     "outcome": "Keep every account scored and tiered against your written ICP by a deployed agent that re-scores as accounts arrive and as the ICP changes, writing the rationale back to the CRM.",
@@ -20,66 +168,346 @@
       },
       {
         "id": "no-crm-at-all",
-        "when": "You have no CRM, or you do not want to hand this skill a CRM credential",
+        "when": "You have no CRM, or the workspace has no CRM connection and you do not want to authorize one",
         "trade": "Every other CRM-dependent skill you install later brings a CRM connector of its own; reuse one"
       }
-    ]
+    ],
+    "stage": "Fundamentals"
+  },
+  {
+    "slug": "website-building",
+    "kind": "cookbook",
+    "outcome": "Build the company website on Cargo and serve it on your own domain: a statically exported Next.js app, one defineApp with its www hostname, and a defineDomain that publishes the records and forwards the apex, changed only through reviewed pull requests.",
+    "state": "approved",
+    "chain": 10,
+    "requires": [],
+    "hasSkill": true,
+    "variations": [
+      {
+        "id": "external-dns",
+        "when": "The domain's DNS is at another provider, as for most existing company domains",
+        "trade": "Three records and an apex redirect kept by hand; Cargo cannot correct them."
+      },
+      {
+        "id": "register-domain",
+        "when": "The company wants a new domain for the website, bought through Cargo",
+        "trade": "Workspace credits, not refundable; the plan's `+ create domain:…` line is the purchase."
+      },
+      {
+        "id": "source-recreation",
+        "when": "An authorized repository or live site already exists",
+        "trade": "Dependency migration, inherited defects to separate from new ones, binary assets to adapt for a text upload."
+      },
+      {
+        "id": "redesign",
+        "when": "The current site does not fit the company it describes",
+        "trade": "More design decisions, and no old page to compare against."
+      },
+      {
+        "id": "more-pages",
+        "when": "The brief needs pricing, landing or legal pages",
+        "trade": "Metadata and sitemap to keep current per page."
+      },
+      {
+        "id": "working-form",
+        "when": "A demo or contact form has to deliver",
+        "trade": "A backend outside this static app, with its own consent and cost."
+      }
+    ],
+    "stage": "Fundamentals"
+  },
+  {
+    "slug": "new-hire-detection",
+    "kind": "cookbook",
+    "outcome": "Watch your whole market for people who just took a role you sell to, qualify the company each one joined against your ICP, and post the ones that fit to Slack with the verdict and the links. A deployed pipeline on a Sales Navigator job-change search; checking or writing the CRM is an optional variation.",
+    "state": "to-be-approved",
+    "chain": 11,
+    "requires": [],
+    "hasSkill": true,
+    "variations": [
+      {
+        "id": "crm_lookup",
+        "when": "A CRM is connected and the team wants to know, on the post, whether the company is already in it",
+        "trade": "A CRM lookup per qualified person, and one more connector to keep authorized. Nothing is written"
+      },
+      {
+        "id": "crm_routing",
+        "when": "The CRM is where the team works, and a task on the right owner beats a Slack message",
+        "trade": "Owner IDs, a CSM field, association types and a LinkedIn field to resolve; an email lookup per person; writes that a mistake leaves in the CRM"
+      },
+      {
+        "id": "cadence",
+        "when": "The market is small and a weekly signal matters, or the budget is tight and monthly is enough",
+        "trade": "Weekly roughly doubles the extraction spend of the default for the same people found; monthly halves it and the team hears about a new hire weeks later"
+      },
+      {
+        "id": "split_search",
+        "when": "The counted search is above 2,500",
+        "trade": "More URLs to keep in sync with the ICP; overlapping splits extract the same person twice and bill both"
+      },
+      {
+        "id": "channel_per_segment",
+        "when": "Different teams own different segments (regions, tiers)",
+        "trade": "One channel id per branch to resolve and keep current"
+      },
+      {
+        "id": "find_email",
+        "when": "The team wants the work email on the post, ready for its own sequencer",
+        "trade": "One email lookup per qualified person"
+      },
+      {
+        "id": "draft_first_touch",
+        "when": "The team wants a first email written, not just the signal",
+        "trade": "One more LLM call per qualified person, and copy that has to be reviewed before it is trusted. The play still sends nothing"
+      }
+    ],
+    "stage": "Signals"
+  },
+  {
+    "slug": "agentic-engagement",
+    "kind": "cookbook",
+    "outcome": "Deploy an agent that holds email conversations with leads: a sending domain, a mailbox, native sendEmail and listEmailEvents on the agent, a native email trigger on reply and unsubscribe, and a heartbeat that checks thread status when nothing inbound happened.",
+    "state": "to-be-approved",
+    "chain": 5,
+    "requires": [],
+    "hasSkill": true,
+    "variations": [
+      {
+        "id": "register-domain",
+        "when": "The workspace does not yet own a sending domain",
+        "trade": "Registration charges workspace credits and is not refundable. The deploy waits until the domain is `active` before creating the mailbox."
+      },
+      {
+        "id": "mailbox-type",
+        "when": "Shared or private SMTP fits better than Google",
+        "trade": "Type is create-only. Changing it later is a new inbox and a reset ramp. Live `pricing get` for the new flavour."
+      },
+      {
+        "id": "adopt-mailbox",
+        "when": "The inbox already exists in the workspace",
+        "trade": "Adopting never falls back to creating. The wrong address fails deploy instead of minting a second inbox."
+      },
+      {
+        "id": "first-touch-play",
+        "when": "New leads should get a first email without a human starting the chat",
+        "trade": "A play that sends without going through the agent starts threads the native trigger will never wake, because the trigger keys off chats *this agent* has emailed."
+      }
+    ],
+    "stage": "Engagement"
+  },
+  {
+    "slug": "standup",
+    "kind": "cookbook",
+    "outcome": "Every evening the GTM day is recapped into the cadence log and a digest is posted to Slack, as one reviewable pull request against your GTM repo.",
+    "state": "to-be-approved",
+    "chain": 7,
+    "requires": [],
+    "hasSkill": true,
+    "variations": [
+      {
+        "id": "move-the-hour",
+        "when": "The team reads Slack at a different time, or you are not on Pacific time",
+        "trade": "A morning cron recaps an incomplete day. A timezone the collector does not share with the prompt splits the dump and the log across two dates."
+      },
+      {
+        "id": "skip-slack",
+        "when": "You want the log and the pull request, and a human will paste the digest",
+        "trade": "The team stops seeing the day. The log still lands, but the thing people actually read is gone."
+      },
+      {
+        "id": "header-emoji",
+        "when": "Two recaps land in the same channel and the reader has to tell them apart from the first line",
+        "trade": "Cosmetic unless you pick the same emoji as another bot in that channel, in which case the two posts merge in the reader's eye."
+      },
+      {
+        "id": "log-only-quiet",
+        "when": "A quiet day should not ping Slack",
+        "trade": "Silence on a quiet day is indistinguishable from a missed run. The default is the opposite: a quiet day still gets an entry, because silence is signal."
+      },
+      {
+        "id": "git-only",
+        "when": "The sandbox has no Cargo session, or this agent must not reach the workspace at all",
+        "trade": "The recap loses runs, usage and what is deployed, so \"declared but it never ran\" stops being visible. The git dump still lands, which is what §1b already falls back to when `cargo-ai whoami` fails."
+      }
+    ],
+    "stage": "Operations"
+  },
+  {
+    "slug": "weekly-planning",
+    "kind": "cookbook",
+    "outcome": "Every Monday last week's GTM work is ranked against active initiatives, declared infra, and live runs, as one reviewable pull request per initiative — or one workspace pull request when there are none.",
+    "state": "to-be-approved",
+    "chain": 8,
+    "requires": [],
+    "hasSkill": true,
+    "variations": [
+      {
+        "id": "move-the-hour",
+        "when": "The team reads pull requests at a different time, or you are not on Pacific time",
+        "trade": "A Sunday cron recaps an incomplete week. A timezone the collector does not share with the prompt splits the dump and the plan files across two weeks."
+      },
+      {
+        "id": "skip-on-track",
+        "when": "An on-track initiative should not ping the reviewer",
+        "trade": "Silence on an on-track week is indistinguishable from a missed run for that initiative. The default still opens the PR, because a written \"keep going\" is the record."
+      },
+      {
+        "id": "git-only",
+        "when": "The sandbox has no Cargo session, or this agent must not reach the workspace at all",
+        "trade": "\"Deployed is not running\" stops being answerable, which is most of the point: the gap collapses to what git can see. The dump still lands, which is what §1b already falls back to when `cargo-ai whoami` fails."
+      },
+      {
+        "id": "one-pr",
+        "when": "You want one weekly diff even when there are five initiatives",
+        "trade": "The reviewer merges the loud initiative and skips the overdue one. The default splits them because that is the gate."
+      }
+    ],
+    "stage": "Operations"
+  },
+  {
+    "slug": "ask-cargo",
+    "kind": "cookbook",
+    "outcome": "One agent the whole team @mentions in Slack, sitting on top of your GTM repo and workspace: it answers from context, cadence and live runs, turns change requests into pull requests, and hands work to the other deployed agents only after a go in the thread.",
+    "state": "to-be-approved",
+    "chain": 9,
+    "requires": [],
+    "hasSkill": true,
+    "variations": [
+      {
+        "id": "answer-only",
+        "when": "You want a Slack oracle over the repo first, and no one running anything from Slack yet",
+        "trade": "The team copies commands out of Slack into a terminal, and \"the agent said it would cost X\" stops being checked against what actually ran."
+      },
+      {
+        "id": "listed-channels",
+        "when": "The bot sits in channels it must never answer in, or you want answers in a few channels only",
+        "trade": "A list to keep in sync: a new team channel gets no answer until someone edits the file and deploys. Listing a channel also takes it from any `allChannels` agent."
+      },
+      {
+        "id": "dms-too",
+        "when": "Individuals want to ask privately",
+        "trade": "The thread stops being multiplayer: nobody else sees the proposal or the go, so a DM go is one person approving spend alone. Keep §3 unchanged if you take this."
+      },
+      {
+        "id": "master-agent-slack",
+        "when": "You only need questions answered, no repo and no pull requests",
+        "trade": "No checkout: it cannot read `infra/` or `cadence/`, and it cannot change anything. Cheaper and faster per question, because there is no sandbox to start."
+      },
+      {
+        "id": "no-handoff",
+        "when": "No other agents are deployed yet",
+        "trade": "Every job is redone by this agent from scratch, without the owning agent's rules. Add §4 back the day the first pipeline deploys."
+      },
+      {
+        "id": "higher-sample-bar",
+        "when": "Your runs are expensive per record, or touch people",
+        "trade": "More round trips in the thread for every batch, and each one needs another `@Cargo go`."
+      }
+    ],
+    "stage": "Operations"
   },
   {
     "slug": "crm-enrichment",
     "kind": "cookbook",
-    "outcome": "Keep CRM accounts filled and refresh them when they go stale: a deployed play that fills approved blank firmographics from LinkedIn and re-enrolls a record after six months.",
+    "outcome": "Keep CRM accounts and contacts filled and refresh them when they go stale. The contact pipeline uses one enrichment play with three gated tools: Cargo-native Find Email, Cargo-native Find LinkedIn Profile from Email, and custom Contact LinkedIn Enrichment.",
     "state": "to-be-approved",
     "chain": 3,
     "requires": [],
     "hasSkill": true,
     "variations": [
       {
-        "id": "crm",
-        "when": "The consumer uses Salesforce or Attio instead of HubSpot",
-        "trade": "Live generated types must be rechecked; a guessed flag writes or no-ops silently"
+        "id": "crm_shape",
+        "when": "The consumer uses Salesforce or Attio",
+        "trade": "Generated types and write semantics must be reverified"
       },
       {
-        "id": "selected_fields",
-        "when": "The approved contract differs from the starting recommendation",
-        "trade": "Each added field expands mapping, type-review, and the \"already filled\" filter"
+        "id": "refresh_cadence",
+        "when": "The default window does not fit the data policy",
+        "trade": "Faster cadence repeats provider charges more often"
       },
       {
-        "id": "eligibility",
-        "when": "Only a governed subset should be enriched",
+        "id": "account_fields",
+        "when": "The approved company contract differs from the starting fields",
+        "trade": "Every added field expands schema and write review"
+      },
+      {
+        "id": "account_eligibility",
+        "when": "Only a governed company subset should be enriched",
         "trade": "Narrower scope reduces coverage and paid calls"
       },
       {
-        "id": "approved_refresh_behavior",
-        "when": "Populated fields must be refreshed after explicit approval",
-        "trade": "Refresh can overwrite CRM-authoritative values if the preview and the write disagree"
+        "id": "account_refresh_policy",
+        "when": "Approved populated company fields must be refreshed",
+        "trade": "The provider snapshot can replace CRM-authoritative values"
+      },
+      {
+        "id": "contact_fields",
+        "when": "The approved person contract differs from the starting fields",
+        "trade": "Every added field expands schema and write review"
+      },
+      {
+        "id": "contact_eligibility",
+        "when": "Only a governed contact subset should be enriched",
+        "trade": "Narrower scope reduces coverage and paid calls"
+      },
+      {
+        "id": "native_tool_contracts",
+        "when": "The deployed native tools expose different schemas",
+        "trade": "A guessed path can create paid calls with no usable result"
+      },
+      {
+        "id": "profile_provider",
+        "when": "The workspace uses an equivalent approved profile action",
+        "trade": "Coverage, fields, and unit price change"
       }
-    ]
+    ],
+    "stage": "CRM"
   },
   {
-    "slug": "tam-building",
+    "slug": "crm-deduplication",
     "kind": "cookbook",
-    "outcome": "Stand up your account universe as a deployed pipeline: a Sales Navigator company search split past the 1,000 extraction cap, resolved to real domains, deduped into a shared accounts model.",
+    "outcome": "Keep CRM accounts and contacts duplicate-free: audit company and person identity, run recurring deduplication plays directly on CRM models, merge safe exact matches, and route uncertain clusters to manual review.",
     "state": "to-be-approved",
-    "chain": 2,
+    "chain": 6,
     "requires": [],
     "hasSkill": true,
     "variations": [
       {
-        "id": "non-linkedin-source",
-        "when": "You do not want to source from LinkedIn at all, or Sales Nav does not cover your market",
-        "trade": "You lose the Sales Nav facet taxonomy that makes the split tactic mechanical, and the splitting has to be redesigned around the new source's own limits"
+        "id": "crm",
+        "when": "The consumer uses Salesforce or Attio",
+        "trade": "Generated types and native merge semantics must be revalidated"
       },
       {
-        "id": "land-without-promoting",
-        "when": "You want to see and filter the raw market before paying to enrich it",
-        "trade": "Nothing reaches `accounts`, so no downstream skill (scoring, contact sourcing, signals) has anything to work with until you promote"
+        "id": "structured_ai_review",
+        "when": "Ambiguous evidence needs a concise review aid",
+        "trade": "Adds model cost and a non-deterministic review surface"
       },
       {
-        "id": "sample-first",
-        "when": "The market search is large and you want to see the cost curve before committing",
-        "trade": "Your TAM is deliberately incomplete until you widen it, so do not score or report on coverage from a sample"
+        "id": "account_matching_keys",
+        "when": "The CRM has another approved durable company identity",
+        "trade": "Wider matching can create new false-positive company classes"
+      },
+      {
+        "id": "account_survivor_precedence",
+        "when": "Protected lifecycle, billing, tier, or customer policy must win",
+        "trade": "A policy change can select a different survivor for every cluster"
+      },
+      {
+        "id": "contact_matching_keys",
+        "when": "The CRM has another approved durable person identity",
+        "trade": "Wider matching can create new false-positive person classes"
+      },
+      {
+        "id": "contact_survivor_precedence",
+        "when": "Commercial history or activity policy differs",
+        "trade": "A policy change can select a different survivor for every group"
+      },
+      {
+        "id": "low_confidence_review",
+        "when": "The operator wants phone-only or ambiguous groups surfaced",
+        "trade": "Review volume changes; disabled review leaves more duplicates"
       }
-    ]
+    ],
+    "stage": "CRM"
   }
 ]
