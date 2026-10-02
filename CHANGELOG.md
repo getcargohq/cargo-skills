@@ -10,6 +10,16 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### `cargo-gtm` → 2.1.2, `cargo` → 1.27.1, `cargo-quickstart` → 1.0.4, `cargo-billing` → 2.0.1 — Sales Navigator search repriced to 0.2/record
+
+`salesNavigator.searchLeads`, `searchAccounts`, `extractLeadSearch` and `extractAccountSearch` now bill **0.2 credits per returned record** (were 0.02 for leads, 0.05 for accounts), per `cargo-ai orchestration action list --integration-slug salesNavigator`. Every mention is updated, along with the figures derived from it:
+
+- **Free-tier anchor:** 100 free credits now source ~500 leads, not ~5,000 (router, README, billing).
+- **Quickstart:** the 25-lead demo now spends ~5 credits, not ~0.5. The demo cap, the receipt example, and the fallback-rung wording are updated to match.
+- **Recipe budgets:** `build-tam` (volume table and the 500-company budget → ~2,555), `portfolio-prospecting` (→ ~785), `prospecting` P1/P2 (→ ~14 / ~159), and the `custom-datapoints` worked shortlist (the LinkedIn `companyId` prereq is now 0.2/account → ~14,100 / ~9,000 / ~3,100).
+- **"Cheapest sourcing in the catalog" is no longer true.** `aiArk.searchCompanies` (0.01), `aiArk.searchPeople` (0.05) and `icypeas.findPeople` (0.02) all undercut it. The salesNavigator playbook, the sourcing decision tree, the stage-action map and the glossary now position it as the default for **LinkedIn-native filters**, not on price. Cross-provider ratios in the playbooks were recomputed (oceanio, theirStack, peopleDataLabs, proxycurl, icypeas, piloterr, aiArk, contactOut).
+- `credits-cost-table.md` rows moved into the 0.2 block.
+
 ### `cargo` → 1.27.0 — nine silent traps from a production build, two stale rows fixed
 
 Collected while building a revenue engine in a production workspace between 2026-06 and 2026-09. Every one fails silently: the call succeeds and the result is wrong. Added to [`references/gotchas.md`](cargo/references/gotchas.md): the `--version 1.2.3` form that deploys nothing (verified on CLI 1.0.47), `update-draft` replacing rather than patching, an open editor tab overwriting a CLI draft, the two causes behind "Unable to retrieve language model", the missing output-schema flag on agent releases, where custom columns hide, `modelInsert` writing an empty row, `UNION ALL` and `NULLS LAST` in storage SQL, and batches returning fewer answers than records.

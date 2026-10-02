@@ -97,8 +97,8 @@ A price here means **credits per account**, which for a row-billed action is not
 
 | What you want to know | Cheapest catalog path | Credits/account | Coverage to expect |
 |---|---|---|---|
-| Function headcount, seniority mix, SDR:AE ratio, eng-as-share-of-total | `salesNavigator.findEmployeesDistribution` (0.25 **+ 0.05 ID**), or `linkedin.findCustomHeadcount` (0.5) when the role you care about isn't one of the buckets — it counts by keyword | 0.25–0.5 **+ ID** | High where a LinkedIn company page exists |
-| Headcount growth or decline | `salesNavigator.findCompanyMetrics` (0.25 **+ 0.05 ID**), or `companyEnrich.getWorkforce` (0.25 — historical headcount **by department**) | 0.25 | Medium–High |
+| Function headcount, seniority mix, SDR:AE ratio, eng-as-share-of-total | `salesNavigator.findEmployeesDistribution` (0.25 **+ 0.2 ID**), or `linkedin.findCustomHeadcount` (0.5) when the role you care about isn't one of the buckets — it counts by keyword | 0.25–0.5 **+ ID** | High where a LinkedIn company page exists |
+| Headcount growth or decline | `salesNavigator.findCompanyMetrics` (0.25 **+ 0.2 ID**), or `companyEnrich.getWorkforce` (0.25 — historical headcount **by department**) | 0.25 | Medium–High |
 | Revenue band, NAICS / industry codes | `companyEnrich.enrichByDomain` (0.25) — same call also returns employees, funding and socials, so it can fill several rows at once | 0.25 | Medium — banded, not exact; private companies are estimates |
 | Tech stack | `builtwith.getDomainSummary` (**0**) first, then `builtwith.enrichDomain` (1, flat) or `theirStack.searchTechnologies` (0.5/row) | 0 to start; 1 flat, or **0.5 × rows** — cap with `limit` | Medium — detection favors client-side and vendor-declared tech; back-office tools are near-invisible |
 | Hiring intent — which roles, how many, how recent | `theirStack.searchJobs` (0.5) or `linkedin.searchJobs` (0.5) | **0.5 × postings returned** — cap with `limit` | Medium–High |
@@ -117,7 +117,7 @@ The `firecrawl.scrape` → `anthropic.instruct` row is the workhorse of this rec
 
 Two cost mechanics change the arithmetic. The first is an **ID prerequisite** — a per-account entry fee before the attribute's own price, and the most common reason a shortlist under-quotes:
 
-- Every `salesNavigator.find*` action (`findEmployeesDistribution`, `findCompanyMetrics`, `findEmployeesCount`, `findCompanyInsights`) keys on a LinkedIn **`companyId`**, not a domain. Accounts sourced through `salesNavigator.searchAccounts` already carry it; a list that arrived from a CRM export or a domain column does not, and resolving it costs 0.05/account through `searchAccounts`. It amortizes across every `find*` attribute on the same account — but it is easy to miss, because these actions look self-contained.
+- Every `salesNavigator.find*` action (`findEmployeesDistribution`, `findCompanyMetrics`, `findEmployeesCount`, `findCompanyInsights`) keys on a LinkedIn **`companyId`**, not a domain. Accounts sourced through `salesNavigator.searchAccounts` already carry it; a list that arrived from a CRM export or a domain column does not, and resolving it costs 0.2/account through `searchAccounts`. It amortizes across every `find*` attribute on the same account — but it is easy to miss, because these actions look self-contained.
 - **Search-shaped actions bill per returned row; the `find*` actions do not.** `theirStack.searchJobs`, `salesNavigator.searchAccounts` / `searchLeads` / `extract*` charge for every record they return, so keep `limit` strict and size the pool with `limit: 1` first ([`../references/cost-discipline.md`](../references/cost-discipline.md) §4). The `salesNavigator.find*` calls above are flat per account regardless of what comes back — don't budget them per row.
 
 That second mechanic is the one that breaks estimates quietly, because a row-billed action *looks* like a flat per-account price in a table. A hiring-velocity field over an account with 8 open postings costs 4 credits, not 0.5 — and the accounts with the most postings are exactly the high-growth ones the field exists to find, so the overrun concentrates on the rows you care about. `cost-discipline.md` uses this precise case as its worked example of an estimate missing by 2×. **Price a row-billed attribute as `unit cost × rows you will actually accept`, and set `limit` to that number** so the cap is enforced rather than hoped for. Step 5 is where you measure the multiplier.
@@ -142,7 +142,7 @@ The deliverable is a costed table, not an essay. Present it and stay in AWAIT_AP
 >
 > | # | Field | Type | Source | Cost/acct | Probe hit | Refresh | Decision it changes |
 > |---|---|---|---|---:|---:|---|---|
-> | — | *LinkedIn `companyId`* | *prereq* | `salesNavigator.searchAccounts` — needed once for #1–#2 | 0.05 | 9/10 | Once | — |
+> | — | *LinkedIn `companyId`* | *prereq* | `salesNavigator.searchAccounts` — needed once for #1–#2 | 0.20 | 9/10 | Once | — |
 > | 1 | `eng_headcount_est` | number | `salesNavigator.findEmployeesDistribution` | 0.25 | 9/10 | Monthly | Tier + seat-count estimate |
 > | 2 | `has_platform_team` | boolean | same call, title parse | 0.00 | 9/10 | Monthly | Routes to the technical persona |
 > | 3 | `soc2_status` | enum | `firecrawl.scrape` /security + extract | 0.25 | 6/10 | Quarterly | Kills or unlocks enterprise motion |
@@ -154,9 +154,9 @@ The deliverable is a costed table, not an essay. Present it and stay in AWAIT_AP
 >
 > **Cut, with reason:** exact competitor spend (no source at any price) · contract renewal date (not public) · "is growing" (not discriminating) · industry (already a column).
 >
-> **Full-list arithmetic:** 3.30 credits/account (1 prereq + 6 attributes) × 4,100 accounts = **~13,500 credits**. Balance is 12,000 — the full fan-out does not fit, which is the point of quoting it before running it.
-> **Cheaper cut (recommended):** drop #4 and #6, the two quarterly/monthly enrichment rows → **~8,400 credits** (2.05/account), keeps 80% of the scoring signal. Neither carries an ID fee, so the saving here is exactly their own price — 1.25/account, no more.
-> **Narrower cut:** run all 6 on the 900 accounts already in the Tier-1 segment → **~3,000 credits**.
+> **Full-list arithmetic:** 3.45 credits/account (1 prereq + 6 attributes) × 4,100 accounts = **~14,100 credits**. Balance is 12,000 — the full fan-out does not fit, which is the point of quoting it before running it.
+> **Cheaper cut (recommended):** drop #4 and #6, the two quarterly/monthly enrichment rows → **~9,000 credits** (2.20/account), keeps 80% of the scoring signal. Neither carries an ID fee, so the saving here is exactly their own price — 1.25/account, no more.
+> **Narrower cut:** run all 6 on the 900 accounts already in the Tier-1 segment → **~3,100 credits**.
 
 Three shaped options, a default, the reconciled balance — the standard approval shape from [`../references/cost-discipline.md`](../references/cost-discipline.md).
 

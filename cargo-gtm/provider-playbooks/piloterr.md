@@ -6,7 +6,7 @@ last-reviewed: 2026-07-09
 
 # piloterr (Piloterr)
 
-Ultra-cheap sourcing surfaces, both priced at **0.01**: an **action** (`getG2ProductInfo`) that scrapes one G2 product page (reviews, ratings, pricing plans, specs), and an **extractor** (`fetchCompanies`, 0.01 **per item**) that syncs filtered company lists into a model — 10,000 companies for 100 credits, the cheapest at-scale company pull in the catalog. It complements rather than replaces `salesNavigator.searchAccounts` (0.05): salesNavigator is an on-demand action inside a workflow; piloterr's company pull is a scheduled model sync.
+Ultra-cheap sourcing surfaces, both priced at **0.01**: an **action** (`getG2ProductInfo`) that scrapes one G2 product page (reviews, ratings, pricing plans, specs), and an **extractor** (`fetchCompanies`, 0.01 **per item**) that syncs filtered company lists into a model — 10,000 companies for 100 credits, the cheapest at-scale company pull in the catalog. It complements rather than replaces `salesNavigator.searchAccounts` (0.2): salesNavigator is an on-demand action inside a workflow; piloterr's company pull is a scheduled model sync.
 
 ## Credits-based actions
 
@@ -24,7 +24,7 @@ Wire it with `cargo-ai storage model create … --extractor-slug fetchCompanies`
 
 ## What it's for
 
-- ✅ **Bulk TAM seeding on a budget** — a 10,000-company filtered pull costs 100 credits vs 500 with `salesNavigator.searchAccounts` (0.05/record).
+- ✅ **Bulk TAM seeding on a budget** — a 10,000-company filtered pull costs 100 credits vs 2,000 with `salesNavigator.searchAccounts` (0.2/record).
 - ✅ **G2 product scrapes at volume** — competitive review sweeps at 0.01/product; includes pricing plans, which `g2.enrichProduct` doesn't list in its description.
 - ❌ **Interactive sourcing inside a play** — `fetchCompanies` is an extractor on a sync schedule; for search-as-a-node, use `salesNavigator` / `oceanio`.
 - ❌ **Filters beyond firmographics** — the property set is LinkedIn-page-shaped (industry, staff, HQ, founded); no funding, tech-stack, or intent filters. That's `theirStack` (0.5) / `peopleDataLabs` (3).
@@ -72,7 +72,7 @@ Configure the model's extractor with the cargo filter shape (note the `conjoncti
 
 ## Position in the waterfall
 
-**SOURCE stage, bulk/scheduled rung.** For recurring TAM refresh: **piloterr extractor (0.01/item)** → `salesNavigator.searchAccounts` (0.05, interactive) → `oceanio.searchCompanies` (1, lookalike/technographic) → `peopleDataLabs` (3, heavyweight filters). See [`../references/stage-action-map.md`](../references/stage-action-map.md).
+**SOURCE stage, bulk/scheduled rung.** For recurring TAM refresh: **piloterr extractor (0.01/item)** → `salesNavigator.searchAccounts` (0.2, interactive) → `oceanio.searchCompanies` (1, lookalike/technographic) → `peopleDataLabs` (3, heavyweight filters). See [`../references/stage-action-map.md`](../references/stage-action-map.md).
 
 ## Recurring use
 

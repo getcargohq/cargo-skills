@@ -13,7 +13,7 @@ For sourcing-only / TAM list builds, see [`build-tam.md`](build-tam.md). For inv
 ## Pipeline spine
 
 ```
-1. SOURCE    → salesNavigator.searchLeads / searchAccounts            (0.02–0.05/record)
+1. SOURCE    → salesNavigator.searchLeads / searchAccounts            (0.2/record)
 2. DEDUPE    → match against the workspace's own Contacts / Companies models
                on linkedin_url / domain (storage SQL or a segment filter)  (free)
 3. ENRICH    → LinkedIn URL in hand? aiArk.enrichPerson (0.1) FIRST — profile + verified email
@@ -121,7 +121,7 @@ jq -s '[.[0].results, .[1].results, .[2].results, .[3].results]
   /tmp/p1-leads.json /tmp/p1-prospect-enriched.json /tmp/p1-emails.json /tmp/p1-verified.json
 ```
 
-**Credit budget**: ~10 leads × (0.02 + 0 + 0.1 + 0.01 + 1 + 0.1) = ~12 credits. Step 5 (`FullEnrich.findEmail`, 1/record) only runs on the rows step 3a left without an email — `aiArk.enrichPerson` usually returns one, so the real figure lands under this.
+**Credit budget**: ~10 leads × (0.2 + 0 + 0.1 + 0.01 + 1 + 0.1) = ~14 credits. Step 5 (`FullEnrich.findEmail`, 1/record) only runs on the rows step 3a left without an email — `aiArk.enrichPerson` usually returns one, so the real figure lands under this.
 
 ---
 
@@ -242,11 +242,11 @@ If a Contacts model exists, upsert via `cargo-ai storage` patterns — see [`../
 - theirStack searchJobs: 0.5
 - dedupe against the Companies model: 0
 - aiArk.enrichCompany × 95: ~1
-- salesNavigator.searchLeads × 95: ~5.7 (≈ 0.02 × 3 × 95)
+- salesNavigator.searchLeads × 95: ~57 (≈ 0.2 × 3 × 95)
 - aiArk.enrichPerson × 200: 20
 - FullEnrich.findEmail × 60 (the rows aiArk left without an email): 60
 - waterfall.verifyEmail × 200: 20
-- **Total: ~107 credits for 200 fully-enriched + verified prospects** (~0.5 cred/prospect).
+- **Total: ~159 credits for 200 fully-enriched + verified prospects** (~0.8 cred/prospect).
 
 ---
 

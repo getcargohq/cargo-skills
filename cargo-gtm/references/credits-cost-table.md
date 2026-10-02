@@ -34,8 +34,6 @@ Generated: 2026-08-28
 | 0.02 / 100 item | `icypeas` | enrichment | `findCompanies` | Search the Icypeas lead database for companies matching the given criteria. Returns a paginated list of matching compani… |
 | 0.02 / 100 item | `icypeas` | enrichment | `findPeople` | Search the Icypeas lead database for people matching the given criteria. Returns a paginated list of matching profiles. |
 | 0.02 / 1k token | `native` | platform | `fileSearch` | Search files |
-| 0.02 / item | `salesNavigator` | enrichment | `extractLeadSearch` | Retrieve leads from Sales Navigator |
-| 0.02 / item | `salesNavigator` | enrichment | `searchLeads` | Search and retrieve contact profiles from Sales Navigator based on various filters including company, role, location, an… |
 | 0.02 | `x` | enrichment | `getFollowers` | Get the followers of an X account |
 | 0.02 | `x` | enrichment | `getFollowing` | Get the accounts an X account is following |
 | 0.02 | `x` | enrichment | `getPostComments` | Get the replies (comments) on an X post |
@@ -68,8 +66,6 @@ Generated: 2026-08-28
 | 0.05 / item | `linkedin` | enrichment | `extractProfileViewers` | Extract the list of people who have viewed your LinkedIn profile recently. |
 | 0.05 / item | `linkedin` | enrichment | `searchPostComments` | Search for post comments |
 | 0.05 / item | `linkedin` | enrichment | `searchPostReactions` | Search for post reactions |
-| 0.05 / item | `salesNavigator` | enrichment | `extractAccountSearch` | Retrieve accounts from Sales Navigator |
-| 0.05 / item | `salesNavigator` | enrichment | `searchAccounts` | Search and retrieve company accounts from Sales Navigator based on various filters including headcount, location, indust… |
 | 0.05 | `serper` | enrichment | `search` | Retrieve Google searches |
 | 0.05 | `serper` | enrichment | `searchPlaces` | Retrieve Google places |
 | 0.05–4 / 1k token + base | `anthropic` | freeform | `instruct` | Instruct prompt |
@@ -91,6 +87,10 @@ Generated: 2026-08-28
 | 0.125 + 0.025 / item | `parallel` | enrichment | `search` | Search the web with Parallel AI and return ranked results with relevant excerpts |
 | 0.025 / item + base | `exa` | enrichment | `search` | Search the web with Exa and return ranked results |
 | 0.2 | `neverBounce` | enrichment | `verifyEmail` | Verify an email address |
+| 0.2 / item | `salesNavigator` | enrichment | `extractAccountSearch` | Retrieve accounts from Sales Navigator |
+| 0.2 / item | `salesNavigator` | enrichment | `extractLeadSearch` | Retrieve leads from Sales Navigator |
+| 0.2 / item | `salesNavigator` | enrichment | `searchAccounts` | Search and retrieve company accounts from Sales Navigator based on various filters including headcount, location, indust… |
+| 0.2 / item | `salesNavigator` | enrichment | `searchLeads` | Search and retrieve contact profiles from Sales Navigator based on various filters including company, role, location, an… |
 | 0.25 | `companyEnrich` | enrichment | `enrichByDomain` | Retrieve company information by domain name |
 | 0.25 | `companyEnrich` | enrichment | `getWorkforce` | Returns workforce insights including historical headcount by department. Useful for tracking department-level growth and… |
 | 0.25 | `companyEnrich` | enrichment | `lookupPerson` | Looks up a person by email address. Resolves the company from the email domain first, then matches the person by email l… |

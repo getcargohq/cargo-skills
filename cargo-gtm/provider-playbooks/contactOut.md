@@ -23,7 +23,7 @@ Cost is driven by the **config you request**, not the data returned: asking for 
 - ✅ **Emails/phone when you already hold the LinkedIn URL** — `enrich` is keyed on `linkedinUrl` only; no name/domain fallback inputs.
 - ✅ **Free company lookup** — `enrich` with `objectType: "company"` costs 0 credits and returns firmographics (`size`, `industry`, `revenue`, `employees`, `funding`, …).
 - ✅ **Phone at the prospeo price point** — contact enrich with `includePhone` is 3, the same as `prospeo.findPhone`, and returns emails in the same call.
-- ❌ **Primary people sourcing** — `search` at 1/item (3/item revealed) vs `salesNavigator.searchLeads` at 0.02. Mid-tier when other sources miss (see [`../references/stage-action-map.md`](../references/stage-action-map.md)).
+- ❌ **Primary people sourcing** — `search` at 1/item (3/item revealed) vs `salesNavigator.searchLeads` at 0.2. Mid-tier when other sources miss (see [`../references/stage-action-map.md`](../references/stage-action-map.md)).
 - ❌ **Enrichment without a LinkedIn URL** — resolve the URL first ([`../recipes/linkedin-url-lookup.md`](../recipes/linkedin-url-lookup.md)) or use `waterfall.enrichContact` (2), which accepts name/domain/email.
 
 ## Patterns
@@ -84,7 +84,7 @@ The `filters` array is discriminated by `name`: list-type filters (`skills`, `ed
 
 ## Anti-patterns
 
-- **contactOut for bulk sourcing.** At 1–3/item, a 1,000-row search costs 1,000–3,000 credits; `salesNavigator.searchLeads` covers the same B2B ground at 0.02. Use contactOut search only when LinkedIn-anchored and priority sources miss.
+- **contactOut for bulk sourcing.** At 1–3/item, a 1,000-row search costs 1,000–3,000 credits; `salesNavigator.searchLeads` covers the same B2B ground at 0.2 (200 credits). Use contactOut search only when LinkedIn-anchored and priority sources miss.
 - **Skipping verification.** Returned emails still go through `waterfall.verifyEmail` (0.1) — or `zeroBounce.verifyEmail` (0.1) as a second opinion — before any send.
 
 ## Position in the waterfall

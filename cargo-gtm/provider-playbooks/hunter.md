@@ -49,7 +49,7 @@ cargo-ai orchestration action execute-batch \
   --wait-until-finished
 ```
 
-`domain` and `type` (`all`/`personal`/`generic`) are required. `limit` caps at 10 — this is a spot-check tool, not a sourcing engine; for volume sourcing use `salesNavigator.searchLeads` (0.02) or `icypeas.findPeople` (0.02).
+`domain` and `type` (`all`/`personal`/`generic`) are required. `limit` caps at 10 — this is a spot-check tool, not a sourcing engine; for volume sourcing use `salesNavigator.searchLeads` (0.2) or `icypeas.findPeople` (0.02).
 
 ## Common pitfalls
 

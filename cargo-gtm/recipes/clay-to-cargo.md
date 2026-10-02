@@ -42,10 +42,10 @@ Costs are credits/record and are the pack's own priority stack. Confirm each aga
 
 | What the Clay column does | Cargo action | Cost |
 |---|---|---|
-| Find people by title, company, seniority | `salesNavigator.searchLeads` | 0.02 |
+| Find people by title, company, seniority | `salesNavigator.searchLeads` | 0.2 |
 | Find people by education, skills, tenure | `aiArk.searchPeople` | 0.05 |
 | Find companies (default) | `aiArk.searchCompanies` | 0.01 |
-| Find companies, LinkedIn-anchored | `salesNavigator.searchAccounts` | 0.05 |
+| Find companies, LinkedIn-anchored | `salesNavigator.searchAccounts` | 0.2 |
 | Find companies by funding or investor | `peopleDataLabs.queryCompanies` (SQL variant) | 3 |
 | Find lookalikes from seed domains | `aiArk.searchCompanies` with `lookalikeDomains` (≤5 seeds) | 0.01 |
 

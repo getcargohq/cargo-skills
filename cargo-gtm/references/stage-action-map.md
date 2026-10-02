@@ -14,9 +14,9 @@ This map is **curated** — the cheapest few rungs per stage, with the routing j
 |---|---|---|---|---|
 | aiArk | countPeople | **0** | ✅ | Not a source — counts matches for a filter. Run this first. |
 | apolloio | searchPeople | 0 / **1** per person | ✅ | **0 with `shouldEnrich: false`** (identity only), 1 when it enriches. Cheapest way to test whether Apollo has the audience at all. |
-| salesNavigator | searchLeads | 0.02 | ✅ | LinkedIn-anchored. Default at-scale. |
 | icypeas | findPeople | 0.02 |   | Cheapest non-LinkedIn source. |
 | aiArk | searchPeople | 0.05 | ✅ | Rich filters (education, skills, tenure, seniority, past company). Per returned record. |
+| salesNavigator | searchLeads | 0.2 | ✅ | LinkedIn-anchored. Default for LinkedIn-native filters. |
 | firecrawl | search | 0.05 |   | Web search; use when no structured provider has the data. |
 | linkup | search | 0.5 |   | Web search with structured answers. |
 | contactOut | search | 1 / item (**3** with `revealInfo: true`) |   | Mid-tier when other sources miss. |
@@ -33,7 +33,7 @@ This map is **curated** — the cheapest few rungs per stage, with the routing j
 | aiArk | searchCompanies | 0.01 | ✅ | **Cheapest in catalog.** Per returned record; supports `lookalikeDomains` (≤5 seeds). |
 | apolloio | searchOrganizations | 0.01 / organization | ✅ | Ties aiArk on price. Firmographic, funding, technology and hiring filters. |
 | icypeas | findCompanies | 0.02 |   | Cheapest non-lookalike. |
-| salesNavigator | searchAccounts | 0.05 | ✅ | LinkedIn-anchored. Default at-scale. |
+| salesNavigator | searchAccounts | 0.2 | ✅ | LinkedIn-anchored. Default for LinkedIn-native filters. |
 | theirStack | searchCompanies | 0.5 | ✅ | Tech-stack + hiring-intent filter. |
 | oceanio | searchCompanies | 1 |   | Mid-tier. |
 | societeInfo | search (`objectType: company`) | 4 / item |   | **France only.** Registry filters nothing else has: NAF code, collective agreement, filed sales/profits, legal form. |

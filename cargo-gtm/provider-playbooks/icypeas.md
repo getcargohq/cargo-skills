@@ -6,7 +6,7 @@ last-reviewed: 2026-07-09
 
 # icypeas
 
-The **cheap tier** of the contact stack, three ways: `verifyEmail` at **0.01** is the cheapest verification in the entire catalog (10× cheaper than the `waterfall.verifyEmail` default), `findEmail` at 0.1 is the cheap last resort of the find-email chain, and `findPeople`/`findCompanies` at 0.02/record are the cheapest non-LinkedIn sourcing alternative to `salesNavigator`. Prefer it for very large lists where unit cost dominates; avoid it as the lead email finder when hit rate matters — that's `FullEnrich.findEmail` ([`../references/alternatives.md`](../references/alternatives.md)).
+The **cheap tier** of the contact stack, three ways: `verifyEmail` at **0.01** is the cheapest verification in the entire catalog (10× cheaper than the `waterfall.verifyEmail` default), `findEmail` at 0.1 is the cheap last resort of the find-email chain, and `findPeople`/`findCompanies` at 0.02/record are a far cheaper non-LinkedIn sourcing alternative to `salesNavigator` (0.2). Prefer it for very large lists where unit cost dominates; avoid it as the lead email finder when hit rate matters — that's `FullEnrich.findEmail` ([`../references/alternatives.md`](../references/alternatives.md)).
 
 ## Credits-based actions
 
@@ -24,7 +24,7 @@ The **cheap tier** of the contact stack, three ways: `verifyEmail` at **0.01** i
 
 - ✅ **Verification at scale** — 10,000 emails = 100 credits. Use over `waterfall.verifyEmail` (0.1) when the list is large enough for the 10× saving to matter.
 - ✅ **Last-resort email finding** — rung 4 of the chain (FullEnrich → hunter → peopleDataLabs → icypeas), per [`../references/waterfall-strategy.md`](../references/waterfall-strategy.md).
-- ✅ **Cheap sourcing when LinkedIn coverage is thin** — `findPeople` (0.02) matches `salesNavigator.searchLeads` pricing with a different database; useful for privacy-focused industries.
+- ✅ **Cheap sourcing when LinkedIn coverage is thin** — `findPeople` (0.02) is 10× cheaper than `salesNavigator.searchLeads` (0.2), on a different database; useful for privacy-focused industries.
 - ✅ **Role-based address discovery** — `scanDomain` is the only action in the stack that enumerates generic mailboxes on a domain.
 
 ## Patterns

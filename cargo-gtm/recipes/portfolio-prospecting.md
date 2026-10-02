@@ -112,10 +112,10 @@ For 200 portfolio companies × 3 contacts each = 600 prospects:
 | 1. queryCompanies (single call returning 200) | — | 1 call | 3 |
 | 2. Dedupe against the Companies model | 0 | 200 | 0 |
 | 3. aiArk.enrichCompany | 0.01 | 200 | 2 |
-| 4. searchLeads (3 contacts each) | 0.02 | 600 | 12 |
+| 4. searchLeads (3 contacts each) | 0.2 | 600 | 120 |
 | 5. FullEnrich.findEmail | 1 | 600 | 600 |
 | 6. waterfall.verifyEmail | 0.1 | 600 | 60 |
-| **Total** | | | **~677 credits for 600 verified contacts at 200 portfolio companies** |
+| **Total** | | | **~785 credits for 600 verified contacts at 200 portfolio companies** |
 
 ## Discovery sequence
 

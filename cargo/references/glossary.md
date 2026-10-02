@@ -297,7 +297,7 @@ A human-readable string identifier used throughout the platform. Node slugs iden
 See **intent signal**. In cargo recipes, signals are the basis for segment construction (e.g. "all companies that just raised funding AND are hiring engineers") and outbound timing. Captured as `signal/<slug>.md` files in the context repo.
 
 **sourcing**
-The activity of finding companies or people matching ICP criteria. Cheapest at-scale options: `salesNavigator.searchLeads` (0.02 cred/record), `salesNavigator.searchAccounts` (0.05). For investor / funding / complex filters: `peopleDataLabs.queryCompanies` (3). For local SMBs: `serper.searchPlaces` (1).
+The activity of finding companies or people matching ICP criteria. Cheapest at-scale options: `aiArk.searchCompanies` (0.01 cred/record) and `aiArk.searchPeople` (0.05); `salesNavigator.searchLeads` / `searchAccounts` (0.2) when you want LinkedIn-native filters. For investor / funding / complex filters: `peopleDataLabs.queryCompanies` (3). For local SMBs: `serper.searchPlaces` (1).
 
 **system of record (SoR)**
 Cargo's storage layer, backed by a customer-connected database (BigQuery, Snowflake, etc.) that Cargo queries via SQL. Queried with `cargo-ai storage query execute "<sql>"` (or `storage query download --query "<sql>"` for full exports), which references tables as `<datasetSlug>.<modelSlug>` (e.g. `default.companies`). Use `cargo-ai storage model get-ddl <model-uuid>` for column types and SQL dialect. Distinct from the **context repository** (markdown/MDX knowledge base, not relational data) and from the **orchestration query** surface (`cargo-ai orchestration query execute`, which targets the `runs`/`batches`/`spans`/`records` runtime tables).

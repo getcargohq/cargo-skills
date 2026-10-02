@@ -21,7 +21,7 @@ Tech-stack and jobs-posted intent signals. **Three credits-based actions, all 0.
 - ✅ **"Everyone hiring for role X"** — `searchJobs` with title and posting-window filters → list of companies actively recruiting that role.
 - ✅ **"Companies running tech stack Y"** — `searchTechnologies` with stack filter → list of companies using a specific framework, infra, or SaaS.
 - ✅ **Combined intent + tech-stack** — `searchCompanies` with both `jobFields` and `techFields` → companies running stack Y AND hiring for role X.
-- ❌ **Generic firmographic search** — for "fintech in US, 50-500 headcount" without intent signals, salesNavigator (0.05) is 10× cheaper. Use theirStack only when the intent signal is the primary filter.
+- ❌ **Generic firmographic search** — for "fintech in US, 50-500 headcount" without intent signals, salesNavigator (0.2) or `aiArk.searchCompanies` (0.01) is cheaper per company. Use theirStack only when the intent signal is the primary filter.
 
 ## Patterns
 
@@ -92,7 +92,7 @@ This is the unique strength of theirStack — combined tech-stack AND hiring-int
 ## Anti-patterns
 
 - **Free-text technology names.** `techFields.technologies` wants theirStack's canonical slugs — discover them via `searchTechnologies` first, then plug the slugs into `searchCompanies`. Guessing (`"Snowflake"` vs `"snowflake"` vs `"snowflake-db"`) silently narrows results.
-- **theirStack for plain firmographics.** No intent signal in the filter → salesNavigator is 10× cheaper. theirStack earns its cost only when the job-posting or tech-stack signal IS the filter.
+- **theirStack for plain firmographics.** No intent signal in the filter → salesNavigator (0.2) is 2.5× cheaper and `aiArk.searchCompanies` (0.01) 50×. theirStack earns its cost only when the job-posting or tech-stack signal IS the filter.
 - **Skipping the count check.** Start with 1–2 filters and a small `limit`, read the result count, then narrow — over-filtered queries return zero and the credits for the probe calls add up.
 
 ## Position in the waterfall

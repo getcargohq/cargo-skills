@@ -22,7 +22,7 @@ Billing is **fixed per query, not per record** — a `limit: 100` call costs the
 - ✅ **Local / SMB TAM** — "dentists in Austin", "HVAC contractors in Lyon": `searchPlaces` is the sourcing rung the priority stack lacks (see [`../recipes/build-tam.md`](../recipes/build-tam.md), local-SMB variant, and [`../guides/finding-companies-and-contacts.md`](../guides/finding-companies-and-contacts.md)).
 - ✅ **Google lookups mid-pipeline** — recent news, a company's public footprint, resolving an official website before enrichment.
 - ✅ **Geo-targeted results** — `country` (autocomplete-backed country list) plus `locale` (Google interface-language codes like `en`, `fr`, `de`) localize results properly.
-- ❌ **Standard B2B sourcing** — `salesNavigator.searchLeads` (0.02) / `searchAccounts` (0.05) return structured, LinkedIn-anchored records; Google results need parsing.
+- ❌ **Standard B2B sourcing** — `salesNavigator.searchLeads` / `searchAccounts` (0.2) return structured, LinkedIn-anchored records; Google results need parsing.
 - ❌ **Reading a page you already know** — that's `firecrawl.scrape` (0.05/item); serper returns result listings, not page content.
 
 ## Patterns

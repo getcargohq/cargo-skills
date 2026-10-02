@@ -1,7 +1,7 @@
 ---
 name: cargo-billing
 description: "Understand what Cargo is costing — remaining credits, usage broken down by workflow, connector, or agent, subscription state, and invoice history. Triggers: \"how many credits do I have left\", \"what did that cost\", \"why is my bill so high\", \"am I about to run out\", \"will this fit in our budget\", \"show me my invoices\", \"how much have I spent this month\", \"what plan am I on\", \"what do I get for free\", \"how many free credits\", \"can I afford this run\", \"add a card\", \"update my payment method\", \"why was my card declined\". Needs a token with admin access. Skip when: attributing spend to specific nodes or cutting a play cost — use cargo-diagnostics."
-version: "2.0.0"
+version: "2.0.1"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -218,13 +218,13 @@ What 100 credits buys, as ballpark anchors (per-action costs in [`../cargo-gtm/r
 
 | Work | Cost | 100 credits ≈ |
 |---|---|---|
-| Source leads — `salesNavigator.searchLeads` | 0.02/record | ~5,000 leads |
+| Source leads — `salesNavigator.searchLeads` | 0.2/record | ~500 leads |
 | Enrich from a LinkedIn URL + verified email — `aiArk.enrichPerson` | 0.1 | ~1,000 people |
 | Verify an email — `waterfall.verifyEmail` | 0.1 | ~1,000 checks |
 | Full contact enrichment — `waterfall.enrichContact` | 2 | ~50 contacts |
 | Find a phone — `FullEnrich.findPhone` | 6 | ~16 numbers |
 
-The [quickstart demo](../cargo-quickstart/SKILL.md) spends about **0.5**. Phone lookups are the fastest way to burn a free tier, so phone is the **guarded lever**: the escalation tier runs 3–7 credits/record, ~10× email, and never belongs in a default chain — it enters a plan only on explicit user request, on qualified leads only. Full spend rules in [`../cargo-gtm/references/cost-discipline.md`](../cargo-gtm/references/cost-discipline.md).
+The [quickstart demo](../cargo-quickstart/SKILL.md) spends about **5**. Phone lookups are the fastest way to burn a free tier, so phone is the **guarded lever**: the escalation tier runs 3–7 credits/record, ~10× email, and never belongs in a default chain — it enters a plan only on explicit user request, on qualified leads only. Full spend rules in [`../cargo-gtm/references/cost-discipline.md`](../cargo-gtm/references/cost-discipline.md).
 
 ### Adding a card
 

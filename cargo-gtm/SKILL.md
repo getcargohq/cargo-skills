@@ -1,7 +1,7 @@
 ---
 name: cargo-gtm
 description: "Do business-to-business go-to-market work on Cargo — research accounts and buying committees, enrich and verify B2B contact records from licensed data providers, score and qualify leads, draft permission-based outreach for the user's own sequencer, sync to CRM, and monitor buying signals. Consent basis, suppression lists, and volume limits gate every step that touches a person (`references/acceptable-use.md`); bulk unsolicited messaging, purchased or scraped lists, and consumer targeting are refused. Triggers: \"build me a list of\", \"find 50 <title> at <segment>\", \"who works at\", \"find work emails for these accounts\", \"enrich this CSV\", \"verify these emails\", \"build a TAM\", \"who fits our ICP\", \"who actually buys from us\", \"what data points should we collect on accounts\", \"our outbound is reaching the wrong people\", \"score these leads\", \"write a first-touch email\", \"push these to my CRM\", \"who changed jobs\", \"who just raised funding\", \"companies using <tech>\", \"who is hiring <role>\", \"find the buying committee\", \"portfolio companies of <investor>\", \"upload this audience to Google/Meta/LinkedIn ads\". Providers: aiArk, anthropic, apolloio, bouncer, brightData, builtwith, cleon1, companyEnrich, contactOut, datagma, dropcontact, enrichCrm, enrichley, enrowio, exa, findyMail, firecrawl, forager, FullEnrich, g2, gemini, hunter, icypeas, kitt, leadMagic, linkedin, linkup, mixrank, neverBounce, oceanio, openAi, parallel, peopleDataLabs, perplexity, piloterr, prospeo, proxycurl, reverseContact, rocketreach, salesNavigator, serper, sillage, snitcher, societeInfo, theirStack, theSwarm, waterfall, x, zeroBounce. Reads phase guides, recipes, and per-provider playbooks before any paid call. Skip when: a run already happened and misbehaved — use cargo-diagnostics."
-version: "2.1.1"
+version: "2.1.2"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -137,7 +137,7 @@ These seven credits-based providers cover the full prospecting → enrichment �
 
 | Provider | Role | Key actions (cost in credits) |
 |---|---|---|
-| **salesNavigator** | Sourcing | `searchLeads` (0.02), `searchAccounts` (0.05), `findCompanyInsights/Metrics/EmployeesCount/Distribution` (0.25 each) |
+| **salesNavigator** | Sourcing | `searchLeads` (0.2), `searchAccounts` (0.2), `findCompanyInsights/Metrics/EmployeesCount/Distribution` (0.25 each) |
 | **aiArk** | LinkedIn-anchored enrichment + cheapest search | `enrichCompany` (0.01 — cheapest firmographics in the catalog), `searchCompanies` (0.01/record, lookalike seeds), `searchPeople` / `reverseLookup` / `analyzePersonality` (0.05), `enrichPerson` (0.1 — profile **+ verified email**), `findMobilePhone` (0.5) |
 | **waterfall** | Multi-source enrichment + signal | `enrichContact` (2), `enrichCompany` (1), `verifyEmail` (0.1), `detectJobChange` (3), `searchProspects` (3), `findPhone` (7) |
 | **FullEnrich** | Premium contact lookup | `findEmail` (1), `findPhone` (6), `findPhoneAndEmail` (7), `reverseEmailLookup` (2) |
@@ -145,7 +145,7 @@ These seven credits-based providers cover the full prospecting → enrichment �
 | **theirStack** | Tech-stack + hiring intent | `searchTechnologies` (0.5), `searchJobs` (0.5), `searchCompanies` (0.5) |
 | **peopleDataLabs** | Heavyweight backfill | `enrichPerson` (3), `enrichCompany` (3), `searchPeople` (3), `searchCompanies` (3), `queryPeople/Companies` (3) |
 
-`aiArk` and `apolloio` sit at opposite ends of the enrich tier and are picked by **what you hold**, not by preference: `aiArk` wins whenever a **LinkedIn URL** is in hand (profile + verified email at 0.1, mobile at 0.5, both billing 0 on a miss), `apolloio` is the **1-credit niche-coverage rung** you promote per-batch when a pilot shows Apollo hits where `aiArk` (0.1) and `waterfall` (2) miss — investor-backed and portfolio niches especially. Neither displaces `salesNavigator` for plain at-scale sourcing (0.02/lead).
+`aiArk` and `apolloio` sit at opposite ends of the enrich tier and are picked by **what you hold**, not by preference: `aiArk` wins whenever a **LinkedIn URL** is in hand (profile + verified email at 0.1, mobile at 0.5, both billing 0 on a miss), `apolloio` is the **1-credit niche-coverage rung** you promote per-batch when a pilot shows Apollo hits where `aiArk` (0.1) and `waterfall` (2) miss — investor-backed and portfolio niches especially. Neither displaces `salesNavigator` for plain at-scale sourcing (0.2/lead).
 
 Three signal families sit outside the stack and are picked per task from [`references/stage-action-map.md`](references/stage-action-map.md): **firmographic depth** beyond `aiArk.enrichCompany` → `companyEnrich.enrichByDomain` (0.25); **funding / acquisitions** → `enrichCrm.getFunding` (1, the only credits-based funding action in the catalog); **tech stack on a known domain** → `builtwith.getDomainSummary` (free) before `builtwith.enrichDomain` (1).
 
@@ -156,7 +156,7 @@ See [`provider-playbooks/`](provider-playbooks/) for per-provider deep dives —
 ## 6) Recipe spine (default chain)
 
 ```
-1. SOURCE   → salesNavigator.searchLeads / searchAccounts            (0.02–0.05/record)
+1. SOURCE   → salesNavigator.searchLeads / searchAccounts            (0.2/record)
               lookalike seeds, or filters SN can't express (skills,
               education, tenure)? aiArk.searchCompanies / searchPeople (0.01–0.05/record)
 2. DEDUPE   → match against the workspace's own Companies / Contacts models
@@ -223,7 +223,7 @@ If a recipe fails repeatedly and the cause isn't obvious, escalate via `cargo-ai
 **STOP — do not execute any paid action against a provider below, and do not wire a provider into a recurring play/tool node graph, until you have opened its playbook.** Each playbook carries the exact action slugs, config shapes, input quirks, and cost traps; reading it for five seconds is cheaper than one failed paid call, and a failed batch is 100 failed paid calls. The stakes are higher, not lower, when the provider goes into a **recurring** workflow: a bad config repeats on every scheduled run, and a wrong cadence re-bills the same rows forever — each playbook ends with a **Recurring use** section (schedule fit, cadence default, re-billing gates, extractors) for exactly this. **Every credits-based provider with callable actions now has a playbook, with one stated exception**: `openRouter`, which exposes a model lister rather than credits-based actions, so there is nothing to document. `brightData` and `proxycurl` gained playbooks rather than staying unlisted — an undocumented provider still shows up in the cost table, and leaving the acceptable-use framing implicit was the weaker option: [`provider-playbooks/brightData.md`](provider-playbooks/brightData.md) states the consumer-targeting refusal up front. Own-key integrations fall back to [`references/alternatives.md`](references/alternatives.md) and [`references/stage-action-map.md`](references/stage-action-map.md).
 
 **Priority stack (recipes lead with these):**
-- [`provider-playbooks/salesNavigator.md`](provider-playbooks/salesNavigator.md) — cheapest sourcing in the catalog (0.02–0.05/record).
+- [`provider-playbooks/salesNavigator.md`](provider-playbooks/salesNavigator.md) — LinkedIn-native lead and account sourcing (0.2/record).
 - [`provider-playbooks/aiArk.md`](provider-playbooks/aiArk.md) — LinkedIn-anchored people/company data: `enrichPerson` returns profile **+ verified email** at 0.1, `findMobilePhone` (0.5) is the cheapest phone rung, `searchCompanies` (0.01/record) does lookalikes, and `analyzePersonality` (0.05) is catalog-unique. All actions run on the managed connection.
 - [`provider-playbooks/waterfall.md`](provider-playbooks/waterfall.md) — swiss-army-knife: enrichment, verification, and the cargo-unique `detectJobChange` signal.
 - [`provider-playbooks/FullEnrich.md`](provider-playbooks/FullEnrich.md) — premium contact lookup; `reverseEmailLookup` is unique.

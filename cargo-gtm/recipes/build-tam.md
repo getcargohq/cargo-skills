@@ -14,8 +14,8 @@ The right step-1 provider depends on which filter is primary:
 
 | Primary filter | Provider | Cost (credits) | Notes |
 |---|---|---|---|
-| Industry / size / geo | `salesNavigator.searchAccounts` | 0.05 | LinkedIn-anchored. Default at-scale. |
-| Industry / size / geo, budget-first | `aiArk.searchCompanies` | 0.01 | **Cheapest per record in the catalog** (5× under salesNavigator). Billed per *returned* row, `limit` max 100 — paginate for large pulls. |
+| Industry / size / geo | `salesNavigator.searchAccounts` | 0.2 | LinkedIn-anchored. Default for LinkedIn-native filters. |
+| Industry / size / geo, budget-first | `aiArk.searchCompanies` | 0.01 | **Cheapest per record in the catalog** (20× under salesNavigator). Billed per *returned* row, `limit` max 100 — paginate for large pulls. |
 | "Companies like these customers" | `aiArk.searchCompanies` (with `lookalikeDomains`) | 0.01 | Up to 5 seed domains / LinkedIn URLs. Cheaper than `oceanio` / `companyEnrich` lookalikes. |
 | Funding stage / investor / round size | `peopleDataLabs.queryCompanies` | 3 | PDL **SQL** string. Required for array-membership filters like `summary.investors LIKE %X%`. |
 | Tech stack | `theirStack.searchCompanies` (with techFields) | 0.5 | Tech-stack-driven sourcing. |
@@ -29,10 +29,10 @@ For combined filters (e.g. fintech in US AND running Snowflake AND hiring data e
 
 | Target volume | Recommended sourcing path | Estimated credits (sourcing only) |
 |---|---|---|
-| 100 companies | salesNavigator.searchAccounts | ~5 |
-| 500 companies | salesNavigator.searchAccounts | ~25 |
-| 1,000 companies | salesNavigator.searchAccounts | ~50 |
-| 5,000 companies | salesNavigator.searchAccounts (paginate) | ~250 |
+| 100 companies | salesNavigator.searchAccounts | ~20 |
+| 500 companies | salesNavigator.searchAccounts | ~100 |
+| 1,000 companies | salesNavigator.searchAccounts | ~200 |
+| 5,000 companies | salesNavigator.searchAccounts (paginate) | ~1,000 |
 | 5,000 companies, budget-first | aiArk.searchCompanies (paginate, 100/call) | ~50 |
 | 10,000 companies | peopleDataLabs.queryCompanies (high-quality, structured) | ~30,000 (3/company) |
 
@@ -51,7 +51,7 @@ If anything is missing, ask the user **once** before sourcing.
 
 ### Step 1 — Source companies
 
-Cheapest at scale (≥ 100 companies): `aiArk.searchCompanies` (0.01 cred/company, `limit` max 100 per call) when price leads, or `salesNavigator.searchAccounts` (0.05 cred/company) when you want LinkedIn-native filters and larger pages. Both bill per *returned* row — size the pool with a `limit: 1` probe first. The salesNavigator form:
+Cheapest at scale (≥ 100 companies): `aiArk.searchCompanies` (0.01 cred/company, `limit` max 100 per call) when price leads, or `salesNavigator.searchAccounts` (0.2 cred/company) when you want LinkedIn-native filters and larger pages. Both bill per *returned* row — size the pool with a `limit: 1` probe first. The salesNavigator form:
 
 ```bash
 cargo-ai orchestration action execute \
@@ -204,16 +204,16 @@ For a 500-company TAM with contacts:
 
 | Step | Per record | Records | Subtotal |
 |---|---|---|---|
-| 1. Source (salesNavigator.searchAccounts) | 0.05 | 500 | 25 |
+| 1. Source (salesNavigator.searchAccounts) | 0.2 | 500 | 100 |
 | 2. Dedupe against the Companies model | 0 | 500 | 0 |
 | 3. aiArk.enrichCompany | 0.01 | 500 | 5 |
 | 3. enrichCrm.getFunding (optional) | 1 | 500 | 500 |
 | 3. builtwith.getDomainSummary (optional) | 0 | 500 | 0 |
-| 4. searchLeads (3 contacts each) | 0.02 × 3 | 500 | 30 |
+| 4. searchLeads (3 contacts each) | 0.2 × 3 | 500 | 300 |
 | 5. FullEnrich.findEmail | 1 | 1500 | 1500 |
 | 6. waterfall.verifyEmail | 0.1 | 1500 | 150 |
 
-**Total: ~2,210 credits for 500 companies + 1,500 contacts** (~1.5 credits per fully-enriched contact).
+**Total: ~2,555 credits for 500 companies + 1,500 contacts** (~1.7 credits per fully-enriched contact).
 
 Cut steps the user doesn't need (skip step 3 funding/tech if not part of ICP, skip steps 4-6 if no contacts needed) to bring the cost down.
 

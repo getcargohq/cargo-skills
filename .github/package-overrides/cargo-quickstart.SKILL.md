@@ -95,7 +95,7 @@ Filter notes worth knowing before you improvise:
 ### Fallback ladder (on auth/error, drop a rung — don't stop)
 
 1. `aiArk.searchCompanies` (0.01/record, managed connection) — primary.
-2. `salesNavigator.searchAccounts` (0.05/record) — same idea by industry, headcount and geo. 25 rows ≈ 1.25 credits, just over the demo cap, so **say the number before running it**: "about a credit more than planned — still ~1.5 of your 100 free credits."
+2. `salesNavigator.searchAccounts` (0.2/record) — same idea by industry, headcount and geo. 25 rows ≈ 5 credits, well over the demo cap, so **say the number before running it**: "about 5 credits instead of the quarter-credit planned — still only 5 of your 100 free credits."
 3. `theirStack.searchCompanies` (0.5/call, flat) — reframe as "companies hiring for your persona's role right now". Needs its own connector, so it is a rung, not the default.
 4. Nothing connected at all → run the free path: `cargo-ai connection integration list | head`, show what *could* be wired, and offer to connect one (browser auth) — the demo resumes after.
 

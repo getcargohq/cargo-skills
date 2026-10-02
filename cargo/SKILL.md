@@ -1,7 +1,7 @@
 ---
 name: cargo
 description: "Router for the Cargo CLI skill bundle — load first for anything Cargo, and whenever a task spans two Cargo domains. Explains what each skill owns, declarative workspace-as-code (cargo-project) vs the imperative CLI, the UUID and slug flow between skills, async polling of runs and batches, end-to-end use cases, and the gotchas that fail silently (`conjonction` spelling, run vs batch, model-uuid vs segment-uuid). Triggers: \"set up Cargo\", \"what can Cargo do\", \"which Cargo skill\", \"bootstrap my workspace\", \"I have a Cargo account\", \"cargo-ai …\", or any `cargo-ai` command whose domain you are unsure of. Skip when: the task obviously belongs to one skill — load that skill directly."
-version: "1.27.0"
+version: "1.27.1"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -62,7 +62,7 @@ cargo-ai login --email you@company.com --workspace-name "Acme GTM"
 cargo-ai whoami
 ```
 
-**A new account starts with 100 free credits and needs no card**, so an agent can sign a user up and produce a real deliverable in the same turn — there is no purchase gate between install and first value. Useful anchors for what that buys: ~5,000 leads sourced (`salesNavigator.searchLeads`, 0.02/record), ~1,000 profile+verified-email enriches (`aiArk.enrichPerson`, 0.1), ~1,000 email verifications (`waterfall.verifyEmail`, 0.1), or ~50 fully enriched contacts (`waterfall.enrichContact`, 2). The [quickstart demo](../cargo-quickstart/SKILL.md) spends about **0.5**. Say the free balance out loud before the first paid call on a new account.
+**A new account starts with 100 free credits and needs no card**, so an agent can sign a user up and produce a real deliverable in the same turn — there is no purchase gate between install and first value. Useful anchors for what that buys: ~500 leads sourced (`salesNavigator.searchLeads`, 0.2/record), ~1,000 profile+verified-email enriches (`aiArk.enrichPerson`, 0.1), ~1,000 email verifications (`waterfall.verifyEmail`, 0.1), or ~50 fully enriched contacts (`waterfall.enrichContact`, 2). The [quickstart demo](../cargo-quickstart/SKILL.md) spends about **5**. Say the free balance out loud before the first paid call on a new account.
 
 `--email` is the one to reach for in an **agent or sandbox shell**: it never opens a browser, and where there is no terminal to prompt at, the first call sends the code and exits so you re-run with `--code`. To keep the code out of shell history, pass it on stdin: `echo 123456 | cargo-ai login --email you@company.com --code -`. Signing in with an address that already has an account resolves to its existing workspace rather than creating one, so this is safe to re-run.
 

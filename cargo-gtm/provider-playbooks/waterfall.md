@@ -79,7 +79,7 @@ cargo-ai orchestration action execute-batch \
 
 - **Don't use `findPhone` first.** At 7 credits, it's the most expensive phone action in the priority stack. Try `prospeo.findPhone` (3) first; escalate to waterfall only when prospeo misses.
 - **`detectJobChange` requires at least one identifier**. Best coverage: LinkedIn URL + company domain. Email-only inputs often return UNKNOWN.
-- **`searchProspects` is 3 credits/record** — comparable to peopleDataLabs but with less rich filtering. Default to salesNavigator.searchLeads (0.02) unless you need waterfall's specific filter combinations.
+- **`searchProspects` is 3 credits/record** — comparable to peopleDataLabs but with less rich filtering. Default to salesNavigator.searchLeads (0.2) unless you need waterfall's specific filter combinations.
 
 ## Anti-patterns
 

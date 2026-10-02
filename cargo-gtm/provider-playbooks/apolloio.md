@@ -34,7 +34,7 @@ These consume your Apollo plan's quota, not cargo credits — recipes stay on cr
 - ✅ **Niche-coverage person enrichment** — 1 credit when a pilot shows Apollo hits where `aiArk.enrichPerson` (0.1) / `waterfall.enrichContact` (2) miss.
 - ✅ **Domain → company fallback** — `enrichOrganization` (1) after `aiArk.enrichCompany` (0.01) and `linkedin.enrichCompanyFromDomain` (0.5) come back empty.
 - ✅ **Sequencer handoff** — send verified leads into Apollo sequences via the own-key actions when the user's outbound already lives there.
-- ❌ **Sourcing on credits** — `searchPeople` / `searchOrganizations` are own-key only; credits-based sourcing is `salesNavigator` (0.02–0.05).
+- ❌ **Sourcing on credits** — `searchPeople` / `searchOrganizations` are own-key only; credits-based sourcing is `salesNavigator` (0.2) or `aiArk` (0.01–0.05).
 
 ## Patterns
 
