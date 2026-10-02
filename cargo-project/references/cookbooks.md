@@ -31,34 +31,146 @@ gtm-skills and still have to place it.
 
 ## With a skill
 
-| Skill | Deploys | State |
-| --- | --- | --- |
-| `account-scoring` | Keep every account scored and tiered against your written ICP by a deployed agent that re-scores as accounts arrive and as the ICP changes, writing the rationale back to the CRM. | to-be-approved |
-| `crm-enrichment` | Keep CRM accounts filled and refresh them when they go stale: a deployed play that fills approved blank firmographics from LinkedIn and re-enrolls a record after six months. | to-be-approved |
-| `tam-building` | Stand up your account universe as a deployed pipeline: a Sales Navigator company search split past the 1,000 extraction cap, resolved to real domains, deduped into a shared accounts model. | to-be-approved |
+In stage order, and in order within a stage: the order is the recommendation below.
+
+| Stage | Skill | Deploys | State |
+| --- | --- | --- | --- |
+| Context | `call-capture` | Every call the team records is collected into the cadence layer each morning, scribed into a log entry, and — once a claim repeats — promoted into the context knowledge layer, as one reviewable pull request against your GTM repo. Nine recorders ship; a tenth is one adapter file. | to-be-approved |
+| Context | `web-capture` | Each Monday the company's own website, its competitors' pages and recent news about both land in context/ as one pull request: the first run seeds positioning, offerings, an inferred ICP with a disqualifier, competitors, clients and proof; every run after adds a dated note of what changed (pricing, a launch, funding, a customer) and never edits an existing file. | to-be-approved |
+| Context | `win-loss-review` | Every month the CRM's closed deals are audited and what they say lands in context/ as one pull request: the ICP verified against won versus lost with a disqualifier, dated insights with counts and denominators, objections from recorded lost reasons, and a client file per closed-won account; a five-line Slack digest says what changed. Never edits a persona, nor the ICP after the first pass. | to-be-approved |
+| Fundamentals | `tam-building` | Stand up your account universe as a deployed pipeline: an AI Ark company search shaped by your ICP, sized for free before it bills, then tiered A / B / C / disqualified by an agent that reads your rubric from the workspace context and web-searches the evidence the sourced row does not carry. | to-be-approved |
+| Fundamentals | `account-scoring` | Keep every account scored and tiered against your written ICP by a deployed agent that re-scores as accounts arrive and as the ICP changes, writing the rationale back to the CRM. | to-be-approved |
+| Fundamentals | `website-building` | Build the company website on Cargo and serve it on your own domain: a statically exported Next.js app, one defineApp with its www hostname, and a defineDomain that publishes the records and forwards the apex, changed only through reviewed pull requests. | approved |
+| Signals | `new-hire-detection` | Watch your whole market for people who just took a role you sell to, qualify the company each one joined against your ICP, and post the ones that fit to Slack with the verdict and the links. A deployed pipeline on a Sales Navigator job-change search; checking or writing the CRM is an optional variation. | to-be-approved |
+| Engagement | `agentic-engagement` | Deploy an agent that holds email conversations with leads: a sending domain, a mailbox, native sendEmail and listEmailEvents on the agent, a native email trigger on reply and unsubscribe, and a heartbeat that checks thread status when nothing inbound happened. | to-be-approved |
+| Operations | `standup` | Every evening the GTM day is recapped into the cadence log and a digest is posted to Slack, as one reviewable pull request against your GTM repo. | to-be-approved |
+| Operations | `weekly-planning` | Every Monday last week's GTM work is ranked against active initiatives, declared infra, and live runs, as one reviewable pull request per initiative — or one workspace pull request when there are none. | to-be-approved |
+| Operations | `ask-cargo` | One agent the whole team @mentions in Slack, sitting on top of your GTM repo and workspace: it answers from context, cadence and live runs, turns change requests into pull requests, and hands work to the other deployed agents only after a go in the thread. | to-be-approved |
+| CRM | `crm-enrichment` | Keep CRM accounts and contacts filled and refresh them when they go stale. The contact pipeline uses one enrichment play with three gated tools: Cargo-native Find Email, Cargo-native Find LinkedIn Profile from Email, and custom Contact LinkedIn Enrichment. | to-be-approved |
+| CRM | `crm-deduplication` | Keep CRM accounts and contacts duplicate-free: audit company and person identity, run recurring deduplication plays directly on CRM models, merge safe exact matches, and route uncertain clusters to manual review. | to-be-approved |
+
+## What to suggest next
+
+The cookbooks are grouped by stage, in order: Context, Fundamentals, Signals, Engagement, Operations, CRM. That order is
+the recommendation, not a dependency graph. Start anywhere: every cookbook installs and
+works on its own. Once one is set up, look at what the project already declares and suggest
+the earliest cookbooks in the table above that are not set up yet — so after `call-capture`
+suggest `web-capture`, and after `web-capture` suggest `call-capture`. Suggest, never install
+unasked, and skip one whose skill says it does not apply (no CRM yet, say).
 
 ## When one does not fit as written
 
 Declared adaptations, not forks. Reach for one before concluding a skill is the wrong start.
 
+**`call-capture`**
+
+- `notes-not-transcripts` — The repo is growing faster than you want, or your recorder's AI notes are genuinely good. Costs: You lose the verbatim record, so the scribe can no longer quote and nobody can check a summary against what was actually said. Notes are already an interpretation; scribing them is interpreting an interpretation.
+- `raise-the-bar` — Your context is filling with claims that turn out to be one customer's opinion. Costs: The knowledge layer lags the field by weeks. A real, fast-moving objection sits unwritten while it is costing you deals.
+- `widen-the-cap` — The backfill queue is not draining — the pull request reports a remainder that never falls. Costs: The pull request stops being reviewable, which is the whole control. A diff nobody reads is an auto-merge with extra steps.
+- `internal-calls-too` — You want deal reviews, onboardings and retros in the record as well as customer calls. Costs: Volume roughly doubles and the signal thins: internal calls restate what customers said, so the repetition bar counts the same occurrence twice and promotes it as if two customers had said it.
+- `two-recorders` — You are mid-migration between recorders, or sales records on one and CS on another. Costs: Deduplication is per-recorder, because the ids are. A call both tools recorded is captured twice and scribed as two entries, and the repetition bar then counts one conversation as two occurrences and promotes it as if two customers had said it.
+
+**`web-capture`**
+
+- `more_pages` — Product, solution or docs pages say what is sold better than the home page. Costs: One more URL billed on every read, more candidate changes for the agent to read, and the 20-URL cap.
+- `daily` — The company or a competitor ships several times a week. Costs: Five times the reads, and most days open no pull request.
+- `slack_digest` — The team does not watch pull requests. Costs: One more connector to keep authorized, and a channel to choose.
+- `deeper_news` — The `lite` search misses coverage the team knows about. Costs: The next rung of the processor price ladder on every run; read it live before switching.
+
+**`win-loss-review`**
+
+- `another_crm` — The deals live in Salesforce or Attio. Costs: Field names vary per org, so the queries are rewritten against the live schema and the first pass is checked by eye.
+- `deal_contacts` — Titles at won accounts are too broad, and the team wants the titles on the deals only. Costs: One more column to keep in sync with the extractor's naming, and a query to re-check if the extractor changes it.
+- `raise_the_verify_line` — Twenty wins is too few to separate won from lost in your market (long cycles, few deals). Costs: More months land in hypothesis mode, and the files assert less.
+- `wider_window` — Your sales cycle is longer than a year, or last year was not representative. Costs: Older deals describe an older market, and a two-year window on a company that repositioned last spring verifies the old ICP.
+- `quarterly` — Fewer than ten deals close a month and the digest is mostly "nothing new". Costs: A lost reason that recurs in month one is written in month three. The append-only rule means nothing is lost, only late.
+- `no_digest` — The team reads pull requests and does not want a Slack post. Costs: The pull request is the only surface, and a monthly pull request nobody is pinged about is a monthly pull request nobody opens.
+
+**`tam-building`**
+
+- `lookalike-sourcing` — Your best customers describe the ICP better than any facet does, which is usual before a segment is written down. Costs: The pool is shaped by the seeds rather than by anything written down, so it drifts from `icp.md` and `countCompanies` becomes the only way to see what you asked for.
+- `refresh-cadence` — The market moves and a one-time source goes stale. Costs: Every run re-bills every returned record, including the rows you already have: a monthly refresh buys the handful of new companies at the price of the whole pool.
+- `promote-to-shared-accounts` — The project already has an `accounts` model that scoring, routing, and signals all read. Costs: One more resource and one more dedupe key to keep true; a row that cannot resolve to that key has to be dropped rather than written, or it forks into duplicates the first time it appears elsewhere.
+- `sales-navigator-source` — Your market is expressed better by LinkedIn's facet taxonomy than by AI Ark's filter groups. Costs: Sales Nav returns no domain, so you add a resolution step of two credited calls per company; and its extraction cap forces splitting one market search into sub-searches and recounting each.
+- `deterministic-tiering` — The rubric turns out to be thresholds (headcount band, industry, funding stage) with no judgment in it. Costs: You lose the rationale a rep reads and the web-verified evidence, which is most of what makes a tier trusted rather than obeyed.
+
 **`account-scoring`**
 
 - `deterministic-scoring` — You need fixed cost and exact reproducibility, or an LLM judgement is not acceptable to your team. Costs: The criteria move out of the ICP markdown and into code, so they stop being reviewable by non-engineers, and you lose the rationale entirely.
 - `skip-crm-roundtrip` — You want the score on the model directly and do not need it visible in the CRM. Costs: Reps lose the score and rationale where they actually work. The native's input is untyped, so confirm the field shape on the first run.
-- `no-crm-at-all` — You have no CRM, or you do not want to hand this skill a CRM credential. Costs: Every other CRM-dependent skill you install later brings a CRM connector of its own; reuse one.
+- `no-crm-at-all` — You have no CRM, or the workspace has no CRM connection and you do not want to authorize one. Costs: Every other CRM-dependent skill you install later brings a CRM connector of its own; reuse one.
+
+**`website-building`**
+
+- `external-dns` — The domain's DNS is at another provider, as for most existing company domains. Costs: Three records and an apex redirect kept by hand; Cargo cannot correct them..
+- `register-domain` — The company wants a new domain for the website, bought through Cargo. Costs: Workspace credits, not refundable; the plan's `+ create domain:…` line is the purchase..
+- `source-recreation` — An authorized repository or live site already exists. Costs: Dependency migration, inherited defects to separate from new ones, binary assets to adapt for a text upload..
+- `redesign` — The current site does not fit the company it describes. Costs: More design decisions, and no old page to compare against..
+- `more-pages` — The brief needs pricing, landing or legal pages. Costs: Metadata and sitemap to keep current per page..
+- `working-form` — A demo or contact form has to deliver. Costs: A backend outside this static app, with its own consent and cost..
+
+**`new-hire-detection`**
+
+- `crm_lookup` — A CRM is connected and the team wants to know, on the post, whether the company is already in it. Costs: A CRM lookup per qualified person, and one more connector to keep authorized. Nothing is written.
+- `crm_routing` — The CRM is where the team works, and a task on the right owner beats a Slack message. Costs: Owner IDs, a CSM field, association types and a LinkedIn field to resolve; an email lookup per person; writes that a mistake leaves in the CRM.
+- `cadence` — The market is small and a weekly signal matters, or the budget is tight and monthly is enough. Costs: Weekly roughly doubles the extraction spend of the default for the same people found; monthly halves it and the team hears about a new hire weeks later.
+- `split_search` — The counted search is above 2,500. Costs: More URLs to keep in sync with the ICP; overlapping splits extract the same person twice and bill both.
+- `channel_per_segment` — Different teams own different segments (regions, tiers). Costs: One channel id per branch to resolve and keep current.
+- `find_email` — The team wants the work email on the post, ready for its own sequencer. Costs: One email lookup per qualified person.
+- `draft_first_touch` — The team wants a first email written, not just the signal. Costs: One more LLM call per qualified person, and copy that has to be reviewed before it is trusted. The play still sends nothing.
+
+**`agentic-engagement`**
+
+- `register-domain` — The workspace does not yet own a sending domain. Costs: Registration charges workspace credits and is not refundable. The deploy waits until the domain is `active` before creating the mailbox..
+- `mailbox-type` — Shared or private SMTP fits better than Google. Costs: Type is create-only. Changing it later is a new inbox and a reset ramp. Live `pricing get` for the new flavour..
+- `adopt-mailbox` — The inbox already exists in the workspace. Costs: Adopting never falls back to creating. The wrong address fails deploy instead of minting a second inbox..
+- `first-touch-play` — New leads should get a first email without a human starting the chat. Costs: A play that sends without going through the agent starts threads the native trigger will never wake, because the trigger keys off chats *this agent* has emailed..
+
+**`standup`**
+
+- `move-the-hour` — The team reads Slack at a different time, or you are not on Pacific time. Costs: A morning cron recaps an incomplete day. A timezone the collector does not share with the prompt splits the dump and the log across two dates..
+- `skip-slack` — You want the log and the pull request, and a human will paste the digest. Costs: The team stops seeing the day. The log still lands, but the thing people actually read is gone..
+- `header-emoji` — Two recaps land in the same channel and the reader has to tell them apart from the first line. Costs: Cosmetic unless you pick the same emoji as another bot in that channel, in which case the two posts merge in the reader's eye..
+- `log-only-quiet` — A quiet day should not ping Slack. Costs: Silence on a quiet day is indistinguishable from a missed run. The default is the opposite: a quiet day still gets an entry, because silence is signal..
+- `git-only` — The sandbox has no Cargo session, or this agent must not reach the workspace at all. Costs: The recap loses runs, usage and what is deployed, so "declared but it never ran" stops being visible. The git dump still lands, which is what §1b already falls back to when `cargo-ai whoami` fails..
+
+**`weekly-planning`**
+
+- `move-the-hour` — The team reads pull requests at a different time, or you are not on Pacific time. Costs: A Sunday cron recaps an incomplete week. A timezone the collector does not share with the prompt splits the dump and the plan files across two weeks..
+- `skip-on-track` — An on-track initiative should not ping the reviewer. Costs: Silence on an on-track week is indistinguishable from a missed run for that initiative. The default still opens the PR, because a written "keep going" is the record..
+- `git-only` — The sandbox has no Cargo session, or this agent must not reach the workspace at all. Costs: "Deployed is not running" stops being answerable, which is most of the point: the gap collapses to what git can see. The dump still lands, which is what §1b already falls back to when `cargo-ai whoami` fails..
+- `one-pr` — You want one weekly diff even when there are five initiatives. Costs: The reviewer merges the loud initiative and skips the overdue one. The default splits them because that is the gate..
+
+**`ask-cargo`**
+
+- `answer-only` — You want a Slack oracle over the repo first, and no one running anything from Slack yet. Costs: The team copies commands out of Slack into a terminal, and "the agent said it would cost X" stops being checked against what actually ran..
+- `listed-channels` — The bot sits in channels it must never answer in, or you want answers in a few channels only. Costs: A list to keep in sync: a new team channel gets no answer until someone edits the file and deploys. Listing a channel also takes it from any `allChannels` agent..
+- `dms-too` — Individuals want to ask privately. Costs: The thread stops being multiplayer: nobody else sees the proposal or the go, so a DM go is one person approving spend alone. Keep §3 unchanged if you take this..
+- `master-agent-slack` — You only need questions answered, no repo and no pull requests. Costs: No checkout: it cannot read `infra/` or `cadence/`, and it cannot change anything. Cheaper and faster per question, because there is no sandbox to start..
+- `no-handoff` — No other agents are deployed yet. Costs: Every job is redone by this agent from scratch, without the owning agent's rules. Add §4 back the day the first pipeline deploys..
+- `higher-sample-bar` — Your runs are expensive per record, or touch people. Costs: More round trips in the thread for every batch, and each one needs another `@Cargo go`..
 
 **`crm-enrichment`**
 
-- `crm` — The consumer uses Salesforce or Attio instead of HubSpot. Costs: Live generated types must be rechecked; a guessed flag writes or no-ops silently.
-- `selected_fields` — The approved contract differs from the starting recommendation. Costs: Each added field expands mapping, type-review, and the "already filled" filter.
-- `eligibility` — Only a governed subset should be enriched. Costs: Narrower scope reduces coverage and paid calls.
-- `approved_refresh_behavior` — Populated fields must be refreshed after explicit approval. Costs: Refresh can overwrite CRM-authoritative values if the preview and the write disagree.
+- `crm_shape` — The consumer uses Salesforce or Attio. Costs: Generated types and write semantics must be reverified.
+- `refresh_cadence` — The default window does not fit the data policy. Costs: Faster cadence repeats provider charges more often.
+- `account_fields` — The approved company contract differs from the starting fields. Costs: Every added field expands schema and write review.
+- `account_eligibility` — Only a governed company subset should be enriched. Costs: Narrower scope reduces coverage and paid calls.
+- `account_refresh_policy` — Approved populated company fields must be refreshed. Costs: The provider snapshot can replace CRM-authoritative values.
+- `contact_fields` — The approved person contract differs from the starting fields. Costs: Every added field expands schema and write review.
+- `contact_eligibility` — Only a governed contact subset should be enriched. Costs: Narrower scope reduces coverage and paid calls.
+- `native_tool_contracts` — The deployed native tools expose different schemas. Costs: A guessed path can create paid calls with no usable result.
+- `profile_provider` — The workspace uses an equivalent approved profile action. Costs: Coverage, fields, and unit price change.
 
-**`tam-building`**
+**`crm-deduplication`**
 
-- `non-linkedin-source` — You do not want to source from LinkedIn at all, or Sales Nav does not cover your market. Costs: You lose the Sales Nav facet taxonomy that makes the split tactic mechanical, and the splitting has to be redesigned around the new source's own limits.
-- `land-without-promoting` — You want to see and filter the raw market before paying to enrich it. Costs: Nothing reaches `accounts`, so no downstream skill (scoring, contact sourcing, signals) has anything to work with until you promote.
-- `sample-first` — The market search is large and you want to see the cost curve before committing. Costs: Your TAM is deliberately incomplete until you widen it, so do not score or report on coverage from a sample.
+- `crm` — The consumer uses Salesforce or Attio. Costs: Generated types and native merge semantics must be revalidated.
+- `structured_ai_review` — Ambiguous evidence needs a concise review aid. Costs: Adds model cost and a non-deterministic review surface.
+- `account_matching_keys` — The CRM has another approved durable company identity. Costs: Wider matching can create new false-positive company classes.
+- `account_survivor_precedence` — Protected lifecycle, billing, tier, or customer policy must win. Costs: A policy change can select a different survivor for every cluster.
+- `contact_matching_keys` — The CRM has another approved durable person identity. Costs: Wider matching can create new false-positive person classes.
+- `contact_survivor_precedence` — Commercial history or activity policy differs. Costs: A policy change can select a different survivor for every group.
+- `low_confidence_review` — The operator wants phone-only or ambiguous groups surfaced. Costs: Review volume changes; disabled review leaves more duplicates.
 
 ## Routing
 

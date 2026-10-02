@@ -43,6 +43,8 @@ interface Cookbook {
   requires: string[];
   hasSkill: boolean;
   variations: Variation[];
+  /** The gtm-skills stage (Context, Fundamentals, …); absent before stages existed. */
+  stage?: string;
 }
 
 async function refresh(): Promise<Cookbook[]> {
@@ -66,7 +68,16 @@ async function refresh(): Promise<Cookbook[]> {
       canChange?: Array<{ id: string; when: string; cost: string }>;
     }>;
     pending?: Array<{ name: string; job: string; state?: string }>;
+    groups?: Array<{ title: string; skills?: string[] }>;
   };
+  // The stages, in order, and the cookbooks within each, in order: that order
+  // is gtm-skills' recommendation for what to set up next, so the menu keeps it.
+  const position = new Map<string, { stage: string; order: number }>();
+  (catalog.groups ?? []).forEach((g, stage) =>
+    (g.skills ?? []).forEach((name, index) =>
+      position.set(name, { stage: g.title, order: stage * 1000 + index }),
+    ),
+  );
   const out: Cookbook[] = [];
   for (const s of catalog.skills) {
     if (s.kind !== "cookbook") continue;
@@ -74,12 +85,14 @@ async function refresh(): Promise<Cookbook[]> {
       slug: s.name, kind: "cookbook", outcome: s.job, state: s.state ?? "to-be-approved",
       chain: s.chain ?? null, requires: [], hasSkill: true,
       variations: (s.canChange ?? []).map((v) => ({ id: v.id, when: v.when, trade: v.cost })),
+      stage: position.get(s.name)?.stage,
     });
   }
   for (const p of catalog.pending ?? []) {
     out.push({ slug: p.name, kind: "cookbook", outcome: p.job, state: p.state ?? "to-be-approved", chain: null, requires: [], hasSkill: false, variations: [] });
   }
-  return out.sort((a, b) => a.slug.localeCompare(b.slug));
+  const order = (b: Cookbook) => position.get(b.slug)?.order ?? Number.MAX_SAFE_INTEGER;
+  return out.sort((a, b) => order(a) - order(b) || a.slug.localeCompare(b.slug));
 }
 
 function render(examples: Cookbook[]): string {
@@ -116,11 +129,32 @@ function render(examples: Cookbook[]): string {
   L.push("Start the skill at its Adapt section: its earlier steps assume you found the folder in");
   L.push("gtm-skills and still have to place it.");
   L.push("");
+  const staged = withSkill.some((b) => b.stage);
   L.push("## With a skill");
   L.push("");
-  L.push("| Skill | Deploys | State |");
-  L.push("| --- | --- | --- |");
-  for (const b of withSkill) L.push(`| \`${b.slug}\` | ${b.outcome} | ${b.state} |`);
+  if (staged) {
+    L.push("In stage order, and in order within a stage: the order is the recommendation below.");
+    L.push("");
+    L.push("| Stage | Skill | Deploys | State |");
+    L.push("| --- | --- | --- | --- |");
+    for (const b of withSkill) L.push(`| ${b.stage ?? ""} | \`${b.slug}\` | ${b.outcome} | ${b.state} |`);
+  } else {
+    L.push("| Skill | Deploys | State |");
+    L.push("| --- | --- | --- |");
+    for (const b of withSkill) L.push(`| \`${b.slug}\` | ${b.outcome} | ${b.state} |`);
+  }
+  if (staged) {
+    const stages = [...new Set(withSkill.map((b) => b.stage).filter(Boolean))];
+    L.push("");
+    L.push("## What to suggest next");
+    L.push("");
+    L.push(`The cookbooks are grouped by stage, in order: ${stages.join(", ")}. That order is`);
+    L.push("the recommendation, not a dependency graph. Start anywhere: every cookbook installs and");
+    L.push("works on its own. Once one is set up, look at what the project already declares and suggest");
+    L.push("the earliest cookbooks in the table above that are not set up yet — so after `call-capture`");
+    L.push("suggest `web-capture`, and after `web-capture` suggest `call-capture`. Suggest, never install");
+    L.push("unasked, and skip one whose skill says it does not apply (no CRM yet, say).");
+  }
   const withVariations = withSkill.filter((b) => b.variations.length);
   if (withVariations.length) {
     L.push("");

@@ -1,7 +1,7 @@
 ---
 name: cargo-project
 description: "Manage a whole Cargo workspace as code — declare connectors, models, plays, tools, agents, MCP servers, segments, context, folders, files, workers, and apps in TypeScript, then reconcile them with `cargo-ai project` (init → types → plan → deploy), the way you would run Pulumi or the AWS CDK. Triggers: \"as code\", \"in git\", \"version-controlled\", \"reproducible\", \"Terraform for Cargo\", \"set up a whole workspace\", \"staging and production\", \"deploy the workspace from CI\", \"review this in a PR\", \"cargo.state.json\", \"scaffold from a template\", \"is there a cookbook for this\", \"start from a cookbook\". Skills with a CDK example (TAM building, account scoring, contact sourcing, routing, AI SDR, rep cockpit) live in gtm-skills; menu in references/cookbooks.md. Skip when: it is a one-off operation, a read, or an ad-hoc query — use the matching capability skill."
-version: "3.0.0"
+version: "3.1.0"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -159,7 +159,7 @@ project` with no arguments does `info` inside a project and `init` outside one.
 | A field/spec/output for a specific builder | [`references/resources.md`](references/resources.md) | Every builder → spec fields → which ref each takes → outputs. |
 | Exact command flags | [`references/commands.md`](references/commands.md) | Every `cargo-ai project` subcommand and its flags. |
 | A deploy error / footgun | [`references/troubleshooting.md`](references/troubleshooting.md) | The known failure modes and fixes. |
-| A known GTM outcome, before authoring one | [`references/cookbooks.md`](references/cookbooks.md) | The cookbook menu: gtm-skills that carry a worked CDK example, and the adaptations each supports. |
+| A known GTM outcome, before authoring one; or what to suggest after one is set up | [`references/cookbooks.md`](references/cookbooks.md) | The cookbook menu, in stage order: gtm-skills that carry a worked CDK example, the adaptations each supports, and which to suggest next. |
 
 ### Cookbooks — check the menu before authoring a known outcome from scratch
 
@@ -170,8 +170,10 @@ sourcing, routing engine, AI SDR, rep cockpit, …). Every folder is self-contai
 own models, connectors and folders, no shared foundation, no requires graph.
 
 **The menu is local: [`references/cookbooks.md`](references/cookbooks.md).** Read it
-before authoring a common GTM outcome from scratch. It is generated from gtm-skills'
-`catalog.json`, so it cannot drift.
+before authoring a common GTM outcome from scratch, and again once a cookbook is set up:
+it lists them in stage order, and that order is what to suggest next — the earliest
+cookbooks not set up yet. It is generated from gtm-skills' `catalog.json`, so it cannot
+drift.
 
 **A cookbook is a worked example, not a template to fill in.** Each one declares in its `SKILL.md` what may be reshaped, what must hold or it stops
 working, and what has to be answered either way, and it carries its own procedure.
