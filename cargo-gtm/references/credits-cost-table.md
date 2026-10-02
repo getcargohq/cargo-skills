@@ -1,6 +1,6 @@
 # Credits cost table
 
-Every credits-based action Cargo can run — 176 of the 513 actions exposed by 123 of the catalog's 136 integrations, plus Cargo's own native actions — sorted by cost. The other 337 carry no *provider* price; they are not free, because every node execution bills 0.01 credits (1 per 100) regardless. See [`../../cargo-billing/SKILL.md`](../../cargo-billing/SKILL.md) → "The execution charge".
+Every credits-based action Cargo can run — 180 of the 517 actions exposed by 123 of the catalog's 136 integrations, plus Cargo's own native actions — sorted by cost. The other 337 carry no *provider* price; they are not free, because every node execution bills 0.01 credits (1 per 100) regardless. See [`../../cargo-billing/SKILL.md`](../../cargo-billing/SKILL.md) → "The execution charge".
 
 Rows whose provider is `native` are Cargo's own platform actions, run as `{"kind":"native","actionSlug":"<action>"}` with no integration; every other row runs as `{"kind":"connector","integrationSlug":"<provider>","actionSlug":"<action>"}`.
 
@@ -25,6 +25,10 @@ Generated: 2026-08-28
 | 0–1 / person | `apolloio` | enrichment | `searchPeople` | Search Apollo's people database by person, company, technology, and hiring filters |
 | 0–3 | `contactOut` | enrichment | `enrich` | Find data from an email. It returns data person / company information as the response |
 | 0.006–0.5 / 1k token + base | `openAi` | freeform | `instruct` | Instruct prompt |
+| 0 | `FullEnrich` | enrichment | `lookupCompany` | Look up one company by domain or LinkedIn URL or ID |
+| 0 | `FullEnrich` | enrichment | `lookupPerson` | Look up one person by LinkedIn URL or ID, or by full name with a company domain or LinkedIn URL |
+| 0 | `FullEnrich` | enrichment | `searchCompanies` | Search for companies matching company filters |
+| 0 | `FullEnrich` | enrichment | `searchPeople` | Search for people matching person and company filters |
 | 0.01 | `aiArk` | enrichment | `enrichCompany` | Retrieve firmographics for a single company from its domain or LinkedIn URL |
 | 0.01 / item | `aiArk` | enrichment | `searchCompanies` | Search for companies matching company filters or lookalike domains |
 | 0.01 / organization | `apolloio` | enrichment | `searchOrganizations` | Search Apollo's company database by firmographic, funding, technology, and hiring filters |
@@ -145,6 +149,7 @@ Generated: 2026-08-28
 | 1 | `enrichCrm` | enrichment | `getFunding` | Get company financial and funding data given a domain |
 | 1 | `enrowio` | enrichment | `findEmail` | Find a person's email |
 | 1 | `FullEnrich` | enrichment | `findEmail` | Find a person's email address using their first name, last name, company name, domain name, or LinkedIn URL |
+| 1 | `FullEnrich` | enrichment | `reverseEmailLookup` | Find a person's LinkedIn profile and company information from their email address |
 | 1 | `g2` | enrichment | `enrichProduct` | Retrieve detailed information about a product from G2 including reviews, ratings, and product specifications |
 | 1 | `hunter` | enrichment | `enrichPerson` | Enrich a person's information |
 | 1 | `hunter` | enrichment | `searchDomain` | Search for people in a domain |
@@ -164,7 +169,6 @@ Generated: 2026-08-28
 | 2 | `datagma` | enrichment | `enrichPersonFromPersonalEmail` | Retrieve a person's profile from a personal email address (outside of the EU) |
 | 2 | `forager` | enrichment | `findPersonalEmail` | Find a person's personal email |
 | 2 | `forager` | enrichment | `findWorkEmail` | Find a person's work email |
-| 2 | `FullEnrich` | enrichment | `reverseEmailLookup` | Find a person's LinkedIn profile and company information from their email address |
 | 2 | `theSwarm` | enrichment | `searchWarmIntrosToCompany` | Search for warm intros to a company, filtering for target company employees with the desired job function and seniority. |
 | 2 | `theSwarm` | enrichment | `searchWarmIntrosToPerson` | Search for warm introductions to a specific person using their LinkedIn profile. |
 | 2 | `waterfall` | enrichment | `enrichContact` | Retrieve a contact |

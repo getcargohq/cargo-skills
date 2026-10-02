@@ -18,8 +18,8 @@ Default rule: **don't swap to chase 2× cheaper if hit-rate drops 30%**. The tot
 
 | Goal | Priority | Alternative | When to swap |
 |---|---|---|---|
-| At-scale lead search | salesNavigator.searchLeads (0.2) | icypeas.findPeople (0.02) | When LinkedIn coverage is thin (e.g., privacy-focused industries). |
-| At-scale account search | salesNavigator.searchAccounts (0.2) **or** aiArk.searchCompanies (0.01) | oceanio.searchCompanies (1) | aiArk is 20× cheaper and takes lookalike seeds (≤5 domains), oceanio when the filter is technographic / web-traffic shaped. |
+| At-scale lead search | FullEnrich.searchPeople (**0**) **or** salesNavigator.searchLeads (0.2) | icypeas.findPeople (0.02) | When LinkedIn coverage is thin (e.g., privacy-focused industries). |
+| At-scale account search | FullEnrich.searchCompanies (**0**), salesNavigator.searchAccounts (0.2) **or** aiArk.searchCompanies (0.01) | oceanio.searchCompanies (1) | aiArk is 20× cheaper and takes lookalike seeds (≤5 domains), oceanio when the filter is technographic / web-traffic shaped. |
 |   |   | peopleDataLabs.searchCompanies (3) for cargo-filter shape, or queryCompanies (3) for SQL | When salesNavigator's filters miss (funding, investor, complex bool). |
 | Tech-intent sourcing | theirStack.searchJobs / searchCompanies (0.5) | (no priority alternative — theirStack IS priority) | n/a |
 | SMB / local | (none in priority — priority skips SMB) | serper.searchPlaces (0.05), firecrawl.scrape (0.05) | Always for local/storefront. |
@@ -34,7 +34,7 @@ Default rule: **don't swap to chase 2× cheaper if hit-rate drops 30%**. The tot
 |   |   | prospeo.enrichLinkedin (0.5) | Second opinion on a URL-anchored miss. |
 | Person enrichment (name + company) | waterfall.enrichContact (2) | apolloio.enrichPerson (1, **3** with phone reveal, priority) | The niche-coverage rung — promote per-batch when a pilot shows Apollo hits where aiArk/waterfall miss (investor-backed, portfolio niches). |
 |   |   | hunter.enrichPerson (1) | Cheap mid-tier alternative. |
-| Reverse email → person | (none in priority) | FullEnrich.reverseEmailLookup (2) | Always for email → LinkedIn. |
+| Reverse email → person | (none in priority) | FullEnrich.reverseEmailLookup (1) | Always for email → LinkedIn. |
 | Person backfill (heavyweight) | peopleDataLabs.enrichPerson (3) | (none cheaper for heavyweight) | n/a |
 
 ## Company enrichment alternatives
@@ -82,7 +82,7 @@ Default rule: **don't swap to chase 2× cheaper if hit-rate drops 30%**. The tot
 | Goal | Priority | Alternative | When to swap |
 |---|---|---|---|
 | Resolve LinkedIn from name+company | linkedin.findProfileUrl (0.25) | (no cheaper credible alternative) | n/a |
-| Resolve LinkedIn from email | FullEnrich.reverseEmailLookup (2) | (no cheaper credible alternative) | n/a |
+| Resolve LinkedIn from email | FullEnrich.reverseEmailLookup (1) | (no cheaper credible alternative) | n/a |
 
 ## When the priority stack genuinely can't serve the goal
 

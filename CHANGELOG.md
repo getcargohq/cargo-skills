@@ -10,6 +10,15 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### `cargo-gtm` → 2.2.0 — FullEnrich search, lookup and fetch are free; reverse email lookup drops to 1
+
+getcargohq/cargo#6063 adds four FullEnrich actions and two extractors, all billed **0 credits** on Cargo's managed connection: `searchPeople`, `searchCompanies` (up to 2,000 per action run), `lookupPerson`, `lookupCompany`, and the `fetchPeople` / `fetchCompanies` extractors (up to 10,000 rows into a model, contacts unified on LinkedIn URL, accounts on domain + LinkedIn URL). The same PR moves `reverseEmailLookup` from 2 credits to **1**.
+
+- **FullEnrich playbook:** the new actions, their filter shape (plain strings, OR within a filter, AND across filters, enums for seniority / function / company type, autocompletes for industry and sub-function), the extractors, a free list-building pattern, and the own-key caveat (FullEnrich bills its own 0.25 credits per record to the user's account then).
+- **Sourcing guidance:** `FullEnrich.searchPeople` / `searchCompanies` are now the free first pass in the decision tree, `build-tam` (provider table, volume table, step 1), the stage-action map, alternatives, and both recipe spines. `aiArk.searchCompanies` is now the cheapest *paid* search, not the cheapest search; `salesNavigator` stays the default for LinkedIn-native filters.
+- **`reverseEmailLookup` at 1** everywhere it is quoted, and the `linkedin-url-lookup` budget drops to ~0.8 per resolved contact.
+- `credits-cost-table.md`: four 0-credit FullEnrich rows added and `reverseEmailLookup` moved to the 1 block, by hand ahead of the next catalog regeneration.
+
 ### `cargo-gtm` → 2.1.2, `cargo` → 1.27.1, `cargo-quickstart` → 1.0.4, `cargo-billing` → 2.0.1 — Sales Navigator search repriced to 0.2/record
 
 `salesNavigator.searchLeads`, `searchAccounts`, `extractLeadSearch` and `extractAccountSearch` now bill **0.2 credits per returned record** (were 0.02 for leads, 0.05 for accounts), per `cargo-ai orchestration action list --integration-slug salesNavigator`. Every mention is updated, along with the figures derived from it:

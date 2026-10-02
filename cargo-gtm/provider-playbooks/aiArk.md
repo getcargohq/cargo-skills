@@ -17,7 +17,7 @@ LinkedIn-anchored people/company data with an unusually cheap enrich-and-email c
 | `analyzePersonality` | **0.05** | `linkedinUrl` | Personality insights (OCEAN, DISC) + tailored **selling and hiring guidance**. Bills **0** on no match. |
 | `findMobilePhone` | **0.5** | `linkedinUrl` **or** (`domain` + `name`) | Mobile phone number. Bills **0** when nothing is found. |
 | `searchPeople` | **0.05 / returned record** | contact + account filter **groups** (see below) + `limit` (default 10, max 100) | Filter-rich people search (title, seniority, department, education, skills, tenure, past company, firmographics). |
-| `searchCompanies` | **0.01 / returned record** | account filter **groups** + `lookalikeDomains` (≤5 domains/LinkedIn URLs) + `limit` (default 10, max 100) | Cheapest company search in the catalog + lookalike discovery. |
+| `searchCompanies` | **0.01 / returned record** | account filter **groups** + `lookalikeDomains` (≤5 domains/LinkedIn URLs) + `limit` (default 10, max 100) | Cheapest *paid* company search + lookalike discovery (`FullEnrich.searchCompanies` is free when lookalikes aren't needed). |
 | `enrichCompany` | **0.01** | `domain` **or** `linkedinUrl` | Full company profile. Cheapest company enrich in the catalog. |
 | `countCompanies` | **free** | same account filter **groups** as `searchCompanies` (no `limit`) | Returns `{"count": N}` — the size of the pool a search would draw from. |
 | `countPeople` | **free** | same filter **groups** as `searchPeople` (no `limit`) | Returns `{"count": N}` — pool size before paying per record. |
@@ -129,7 +129,7 @@ Conventions inside a group:
 - `enrichPerson` — **ENRICH + CONTACT (person)** for URL-in-hand rows: profile + verified email at 0.1, ahead of `linkedin.enrichProfile` (0.25, no email) and the pricier `waterfall.enrichContact` (2) / `FullEnrich.findEmail` (1) chain.
 - `findMobilePhone` — **new cheapest phone rung** (0.5) ahead of `prospeo.findPhone` (3); mobile-only, so keep the higher tiers for landline/DID fallback.
 - `searchCompanies` / `searchPeople` — **SOURCE** (0.01 / 0.05 per record): `searchCompanies` is the cheapest account search in the stack and the lookalike path; `searchPeople` covers the filters `salesNavigator` can't express (education, skills, tenure, past company).
-- `reverseLookup` — **niche**: email/phone → profile, beside `FullEnrich.reverseEmailLookup` (2, email → LinkedIn URL).
+- `reverseLookup` — **niche**: email/phone → profile, beside `FullEnrich.reverseEmailLookup` (1, email → LinkedIn URL).
 - `analyzePersonality` — **WRITE/personalization input**, outside the credits spine's find-and-verify path.
 
 ## Recurring use

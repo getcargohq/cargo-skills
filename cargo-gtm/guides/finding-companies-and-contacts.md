@@ -8,15 +8,17 @@ How to source accounts and people on Cargo. Covers the full sourcing decision tr
 Goal → which sourcing path?
 
 Looking for COMPANIES matching ICP criteria (industry, size, geo, …)?
-  ├─ Cheapest at scale (0.01 cred/record):    aiArk.searchCompanies — also lookalikes from ≤5 seed domains
+  ├─ Free (0 cred):                          FullEnrich.searchCompanies — industry, headcount, HQ, tech, keywords
+  ├─ Lookalikes / cheap at scale (0.01):      aiArk.searchCompanies — lookalikes from ≤5 seed domains
   ├─ LinkedIn-native filters (0.2 cred):      salesNavigator.searchAccounts
   ├─ Need rich filters / structured query:    peopleDataLabs.queryCompanies (3 cred)
   ├─ Tech-stack or hiring intent:             theirStack.searchCompanies / searchTechnologies / searchJobs (0.5 cred)
   ├─ Local / SMB / storefront (Maps-style):   serper.searchPlaces (1 cred)
-  ├─ Specific domain → details:               aiArk.enrichCompany (0.01 cred)
+  ├─ Specific domain → details:               FullEnrich.lookupCompany (0) or aiArk.enrichCompany (0.01 cred)
   └─ Already have a domain list?              skip sourcing — go straight to enrichment
 
 Looking for PEOPLE at companies?
+  ├─ Free (0 cred):                          FullEnrich.searchPeople — title, seniority, function, skills, tenure, past company, employer filters
   ├─ Cheap at scale (0.05 cred/record):       aiArk.searchPeople — also education, skills, tenure, past company
   ├─ LinkedIn-native filters (0.2 cred):      salesNavigator.searchLeads
   ├─ Rich filters / large database:           peopleDataLabs.searchPeople / queryPeople (3 cred)
@@ -42,6 +44,7 @@ When the user asks for "contacts at companies matching X," **always** discover t
 | Provider | Best for | Cost (credits) |
 |---|---|---|
 | **salesNavigator** | At-scale lead/account search, LinkedIn-native filters | 0.2 (lead or account) |
+| **FullEnrich** | Free people and company search (`searchPeople`, `searchCompanies`), free single lookups, and `fetchPeople` / `fetchCompanies` extractors into a model | 0 |
 | **aiArk** | Cheapest company search + lookalike seeds; people filters on education / skills / tenure / past company | 0.01 (company) / 0.05 (person) |
 | **peopleDataLabs** | Structured queries (`queryPeople` / `queryCompanies`), heavy filtering, backfill when other sources miss | 3 (flat) |
 | **theirStack** | Tech-stack signals, jobs-posted signals, "everyone hiring for role X" | 0.5 |
