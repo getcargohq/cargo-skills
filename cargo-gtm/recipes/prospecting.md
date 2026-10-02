@@ -14,6 +14,7 @@ For sourcing-only / TAM list builds, see [`build-tam.md`](build-tam.md). For inv
 
 ```
 1. SOURCE    → salesNavigator.searchLeads / searchAccounts            (0.2/record)
+               free first pass? FullEnrich.searchPeople / searchCompanies (0/record)
 2. DEDUPE    → match against the workspace's own Contacts / Companies models
                on linkedin_url / domain (storage SQL or a segment filter)  (free)
 3. ENRICH    → LinkedIn URL in hand? aiArk.enrichPerson (0.1) FIRST — profile + verified email

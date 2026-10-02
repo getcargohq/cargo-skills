@@ -14,8 +14,9 @@ The right step-1 provider depends on which filter is primary:
 
 | Primary filter | Provider | Cost (credits) | Notes |
 |---|---|---|---|
+| Industry / size / geo, free | `FullEnrich.searchCompanies` | 0 | **Free.** Plain-string filters (industry, headcount range, HQ, technologies, keywords), up to 2,000 per action run; `FullEnrich.fetchCompanies` pulls up to 10,000 straight into a model. Pilot this first. |
 | Industry / size / geo | `salesNavigator.searchAccounts` | 0.2 | LinkedIn-anchored. Default for LinkedIn-native filters. |
-| Industry / size / geo, budget-first | `aiArk.searchCompanies` | 0.01 | **Cheapest per record in the catalog** (20× under salesNavigator). Billed per *returned* row, `limit` max 100 — paginate for large pulls. |
+| Industry / size / geo, budget-first | `aiArk.searchCompanies` | 0.01 | Cheapest *paid* search (20× under salesNavigator). Billed per *returned* row, `limit` max 100 — paginate for large pulls. |
 | "Companies like these customers" | `aiArk.searchCompanies` (with `lookalikeDomains`) | 0.01 | Up to 5 seed domains / LinkedIn URLs. Cheaper than `oceanio` / `companyEnrich` lookalikes. |
 | Funding stage / investor / round size | `peopleDataLabs.queryCompanies` | 3 | PDL **SQL** string. Required for array-membership filters like `summary.investors LIKE %X%`. |
 | Tech stack | `theirStack.searchCompanies` (with techFields) | 0.5 | Tech-stack-driven sourcing. |
@@ -29,6 +30,7 @@ For combined filters (e.g. fintech in US AND running Snowflake AND hiring data e
 
 | Target volume | Recommended sourcing path | Estimated credits (sourcing only) |
 |---|---|---|
+| Any volume up to 10,000, free | FullEnrich.searchCompanies / fetchCompanies | 0 |
 | 100 companies | salesNavigator.searchAccounts | ~20 |
 | 500 companies | salesNavigator.searchAccounts | ~100 |
 | 1,000 companies | salesNavigator.searchAccounts | ~200 |
@@ -51,7 +53,7 @@ If anything is missing, ask the user **once** before sourcing.
 
 ### Step 1 — Source companies
 
-Cheapest at scale (≥ 100 companies): `aiArk.searchCompanies` (0.01 cred/company, `limit` max 100 per call) when price leads, or `salesNavigator.searchAccounts` (0.2 cred/company) when you want LinkedIn-native filters and larger pages. Both bill per *returned* row — size the pool with a `limit: 1` probe first. The salesNavigator form:
+Free at any scale: `FullEnrich.searchCompanies` (0 cred, plain-string filters — pilot it first and keep it when the sample fits the ICP). Cheapest paid: `aiArk.searchCompanies` (0.01 cred/company, `limit` max 100 per call) when price leads, or `salesNavigator.searchAccounts` (0.2 cred/company) when you want LinkedIn-native filters and larger pages. Both bill per *returned* row — size the pool with a `limit: 1` probe first. The salesNavigator form:
 
 ```bash
 cargo-ai orchestration action execute \

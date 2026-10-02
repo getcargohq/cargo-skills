@@ -15,6 +15,7 @@ This map is **curated** — the cheapest few rungs per stage, with the routing j
 | aiArk | countPeople | **0** | ✅ | Not a source — counts matches for a filter. Run this first. |
 | apolloio | searchPeople | 0 / **1** per person | ✅ | **0 with `shouldEnrich: false`** (identity only), 1 when it enriches. Cheapest way to test whether Apollo has the audience at all. |
 | icypeas | findPeople | 0.02 |   | Cheapest non-LinkedIn source. |
+| FullEnrich | searchPeople | **0** | ✅ | **Free.** Title, seniority, function, location, skills, tenure, past company + current-employer filters. Plain strings, not codes. `fetchPeople` extractor pulls the same list into a model. |
 | aiArk | searchPeople | 0.05 | ✅ | Rich filters (education, skills, tenure, seniority, past company). Per returned record. |
 | salesNavigator | searchLeads | 0.2 | ✅ | LinkedIn-anchored. Default for LinkedIn-native filters. |
 | firecrawl | search | 0.05 |   | Web search; use when no structured provider has the data. |
@@ -30,7 +31,8 @@ This map is **curated** — the cheapest few rungs per stage, with the routing j
 | Provider | Action | Cost | Priority? | Notes |
 |---|---|---|---|---|
 | aiArk | countCompanies | **0** | ✅ | Not a source — counts matches for a filter. Run this first. |
-| aiArk | searchCompanies | 0.01 | ✅ | **Cheapest in catalog.** Per returned record; supports `lookalikeDomains` (≤5 seeds). |
+| FullEnrich | searchCompanies | **0** | ✅ | **Free.** Industry, headcount, HQ, technologies, specialties, keywords. `fetchCompanies` extractor pulls the same list into a model. |
+| aiArk | searchCompanies | 0.01 | ✅ | Cheapest *paid* search. Per returned record; supports `lookalikeDomains` (≤5 seeds). |
 | apolloio | searchOrganizations | 0.01 / organization | ✅ | Ties aiArk on price. Firmographic, funding, technology and hiring filters. |
 | icypeas | findCompanies | 0.02 |   | Cheapest non-lookalike. |
 | salesNavigator | searchAccounts | 0.2 | ✅ | LinkedIn-anchored. Default for LinkedIn-native filters. |
@@ -166,7 +168,7 @@ a handful of contacts at a known account; wrong for building a list.
 |---|---|---|---|
 | linkedin | findProfileUrl | 0.25 | Default. See `recipes/linkedin-url-lookup.md` for validation pattern. |
 | linkedin | enrichProfile | 0.25 | Validation step after findProfileUrl. |
-| FullEnrich | reverseEmailLookup | 2 | Email → LinkedIn URL. Unique action. |
+| FullEnrich | reverseEmailLookup | 1 | Email → LinkedIn URL. Unique action. |
 
 ## Job change signal
 

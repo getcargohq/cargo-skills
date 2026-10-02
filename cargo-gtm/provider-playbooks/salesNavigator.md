@@ -6,7 +6,7 @@ last-reviewed: 2026-09-22
 
 # salesNavigator (Sales Navigator)
 
-LinkedIn-anchored search for accounts and leads — `searchLeads` and `searchAccounts` both at 0.2 credits/record. Default when the list is defined by LinkedIn-native filters (title, function, seniority, headcount, industry, geo). Not the cheapest search in the catalog: `aiArk.searchCompanies` (0.01) and `aiArk.searchPeople` (0.05) undercut it when their filters fit.
+LinkedIn-anchored search for accounts and leads — `searchLeads` and `searchAccounts` both at 0.2 credits/record. Default when the list is defined by LinkedIn-native filters (title, function, seniority, headcount, industry, geo). Not the cheapest search in the catalog: `FullEnrich.searchPeople` / `searchCompanies` are free, and `aiArk.searchCompanies` (0.01) and `aiArk.searchPeople` (0.05) undercut it too, when their filters fit.
 
 ## Credits-based actions
 

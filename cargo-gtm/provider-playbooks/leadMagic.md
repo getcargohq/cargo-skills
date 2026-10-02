@@ -20,7 +20,7 @@ Mid-tier email finder whose hits come **pre-annotated**: `findEmail` (0.5) retur
 - ✅ **Chain rung at the 0.5 tier** — interchangeable with `hunter.findEmail` / `findyMail.findEmail`; run it on the rows the earlier rung missed ([`../references/alternatives.md`](../references/alternatives.md)).
 - ✅ **MX-aware triage** — `mx_provider`, `mx_security_gateway`, and `has_mx` in the hit payload help flag risky domains before paid verification.
 - ✅ **Firmographics for free on hits** — company name, industry, size, founded, location, and LinkedIn URL ride along with each found email; useful when coalescing chain results.
-- ✅ **Email → LinkedIn URL** — `enrichProfile` de-anonymizes an email-only row when `FullEnrich.reverseEmailLookup` (2) missed; set `isPersonal: true` for personal addresses.
+- ✅ **Email → LinkedIn URL** — `enrichProfile` de-anonymizes an email-only row when `FullEnrich.reverseEmailLookup` (1) missed; set `isPersonal: true` for personal addresses.
 
 ## Patterns
 
@@ -54,7 +54,7 @@ Returns `profile_url`. Validate the URL with `linkedin.enrichProfile` before tru
 
 - **`status` is the provider grading its own homework.** Whatever `findEmail.status` claims, the hit still goes through `waterfall.verifyEmail` (0.1) before any sequencer — verification hard rules in [`../references/waterfall-strategy.md`](../references/waterfall-strategy.md).
 - **`mx_security_gateway: true` is a deliverability warning**, not a reason to auto-drop — route those rows to REVIEW rather than silently discarding (verdict semantics in [`../references/contact-accuracy.md`](../references/contact-accuracy.md)).
-- **`enrichProfile` at 3 credits is pricier than `FullEnrich.reverseEmailLookup` (2)** for the same email → LinkedIn job. Use it as the fallback, not the opener.
+- **`enrichProfile` at 3 credits is pricier than `FullEnrich.reverseEmailLookup` (1)** for the same email → LinkedIn job. Use it as the fallback, not the opener.
 
 ## Anti-patterns
 

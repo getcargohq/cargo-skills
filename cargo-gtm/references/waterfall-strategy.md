@@ -95,7 +95,7 @@ Goal: get the correct LinkedIn URL for a person given name + company.
 ```
 1. linkedin.findProfileUrl (0.25 cred)
 2. linkedin.enrichProfile on candidate (0.25 cred)   ← validation step (mandatory)
-3. FullEnrich.reverseEmailLookup (2 cred)            ← only if email available
+3. FullEnrich.reverseEmailLookup (1 cred)            ← only if email available
 ```
 
 See [`../recipes/linkedin-url-lookup.md`](../recipes/linkedin-url-lookup.md) for the strict-validation pattern. Don't skip step 2 — false positive rate is high without validation.

@@ -61,7 +61,7 @@ Costs are credits/record and are the pack's own priority stack. Confirm each aga
 | Find mobile phone | `aiArk.findMobilePhone` | 0.5 |
 | Enrich person from LinkedIn URL | `aiArk.enrichPerson` | 0.1 |
 | Enrich person from name + company | `waterfall.enrichContact` | 2 |
-| Email → LinkedIn (reverse lookup) | `FullEnrich.reverseEmailLookup` | 2 |
+| Email → LinkedIn (reverse lookup) | `FullEnrich.reverseEmailLookup` | 1 |
 
 **`aiArk.enrichPerson` is the single highest-leverage substitution in most Clay migrations.** It returns the profile *and* a verified email for 0.1 and bills 0 when it finds none, so a Clay table that runs an email waterfall over rows that already carry LinkedIn URLs is usually paying several times over for what one 0.1 call does. Run it first, then run the finders above only on the residue.
 

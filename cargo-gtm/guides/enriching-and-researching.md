@@ -53,7 +53,7 @@ Job change detection?
 
 Reverse-email lookup (email → person + company)?
   ├─ aiArk.reverseLookup (0.05) — email *or* phone → full profile
-  └─ FullEnrich.reverseEmailLookup (2) — email → LinkedIn URL
+  └─ FullEnrich.reverseEmailLookup (1) — email → LinkedIn URL
 ```
 
 ## Waterfall enrichment pattern

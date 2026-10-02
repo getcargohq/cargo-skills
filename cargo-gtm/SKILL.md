@@ -1,7 +1,7 @@
 ---
 name: cargo-gtm
 description: "Do business-to-business go-to-market work on Cargo — research accounts and buying committees, enrich and verify B2B contact records from licensed data providers, score and qualify leads, draft permission-based outreach for the user's own sequencer, sync to CRM, and monitor buying signals. Consent basis, suppression lists, and volume limits gate every step that touches a person (`references/acceptable-use.md`); bulk unsolicited messaging, purchased or scraped lists, and consumer targeting are refused. Triggers: \"build me a list of\", \"find 50 <title> at <segment>\", \"who works at\", \"find work emails for these accounts\", \"enrich this CSV\", \"verify these emails\", \"build a TAM\", \"who fits our ICP\", \"who actually buys from us\", \"what data points should we collect on accounts\", \"our outbound is reaching the wrong people\", \"score these leads\", \"write a first-touch email\", \"push these to my CRM\", \"who changed jobs\", \"who just raised funding\", \"companies using <tech>\", \"who is hiring <role>\", \"find the buying committee\", \"portfolio companies of <investor>\", \"upload this audience to Google/Meta/LinkedIn ads\". Providers: aiArk, anthropic, apolloio, bouncer, brightData, builtwith, cleon1, companyEnrich, contactOut, datagma, dropcontact, enrichCrm, enrichley, enrowio, exa, findyMail, firecrawl, forager, FullEnrich, g2, gemini, hunter, icypeas, kitt, leadMagic, linkedin, linkup, mixrank, neverBounce, oceanio, openAi, parallel, peopleDataLabs, perplexity, piloterr, prospeo, proxycurl, reverseContact, rocketreach, salesNavigator, serper, sillage, snitcher, societeInfo, theirStack, theSwarm, waterfall, x, zeroBounce. Reads phase guides, recipes, and per-provider playbooks before any paid call. Skip when: a run already happened and misbehaved — use cargo-diagnostics."
-version: "2.1.2"
+version: "2.2.0"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -140,7 +140,7 @@ These seven credits-based providers cover the full prospecting → enrichment �
 | **salesNavigator** | Sourcing | `searchLeads` (0.2), `searchAccounts` (0.2), `findCompanyInsights/Metrics/EmployeesCount/Distribution` (0.25 each) |
 | **aiArk** | LinkedIn-anchored enrichment + cheapest search | `enrichCompany` (0.01 — cheapest firmographics in the catalog), `searchCompanies` (0.01/record, lookalike seeds), `searchPeople` / `reverseLookup` / `analyzePersonality` (0.05), `enrichPerson` (0.1 — profile **+ verified email**), `findMobilePhone` (0.5) |
 | **waterfall** | Multi-source enrichment + signal | `enrichContact` (2), `enrichCompany` (1), `verifyEmail` (0.1), `detectJobChange` (3), `searchProspects` (3), `findPhone` (7) |
-| **FullEnrich** | Premium contact lookup | `findEmail` (1), `findPhone` (6), `findPhoneAndEmail` (7), `reverseEmailLookup` (2) |
+| **FullEnrich** | Premium contact lookup + free sourcing | `searchPeople` / `searchCompanies` / `lookupPerson` / `lookupCompany` (**0**), `fetchPeople` / `fetchCompanies` extractors (**0**), `findEmail` (1), `findPhone` (6), `findPhoneAndEmail` (7), `reverseEmailLookup` (1) |
 | **apolloio** | Niche-coverage enrichment | `enrichPerson` (1, **3** with `revealPhoneNumber`), `enrichOrganization` (1) — the **only two** credits-based actions; its other nine need your own Apollo API key |
 | **theirStack** | Tech-stack + hiring intent | `searchTechnologies` (0.5), `searchJobs` (0.5), `searchCompanies` (0.5) |
 | **peopleDataLabs** | Heavyweight backfill | `enrichPerson` (3), `enrichCompany` (3), `searchPeople` (3), `searchCompanies` (3), `queryPeople/Companies` (3) |
@@ -159,6 +159,8 @@ See [`provider-playbooks/`](provider-playbooks/) for per-provider deep dives —
 1. SOURCE   → salesNavigator.searchLeads / searchAccounts            (0.2/record)
               lookalike seeds, or filters SN can't express (skills,
               education, tenure)? aiArk.searchCompanies / searchPeople (0.01–0.05/record)
+              free first pass on plain title/industry/size/geo filters?
+              FullEnrich.searchPeople / searchCompanies                (0/record)
 2. DEDUPE   → match against the workspace's own Companies / Contacts models
               on domain / linkedin_url (storage SQL or a segment filter)  (free)
 3. ENRICH   → LinkedIn URL in hand? aiArk.enrichPerson (0.1) FIRST — profile + verified
@@ -226,7 +228,7 @@ If a recipe fails repeatedly and the cause isn't obvious, escalate via `cargo-ai
 - [`provider-playbooks/salesNavigator.md`](provider-playbooks/salesNavigator.md) — LinkedIn-native lead and account sourcing (0.2/record).
 - [`provider-playbooks/aiArk.md`](provider-playbooks/aiArk.md) — LinkedIn-anchored people/company data: `enrichPerson` returns profile **+ verified email** at 0.1, `findMobilePhone` (0.5) is the cheapest phone rung, `searchCompanies` (0.01/record) does lookalikes, and `analyzePersonality` (0.05) is catalog-unique. All actions run on the managed connection.
 - [`provider-playbooks/waterfall.md`](provider-playbooks/waterfall.md) — swiss-army-knife: enrichment, verification, and the cargo-unique `detectJobChange` signal.
-- [`provider-playbooks/FullEnrich.md`](provider-playbooks/FullEnrich.md) — premium contact lookup; `reverseEmailLookup` is unique.
+- [`provider-playbooks/FullEnrich.md`](provider-playbooks/FullEnrich.md) — premium contact lookup; `reverseEmailLookup` is unique; `searchPeople` / `searchCompanies` and the `fetch*` extractors are free.
 - [`provider-playbooks/apolloio.md`](provider-playbooks/apolloio.md) — the 1-credit niche-coverage enrich rung (person + organization); **read it before assuming Apollo is available** — only two of its eleven actions are credits-based, the rest need your own Apollo API key.
 - [`provider-playbooks/theirStack.md`](provider-playbooks/theirStack.md) — tech-stack + hiring-intent signals.
 - [`provider-playbooks/peopleDataLabs.md`](provider-playbooks/peopleDataLabs.md) — heavyweight backfill at flat 3-credit tier.

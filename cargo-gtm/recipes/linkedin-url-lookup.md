@@ -77,8 +77,8 @@ Only the rows that passed the validation gate get written back. Mark unresolved 
 |---|---|
 | `linkedin.findProfileUrl` | 0.25 |
 | `linkedin.enrichProfile` (validation) | 0.25 |
-| `FullEnrich.reverseEmailLookup` (fallback, ~30% of cases) | 2 × 0.3 = 0.6 |
-| **Effective: ~1.1 cred per resolved contact** (with ~80% resolution rate) |
+| `FullEnrich.reverseEmailLookup` (fallback, ~30% of cases) | 1 × 0.3 = 0.3 |
+| **Effective: ~0.8 cred per resolved contact** (with ~80% resolution rate) |
 
 ## Common pitfalls
 
