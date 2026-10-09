@@ -496,6 +496,41 @@ const PACKAGE_EDITS = [
   },
 ];
 
+// The cookbook menu is regenerated from gtm-skills' catalog, so exact-text
+// edits would break on every sync. A cookbook built on an excluded provider
+// leaves the package by slug instead: its table row and its variations block.
+const COOKBOOK_MENU = "cargo-project/references/cookbooks.md";
+const EXCLUDED_COOKBOOKS = ["visitor-identification"];
+
+// Removes EXCLUDED_COOKBOOKS from the staged menu. Returns what didn't match.
+const removeExcludedCookbooks = () => {
+  const path = join(stageDir, "skills", COOKBOOK_MENU);
+  if (existsSync(path) === false) {
+    return [`EXCLUDED_COOKBOOKS targets ${COOKBOOK_MENU}, which is not in the package`];
+  }
+
+  const errors = [];
+  let menu = readFileSync(path, "utf8");
+
+  for (const slug of EXCLUDED_COOKBOOKS) {
+    const tableRow = new RegExp(`^\\|[^\\n]*\\| \`${slug}\` \\|[^\\n]*\\n`, "m");
+    const variationsBlock = new RegExp(
+      `^\\*\\*\`${slug}\`\\*\\*\\n\\n(?:- [^\\n]*\\n)*\\n?`,
+      "m",
+    );
+
+    if (tableRow.test(menu) === false) {
+      errors.push(`EXCLUDED_COOKBOOKS: ${slug} has no row in ${COOKBOOK_MENU}`);
+      continue;
+    }
+
+    menu = menu.replace(tableRow, "").replace(variationsBlock, "");
+  }
+
+  writeFileSync(path, menu, "utf8");
+  return errors;
+};
+
 // Applies PACKAGE_EDITS to the staged tree. Returns what didn't match.
 const applyPackageEdits = () => {
   const errors = [];
@@ -727,7 +762,7 @@ for (const rel of EXCLUDED_FILES) {
   rmSync(path);
 }
 
-const editErrors = applyPackageEdits();
+const editErrors = [...applyPackageEdits(), ...removeExcludedCookbooks()];
 if (editErrors.length > 0) {
   for (const e of editErrors) console.error(`error: ${e}`);
   process.exit(1);
