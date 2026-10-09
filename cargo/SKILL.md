@@ -644,7 +644,7 @@ against the workspace) → author `define*` files → `project plan` (offline di
 `build-an-agent.md`, `migrate-existing-workspace.md`, `deploy-from-ci.md`.
 
 **Cookbooks:** ~20 pre-written GTM outcomes (TAM building,
-inbound flow, contact sourcing, account scoring, AI SDR, …) live in
+account scoring, call capture, inbound qualification, CRM enrichment, …) live in
 [`getcargohq/gtm-skills`](https://github.com/getcargohq/gtm-skills) beside its one-off
 skills. The menu is local:
 [`../cargo-project/references/cookbooks.md`](../cargo-project/references/cookbooks.md).
