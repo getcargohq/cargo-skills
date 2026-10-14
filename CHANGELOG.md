@@ -10,6 +10,14 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### `cargo` → 1.27.2, `cargo-quickstart` → 1.0.5: say which Cargo this is
+
+`cargo` is also Rust's package manager, and agents searching for Cargo developer resources kept landing on Rust tooling (an agent-readiness scan reported it; a docs-index search for `cargo-ai` returned Rust first). Nothing is renamed. Instead, "Cargo GTM" and `cargo-ai` become the disambiguating tokens on every surface an agent reads before it opens anything:
+
+- **Plugin and marketplace manifests** (`.claude-plugin/`, `.codex-plugin/`, `.cursor-plugin/`, `.agents/plugins/marketplace.json`, root `plugin.json`): descriptions now open with "Cargo GTM (cargo-ai), the go-to-market platform" and say it is not Rust's cargo. `displayName` is "Cargo GTM (cargo-ai)" where the format has one. `cargo-ai` and `go-to-market` join the keywords. The marketplace blurbs said 18 skills; they say 19.
+- **README and `llms.txt`:** the H1 and first line name Cargo GTM and `cargo-ai`, with one explicit line: not the Rust package manager.
+- **Entry-point descriptions only:** the `cargo` router and `cargo-quickstart` name Cargo GTM and `cargo-ai` in their job line and add Rust's `cargo` to `Skip when:`. Their trigger phrases are unchanged, and no other skill description was touched.
+
 ### `cargo-gtm` → 2.2.0 — FullEnrich search, lookup and fetch are free; reverse email lookup drops to 1
 
 getcargohq/cargo#6063 adds four FullEnrich actions and two extractors, all billed **0 credits** on Cargo's managed connection: `searchPeople`, `searchCompanies` (up to 2,000 per action run), `lookupPerson`, `lookupCompany`, and the `fetchPeople` / `fetchCompanies` extractors (up to 10,000 rows into a model, contacts unified on LinkedIn URL, accounts on domain + LinkedIn URL). The same PR moves `reverseEmailLookup` from 2 credits to **1**.
