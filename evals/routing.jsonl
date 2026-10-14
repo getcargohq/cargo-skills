@@ -137,3 +137,5 @@
 {"prompt": "Connect Cargo to Claude Desktop", "expect": "cargo-mcp", "why": "Pointing a client at the hosted server, not publishing one out of a workspace."}
 {"prompt": "What will execute_action_batch cost before I run it?", "expect": "cargo-mcp", "why": "MCP tool names are the highest-precision routing tokens for this surface."}
 {"prompt": "The Cargo MCP server is showing the wrong workspace", "expect": "cargo-mcp", "why": "Token-binds-workspace is the silent failure this skill exists to catch.", "tier": "hard"}
+{"prompt": "I use Cargo GTM, which cargo-ai skill handles what?", "expect": "cargo", "why": "the router answers to the Cargo GTM name it now carries, not just bare Cargo"}
+{"prompt": "just installed Cargo GTM, give me a quick demo", "expect": "cargo-quickstart", "why": "the quickstart answers to the Cargo GTM name it now carries"}

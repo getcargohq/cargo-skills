@@ -1,8 +1,10 @@
-# Cargo Skills — GTM engineering for AI coding agents
+# Cargo GTM Skills (cargo-ai): GTM engineering for AI coding agents
 
 [![cargo-ai cli](https://img.shields.io/npm/v/@cargo-ai/cli?label=cargo-ai%20cli&color=black)](https://www.npmjs.com/package/@cargo-ai/cli)
 [![skills.sh](https://img.shields.io/badge/skills.sh-18%20skills-black)](https://www.skills.sh)
 [![License](https://img.shields.io/github/license/getcargohq/cargo-skills?color=black)](LICENSE)
+
+**Cargo GTM** is [Cargo](https://getcargo.ai), the go-to-market platform, driven from the `cargo-ai` CLI. Not the Rust package manager.
 
 Nineteen agent skills that turn Claude Code, Codex, Cursor, and any [skills.sh](https://skills.sh)-compatible agent into a go-to-market engineering workstation: **build lead lists, find and verify emails and phone numbers, enrich companies and contacts through provider waterfalls, score and qualify leads, write outreach, sync to your CRM, and monitor buying signals** (job changes, funding rounds, tech-stack and hiring intent) — then make any of it a scheduled, always-on workflow.
 

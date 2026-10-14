@@ -4,7 +4,7 @@
   "groupings": [
     {
       "title": "Start here \u2014 router",
-      "description": "Load first for anything Cargo, and whenever a task spans two domains.",
+      "description": "Load first for anything Cargo GTM (the cargo-ai CLI for the go-to-market platform, not Rust's cargo), and whenever a task spans two domains.",
       "skills": [
         "cargo"
       ]
