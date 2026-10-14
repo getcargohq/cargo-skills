@@ -1,6 +1,6 @@
 {
   "name": "cargo",
-  "description": "Cargo GTM (cargo-ai), the go-to-market platform, in Cursor. Not Rust's cargo. 19 skills over the cargo-ai CLI, plus the hosted MCP server: target lists, contact enrichment and verification from licensed data providers, lead scoring, CRM sync, signal monitoring, orchestration, storage, segments, CDK, diagnostics, plus prompt-free approval for safe cargo-ai calls.",
+  "description": "Cargo GTM (cargo-ai), the go-to-market platform, in Cursor. 19 skills over the cargo-ai CLI, plus the hosted MCP server: target lists, contact enrichment and verification from licensed data providers, lead scoring, CRM sync, signal monitoring, orchestration, storage, segments, CDK, diagnostics, plus prompt-free approval for safe cargo-ai calls.",
   "version": "1.27.2",
   "author": { "name": "getcargo" },
   "homepage": "https://github.com/getcargohq/cargo-skills",

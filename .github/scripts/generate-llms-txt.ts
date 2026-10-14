@@ -151,7 +151,7 @@ function render(skills: Skill[]): string {
 
   return `# Cargo GTM Agent Skills (cargo-ai)
 
-> ${skills.length} agent skills that teach AI coding agents the \`cargo-ai\` CLI for [Cargo GTM](https://getcargo.ai), the go-to-market platform: sourcing, enrichment, verification, signal monitoring, workflow orchestration, workspace-as-code (CDK), diagnostics, and billing. Not the Rust package manager.
+> ${skills.length} agent skills that teach AI coding agents the \`cargo-ai\` CLI for [Cargo GTM](https://getcargo.ai), the go-to-market platform: sourcing, enrichment, verification, signal monitoring, workflow orchestration, workspace-as-code (CDK), diagnostics, and billing.
 
 ## Install
 

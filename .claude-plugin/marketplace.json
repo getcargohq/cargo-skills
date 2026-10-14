@@ -7,7 +7,7 @@
       "name": "cargo",
       "displayName": "Cargo GTM (cargo-ai)",
       "source": "./",
-      "description": "Cargo GTM (cargo-ai), the go-to-market platform, not Rust's cargo. 19 skills over the cargo-ai CLI, plus the hosted MCP server: build target account and contact lists, enrich and verify them against licensed data providers, score and qualify leads, sync your CRM, monitor buying signals, run workflows, and manage the whole workspace as code."
+      "description": "Cargo GTM (cargo-ai), the go-to-market platform. 19 skills over the cargo-ai CLI, plus the hosted MCP server: build target account and contact lists, enrich and verify them against licensed data providers, score and qualify leads, sync your CRM, monitor buying signals, run workflows, and manage the whole workspace as code."
     }
   ]
 }
