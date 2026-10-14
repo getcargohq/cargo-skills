@@ -1,0 +1,87 @@
+name: Publish to the MCP Registry
+
+# Lists the hosted Cargo MCP server (https://mcp.getcargo.io/mcp) in the
+# official MCP Registry, which directories downstream ingest from. The entry
+# is `server.json` at the repo root; this job only validates and uploads it.
+#
+# Auth is GitHub OIDC: the registry trusts the workflow's identity token and
+# grants the `io.github.getcargohq/*` namespace, so there is no secret to
+# create, rotate, or leak.
+#
+# Registry versions are immutable. `server.json` carries the bundle version
+# (skills-lint keeps it in lockstep with cargo/SKILL.md), so a release that
+# did not bump the bundle has nothing new to publish and is reported as
+# skipped, not failed, the same way the ClawHub job treats an unchanged skill.
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Validate server.json, but do not log in or publish
+        type: boolean
+        required: false
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # the OIDC token mcp-publisher exchanges for a registry token
+    env:
+      # Pinned, and checked against the release's own checksum file, for the
+      # same reason the actions above are pinned to a commit SHA.
+      MCP_PUBLISHER_VERSION: "1.8.1"
+      MCP_PUBLISHER_SHA256: a06c9096dcb9727c13555b6be26c7effa707b01f06a4c561ba7a3635443cf2cc
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install mcp-publisher
+        run: |
+          set -euo pipefail
+          archive="mcp-publisher_linux_amd64.tar.gz"
+          base="https://github.com/modelcontextprotocol/registry/releases/download"
+          curl -fsSL -o "$RUNNER_TEMP/$archive" "$base/v${MCP_PUBLISHER_VERSION}/$archive"
+          echo "${MCP_PUBLISHER_SHA256}  $RUNNER_TEMP/$archive" | sha256sum -c -
+          tar -xzf "$RUNNER_TEMP/$archive" -C "$RUNNER_TEMP" mcp-publisher
+          "$RUNNER_TEMP/mcp-publisher" --version
+
+      - name: Check server.json matches the bundle version
+        run: |
+          set -euo pipefail
+          server=$(jq -r .version server.json)
+          plugin=$(jq -r .version .claude-plugin/plugin.json)
+          if [ "$server" != "$plugin" ]; then
+            echo "::error::server.json is $server but the plugin is $plugin. Bump server.json with the bundle."
+            exit 1
+          fi
+          echo "Publishing $(jq -r .name server.json)@$server"
+
+      - name: Validate server.json against the registry schema
+        run: '"$RUNNER_TEMP/mcp-publisher" validate server.json'
+
+      - name: Log in with GitHub OIDC
+        if: ${{ !inputs.dry_run }}
+        run: '"$RUNNER_TEMP/mcp-publisher" login github-oidc'
+
+      - name: Publish
+        if: ${{ !inputs.dry_run }}
+        run: |
+          set -uo pipefail
+          if output=$("$RUNNER_TEMP/mcp-publisher" publish server.json 2>&1); then
+            echo "$output"
+          elif echo "$output" | grep -qi "already exists"; then
+            echo "$output"
+            echo "::notice::$(jq -r '.name + "@" + .version' server.json) is already in the registry. Bump the bundle version to publish a new one."
+          else
+            echo "$output"
+            echo "::error::mcp-publisher publish failed"
+            exit 1
+          fi
+          name=$(jq -r .name server.json)
+          echo "Check: https://registry.modelcontextprotocol.io/v0/servers?search=${name}" >> "$GITHUB_STEP_SUMMARY"
