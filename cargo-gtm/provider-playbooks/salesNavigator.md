@@ -20,6 +20,8 @@ LinkedIn-anchored search for accounts and leads — `searchLeads` and `searchAcc
 | `findCompanyMetrics` | 0.25 | `companyId, parameters` | Pull metrics about a known LinkedIn company. |
 | `findEmployeesCount` | 0.25 | `companyId` | Get employee count snapshot. |
 | `findEmployeesDistribution` | 0.25 | `companyId` | Get employee role/department distribution. |
+| `searchCompanyMetrics` | 0.25 | `url, identityIds` | Total result count (`total_results`) for a Sales Navigator company search URL, exact above the 1,000-per-search extraction cap. Count before you extract. |
+| `searchPersonMetrics` | 0.25 | `url, identityIds` | Total result count (`total_leads`) for a Sales Navigator people search URL, exact above the 2,500-per-search extraction cap. Count before you extract. |
 | `searchLeadsLegacy` | **6** | (deprecated) | **Avoid.** 30× more expensive than `searchLeads`. Only use if `searchLeads` is missing a filter you need (rarely). |
 
 ## What it's for
