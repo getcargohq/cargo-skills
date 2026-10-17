@@ -11,13 +11,13 @@ cargo-ai hosting worker init ./my-api --template blank --name "My API"
 
 # 2. Create the workspace slot. --slug is unique per workspace; the host adds a workspace suffix.
 cargo-ai hosting worker create --name "My API" --slug my-api
-# → { "uuid": "<worker-uuid>", "slug": "my-api", "url": "https://my-api-1a2b3c4d.worker.getcargo.run", ... }
+# → { "worker": { "uuid": "<worker-uuid>", "slug": "my-api", "url": "https://my-api-1a2b3c4d.worker.getcargo.run", ... } }
 
 # 2b. (only if the worker calls the Cargo API) give it a token — see "Env vars and the API token" below
 
 # 3. Build & upload (source = package root). The backend bundles the entrypoint.
 cargo-ai hosting deployment create --worker-uuid <worker-uuid> --source ./my-api
-# → { "uuid": "<deployment-uuid>", "status": "...", ... }
+# → { "deployment": { "uuid": "<deployment-uuid>", "status": "...", ... }, "stats": { "fileCount": n } }
 
 # 4. Poll until the build is terminal
 cargo-ai hosting deployment get <deployment-uuid>
@@ -27,7 +27,7 @@ cargo-ai hosting deployment promote --uuid <deployment-uuid>
 
 # 6. Confirm what's live, then hit it
 cargo-ai hosting deployment get-promoted --worker-uuid <worker-uuid>
-curl "$(cargo-ai hosting worker get <worker-uuid> | jq -r .url)/openapi.json"
+curl "$(cargo-ai hosting worker get <worker-uuid> | jq -r .worker.url)/openapi.json"
 ```
 
 ## List and inspect
@@ -58,20 +58,18 @@ cargo-ai hosting worker remove <worker-uuid>                            # also r
 
 ## Env vars and the API token
 
-`createCargoApi(c.env)` needs a `CARGO_API_TOKEN`, and Cargo does not inject one. Mint a token, then store it as a **secret** env var **before** deploying:
+`createCargoApi(c.env)` needs a `CARGO_API_TOKEN`, and Cargo does not inject one unless the worker runs as a service user (`hosting worker update --uuid <worker-uuid> --run-as-user-uuid <service-user-uuid>`). Otherwise mint a token, then store it as a **secret** env var **before** deploying:
 
 ```bash
 cargo-ai workspaceManagement token create --name "worker: my-api"      # value shown once
 export CARGO_API_TOKEN=<token value>
 
-# Option A — workspace-wide: every worker (and app) in the workspace inherits it
+# Option A — workspace-wide: every worker in the workspace inherits it (secret entries never reach apps)
 cargo-ai workspaceManagement envVar create --key CARGO_API_TOKEN --secret
 
 # Option B — this worker only (overrides a workspace entry of the same key)
-curl -X POST "https://api.getcargo.io/v1/hosting/env-vars" \
-  -H "Authorization: Bearer $CARGO_API_TOKEN" -H "content-type: application/json" \
-  -d "{\"kind\":\"worker\",\"workerUuid\":\"<worker-uuid>\",\"key\":\"CARGO_API_TOKEN\",\"value\":\"$CARGO_API_TOKEN\",\"isSecret\":true}"
-curl "https://api.getcargo.io/v1/hosting/env-vars?workerUuid=<worker-uuid>" -H "Authorization: Bearer $CARGO_API_TOKEN"
+cargo-ai hosting worker env set --worker-uuid <worker-uuid> --key CARGO_API_TOKEN --secret   # --value omitted: read from $CARGO_API_TOKEN
+cargo-ai hosting worker env list --worker-uuid <worker-uuid>                                 # secret values come back as null
 ```
 
 In a CDK project, Option B is `defineWorker("my-api", { path, env: { CARGO_API_TOKEN: secret("CARGO_API_TOKEN") } })`.
@@ -119,7 +117,7 @@ Register it **before** the routes it covers so preflight `OPTIONS` requests are 
 
 ```bash
 cargo-ai workspaceManagement envVar create --key VITE_MY_API_URL \
-  --value "$(cargo-ai hosting worker get <worker-uuid> | jq -r .url)"
+  --value "$(cargo-ai hosting worker get <worker-uuid> | jq -r .worker.url)"
 ```
 
 ```ts
@@ -142,7 +140,7 @@ try {
 }
 ```
 
-Read them in the web app, or `POST /v1/hosting/logs/list` with `{"workerUuid":"<uuid>","levels":["error"]}`.
+Read them with `cargo-ai hosting worker logs list --worker-uuid <uuid> --levels error`, in the web app, or `POST /v1/hosting/logs/list` with `{"workerUuid":"<uuid>","levels":["error"]}`.
 
 ## App vs worker — when to use which
 

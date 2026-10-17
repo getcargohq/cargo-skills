@@ -51,7 +51,7 @@ cargo-ai orchestration action execute-batch \
   --wait-until-finished
 ```
 
-The catalog dump documents no output schema for either action — inspect the first run's output (resolve the output schema via `cargo-orchestration`, or read the run's `runContext`) before filtering on field names.
+Outputs are minimal: `findEmail` returns `{ email }` only when Enrow qualifies the address `valid` (otherwise no data), and `verifyEmail` returns `{ email, qualification }`, where anything other than `qualification: "valid"` counts as not valid.
 
 ## Common pitfalls
 

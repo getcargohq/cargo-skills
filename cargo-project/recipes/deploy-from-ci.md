@@ -42,8 +42,8 @@ cargo-ai project deploy --yes --json
   `project state create` or `state bind`. A pre-remote-state project — one whose
   `cargo.state.json` still holds the resource map inline — *does* still need the
   commit-back dance; migrate it with `project state create` and the problem goes away.
-- **Preview safely** with `cargo-ai project plan --json` (offline, no API calls) on pull
-  requests, and gate `deploy` to the protected branch.
+- **Preview safely** with `cargo-ai project plan --json` (read-only: it reads the state and
+  creates nothing) on pull requests, and gate `deploy` to the protected branch.
 - **Prune deliberately.** Add `--prune` only when you want CI to delete resources
   removed from code; leave it off to make deploys purely additive.
 

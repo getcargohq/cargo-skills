@@ -6,20 +6,22 @@ last-reviewed: 2026-07-09
 
 # gemini (Google Gemini)
 
-Gemini models through a single `instruct` action — the **cheap high-throughput tier**: Flash models run at 0.01–0.05 credits per 1,000-token package with a **15,000 calls/min rate limit** (highest in the LLM catalog), plus optional Google Search grounding. Routing: `anthropic` Sonnet for judgment, `openAi` nano (0.006) for absolute-cheapest bulk, gemini Flash when you want cheap **and** fast (or Google-grounded), `perplexity` for cited web research.
+Gemini models through a single `instruct` action — the **cheap high-throughput tier**: Flash models run at 0.01–0.08 credits per 1,000-token package (the newest `gemini-3.6-flash` is the exception at 0.25) with a **15,000 calls/min rate limit** (highest in the LLM catalog), plus optional Google Search grounding. Routing: `anthropic` Sonnet for judgment, `openAi` nano (0.006) for absolute-cheapest bulk, gemini Flash when you want cheap **and** fast (or Google-grounded), `perplexity` for cited web research.
 
 ## Credits-based actions
 
 | Action | Cost | Inputs | Use for |
 |---|---|---|---|
-| `instruct` | 0.01–0.2 / 1,000-token package (per-model tiers below) | `model` + `prompt` (required); `advancedSettings.{systemPrompt, maxTokens, temperature, withWebSearch}`; `output.{responseFormat, jsonSchema}` | High-throughput LLM steps, optionally grounded in Google Search. |
+| `instruct` | 0.01–0.25 / 1,000-token package (per-model tiers below) | `model` + `prompt` (required); `advancedSettings.{systemPrompt, maxTokens, temperature, withWebSearch}`; `output.{responseFormat, jsonSchema}` | High-throughput LLM steps, optionally grounded in Google Search. |
 
 ### Per-model cost tiers
 
 | Tier | Model ids | Credits / 1,000 tokens | Rate limit |
 |---|---|---|---|
 | Flash (older) | `gemini-2.0-flash`, `gemini-1.5-flash` | 0.01 | 15,000/min |
-| Flash | `gemini-2.5-flash` (schema default) | 0.03 | 15,000/min |
+| Flash | `gemini-2.5-flash` | 0.03 | 15,000/min |
+| Flash Lite | `gemini-3.5-flash-lite` | 0.08 | 15,000/min |
+| Flash (newest) | `gemini-3.6-flash` (schema default) | 0.25 | 15,000/min |
 | Flash (preview) | `gemini-3-flash-preview` | 0.05 | 15,000/min |
 | Pro (older) | `gemini-1.5-pro` | 0.1 | 2,000/min |
 | Pro | `gemini-2.5-pro` | 0.15 | 1,000/min |
@@ -49,12 +51,12 @@ cargo-ai orchestration action execute-batch \
 ## Input quirks
 
 - **Temperature is 0–2, default 1** — set `temperature: 0` explicitly for extraction and scoring families.
-- **Model ids are a plain enum** (no titles): copy them exactly from the tier table; `gemini-2.5-flash` is the schema default.
-- The `-preview` models (3.x line) are newest but cost more than their stable siblings at the same tier — pilot before committing a batch to them.
+- **Model ids are a plain enum** (no titles): copy them exactly from the tier table; `gemini-3.6-flash` is the schema default, and at 0.25 it is the priciest model in the table, so always set `model` explicitly for bulk work.
+- The `-preview` models (3.x line) cost more than their stable siblings at the same tier — pilot before committing a batch to them.
 
 ## Cost traps
 
-- **500-row batch math** (≈1 package per short call): `gemini-2.0-flash`/`1.5-flash` ≈ **5 credits**; `gemini-2.5-flash` ≈ **15**; `gemini-3-flash-preview` ≈ **25**; `gemini-2.5-pro` ≈ **75**; 3.x-pro-preview ≈ **100**. Keep bulk on Flash; Pro is 4–20× Flash for the same row count.
+- **500-row batch math** (≈1 package per short call): `gemini-2.0-flash`/`1.5-flash` ≈ **5 credits**; `gemini-2.5-flash` ≈ **15**; `gemini-3-flash-preview` ≈ **25**; `gemini-3.5-flash-lite` ≈ **40**; `gemini-2.5-pro` ≈ **75**; 3.x-pro-preview ≈ **100**; `gemini-3.6-flash` (the default) ≈ **125**. Keep bulk on the older Flash models; Pro is 4–20× them for the same row count.
 - **Grounded batches are the real trap:** `withWebSearch` adds 0.4 fixed per call (+200 credits on 500 rows) plus the per-search surcharge — a "grounded Flash" batch can cost more than an ungrounded Pro one. Ground only the rows that need fresh facts.
 - **Never bulk on a judgment-tier model:** Pro-tier extraction is Flash-quality work at Pro prices — pilot on Pro/Sonnet if needed, then demote the batch to Flash.
 

@@ -20,14 +20,17 @@ cargo-ai orchestration run download-outputs \
   --output-node-slug <slug> \
   --format json
 # → { "url": "…signed…" }
+# Ad-hoc `action execute-batch` output has no workflow uuid: use
+# `cargo-ai orchestration batch download --uuid <batch-uuid>` (signed CSV) instead.
 ```
 
-Then either hand over the file, or push the rows into a sheet the team can edit:
+Then either hand over the file, or push the rows into a sheet the team can edit. `insert` writes one row per run, its cells given as `mappings`, so run it as a batch with one record per row:
 
 ```bash
-cargo-ai orchestration action execute \
-  --action '{"kind":"connector","integrationSlug":"googleSheets","actionSlug":"insert"}' \
-  --data '{"spreadsheetId": "<id>", "worksheet": "review"}' \
+cargo-ai orchestration action execute-batch \
+  --action '{"kind":"connector","integrationSlug":"googleSheets","actionSlug":"insert","connectorUuid":"<uuid>"}' \
+  --records '[{"spreadsheetId": "<id>", "worksheet": "review",
+               "mappings": [{"attribute": "email", "value": "…"}, {"attribute": "first_line", "value": "…"}]}, …]' \
   --wait-until-finished
 ```
 

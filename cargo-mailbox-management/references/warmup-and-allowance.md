@@ -44,10 +44,13 @@ A mailbox row can carry an explicit `dailySendLimit`. It is clamped against the 
 effectiveLimit = max( min(dailySendLimit, rampedLimit), 0 )
 ```
 
-So it can only ever *tighten*. Setting it to 500 on a mailbox created this morning yields 5,
-not 500 — an override that outranked the ramp would be a way to send 500/day from a cold inbox,
-which is the exact failure warm-up exists to prevent. Use it to hold a mailbox below its ramp
-(a shared inbox you want kept quiet); never expect it to raise anything.
+So it can only ever *tighten*. The API accepts 0 to 40 (500 is rejected outright), and 30 on a
+mailbox created this morning yields 5, not 30: an override that outranked the ramp would be a way
+to send at full volume from a cold inbox, which is the exact failure warm-up exists to prevent.
+Use it to hold a mailbox below its ramp (a shared inbox you want kept quiet); never expect it to
+raise anything. `0` is a state, not a volume: it pauses outreach, and sends fail with
+`mailboxSendingPaused` (no retry). `null` follows the ramp. There is no CLI flag for it: it is
+the `dailySendLimit` field of `PUT /v1/mailboxManagement/mailboxes/<uuid>`.
 
 ## Allowance vs warm-up stats
 
@@ -57,7 +60,7 @@ Two commands, two different populations of mail. Do not report one as the other.
 | --- | --- | --- |
 | Population | Your real outreach | The provider's warm-up network (dummy mail between pooled inboxes) |
 | Window | Rolling **24 hours** | Today, **UTC day** |
-| Fields | `dailyLimit`, `sentCount`, `remainingCount` | `sentCount`, `deliveredCount`, `spamCount`, `inboxRate`, `spamRate` |
+| Fields | `dailyLimit`, `rampLimit`, `sentCount`, `remainingCount` | `sentCount`, `deliveredCount`, `spamCount`, `inboxRate`, `spamRate` |
 | Reads as | Capacity | Reputation |
 | Empty means | Nothing sent today | Nothing measurable yet — see below |
 
@@ -79,7 +82,8 @@ pending row never widens the allowance.
 
 | From | Command | To |
 | --- | --- | --- |
-| `disabled` | `start-warmup <uuid> [--daily-target n]` | `pending`, then `active` once the provider accepts the inbox |
+| `disabled` (new mailbox) | none: the mailbox going `pending` → `active` enrols it at target 40 | `pending`, then `active` once the provider accepts the inbox |
+| `disabled` (failed enrolment, or after `stop-warmup`) | `start-warmup <uuid> [--daily-target n]` | `pending`, then `active` once the provider accepts the inbox |
 | `active` | `update-warmup --uuid <uuid> --status paused` | `paused` (ramp anchor preserved) |
 | `paused` | `update-warmup --uuid <uuid> --status active` | `active` |
 | any | `stop-warmup <uuid>` | `disabled` — **and the ramp resets to day 0** |
@@ -89,8 +93,9 @@ pending row never widens the allowance.
 `stop-warmup`. `--daily-target` (1–40, default 40) sets the provider's dummy volume at full
 ramp; it does **not** change your send allowance.
 
-Errors you will meet: `warmupAlreadyStarted` (already running), `warmupNotStarted`
-(update/stats on a mailbox that never started), `warmupNotSupported` (the provider cannot warm
+Errors you will meet: `warmupAlreadyStarted` (already `active` or `pending`, including the
+automatic enrolment at activation), `warmupNotStarted` (update/stats on a mailbox that never
+started), `warmupNotSupported` (the provider cannot warm
 this flavour), `mailboxNotActive` (still `pending`, or disabled by the provider).
 
 ## Sizing a fleet

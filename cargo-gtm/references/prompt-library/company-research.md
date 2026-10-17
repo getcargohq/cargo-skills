@@ -1,6 +1,6 @@
 # Prompt library — company research
 
-Prompts that turn raw research inputs (scraped website text, news lists, headcount data) into compact, structured company understanding. Run through `anthropic.instruct` with `temperature: 0`–`0.2` (bulk tier only — some judgment-tier models reject non-default sampling parameters with a 400; see [`../../provider-playbooks/anthropic.md`](../../provider-playbooks/anthropic.md) and omit the override when in doubt). Inputs are usually large — truncate scraped text to the first ~3,000 words before substitution; the signal is almost always in the top of the page.
+Prompts that turn raw research inputs (scraped website text, news lists, headcount data) into compact, structured company understanding. Run through `anthropic.instruct` with `temperature: 0`–`0.2` (bulk tier only — Cargo silently drops `temperature` on models that removed sampling parameters (`claude-sonnet-5`, the Opus 5 and Fable 5 families, `claude-opus-4-8`, `claude-opus-4-7`); see [`../../provider-playbooks/anthropic.md`](../../provider-playbooks/anthropic.md) and omit the override when in doubt). Inputs are usually large — truncate scraped text to the first ~3,000 words before substitution; the signal is almost always in the top of the page.
 
 ### company-two-liner
 

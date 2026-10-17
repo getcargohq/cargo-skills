@@ -9,7 +9,7 @@ single synchronous HTTP call — there is no run wrapper and nothing to poll.
 | --- | --- | --- | --- | --- |
 | `mailbox list` | `{ mailboxes: Mailbox[] }` | **no** | **none** | 1000 |
 | `mailbox get` / `create` / `update` / `remove` / `refresh-status` / `*-warmup` | `{ mailbox: Mailbox }` | — | — | — |
-| `mailbox get-send-allowance` | `{ allowance: { dailyLimit, sentCount, remainingCount } }` | — | — | — |
+| `mailbox get-send-allowance` | `{ allowance: { dailyLimit, rampLimit, sentCount, remainingCount } }` | — | — | — |
 | `mailbox get-warmup-stats` | `{ stats: WarmupStats \| null }` | — | — | — |
 | `message list` | `{ count, messages: Message[] }` | yes | 50 | 200 |
 | `message get` | `{ message: Message }` | — | — | — |
@@ -47,7 +47,7 @@ SuppressionReason    unsubscribed | bounced | complained | manual
 - **`bounced` has no producer yet.** Nothing parses delivery-status notifications, so no
   `bounced` events are written and bounces do not auto-suppress. An empty bounce count is not
   evidence of a clean list.
-- Every `--statuses` / `--kinds` / `--reasons` flag is comma-separated **with no spaces**.
+- Every `--statuses` / `--kinds` / `--reasons` flag is comma-separated **with no spaces** (or quoted: the CLI trims each value, but an unquoted space ends the shell argument).
 
 ## `Mailbox`
 

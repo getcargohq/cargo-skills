@@ -46,7 +46,8 @@ Costs are credits/record and are the pack's own priority stack. Confirm each aga
 | Find people by education, skills, tenure | `aiArk.searchPeople` | 0.05 |
 | Find companies (default) | `aiArk.searchCompanies` | 0.01 |
 | Find companies, LinkedIn-anchored | `salesNavigator.searchAccounts` | 0.2 |
-| Find companies by funding or investor | `peopleDataLabs.queryCompanies` (SQL variant) | 3 |
+| Find companies by funding stage | `peopleDataLabs.queryCompanies` (SQL variant) | 3 |
+| Find companies by investor | `theirStack.searchCompanies` with `fields.company_investors_partial_match_or` (PDL has no investor field) | 0.5 |
 | Find lookalikes from seed domains | `aiArk.searchCompanies` with `lookalikeDomains` (≤5 seeds) | 0.01 |
 
 ### Contact-data columns (the ones that dominate the bill)

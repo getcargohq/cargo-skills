@@ -6,28 +6,31 @@ last-reviewed: 2026-07-09
 
 # openAi (OpenAI)
 
-GPT models through a single `instruct` action — **the cheapest bulk-LLM tier in the catalog**: the nano models run at **0.006 credits per 1,000-token package**, 33× cheaper than anthropic's cheapest tier (0.2). Default provider for pure-volume transforms (extraction, classification, short personalization) once the prompt is proven. Routing: `anthropic` Sonnet for judgment, openAi nano for cheapest bulk, `gemini` Flash for cheap high-throughput, `perplexity` for web-grounded answers.
+GPT models through a single `instruct` action — **the cheapest bulk-LLM tier in the catalog**: `gpt-6-luna` runs at **0.003** and the nano models at **0.006 credits per 1,000-token package**, against 0.05 for anthropic's cheapest tier (`claude-3-5-haiku-latest`). Default provider for pure-volume transforms (extraction, classification, short personalization) once the prompt is proven. Routing: `anthropic` Sonnet for judgment, openAi nano for cheapest bulk, `gemini` Flash for cheap high-throughput, `perplexity` for web-grounded answers.
 
 ## Credits-based actions
 
 | Action | Cost | Inputs | Use for |
 |---|---|---|---|
-| `instruct` | 0.006–0.5 / 1,000-token package (per-model tiers below) | `model` + `prompt` (required); `advancedSettings.{systemPrompt, maxTokens, temperature, withWebSearch}`; `output.{responseFormat, jsonSchema}` | Bulk LLM steps with native structured output. |
+| `instruct` | 0.003–0.5 / 1,000-token package (per-model tiers below) | `model` + `prompt` (required); `advancedSettings.{systemPrompt, maxTokens, temperature, withWebSearch}`; `output.{responseFormat, jsonSchema}` | Bulk LLM steps with native structured output. |
 
 ### Per-model cost tiers
 
 | Tier | Model ids | Credits / 1,000 tokens |
 |---|---|---|
-| Nano | `gpt-5-nano`, `gpt-5.5-nano`, `gpt-5.4-nano`, `gpt-5.3-nano` | 0.006 |
+| GPT 6 Luna | `gpt-6-luna` | 0.003 |
+| Nano | `gpt-5-nano`, `gpt-5.6-luna`, `gpt-5.4-nano`, `gpt-5.3-nano` | 0.006 |
 | 4.1 Nano | `gpt-4.1-nano` | 0.01 |
 | 4o Mini | `gpt-4o-mini` | 0.02 |
-| Mini | `gpt-5-mini` (schema default), `gpt-5.5-mini`, `gpt-5.4-mini`, `gpt-5.3-mini` | 0.03 |
+| Mini | `gpt-5-mini` (schema default), `gpt-5.6-terra`, `gpt-5.4-mini`, `gpt-5.3-mini` | 0.03 |
 | 4.1 Mini | `gpt-4.1-mini` | 0.05 |
-| Full GPT-5 | `gpt-5`, `gpt-5.5`, `gpt-5.4`, `gpt-5.3`, `gpt-5.2`, `gpt-5.1` | 0.2 |
+| GPT 6 Sol | `gpt-6-sol` | 0.1 |
+| Full GPT-5 | `gpt-5`, `gpt-5.6-sol`, `gpt-5.5`, `gpt-5.4`, `gpt-5.3`, `gpt-5.2`, `gpt-5.1` | 0.2 |
 | GPT-4.1 | `gpt-4.1` | 0.3 |
+| GPT 6 Astra | `gpt-6-astra` | 0.5 |
 | Legacy | `gpt-4o`, `gpt-3.5-turbo` | 0.5 |
 
-`advancedSettings.withWebSearch: true` adds a **fixed 0.4 credits per call**. Rate limit: 10,000 calls/min per model — the highest of the four LLM providers.
+`advancedSettings.withWebSearch: true` adds a **fixed 0.4 credits per call**. Rate limit: 10,000 calls/min per model (gemini's Flash models allow 15,000).
 
 ## What it's for
 

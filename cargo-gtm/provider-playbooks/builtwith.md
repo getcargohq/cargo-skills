@@ -12,15 +12,15 @@ A domain's technology stack. Three actions, and the important thing about them i
 
 | Action | Cost | Inputs | Use for |
 |---|---|---|---|
-| `getDomainSummary` | **0** | `domain` (required) | The stack summary for a domain. **Free — always run this first.** |
-| `enrichDomain` | 1 | `domain` (required) | Full technology detail for a domain, when the summary is not enough. |
-| `findWebsitesByTechnology` | not credits-priced | `technology` (required), `otherTechnologies`, `country`, `since`, `includeMeta`, `includeHistorical`, `spend` | Reverse lookup: the sites running a given technology. |
+| `getDomainSummary` | **0** | `domain` (required) | Technology-**group** counts for a domain (`groups[].{name, live, dead}`): categories such as analytics or CRM, not named tools. **Free — always run this first.** Throttled to 1 call/second. |
+| `enrichDomain` | 1 | `domain` (required) | Full technology detail for a domain (`Result.Paths[].Technologies[].{Name, Tag, Categories, FirstDetected, LastDetected}`, plus `Meta`), when you need named tools. |
+| `findWebsitesByTechnology` | **own BuiltWith key only** (errors on cargo credits) | `technology` (required), `otherTechnologies`, `country`, `since`, `includeMeta`, `includeHistorical`, `spend`, `revenue`, `employees`, `limit` (default 100, max 1,000) | Reverse lookup: the sites running a given technology. |
 
 `getDomainSummary` returning 0 is not a rounding artifact. It is free, so there is no batch size at which running it first costs anything.
 
 ## What it's for
 
-- ✅ **Qualifying a known domain's stack** — start at `getDomainSummary` (free) and escalate to `enrichDomain` (1) only for the rows where the summary did not answer the question.
+- ✅ **Qualifying a known domain's stack** — start at `getDomainSummary` (free) to see which technology categories are live, and escalate to `enrichDomain` (1) only for the rows where you need to know the named tool.
 - ✅ **Reverse technology sourcing** — `findWebsitesByTechnology` with `since` and `country` narrows to recent adopters in a geography, which is a much better trigger than "uses X" on its own.
 - ❌ **At-scale tech-intent sourcing** — `theirStack.searchCompanies` (0.5) combines tech filters with hiring signals and returns structured company records. builtwith answers about a domain you already have.
 - ❌ **Firmographics** — this is a stack lookup. `companyEnrich.enrichByDomain` (0.25) has the size and industry fields.
@@ -36,7 +36,7 @@ cargo-ai orchestration action execute-batch \
   --wait-until-finished
 ```
 
-Run this across the whole list. It costs nothing, and on most qualification questions ("do they run Salesforce?") the summary settles it. Only the unresolved rows go to `enrichDomain`.
+Run this across the whole list. It costs nothing, and it settles category questions ("is any CRM or marketing-automation tech live?"). It returns group counts, not tool names, so a named-tool question ("do they run Salesforce?") needs `enrichDomain`: send only the rows whose relevant group is live.
 
 ### Pattern B — Recent adopters in a geography
 
@@ -47,11 +47,11 @@ cargo-ai orchestration action execute \
   --wait-until-finished
 ```
 
-`since` is what turns a technology list into a trigger. A company that adopted the tool last quarter is in a buying cycle; one that has run it for six years is not.
+Requires a connector with your own BuiltWith `apiKey`; on cargo's managed connection the action throws. `since` is what turns a technology list into a trigger. A company that adopted the tool last quarter is in a buying cycle; one that has run it for six years is not.
 
 ## Common pitfalls
 
-- **Paying for `enrichDomain` across a list.** The summary is free and answers most qualification questions. One credit a row over 2,000 rows is 2,000 credits for detail nobody reads.
+- **Paying for `enrichDomain` across a list.** The summary is free and screens out the rows with no live technology in the relevant category. One credit a row over 2,000 rows is 2,000 credits for detail nobody reads.
 - **Treating a stack detection as certain.** Technology detection reads public page signals: a tag left behind after a migration still detects. Where the answer decides spend, confirm with a second source before acting.
 - **Using `findWebsitesByTechnology` without `since`.** Unbounded, it returns the long tail of everyone who ever installed the tag, which is a list with no intent in it.
 
@@ -64,7 +64,7 @@ cargo-ai orchestration action execute \
 
 - `getDomainSummary` — **first rung for any technographic question about a known domain**, ahead of everything on price, since it is free.
 - `enrichDomain` (1) — the escalation behind this provider's own free `getDomainSummary`, and the catalog's per-domain tech-detail rung. `theirStack.searchTechnologies` (0.5/row) is the alternative when you want a catalog-style technology list rather than per-domain detection.
-- `findWebsitesByTechnology` — a sourcing alternative behind `theirStack.searchCompanies` (0.5).
+- `findWebsitesByTechnology` — a sourcing alternative behind `theirStack.searchCompanies` (0.5), own BuiltWith key only.
 
 ## Action shape
 

@@ -26,9 +26,9 @@ Use `--wait-until-finished` for short-lived runs or when you need the result imm
 
 | Operation | Create command | Poll command | Interval | Terminal state |
 |---|---|---|---|---|
-| Run | `orchestration run create` | `orchestration run get <uuid>` | 2s | `status` is `success`, `error`, or `cancelled` |
-| Batch | `orchestration batch create` | `orchestration batch get <uuid>` | 5s | `status` is `success`, `error`, or `cancelled` |
-| Agent message | `ai message create` | `ai message get <uuid>` | 2s | `status` is `success` or `error` |
+| Run | `orchestration run create` | `orchestration run get <uuid>` | 2s | `status` is `success`, `error`, `cancelled`, or `skipped` |
+| Batch | `orchestration batch create` | `orchestration batch get <uuid>` | 5s | `status` is `success`, `error`, `cancelled`, or `skipped` |
+| Agent message | `ai message create` | `ai message get <uuid>` | 2s | `status` is `success`, `error`, or `cancelled` |
 
 For large batches (1000+ records), increase the polling interval to 10–15s after the first minute to avoid rate-limiting.
 
@@ -52,7 +52,7 @@ cargo-ai orchestration batch create \
   --wait-until-finished
 ```
 
-For agent messages, poll manually with `ai message get <uuid>` until `status` is `success` or `error`.
+For agent messages, poll manually with `ai message get <uuid>` until `status` is `success`, `error`, or `cancelled`.
 
 ---
 
@@ -117,7 +117,7 @@ RECORD_IDS=$(cargo-ai orchestration query execute \
 # 2. Re-trigger with only those record IDs
 cargo-ai orchestration batch create \
   --workflow-uuid <uuid> \
-  --data "{\"kind\":\"recordIds\",\"recordIds\":$RECORD_IDS}"
+  --data "{\"kind\":\"recordIds\",\"modelUuid\":\"<model-uuid>\",\"ids\":$RECORD_IDS}"
 ```
 
 Re-running bills the paid nodes again — apply the pilot gate in [`../../cargo-gtm/references/cost-discipline.md`](../../cargo-gtm/references/cost-discipline.md) before enrolling the whole failed set.
@@ -166,7 +166,7 @@ Use `fallbackOnFailure: true` if you want execution to continue to the next node
 
 | Symptom | Likely cause | Fix |
 |---|---|---|
-| Run stuck in `pending` for >30s | Workflow not enabled, no deployed release | Check `isEnabled` on the tool/play; verify a release exists with `release list --workflow-uuid <uuid>` |
+| Run stuck in `pending` for >30s | Workflow not enabled, no deployed release | Check `isEnabled` on the play (tools have no such field); verify a release exists with `release list --workflow-uuid <uuid>` |
 | Batch never reaches a terminal `status` | Individual runs are stuck or erroring | Run `run list --workflow-uuid <uuid> --batch-uuid <uuid>` to inspect per-record status |
 | Agent message stuck in `generating` for >60s | Agent running multi-step actions | Wait up to 120s for complex agents; check `message get` for partial progress |
-| Batch shows `executedRunsCount` less than `runsCount` after a long time | Some records are stuck | Check `run list` for `pending` or `generating` statuses; contact support if persistent |
+| Batch shows `executedRunsCount` less than `runsCount` after a long time | Some records are stuck | Check `run list` for `pending` or `running` statuses (`generating` is an agent-message status, not a run status); contact support if persistent |

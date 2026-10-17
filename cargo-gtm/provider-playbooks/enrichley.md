@@ -12,7 +12,7 @@ Dedicated email verification. **One credits-based action, 0.1 credits** — same
 
 | Action | Cost | Inputs | Use for |
 |---|---|---|---|
-| `verify` | 0.1 | `objectType` (required, const `"email"`), `email` (required) | Verify a single email's deliverability, with MX diagnostics. |
+| `verify` | 0.1 | `email` (required) | Verify a single email's deliverability, with MX diagnostics. |
 
 The connector also accepts your own Enrichley API key (`apiKey`) — same action, billed to your Enrichley plan instead of credits.
 
@@ -32,8 +32,8 @@ The connector also accepts your own Enrichley API key (`apiKey`) — same action
 cargo-ai orchestration action execute-batch \
   --action '{"kind":"connector","integrationSlug":"enrichley","actionSlug":"verify"}' \
   --records '[
-    {"objectType":"email","email":"alice@acme.com"},
-    {"objectType":"email","email":"bob@globex.com"}
+    {"email":"alice@acme.com"},
+    {"email":"bob@globex.com"}
   ]' \
   --wait-until-finished
 ```
@@ -47,7 +47,7 @@ Keep an email when either verifier passes it cleanly; drop it only when both agr
 ## Common pitfalls
 
 - **The action slug is `verify`, not `verifyEmail`.** Every other verify provider in the catalog uses `verifyEmail`; copy-pasting that slug here fails.
-- **`objectType` is required.** The payload needs `"objectType":"email"` alongside `email` — omitting it fails schema validation.
+- **`email` is the only input.** The schema has no other field (no `objectType`); extra keys are stripped.
 - **Rate limits differ by billing mode:** 15 calls/second on credits, 5/second on an own-key connector (both spread). Large batches drain at that pace; poll, don't re-trigger.
 
 ## Anti-patterns

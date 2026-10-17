@@ -30,10 +30,13 @@ cargo-ai orchestration action execute-batch \
   --wait-until-finished > /tmp/funding.json
 
 # 3. Filter to recent rounds (last 90 days)
-#    Same field Pattern B diffs on — confirm it once with get-output-schema.
-jq -c --arg cutoff "$(date -v-90d -u +%Y-%m-%d 2>/dev/null || date -d '90 days ago' -u +%Y-%m-%d)" \
-  '[.results[] | select((.lastFundingDate // "") > $cutoff)]' \
-  /tmp/funding.json > /tmp/recent-funded.json
+#    /tmp/funding.json is the batch object; the rows are the batch download CSV,
+#    where the output field lastFundingDate arrives as cargo_lastFundingDate.
+URL=$(cargo-ai orchestration batch download --uuid "$(jq -r .batch.uuid /tmp/funding.json)" | jq -r .url)
+curl -fsSL "$URL" \
+  | python3 -c 'import csv,json,sys; json.dump(list(csv.DictReader(sys.stdin)), sys.stdout)' \
+  | jq -c --arg cutoff "$(date -v-90d -u +%Y-%m-%d 2>/dev/null || date -d '90 days ago' -u +%Y-%m-%d)" \
+      '[.[] | select(.cargo_lastFundingDate > $cutoff)]' > /tmp/recent-funded.json
 ```
 
 ### Pattern B — Detect a *new* event on a known company (diff, not feed)
@@ -58,15 +61,18 @@ cargo-ai orchestration action execute-batch \
   --wait-until-finished > /tmp/fresh.json
 
 # 3. Keep only rows whose latest round post-dates the stored value.
-#    Confirm the output field name first (free, runs nothing):
-#      cargo-ai orchestration action get-output-schema \
-#        --action '{"kind":"connector","integrationSlug":"enrichCrm","actionSlug":"getFunding","config":{}}'
-jq -c --slurpfile known /tmp/known-funding.json '
+#    getFunding declares no output schema (get-output-schema answers
+#    actionHasNoOutput); its date field is lastFundingDate, which the batch
+#    download CSV carries as cargo_lastFundingDate next to the input domain.
+URL=$(cargo-ai orchestration batch download --uuid "$(jq -r .batch.uuid /tmp/fresh.json)" | jq -r .url)
+curl -fsSL "$URL" \
+  | python3 -c 'import csv,json,sys; json.dump(list(csv.DictReader(sys.stdin)), sys.stdout)' \
+  | jq -c --slurpfile known /tmp/known-funding.json '
   ($known[0].rows
      | map({key: .domain, value: (.last_funding_round_at // "")})
      | from_entries) as $stored
-  | [ .results[] | select((.lastFundingDate // "") > ($stored[.domain] // "")) ]
-' /tmp/fresh.json > /tmp/new-rounds.json
+  | [ .[] | select(.cargo_lastFundingDate > ($stored[.domain] // "")) ]
+' > /tmp/new-rounds.json
 ```
 
 A row with no stored date compares against `""` and always passes, which is the
@@ -111,11 +117,11 @@ The output of this recipe is a list of company records with funding events. Offe
 
 ## Output retrieval
 
-For batch runs, use `cargo-ai orchestration run download-outputs --workflow-uuid <uuid> --output-node-slug <slug>`.
+For `execute-batch` runs, use `cargo-ai orchestration batch download --uuid <batch-uuid>` (signed CSV URL, as above). For a saved play, use `cargo-ai orchestration run download-outputs --workflow-uuid <uuid> --output-node-slug <slug>`.
 
 ## Alternative provider
 
-`getFunding` is the only credits-based funding action in the catalog. Where it misses, `companyEnrich.enrichByDomain` (0.25) carries a coarser funding block, and `peopleDataLabs.queryCompanies` (3, PDL SQL) can filter on investor and round fields directly — see [`portfolio-prospecting.md`](portfolio-prospecting.md).
+`getFunding` is the only credits-based funding action in the catalog. Where it misses, `companyEnrich.enrichByDomain` (0.25) carries a coarser funding block, `peopleDataLabs.queryCompanies` (3 per company, PDL SQL) can filter on round fields (`latest_funding_stage`, `last_funding_date`) directly, and investor filters go to `theirStack.searchCompanies` (`fields.company_investors_partial_match_or`, 0.5 per company; PDL has no investor field) — see [`portfolio-prospecting.md`](portfolio-prospecting.md).
 
 ## When stuck — file a workspace report
 

@@ -53,7 +53,7 @@ cargo-ai orchestration action execute \
 
 - **LinkedIn URL is the only key.** Every action takes exactly one field, `linkedinUrl`. No email/name/domain fallback — records missing the URL must go through URL lookup first.
 - **`validation_status` is the provider grading its own homework.** Run found emails through the VERIFY stage (`waterfall.verifyEmail`, 0.1) regardless — see [`../references/waterfall-strategy.md`](../references/waterfall-strategy.md).
-- **Fixed cost on miss.** All three are fixed-price per execution; a `findPhone` miss still costs 5. Gate the expensive rungs on prior-rung misses only ([`../references/cost-discipline.md`](../references/cost-discipline.md)).
+- **Fixed cost per hit.** All three are fixed-price; a hit costs the full 2 or 5 whatever it returns. A miss returns no data and bills nothing on credits. Gate the expensive rungs on prior-rung misses only ([`../references/cost-discipline.md`](../references/cost-discipline.md)).
 - **Personal email ≠ outreach consent.** Route personal mailboxes per your compliance rules; they're best for re-engagement of known contacts, not cold sends.
 
 ## Position in the waterfall
@@ -75,5 +75,5 @@ cargo-ai orchestration action execute \
 No scheduled fit — per-record enrichment only, priced too high (2–5) to re-pull on a timer.
 
 - **Natural trigger:** downstream of the job-change monitor ([`../recipes/job-change-monitoring.md`](../recipes/job-change-monitoring.md), every-2-weeks cadence per [`../recipes/save-as-play.md`](../recipes/save-as-play.md)) — run `findPersonalEmail` only on rows newly entering the "changed jobs" segment.
-- **In-play gate: attempt timestamp, not empty output.** Misses bill full price (see Common pitfalls), so "run where `personal_email` is empty" re-bills the same uncoverable rows on every re-evaluation — stamp a lookup-attempted-at column and gate on it.
+- **In-play gate: attempt timestamp, not empty output.** Misses bill nothing on credits, but "run where `personal_email` is empty" re-calls the same uncoverable rows on every re-evaluation — stamp a lookup-attempted-at column and gate on it.
 - **Stable data:** a found personal mailbox doesn't decay on a schedule; re-verify it before each send wave (VERIFY chain, 0.1) instead of re-finding.

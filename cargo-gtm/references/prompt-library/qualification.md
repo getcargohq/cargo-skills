@@ -1,6 +1,6 @@
 # Prompt library — qualification
 
-Prompts that normalize messy people-data (titles, locations) into fixed labels and qualify contacts for outreach. These are classification tasks — run through `anthropic.instruct` with `temperature: 0` (bulk tier only — some judgment-tier models reject non-default sampling parameters with a 400; see [`../../provider-playbooks/anthropic.md`](../../provider-playbooks/anthropic.md) and omit the override when in doubt) so the same title always maps to the same label. Outputs are enum-constrained for downstream branch/filter nodes.
+Prompts that normalize messy people-data (titles, locations) into fixed labels and qualify contacts for outreach. These are classification tasks — run through `anthropic.instruct` with `temperature: 0` (bulk tier only — Cargo silently drops `temperature` on models that removed sampling parameters (`claude-sonnet-5`, the Opus 5 and Fable 5 families, `claude-opus-4-8`, `claude-opus-4-7`); see [`../../provider-playbooks/anthropic.md`](../../provider-playbooks/anthropic.md) and omit the override when in doubt) so the same title always maps to the same label. Outputs are enum-constrained for downstream branch/filter nodes.
 
 ### seniority-normalization
 

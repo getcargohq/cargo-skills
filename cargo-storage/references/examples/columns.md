@@ -6,7 +6,7 @@
 cargo-ai storage column list --model-uuid <uuid>
 ```
 
-Response includes `uuid`, `slug`, `type`, `label`, and `position` for each column.
+Response is `{"columns": [...]}`, an array of **strings**: each column's storage name, prefixed by kind for added columns (`custom__<slug>`, `computed__<slug>`, `metric__<slug>`, `lookup__<slug>`; original columns keep their slug). For types and labels, use `storage model get <model-uuid>` (`columns` + `additionalColumns`).
 
 ## Create a string column
 
@@ -59,7 +59,7 @@ Metric columns aggregate data from a related model via a relationship.
 ```bash
 cargo-ai storage column create \
   --model-uuid <uuid> \
-  --column '{"slug":"total_deals","type":"number","label":"Total Deals","kind":"metric","relationshipUuid":"<relationship-uuid>","aggregation":{"function":"count","columnSlug":"uuid"}}'
+  --column '{"slug":"total_deals","type":"number","label":"Total Deals","kind":"metric","relationshipUuid":"<relationship-uuid>","aggregation":{"function":"COUNT","columnSlug":"uuid"}}'
 ```
 
 With an optional filter:
@@ -67,7 +67,7 @@ With an optional filter:
 ```bash
 cargo-ai storage column create \
   --model-uuid <uuid> \
-  --column '{"slug":"open_deals","type":"number","label":"Open Deals","kind":"metric","relationshipUuid":"<relationship-uuid>","aggregation":{"function":"count","columnSlug":"uuid"},"filter":{"conjonction":"and","groups":[{"conjonction":"and","conditions":[{"kind":"string","slug":"status","operator":"is","value":"open"}]}]}}'
+  --column '{"slug":"open_deals","type":"number","label":"Open Deals","kind":"metric","relationshipUuid":"<relationship-uuid>","aggregation":{"function":"COUNT","columnSlug":"uuid"},"filter":{"conjonction":"and","groups":[{"conjonction":"and","conditions":[{"kind":"string","columnSlug":"status","operator":"is","values":"open"}]}]}}'
 ```
 
 ## Create a lookup column
@@ -85,7 +85,7 @@ With an optional filter:
 ```bash
 cargo-ai storage column create \
   --model-uuid <uuid> \
-  --column '{"slug":"primary_contact_email","type":"string","label":"Primary Contact Email","kind":"lookup","join":{"toModelUuid":"<contacts-model-uuid>","fromColumnSlug":"uuid","toColumnSlug":"company_uuid"},"extractColumnSlug":"email","filter":{"conjonction":"and","groups":[{"conjonction":"and","conditions":[{"kind":"boolean","slug":"is_primary","operator":"isTrue"}]}]}}'
+  --column '{"slug":"primary_contact_email","type":"string","label":"Primary Contact Email","kind":"lookup","join":{"toModelUuid":"<contacts-model-uuid>","fromColumnSlug":"uuid","toColumnSlug":"company_uuid"},"extractColumnSlug":"email","filter":{"conjonction":"and","groups":[{"conjonction":"and","conditions":[{"kind":"boolean","columnSlug":"is_primary","operator":"isTrue"}]}]}}'
 ```
 
 ## Update a column
@@ -131,7 +131,7 @@ cargo-ai storage column reorder --model-uuid <uuid> --column-slug website_url --
 | ---------- | ----------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
 | `custom`   | User-defined fields                                         | —                                                                                                        |
 | `computed` | Values derived from an expression over other columns        | `expression`; optionally `columnsUsed`                                                                   |
-| `metric`   | Aggregated values from a related model                      | `relationshipUuid`, `aggregation.function`, `aggregation.columnSlug`; optionally `filter`                |
+| `metric`   | Aggregated values from a related model                      | `relationshipUuid`, `aggregation.function` (`AVG`, `COUNT`, `MAX`, `MIN`, `SUM`), `aggregation.columnSlug`; optionally `filter` |
 | `lookup`   | A single field value pulled from a related model via a join | `join.toModelUuid`, `join.fromColumnSlug`, `join.toColumnSlug`, `extractColumnSlug`; optionally `filter` |
 
-Column `slug` values are used in filter conditions (see `cargo-orchestration` skill's `references/filter-syntax.md`) and in `storage query execute` SQL queries.
+Column `slug` values are used in filter conditions (see `cargo-orchestration` skill's `references/filter-syntax.md`) and, with their kind prefix (`custom__<slug>` and so on, as `column list` prints them), in `storage query execute` SQL queries.

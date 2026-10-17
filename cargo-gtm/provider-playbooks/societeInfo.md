@@ -12,7 +12,7 @@ French-market company and contact data, anchored on the official registry: regis
 
 | Action | Cost | Inputs | Use for |
 |---|---|---|---|
-| `search` | 4 **per item** | `objectType: "company"` + `searchFields` (name/value pairs: `query, where, nafLevel, juridicalFormLevel, conventionCollectiveCode, minSales/maxSales, minProfits/maxProfits, minStaff/maxStaff, minCreationDate, webTechnos, sort, page` …) + toggles (`withSite, withPhone, withLinkedin, withEstablishments` …); **or** `objectType: "contact"` + `registrationNumber` (required) + `searchFields` (`contactLevelCode, contactDomainCode, contactRoleQuery, contactMax`) | Registry-filtered French company sourcing, or contacts at one registered company. |
+| `search` | 4 **per item** | `objectType: "company"` + `searchFields` (name/value pairs: `query, where, nafLevel, juridicalFormLevel, conventionCollectiveCode, minSales/maxSales, minProfits/maxProfits, minStaff/maxStaff, minCreationDate, webTechnos, sort, page` …) + toggles (`withSite, withPhone, withLinkedin, withEstablishments` …) + `limit` (schema max 25 per call); **or** `objectType: "contact"` + `registrationNumber` (required) + `searchFields` (`contactLevelCode, contactDomainCode, contactRoleQuery, contactMax`) | Registry-filtered French company sourcing, or contacts at one registered company. |
 | `enrich` | 4 | `objectType: "company"` or `"contact"` + `enrichFields` (name/value pairs: `name, domainName, email, firstName/lastName/fullName, linkedinUrl, registrationNumber, street/postalCode/city, minMatchScore` …; contact mode adds `withEmail, withLinkedin` toggles) | Resolve one French company/contact to its registry record from whatever identifier you hold. |
 
 ## What it's for
@@ -50,7 +50,7 @@ cargo-ai orchestration action execute \
 - **`search` is unit-priced, `enrich` is fixed** — same 4-credit sticker, very different bills. Cap search results; a "quick look" that returns a page of companies costs a page × 4.
 - **Name/value pair arrays, not flat keys.** Filters go in `searchFields` / `enrichFields` as `[{"name":"...","value":...}]` objects — a flat `{"query":"..."}` config is silently ignored.
 - **Contact mode requires `registrationNumber`** — the French company registration id, not a domain or name. Get it from a company `search`/`enrich` first; that's a 2-step, 8+-credit sequence.
-- **`objectType` switches the whole schema.** Company and contact modes accept different fields; mixing them (e.g. `contactRoleQuery` in company mode) does nothing.
+- **`objectType` switches the whole schema.** Company and contact modes accept different fields; a `searchFields` name from the other mode (e.g. `contactRoleQuery` in company mode) fails validation, while an unknown top-level key is silently dropped.
 
 ## Anti-patterns
 

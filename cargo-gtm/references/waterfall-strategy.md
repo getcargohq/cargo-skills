@@ -14,7 +14,7 @@ This doc defines the canonical waterfall chains by enrichment goal. Every recipe
 5. Coalesce: merge results column-by-column, preferring higher-quality sources.
 ```
 
-Cargo doesn't have a built-in "waterfall" primitive — you implement this as N sequential `action execute-batch` calls with the records pruned between calls.
+Cargo doesn't have a built-in "waterfall" primitive — you implement this as N sequential `action execute-batch` calls with the records pruned between calls. Each step's rows come from `cargo-ai orchestration batch download --uuid <batch-uuid>` (a signed CSV URL: the input columns plus each top-level output key as `cargo_<key>`; failed runs keep only the input columns). `--wait-until-finished` prints the batch object, not the rows.
 
 ## Chain — Find email
 
@@ -105,7 +105,7 @@ See [`../recipes/linkedin-url-lookup.md`](../recipes/linkedin-url-lookup.md) for
 Goal: get a phone number for a person.
 
 ```
-1. prospeo.findPhone (3 cred)               ← cheapest
+1. prospeo.findPhone (3 cred)               ← cheapest landline/DID (aiArk.findMobilePhone, 0.5, goes first when a LinkedIn URL is in hand)
 2. FullEnrich.findPhone (6 cred)            ← better hit rate
 3. waterfall.findPhone (7 cred)             ← multi-source last resort
 ```
@@ -123,16 +123,15 @@ The mandatory spend rules (pilot → approval gate, per-run receipts, 1.4×N ove
 
 ## Coalesce — merge results from the chain
 
-After running 2–3 steps of a chain, you have multiple files with partial results. Merge by record:
+After running 2–3 steps of a chain, you have one `batch download` CSV per step with partial results. Carry a stable key (e.g. `id`) in every step's `--records` so the rows can be joined, convert each CSV to a JSON array of row objects, then merge by that key:
 
 ```bash
 jq -s '
-  # Combine three step files, preferring higher-quality sources
-  [.[0].results, .[1].results, .[2].results]
-  | flatten
-  | group_by(.input.recordId)
+  # Combine three step files (arrays of rows), later files win per field
+  flatten
+  | group_by(.id)
   | map(reduce .[] as $r ({}; . * $r))
 ' /tmp/step1.json /tmp/step2.json /tmp/step3.json > /tmp/coalesced.json
 ```
 
-This pattern (group → reduce with object-merge) takes the latest non-null value per field. Adjust the source-priority order to match the per-column quality preferences in [`../guides/enriching-and-researching.md`](../guides/enriching-and-researching.md).
+This pattern (group → reduce with object-merge) takes the value from the last file that has the field, so a later step's empty CSV cell overwrites an earlier hit: drop empty cells (or order the files lowest-quality first) before merging. Adjust the source-priority order to match the per-column quality preferences in [`../guides/enriching-and-researching.md`](../guides/enriching-and-researching.md).

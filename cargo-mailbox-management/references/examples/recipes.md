@@ -22,7 +22,7 @@ cargo-ai billing subscription get                                    # what is l
 ```
 
 Then say it out loud, in this shape: *"3 google mailboxes is 375 credits **per month**, and they
-reach 120 sends/day only after 45 days of warm-up — 15/day next week. Provisioning is not a
+reach 120 sends/day only after 45 days of warm-up — 15/day at first, 30/day after a week. Provisioning is not a
 one-off charge and `mailbox remove` is the only way to stop it. Go ahead?"*
 
 Steady-state capacity is `40 × mailboxes`. If the volume target is bigger than the qualified
@@ -47,22 +47,24 @@ cargo-ai mailboxManagement mailbox refresh-status <mailbox-uuid> | jq -r '.mailb
 ```
 
 `pending` is normal: the provider has not issued SMTP credentials yet. A send before `active`
-fails with `credentialsMissing`, which retries — so an early batch recovers rather than losing
-rows.
+fails with `mailboxNotActive`, which does not retry, so wait for `active` before enrolling
+anything. Warm-up starts on its own when the mailbox first goes `active`.
 
 ---
 
 ## 3. Start warm-up, and read the ramp honestly
 
 ```bash
+# Only needed if the automatic enrolment at activation failed, or after stop-warmup;
+# otherwise this returns warmupAlreadyStarted
 cargo-ai mailboxManagement mailbox start-warmup <mailbox-uuid> --daily-target 40
 
 cargo-ai mailboxManagement mailbox get-send-allowance <mailbox-uuid>
-# day 1  → {"allowance":{"dailyLimit":5,"sentCount":0,"remainingCount":5}}
+# day 1  → {"allowance":{"dailyLimit":5,"rampLimit":5,"sentCount":0,"remainingCount":5}}
 # day 15 → {"allowance":{"dailyLimit":16, …}}
 # day 45 → {"allowance":{"dailyLimit":40, …}}
 
-cargo-ai mailboxManagement mailbox get-warmup-stats <mailbox-uuid>   # next CLI release
+cargo-ai mailboxManagement mailbox get-warmup-stats <mailbox-uuid>
 # → {"stats":{"sentCount":120,"deliveredCount":114,"spamCount":6,"inboxRate":95,"spamRate":5}}
 ```
 

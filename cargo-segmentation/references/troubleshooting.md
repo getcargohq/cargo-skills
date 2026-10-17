@@ -1,20 +1,24 @@
 # Segmentation — troubleshooting
 
-## The filter matches nothing (and there is no error)
+## The filter is rejected with a 400
 
-**Cause, 90% of the time: `conjunction` instead of `conjonction`.** The key is French-spelled. An unrecognized key is dropped, the filter degenerates, and you get an empty result with a `200`.
+**Cause, 90% of the time: `conjunction` instead of `conjonction`.** The key is French-spelled and required on the filter and on every group; the misspelled key is dropped and validation fails on the missing `conjonction`.
 
 ```bash
 # Before every call:
 grep -o 'conjunction' <<< "$FILTER_JSON" && echo "TYPO — use conjonction"
 ```
 
-Other causes, in order of frequency:
+Other causes of a 400:
 
-1. **A `columnSlug` that does not exist on the model.** Confirm with `cargo-ai storage column list --model-uuid <uuid>`. Slugs are not labels — the column shown as "Employee count" may be `employee_count` or `employees`.
-2. **Wrong `kind` for the column type.** A `number` condition against a string column matches nothing. Check the column's `type` in the same listing.
-3. **`values` vs `value`.** `string` and `array` conditions take `values` (string or array); `number`, `date`, and `boolean` take `value` (scalar). Mixing them silently drops the condition.
-4. **The segment has never synced.** `syncedAt` absent means it was never evaluated — `recordsCount: 0` is "unknown", not "empty".
+1. **An empty group.** `{"conjonction":"and","conditions":[]}` fails with `Filter groups must contain at least one condition`. Match everything with `"groups": []`.
+2. **Wrong `kind` for the column type.** A `number` condition against a string column is rejected (`reason: "invalidFilter"`, `Column "…" has type "string" but the filter condition expects kind "number"`). Check the column's `type` with `cargo-ai storage column list --model-uuid <uuid>`.
+3. **`values` vs `value`.** `string` conditions take `values` (string or array); `number` and `date` take `value` (or `firstValue`/`lastValue` for `between`); `boolean` takes no value (`isTrue`, `isFalse`, `isNull`, `isNotNull`). The wrong key fails validation.
+
+## The filter matches nothing (and there is no error)
+
+1. **A `columnSlug` that does not exist on the model.** Unknown slugs are not rejected by validation. Confirm with `cargo-ai storage column list --model-uuid <uuid>`. Slugs are not labels — the column shown as "Employee count" may be `employee_count` or `employees`.
+2. **The segment has never synced.** `syncedAt: null` means it was never evaluated — `recordsCount: 0` is "unknown", not "empty".
 
 ## `400 … expected string, received undefined` on `path: ["segmentUuid"]`
 
@@ -66,7 +70,7 @@ It was created by a play (`fromPlay: true`) and is the play's trigger audience. 
 
 ## Membership looks stale
 
-`segment fetch --sync` re-syncs the model's upstream data sources before evaluating. It is slower and, for connector-backed models, may trigger provider calls — so use it deliberately, not as a default.
+`segment fetch` refreshes the model before evaluating unless you pass `--sync false`. It is slower and, for connector-backed models, may trigger provider calls. If the response says `isRefreshing: true`, a refresh was still running: fetch again shortly. `record fetch` serves cached rows; pass `--reset-cache` to re-read them.
 
 ## A record is in the model but not in the segment
 

@@ -23,7 +23,7 @@ What it covers is the part of the social web the rest of the catalog doesn't: **
 
 Rate limited to 100 calls per minute. Caching is supported, so a re-run over the same URLs inside the cache window doesn't re-bill — which matters more here than usual, because a follower count is exactly the field someone re-pulls out of habit.
 
-**Route X to the `x` provider, not here.** `x.getUserProfile` is **0.02** against `scrapeTwitterProfile`'s 0.1 — the same field for a fifth of the price — and `x` also has fourteen actions this provider has no equivalent for (`getUserPosts`, `getFollowers`, `getPostLikers`, `searchPosts`, …). `scrapeTwitterProfile` is the fallback if an `x` call fails on a specific handle, not the default.
+**Route X to the `x` provider, not here.** `x.getUserProfile` is **0.02** against `scrapeTwitterProfile`'s 0.1 — the same field for a fifth of the price — and `x` also has thirteen other actions this provider has no equivalent for (`getUserPosts`, `getFollowers`, `getPostLikers`, `searchPosts`, …). `scrapeTwitterProfile` is the fallback if an `x` call fails on a specific handle, not the default.
 
 ## Acceptable use — read before the first call
 
@@ -93,7 +93,7 @@ One call returns the posts; the personalization step reads them. Don't pair it w
 
 `{"kind":"connector","integrationSlug":"brightData","actionSlug":"scrapeInstagramProfile","config":{}}`. **No `connectorUuid` in `config`.** The URL goes in `--data`.
 
-Needs a Bright Data API token on the connector (Settings → connector config; the token is at `https://brightdata.com/cp/setting/users`). It still bills cargo credits — a BYO key does not make the action free.
+Runs on cargo's managed connection and bills cargo credits. A workspace can instead attach its own Bright Data API token (connector `apiKey`; the token is at `https://brightdata.com/cp/setting/users`): an own-key connector bills your Bright Data account, not cargo credits.
 
 ## Pairs with
 

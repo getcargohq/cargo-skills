@@ -8,15 +8,15 @@ last-reviewed: 2026-08-15
 
 Signal detections pushed into a Cargo model, read back with one action. **`searchLeads` costs 0**, which makes this the only free signal rung in the catalog.
 
-The shape is different from every other provider here and that is the thing to understand before using it: sillage does not go and look something up. It **receives** detections into a model you nominate, and `searchLeads` reads what has already landed.
+The shape is different from every other provider here and that is the thing to understand before using it: sillage does not go and look something up. It **receives** detections into a Sillage `listenSignals` model (an extractor model that monitors accounts and bills 0.5 per detected item as it lands), and `searchLeads` reads the leads that have already landed there.
 
 ## Credits-based actions
 
 | Action | Cost | Inputs | Use for |
 |---|---|---|---|
-| `searchLeads` | **0** | `modelUuid` (required), `companyDomains`, `companyLinkedinHandles`, `companyLinkedinUrls`, `limit` | Read detections already delivered into the nominated model, optionally filtered to accounts you care about. |
+| `searchLeads` | **0** | `modelUuid` (required), `companyDomains`, `companyLinkedinHandles`, `companyLinkedinUrls`, `limit` (default 25, max 100) | Read detections already delivered into the nominated model, optionally filtered to accounts you care about. |
 
-`modelUuid` is required and there is no default. If the detections are not being delivered into a model yet, this action has nothing to return and the answer is a setup step, not a retry.
+`modelUuid` is required and there is no default. It must be a Sillage `listenSignals` model: any other model fails with "is not a Sillage listen signals model", and one that has never run fails with "run the model once first". If no such model exists yet, this action has nothing to return and the answer is a setup step, not a retry.
 
 ## What it's for
 
@@ -72,5 +72,5 @@ Run `searchLeads` across the segment first. Rows that already carry a detection 
 
 ## Recurring use
 
-- **The one provider where a frequent schedule costs nothing.** Re-reading the feed hourly is free, so cadence is a question of how fresh the downstream action needs to be rather than of budget.
+- **The one provider where a frequent read costs nothing.** Re-reading the feed hourly with `searchLeads` is free (the `listenSignals` model itself bills 0.5 per detection it receives, whatever the read cadence), so cadence is a question of how fresh the downstream action needs to be rather than of budget.
 - **In-play gate still applies downstream.** The read is free; whatever a detection triggers is not. Gate the paid follow-up on detections newer than the last run, or a nightly read re-fires the same paid action on the same rows.

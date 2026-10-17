@@ -10,6 +10,21 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### Every skill but `cargo-cdk` → next minor (`cargo` → 1.28.0, `cargo-gtm` → 2.3.0, `cargo-orchestration` → 1.14.0, `cargo-project` → 3.2.0, the other fifteen one minor each): command, field, enum and price sweep against the product code
+
+Every `cargo-ai` command and flag, action slug, input field, enum value, output field and credit price in the bundle was checked against getcargohq/cargo master (`dce89e07ef`, 2026-10-16): provider action schemas and manifests under `apps/backend/src/domains/connection/services/integration/official/`, the CLI under `packages/cli/src/commands/`, and the HTTP routes. Most of what was wrong failed silently, because zod strips unknown keys: a misnamed filter ran the search unfiltered and billed for every row. Follows gtm-skills#95. The highest-impact corrections:
+
+- **Batch output.** `execute-batch --wait-until-finished` prints the batch object, not rows. Every recipe that piped it into `jq '.results[]'` now reads rows from `orchestration batch download --uuid` (a signed CSV whose output columns are `cargo_<key>`; a search's array lands in one `cargo` column). A direct action's node slug is always `action`.
+- **theirStack.** The sample payloads used fields that do not exist (`job_titles`, `locations`, `employeeCounts`, `techFields.technologies`, `industries`, `headcountMin`, `company_domains`). They are now `job_title_or`, `job_country_code_or`, `min_employee_count`, `company_technology_slug_or` / `_and`, `industry_id_or`, `company_domain_or`. `searchJobs` and `searchCompanies` bill 0.5 **per returned item**. Investor filters exist (`company_investors_partial_match_or`, `only_yc_companies`), so investor and portfolio sourcing moves here.
+- **peopleDataLabs has no investor field.** `summary` is a plain string, so every `summary.investors` query is gone. Connector search conditions take `values` (not `value`) for `is` / `contains`, and `job_company_size` is a range string.
+- **Sales Navigator.** Codes are strings (`["43"]`), headcount `D`/`E` is 51 to 500 (`B` is 1-10), there is no total match count, `role.functions` / `role.seniorityLevels` replace `role.function` / `role.seniority`, and `identityIds` picks the seat rather than filtering results.
+- **`waterfall.detectJobChange`** returns `job_change_status` in lowercase (`moved`, `left`, `no_change`, `unknown`), with mover fields under `person`. Every `"MOVED"` comparison matched nothing.
+- **Slugs that do not exist:** `salesforce.upsert` (now `upsertRecords`), `waterfall.enrichProspectDetails`, `FullEnrich.enrichPerson`, `peopleDataLabs.searchLeads`, clearbit `enrichCompanyFromDomain` (now `enrichCompany`), `integrationSlug: "openai"` (now `openAi`).
+- **Prices.** Apollo phone reveal is 9, not 3, and two Apollo searches run on credits. Haiku is 0.05. x, icypeas, exa and parallel bill per package or past an included first page. reverseContact cannot bill on credits. A miss that returns no data is not billed. `credits-cost-table.md` was corrected by hand (no generator in this repo).
+- **Platform surfaces.** CLI error output is `{"error","status","body"}` on stderr. `context runtime execute` commits and pushes. The context graph shape was wrong in every query. Over-allowance mailbox sends queue rather than fail. The hosted MCP has 17 tools, and `query_models` is SQL. Hosting has worker env and logs commands. A `conjonction` typo is rejected with a 400, not silently empty, so the router description now names misnamed action inputs as the silent trap.
+
+The full per-file table is in the pull request.
+
 ### `cargo-gtm` → 2.2.0 — FullEnrich search, lookup and fetch are free; reverse email lookup drops to 1
 
 getcargohq/cargo#6063 adds four FullEnrich actions and two extractors, all billed **0 credits** on Cargo's managed connection: `searchPeople`, `searchCompanies` (up to 2,000 per action run), `lookupPerson`, `lookupCompany`, and the `fetchPeople` / `fetchCompanies` extractors (up to 10,000 rows into a model, contacts unified on LinkedIn URL, accounts on domain + LinkedIn URL). The same PR moves `reverseEmailLookup` from 2 credits to **1**.

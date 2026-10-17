@@ -1,7 +1,7 @@
 ---
 name: cargo-storage
 description: "Work with the data inside a Cargo workspace — models (Companies, Contacts, Deals…), datasets, columns, relationships, records, and SQL over workspace storage. Triggers: \"what models do I have\", \"show me the schema\", \"add a column for\", \"how many contacts do I have\", \"SELECT … FROM\", \"query my companies table\", \"join contacts to companies\", \"what is the DDL\", \"set up a webhook-fed model\", \"where does this field live\", \"import this into a model\", \"unify these models\", \"merge duplicate accounts\", \"link contacts to companies\", \"set up a relationship between\". Skip when: querying run or batch telemetry rather than business data — use cargo-orchestration; naming a reusable filtered audience — use cargo-segmentation."
-version: "1.2.3"
+version: "1.3.0"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -131,7 +131,7 @@ a payload script, and an API token pasted into the node config. The webhook is f
 systems outside Cargo.
 
 Check the extractor's mode first — when it reports `"autoIngest": true` (calendly,
-smartlead, instantlyV2, heyReach, cargo signals) Cargo registers the
+smartlead, instantlyV2, heyReach, rodz, cargo signals) Cargo registers the
 hook with the provider itself and the URL must **not** be handed out. Full flow,
 payload shapes, and limits: `references/examples/ingest-webhook.md`.
 
@@ -216,10 +216,15 @@ first, then send back the full array with your addition:
 cargo-ai storage relationship set \
   --dataset-uuid <dataset-uuid> \
   --relationships '[
-    {"uuid":"<existing-uuid>","fromModelUuid":"<contacts-uuid>","fromColumnSlug":"account_id","toModelUuid":"<companies-uuid>","toColumnSlug":"id","relation":"manyToOne"},
-    {"fromModelUuid":"<deals-uuid>","fromColumnSlug":"company_id","toModelUuid":"<companies-uuid>","toColumnSlug":"id","relation":"manyToOne"}
+    {"uuid":"<existing-uuid>","fromModelUuid":"<contacts-uuid>","fromColumnSlug":"account_id","fromPropertySlug":null,"toModelUuid":"<companies-uuid>","toColumnSlug":"id","toPropertySlug":null,"fromSelectedColumnSlugs":null,"toSelectedColumnSlugs":null,"relation":"manyToOne"},
+    {"fromModelUuid":"<deals-uuid>","fromColumnSlug":"company_id","fromPropertySlug":null,"toModelUuid":"<companies-uuid>","toColumnSlug":"id","toPropertySlug":null,"fromSelectedColumnSlugs":null,"toSelectedColumnSlugs":null,"relation":"manyToOne"}
   ]'
 ```
+
+`fromPropertySlug`, `toPropertySlug`, `fromSelectedColumnSlugs` and
+`toSelectedColumnSlugs` are required on every entry (pass `null` when unused);
+leaving one out fails validation with an `errorMessage`. Copying the entries
+from `relationship list` keeps them.
 
 `relation` is `oneToOne`, `manyToOne`, or `oneToMany`. Both models must live in
 the dataset you pass — relationships never span datasets, so `fromDatasetUuid`
@@ -285,7 +290,7 @@ both look like a successful run.
 cargo-ai storage record list --model-uuid <uuid>
 ```
 
-For advanced record queries (filtering, sorting, pagination), use `segmentation segment fetch` from the `cargo-orchestration` skill.
+For advanced record queries (filtering, sorting, pagination), use `segmentation segment fetch` from the `cargo-segmentation` skill.
 
 ## Query with SQL
 
@@ -294,10 +299,10 @@ Run SQL against workspace storage with `storage query execute`. Tables are refer
 ```bash
 cargo-ai storage query execute \
   "SELECT name, domain FROM default.companies LIMIT 10"
-# → { "rows": [...] } on success; non-zero exit with { "errorMessage": "..." } on error
+# → { "isRefreshing": false, "rows": [...] } on success; non-zero exit with { "errorMessage": "..." } on error
 ```
 
-For full exports, use `storage query download` — it returns a signed URL to a CSV (default) or Parquet file:
+For full exports, use `storage query download` — it returns signed URLs (`urls`, an array) to CSV (default) or Parquet files:
 
 ```bash
 cargo-ai storage query download \
@@ -307,7 +312,7 @@ cargo-ai storage query download \
   --query "SELECT * FROM default.companies" --format parquet
 ```
 
-Get column slugs from `storage column list --model-uuid <uuid>` (or run `storage model get-ddl <model-uuid>` for the full schema and SQL dialect). Page through large result sets with `LIMIT` / `OFFSET` directly in the SQL.
+Get column names from `storage column list --model-uuid <uuid>` (storage names: added columns carry a `custom__` / `computed__` / `metric__` / `lookup__` prefix) (or run `storage model get-ddl <model-uuid>` for the full schema and SQL dialect). Page through large result sets with `LIMIT` / `OFFSET` directly in the SQL.
 
 See `references/examples/queries.md` for WHERE clauses, aggregations, joins, date queries, pagination, and the failure shapes returned on error.
 

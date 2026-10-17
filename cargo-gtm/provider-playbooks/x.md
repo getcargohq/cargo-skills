@@ -6,7 +6,7 @@ last-reviewed: 2026-08-15
 
 # x (X / Twitter)
 
-Fourteen actions over public X data: profiles, posts, replies, followers, and search. **Every one costs 0.02**, which makes this the cheapest signal surface in the catalog and the easiest place to run up a bill without noticing, because the temptation is to pull all fourteen.
+Fourteen actions over public X data: profiles, posts, replies, followers, and search. **Every one costs 0.02 per page of results** (0.02 per 100 results returned, per 20 for `getFollowers` / `getFollowing`; a single profile or post is 0.02), which makes this the cheapest signal surface in the catalog and the easiest place to run up a bill without noticing, because the temptation is to pull all fourteen.
 
 ## Before anything here touches a person
 
@@ -18,26 +18,26 @@ X data is public, which is not the same as usable. [`../references/acceptable-us
 
 ## Credits-based actions
 
-All fourteen cost 0.02. Four of them are engagement lists and carry a warning rather than a use.
+All fourteen bill 0.02 per package of results: 100 items for most list actions, 20 for `getFollowers` / `getFollowing`, and one call for `getUserProfile` / `getPostDetails`. Four of them are engagement lists and carry a warning rather than a use.
 
 | Action | Cost | Inputs | Use for |
 |---|---|---|---|
-| `getUserPosts` | 0.02 | `handle`, `limit` | **The one worth reaching for.** Recent posts from a company handle: launches, funding, hiring. |
+| `getUserPosts` | 0.02 / 100 | `handle`, `limit` | **The one worth reaching for.** Recent posts from a company handle: launches, funding, hiring. |
 | `getUserProfile` | 0.02 | `handle` | Bio, follower count, links. Confirms a handle is who you think it is. |
-| `searchPosts` | 0.02 | `query`, `limit`, `type` | Who is discussing a problem in public. |
+| `searchPosts` | 0.02 / 100 | `query`, `limit`, `type` | Who is discussing a problem in public. |
 | `getPostDetails` | 0.02 | `tweetId` | One post, when a signal pointed at it. |
-| `getUserReplies` | 0.02 | `handle`, `limit` | What a company answers in public. |
-| `getPostComments` | 0.02 | `tweetId`, `limit` | Reaction to an announcement. |
-| `getQuoteTweets` | 0.02 | `tweetId`, `limit` | The same, one step out. |
-| `getUserMedia` | 0.02 | `handle`, `limit` | Images and video from a handle. |
-| `getFollowing` | 0.02 | `handle`, `limit` | Who a handle follows. |
-| `searchPeople` | 0.02 | `query`, `limit` | X accounts by query. **Not a contact source.** |
-| `getFollowers` | 0.02 | `handle`, `limit` | **See the anti-patterns.** |
-| `getUserLikes` | 0.02 | `handle`, `limit` | **See the anti-patterns.** |
-| `getRetweeters` | 0.02 | `tweetId`, `limit` | **See the anti-patterns.** |
-| `getPostLikers` | 0.02 | `tweetId`, `limit` | **See the anti-patterns.** |
+| `getUserReplies` | 0.02 / 100 | `handle`, `limit` | What a company answers in public. |
+| `getPostComments` | 0.02 / 100 | `tweetId`, `limit` | Reaction to an announcement. |
+| `getQuoteTweets` | 0.02 / 100 | `tweetId`, `limit` | The same, one step out. |
+| `getUserMedia` | 0.02 / 100 | `handle`, `limit` | Images and video from a handle. |
+| `getFollowing` | 0.02 / 20 | `handle`, `limit` | Who a handle follows. |
+| `searchPeople` | 0.02 / 100 | `query`, `limit` | X accounts by query. **Not a contact source.** |
+| `getFollowers` | 0.02 / 20 | `handle`, `limit` | **See the anti-patterns.** |
+| `getUserLikes` | 0.02 / 100 | `handle`, `limit` | **See the anti-patterns.** |
+| `getRetweeters` | 0.02 / 100 | `tweetId`, `limit` | **See the anti-patterns.** |
+| `getPostLikers` | 0.02 / 100 | `tweetId`, `limit` | **See the anti-patterns.** |
 
-Everything except `getUserProfile` and `getPostDetails` also takes a required `limit`.
+Everything except `getUserProfile` and `getPostDetails` also takes an optional `limit`: the total across pages, default 50, max 10,000 (75,000 for `getFollowers` / `getFollowing`).
 
 ## What it's for
 
@@ -75,7 +75,7 @@ Resolve the resulting accounts to companies and enrich from there. The search ou
 ## Common pitfalls
 
 - **Pulling all fourteen actions per account.** At 0.02 each that is 0.28 a row before any enrichment, and twelve of the fourteen answer questions nobody asked.
-- **Large `limit` values by default.** `limit` is required on most actions precisely so the caller decides. A forgotten large default is where the cheap provider stops being cheap.
+- **Large `limit` values by default.** `limit` defaults to 50 and pages internally up to the cap you set, billing 0.02 per 100 results (per 20 on the follow graph). A forgotten large value is where the cheap provider stops being cheap.
 - **Reading engagement as intent.** Someone liking a competitor's post is not in-market. Treat it as a research prompt, not a score input.
 - **Handles that are not the company.** Squatted and parody handles resolve fine and return confident nonsense. Confirm the handle from the company's own site before trusting a signal from it.
 

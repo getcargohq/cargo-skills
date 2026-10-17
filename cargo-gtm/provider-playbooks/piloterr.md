@@ -51,8 +51,8 @@ Configure the model's extractor with the cargo filter shape (note the `conjoncti
     "groups": [{
       "conjonction": "or",
       "conditions": [
-        {"propertyName": "industry", "operator": "is", "values": ["Computer Software"]},
-        {"propertyName": "staff_range", "operator": "is", "values": ["51-200"]}
+        {"propertyName": "industry", "operator": "is", "values": ["Software Development"]},
+        {"propertyName": "staff_range", "operator": "is", "values": ["50-200"]}
       ]
     }]
   },
@@ -61,7 +61,7 @@ Configure the model's extractor with the cargo filter shape (note the `conjoncti
 }
 ```
 
-`industry`, `staff_range`, and `headquarter_country` values are provider enums — resolve them via the `listObjectPropertyEnum` autocomplete on `connection integration get piloterr` before building the filter.
+`industry`, `staff_range`, and `headquarter_country` values are provider enums — resolve them with `cargo-ai connection connector autocomplete --connector-uuid <uuid> --slug listObjectPropertyEnum --params '{"objectType":"company","propertyName":"industry"}'` before building the filter (`staff_range` is `1-10`, `10-50`, `50-200`, `200-500`, `1k-5k`, `5k-10k`, `over-10k`).
 
 ## Common pitfalls
 

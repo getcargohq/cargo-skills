@@ -27,7 +27,7 @@ cargo-ai workspaceManagement role list
 
 # 2. Invite the user with their email and role
 cargo-ai workspaceManagement user create \
-  --user-email newuser@example.com \
+  --email newuser@example.com \
   --role-slug <role-slug>
 ```
 
@@ -57,9 +57,9 @@ List all users and their roles:
 ```bash
 # 1. List all users
 cargo-ai workspaceManagement user list
-# → Note roleSlug for each user
+# → Note role.slug for each user
 
 # 2. List all roles to map slugs to role names
 cargo-ai workspaceManagement role list
-# → Cross-reference roleSlug values
+# → Cross-reference role.slug values
 ```

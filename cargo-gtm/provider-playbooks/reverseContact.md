@@ -6,18 +6,13 @@ last-reviewed: 2026-07-09
 
 # reverseContact (Reverse Contact)
 
-LinkedIn-anchored reverse lookups. **Only one of its four actions is credits-based**: `enrichCompanyFromLinkedin` (1) — a niche ENRICH rung for when your input is precisely a **LinkedIn company URL**. The other three (domain → company, LinkedIn URL → profile, email → profile) run **only on your own Reverse Contact API key** connector. Don't route generic company enrichment here: at 1 credit it matches `waterfall.enrichCompany` (1, priority) while `linkedin.enrichCompany` (0.25) covers most LinkedIn-anchored needs at a quarter of the price (see [`../references/stage-action-map.md`](../references/stage-action-map.md), Enrich company — "Niche: LinkedIn URL → company").
+LinkedIn-anchored reverse lookups. **None of its four actions runs on Cargo credits**: the connector is not credits-compatible (`credits.isCompatible: false`), so every action, including `enrichCompanyFromLinkedin`, needs your own Reverse Contact API key. The catalog lists a 1-credit price on `enrichCompanyFromLinkedin`, but it never bills because a credits connector cannot be created. `enrichCompanyFromLinkedin` is a niche ENRICH rung for when your input is precisely a **LinkedIn company URL**. Don't route generic company enrichment here: the credits-based `waterfall.enrichCompany` (1, priority) covers it, while `linkedin.enrichCompany` (0.25) covers most LinkedIn-anchored needs at a quarter of the price (see [`../references/stage-action-map.md`](../references/stage-action-map.md), Enrich company — "Niche: LinkedIn URL → company").
 
-## Credits-based actions
-
-| Action | Cost | Inputs | Use for |
-|---|---|---|---|
-| `enrichCompanyFromLinkedin` | 1 | `linkedinUrl` (required) | LinkedIn company URL → company record, when the priority stack missed. |
-
-## Own-API-key actions (no credits — require your Reverse Contact account connector)
+## Own-API-key actions (no credits: all four require your Reverse Contact account connector)
 
 | Action | What it does |
 |---|---|
+| `enrichCompanyFromLinkedin` | `linkedinUrl` (required) → company record, when the priority stack missed. |
 | `enrichCompanyFromDomain` | `domain` (required) → company record. |
 | `enrichProfileFromLinkedin` | `linkedinUrl` (required) → person profile. |
 | `enrichProfileFromEmail` | `email` (required; `firstName`, `lastName`, `companyDomain`, `companyName` optional hints) → person profile. Its signature **reverse-email lookup**. |
@@ -48,8 +43,8 @@ The catalog dump documents no output schema for these actions — inspect the fi
 
 ## Cost traps
 
-- **1 credit for a niche lookup.** If the row also has a domain, the cheaper domain-first chain (`aiArk.enrichCompany` 0.01, `companyEnrich.enrichByDomain` 0.25, `linkedin.enrichCompanyFromDomain` 0.5) should already have run — this action is for URL-only rows.
-- **Own-key actions on the wrong assumption.** `enrichProfileFromEmail` and friends fail without a Reverse Contact API key connector; there is no credits fallback for them.
+- **Plan quota for a niche lookup.** If the row also has a domain, the cheaper domain-first chain (`aiArk.enrichCompany` 0.01, `companyEnrich.enrichByDomain` 0.25, `linkedin.enrichCompanyFromDomain` 0.5) should already have run — this action is for URL-only rows.
+- **Own-key actions on the wrong assumption.** All four actions, `enrichCompanyFromLinkedin` included, fail without a Reverse Contact API key connector; there is no credits fallback.
 
 ## Anti-patterns
 
@@ -58,18 +53,18 @@ The catalog dump documents no output schema for these actions — inspect the fi
 
 ## Position in the waterfall
 
-**ENRICH stage, niche fallback rung.** Default company chain: `aiArk.enrichCompany` (0.01) → `companyEnrich.enrichByDomain` (0.25) → `waterfall.enrichCompany` (1) → `peopleDataLabs.enrichCompany` (3). `reverseContact.enrichCompanyFromLinkedin` (1) slots in only when the input is a LinkedIn company URL the stack couldn't resolve.
+**ENRICH stage, niche fallback rung.** Default company chain: `aiArk.enrichCompany` (0.01) → `companyEnrich.enrichByDomain` (0.25) → `waterfall.enrichCompany` (1) → `peopleDataLabs.enrichCompany` (3). `reverseContact.enrichCompanyFromLinkedin` (own key) slots in only when the input is a LinkedIn company URL the stack couldn't resolve.
 
 ## Recurring use
 
 No scheduled fit — a niche per-record fallback rung, never a re-pull.
 
-- **In-play gate:** `enrichCompanyFromLinkedin` runs only where the target firmographic fields are still empty, a LinkedIn company URL exists, and the cheaper chain already missed — firmographics are stable, so re-running unchanged rows re-bills 1 credit for identical data. Stamp an attempted-at column so misses don't retry each cycle.
-- **Own-key actions in plays:** `enrichProfileFromEmail` and friends draw down the workspace's Reverse Contact plan quota on every cycle — apply the same empty-field gating even though no cargo credits move. Play wrapper + cadence defaults: [`../recipes/save-as-play.md`](../recipes/save-as-play.md).
+- **In-play gate:** `enrichCompanyFromLinkedin` runs only where the target firmographic fields are still empty, a LinkedIn company URL exists, and the cheaper chain already missed — firmographics are stable, so re-running unchanged rows spends plan quota on identical data. Stamp an attempted-at column so misses don't retry each cycle.
+- **Own-key actions in plays:** every action draws down the workspace's Reverse Contact plan quota on every cycle — apply the same empty-field gating even though no cargo credits move. Play wrapper + cadence defaults: [`../recipes/save-as-play.md`](../recipes/save-as-play.md).
 
 ## Action shape
 
-`{"kind":"connector","integrationSlug":"reverseContact","actionSlug":"enrichCompanyFromLinkedin"}`. **No `connectorUuid` in `config`.**
+`{"kind":"connector","integrationSlug":"reverseContact","actionSlug":"enrichCompanyFromLinkedin"}`. With no credits connector possible, the run uses the workspace's own-key Reverse Contact connector.
 
 ## Pairs with
 

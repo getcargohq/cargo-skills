@@ -83,7 +83,7 @@ cargo-ai ai release update-draft --agent-uuid <agent-uuid> \
 
 # 4. Attach a knowledge file (optional)
 cargo-ai content file upload --file ./icp-criteria.pdf
-# → Extract file.uuid — attach to agent via release update-draft --resources
+# → Extract .uuid — attach to agent via release update-draft --resources
 
 # 5. Test with a message
 cargo-ai ai chat create \
@@ -116,6 +116,7 @@ AI templates also inform how to configure an inline `agent` node inside a workfl
       "fromRecipe": false
     },
     "advancedSettings": {
+      "connectorUuid": "<llm-connector-uuid>",
       "languageModelSlug": "gpt-4o",
       "temperature": 0.3,
       "maxSteps": 5
@@ -131,8 +132,13 @@ See `cargo-orchestration/references/nodes.md` for the full node creation guide.
 
 ## Template-to-agent quick reference
 
-| Template slug         | Use case                     | Recommended model  | Temperature |
+The slugs in the examples above are illustrative. The built-in public agent templates are:
+
+| Template slug         | Use case                     | Model (`openAi`)   | Temperature |
 | --------------------- | ---------------------------- | ------------------ | ----------- |
-| `lead-researcher`     | Prospect research            | `gpt-4o`           | 0.3         |
-| `company-classifier`  | Industry / ICP classification| `gpt-4.1-mini`     | 0.1         |
-| `email-drafter`       | Personalised outbound emails | `gpt-4o`           | 0.7         |
+| `master_agent`        | General GTM assistant        | `gpt-4.1-mini`     | 1           |
+| `extension_agent`     | LinkedIn / Sales Navigator   | `gpt-4.1-mini`     | 1           |
+| `documentation_agent` | Cargo documentation Q&A      | `gpt-4.1-mini`     | 0.7         |
+| `context_agent`       | Workspace context            | `gpt-4.1-mini`     | 0.7         |
+
+Workspace-private templates, and `kind: "mcpServer"` templates, appear in the same list.

@@ -48,7 +48,7 @@ No field is schema-required, but a call without at least a name plus a company i
 
 - **`email` is an array.** Interpolate `{{nodes.<slug>.email[0].email}}`, not `{{nodes.<slug>.email}}` — the raw field is a list of candidates with per-candidate `qualification`.
 - **`qualification` is the provider grading its own homework.** Route every returned email through the free pre-cull ([`../references/contact-accuracy.md`](../references/contact-accuracy.md)) then `waterfall.verifyEmail` (0.1) regardless.
-- **Rate-limited to 60 calls/minute** (spread), with up to 10 backoff retries per call — large batches drain slowly by design. Don't re-trigger a batch that looks stalled; poll it.
+- **Rate-limited to 60 calls/minute** (spread), and each call is **asynchronous**: the request is submitted, then the row waits for Dropcontact's webhook (up to 120 minutes) before it completes. Large batches drain slowly by design. Don't re-trigger a batch that looks stalled; poll it.
 
 ## Anti-patterns
 

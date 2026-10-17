@@ -40,7 +40,7 @@ Key fields:
 
 - **`slug`** — identifier used to fetch the template
 - **`name`** — human-readable name
-- **`kind`** — `"tool"` (on-demand) or `"play"` (segment-driven)
+- **`kind`** — `"tool"` (on-demand), `"play"` (segment-driven), or `"workflow"`
 
 ## Get a template by slug
 
@@ -79,7 +79,7 @@ Response:
         "slug": "enrich_company",
         "kind": "connector",
         "integrationSlug": "clearbit",
-        "actionSlug": "enrichCompanyFromDomain",
+        "actionSlug": "enrichCompany",
         "connectorUuid": "__REPLACE_WITH_CONNECTOR_UUID__",
         "config": {
           "domain": {
@@ -219,7 +219,7 @@ cargo-ai orchestration batch create \
 
 ## Placeholder convention
 
-Template node graphs use `__REPLACE_WITH_*__` strings to mark values that must be substituted before use:
+Built-in templates carry no placeholders (their connector nodes simply omit `connectorUuid`). When a graph does use `__REPLACE_WITH_*__` strings to mark values that must be substituted before use, they map as follows:
 
 | Placeholder                       | Replace with                                                    |
 | --------------------------------- | --------------------------------------------------------------- |

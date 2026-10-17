@@ -344,7 +344,7 @@ cargo-ai segmentation segment fetch \
 
 ## Fetch with enrichment and sync
 
-Enrichment triggers any connected enrichment tools on the records. Sync writes the results back to the model.
+`--enrich` adds a `_segments` column to each record listing its segment membership (it runs no enrichment tool and spends no credits). `--sync` syncs the model before fetching.
 
 ```bash
 cargo-ai segmentation segment fetch \

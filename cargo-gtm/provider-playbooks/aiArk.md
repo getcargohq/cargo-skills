@@ -16,8 +16,8 @@ LinkedIn-anchored people/company data with an unusually cheap enrich-and-email c
 | `reverseLookup` | **0.05** | `search` (an email address **or** a phone number) | Resolve a full person profile from an email or phone. Bills **0** on no match. |
 | `analyzePersonality` | **0.05** | `linkedinUrl` | Personality insights (OCEAN, DISC) + tailored **selling and hiring guidance**. Bills **0** on no match. |
 | `findMobilePhone` | **0.5** | `linkedinUrl` **or** (`domain` + `name`) | Mobile phone number. Bills **0** when nothing is found. |
-| `searchPeople` | **0.05 / returned record** | contact + account filter **groups** (see below) + `limit` (default 10, max 100) | Filter-rich people search (title, seniority, department, education, skills, tenure, past company, firmographics). |
-| `searchCompanies` | **0.01 / returned record** | account filter **groups** + `lookalikeDomains` (≤5 domains/LinkedIn URLs) + `limit` (default 10, max 100) | Cheapest *paid* company search + lookalike discovery (`FullEnrich.searchCompanies` is free when lookalikes aren't needed). |
+| `searchPeople` | **0.05 / returned record** | contact + account filter **groups** (see below) + `limit` (default 10, max 2,000) | Filter-rich people search (title, seniority, department, education, skills, tenure, past company, firmographics). |
+| `searchCompanies` | **0.01 / returned record** | account filter **groups** + `lookalikeDomains` (≤5 domains/LinkedIn URLs) + `limit` (default 10, max 2,000) | Cheapest *paid* company search + lookalike discovery (`FullEnrich.searchCompanies` is free when lookalikes aren't needed). |
 | `enrichCompany` | **0.01** | `domain` **or** `linkedinUrl` | Full company profile. Cheapest company enrich in the catalog. |
 | `countCompanies` | **free** | same account filter **groups** as `searchCompanies` (no `limit`) | Returns `{"count": N}` — the size of the pool a search would draw from. |
 | `countPeople` | **free** | same filter **groups** as `searchPeople` (no `limit`) | Returns `{"count": N}` — pool size before paying per record. |
@@ -71,7 +71,7 @@ cargo-ai orchestration action execute \
   --action '{"kind":"connector","integrationSlug":"aiArk","actionSlug":"searchCompanies"}' \
   --data '{
     "lookalikeDomains": ["stripe.com", "adyen.com"],
-    "industry": {"industry_or": ["Financial Services"]},
+    "industry": {"industry_or": ["financial services"]},
     "employeeSize": {"min_employee_count": 50, "max_employee_count": 1000},
     "limit": 50
   }' \
@@ -86,9 +86,9 @@ Billed **per returned record** — `limit` is your budget cap. Size the pool wit
 cargo-ai orchestration action execute \
   --action '{"kind":"connector","integrationSlug":"aiArk","actionSlug":"searchPeople"}' \
   --data '{
-    "jobRole": {"title_or": ["VP Engineering"], "seniority_or": ["VP"]},
+    "jobRole": {"title_or": ["VP Engineering"], "seniority_or": ["vp"]},
     "personLocation": {"location_or": ["United States"]},
-    "industry": {"industry_or": ["Software"]},
+    "industry": {"industry_or": ["software development"]},
     "employeeSize": {"min_employee_count": 200},
     "limit": 25
   }' \
@@ -104,7 +104,7 @@ cargo-ai orchestration action execute \
 
 Conventions inside a group:
 
-- **`_or` includes, `_not` excludes.** e.g. `{"jobRole": {"title_or": ["CTO"], "seniority_not": ["Entry"]}}`.
+- **`_or` includes, `_not` excludes.** e.g. `{"jobRole": {"title_or": ["CTO"], "seniority_not": ["entry"]}}`.
 - **Single value or array** — every `_or`/`_not` key accepts a string or an array of strings.
 - **Enum-backed fields come from autocompletes** — `industry`, `seniority`, `department`, `funding_type`, and language values must be valid enum members; resolve them via the integration's autocompletes: `listIndustries`, `listSeniorities`, `listDepartmentsAndFunctions`, `listCompanyDepartments`, `listFundingTypes`, `listLanguages`.
 - **Numeric ranges are numbers**, not strings — `min_employee_count: 50` (contrast the old proxycurl shape, which took stringified numbers).
@@ -113,9 +113,9 @@ Conventions inside a group:
 
 - **`searchPeople` company filters key on AI-Ark company IDs.** `currentAndPastCompany.current_company_id_or` wants AI Ark's own company IDs — get them from a `searchCompanies` call first, don't pass a domain there (use `companyInfo.domain_or` for domain-based company matching).
 - **`enrichPerson.id` is an AI-Ark person ID**, not a generic one — it comes from a prior `searchPeople` result. With no `id`, pass `linkedinUrl`.
-- **Search bills per returned record.** `limit` (default 10, max 100) is the cap; a stray high limit paginates and bills every row. The 0.01/0.05 rate is per *result*, not per call.
+- **Search bills per returned record.** `limit` (default 10, max 2,000; fetched 100 per page) is the cap; a stray high limit paginates and bills every row. The 0.01/0.05 rate is per *result*, not per call.
 - **`findMobilePhone` is mobile-only** and needs a `linkedinUrl` or a full `domain` + `name` pair — it won't resolve from a name alone.
-- **Rate limit: 300 calls/minute** (spread) — large batches stretch out; fine for enrich, plan for it on big searches.
+- **Rate limit: 240 calls/minute** (spread; Cargo holds 80% of AI Ark's 300/minute key cap) — large batches stretch out; fine for enrich, plan for it on big searches.
 - **Flat filter maps express nothing.** `{"title": "CTO"}` at the top level is ignored — it must be `{"jobRole": {"title_or": "CTO"}}`.
 
 ## Anti-patterns

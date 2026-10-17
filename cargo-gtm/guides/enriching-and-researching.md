@@ -15,7 +15,7 @@ Firmographics on a known company (industry, size, geo, revenue, …)?
 
 Contact details on a known person (title, location, social, …)?
   ├─ LinkedIn URL in hand: aiArk.enrichPerson (0.1) — profile + verified email, bills 0 on no-email
-  ├─ No URL: waterfall.enrichContact (2) — keys on email or name + company
+  ├─ No URL: waterfall.enrichContact (2) — keys on email or name + domain
   ├─ Niche coverage (investor-backed, portfolio): apolloio.enrichPerson (1)
   └─ Heavy backfill: peopleDataLabs.enrichPerson (3)
 
@@ -110,11 +110,9 @@ cargo-ai orchestration run download-outputs \
   --format json
 ```
 
-(Don't pass `--is-finished` — the CLI help lists it but the API currently rejects it with `unrecognized_keys`; reported.)
-
 Returns `{"url": "..."}` — a signed URL to a CSV/JSON containing only the output node's data with input/output context per record. See [`../../cargo-analytics/SKILL.md`](../../cargo-analytics/SKILL.md#downloading-run-results) for the full reference.
 
-For ad-hoc `action execute` / `action execute-batch` runs (no saved tool), use `--wait-until-finished` and read the response directly. The response shape is documented in [`../../cargo-orchestration/references/response-shapes.md`](../../cargo-orchestration/references/response-shapes.md). Per-node output lives at `runContext.<nodeSlug>` for runs and per-record `output` fields for batches.
+For ad-hoc `action execute` runs (no saved tool), use `--wait-until-finished` and read the run in the response; the shape is documented in [`../../cargo-orchestration/references/response-shapes.md`](../../cargo-orchestration/references/response-shapes.md). `action execute-batch --wait-until-finished` prints the batch object only, not rows: fetch them with `cargo-ai orchestration batch download --uuid <batch-uuid>`, which returns `{"url": "<signed CSV URL>"}`. The CSV keeps each input record's columns and adds every top-level output key as `cargo_<key>` (nested objects become dotted columns such as `cargo_person.company_name`; a search's result array lands in one `cargo` column); failed rows keep only the input columns.
 
 ## Action shape rules
 

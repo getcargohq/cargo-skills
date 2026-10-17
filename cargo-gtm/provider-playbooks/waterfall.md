@@ -15,8 +15,8 @@ Multi-source enrichment with built-in fallback across multiple underlying provid
 | `verifyEmail` | **0.1** | `email` | Email verification. **Cheapest tier in the priority stack.** |
 | `enrichCompany` | 1 | `linkedin, domain, name` | Fallback for unmatched cargo companies; also useful when LinkedIn is the only known identifier. |
 | `enrichContact` | 2 | `linkedin, full_name, first_name, last_name, domain, email, include_extra_fields` | Multi-source contact enrichment. |
-| `detectJobChange` | 3 | `professional_email, personal_email, company_domain, company_linkedin, contact_linkedin` | **Unique action.** Returns `MOVED / LEFT / NO_CHANGE / UNKNOWN` plus updated person info. |
-| `searchProspects` | 3 | `domain, company_name, linkedin, title_filter, location_country, …` | People search; alternative to salesNavigator when LinkedIn-anchored search isn't enough. |
+| `detectJobChange` | 3 | `professional_email, personal_email, company_domain, company_linkedin, contact_linkedin` | **Unique action.** Returns `job_change_status` (`moved` / `left` / `no_change` / `unknown`) plus updated info under `person`. |
+| `searchProspects` | 3 per prospect | `domain` (required), `company_name, linkedin, title_filter, location_country, limit, …` | People search at one company; alternative to salesNavigator when LinkedIn-anchored search isn't enough. |
 | `findPhone` | 7 | `linkedin, full_name, first_name, last_name, domain, email, include_extra_fields` | Phone number lookup. Premium pricing — escalate from `prospeo.findPhone` (3) only when needed. |
 
 ## What it's for
@@ -52,13 +52,13 @@ cargo-ai orchestration action execute-batch \
   --wait-until-finished
 ```
 
-Pass any combination of identifiers; multi-identifier inputs improve coverage. Result statuses:
-- `MOVED` — person changed company; new role + company returned.
-- `LEFT` — person left and current state unknown.
-- `NO_CHANGE` — same role / company.
-- `UNKNOWN` — no signal available.
+Pass any combination of identifiers; multi-identifier inputs improve coverage. The status is in `job_change_status`, lowercase:
+- `moved` — person changed company; new role + company returned under `person` (`person.company_name`, `person.company_domain`, `person.title`).
+- `left` — person left and current state unknown.
+- `no_change` — same role / company.
+- `unknown` — no signal available.
 
-Filter to `MOVED` for outbound timing. See [`../recipes/job-change-monitoring.md`](../recipes/job-change-monitoring.md) for the full pattern including segment write-back.
+Filter to `job_change_status = 'moved'` for outbound timing (an uppercase `MOVED` comparison matches nothing). See [`../recipes/job-change-monitoring.md`](../recipes/job-change-monitoring.md) for the full pattern including segment write-back.
 
 ### Pattern C — Fallback contact enrichment
 
@@ -78,8 +78,8 @@ cargo-ai orchestration action execute-batch \
 ## Common pitfalls
 
 - **Don't use `findPhone` first.** At 7 credits, it's the most expensive phone action in the priority stack. Try `prospeo.findPhone` (3) first; escalate to waterfall only when prospeo misses.
-- **`detectJobChange` requires at least one identifier**. Best coverage: LinkedIn URL + company domain. Email-only inputs often return UNKNOWN.
-- **`searchProspects` is 3 credits/record** — comparable to peopleDataLabs but with less rich filtering. Default to salesNavigator.searchLeads (0.2) unless you need waterfall's specific filter combinations.
+- **`detectJobChange` requires at least one identifier**. Best coverage: LinkedIn URL + company domain. Email-only inputs often return `unknown`.
+- **`searchProspects` is 3 credits per returned prospect** and needs a company `domain` — comparable to peopleDataLabs but with less rich filtering. Default to salesNavigator.searchLeads (0.2) unless you need waterfall's specific filter combinations.
 
 ## Anti-patterns
 

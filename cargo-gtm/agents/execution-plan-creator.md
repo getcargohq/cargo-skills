@@ -44,7 +44,7 @@ PLAN:
 
   Step 1 — SOURCE
     Provider: salesNavigator.searchAccounts (priority)
-    Cost: 0.05 × N = X credits
+    Cost: 0.2 × N = X credits (billed per returned account)
     Why this provider: ...
 
   Step 2 — DEDUPE
@@ -60,7 +60,7 @@ PLAN:
   ... (steps continue)
 
 TOTAL BUDGET: ~X credits for N records (catalog estimate — refine from the sample's observed per-row cost)
-BALANCE CHECK: remaining credits = subscriptionAvailableCreditsCount − subscriptionCreditsUsedCount
+BALANCE CHECK: remaining credits = subscriptionAvailableCreditsCount + additionalAvailableCreditsCount − subscriptionCreditsUsedCount
   → covers the run? If short, say by how much BEFORE running.
 
 APPROVE FULL RUN? (pick one)
@@ -92,4 +92,4 @@ Every recipe step must use the canonical action shape: `{"kind":"connector","int
 
 ## Output retrieval
 
-Final step of every plan ends with `cargo-ai orchestration run download-outputs --workflow-uuid <uuid> --output-node-slug <slug>` — the canonical way to retrieve action results. See [`../references/output-retrieval.md`](../references/output-retrieval.md).
+Final step of every plan ends with `cargo-ai orchestration run download-outputs --workflow-uuid <uuid> --output-node-slug <slug>` — the canonical way to retrieve action results from a saved tool or play. A direct `action execute-batch` has no workflow: retrieve its rows with `cargo-ai orchestration batch download --uuid <batch-uuid>` (a signed CSV URL; output keys land in `cargo_<key>` columns). See [`../references/output-retrieval.md`](../references/output-retrieval.md).

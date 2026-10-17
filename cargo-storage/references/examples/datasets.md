@@ -8,7 +8,7 @@ Datasets group related models together.
 cargo-ai storage dataset list
 ```
 
-Response includes `uuid`, `name`, and `slug` for each dataset.
+Response includes `uuid`, `slug`, and `kind` (`connector`, with its `connectorUuid`, or `native`) for each dataset. Datasets have no `name`.
 
 ## Get a specific dataset
 
@@ -35,7 +35,7 @@ cargo-ai storage dataset list
 # → Note the dataset UUIDs and slugs
 
 # 2. Group the models by dataset (one call — `model list` has no filter flag)
-cargo-ai storage model list | jq 'group_by(.datasetUuid) | map({datasetUuid: .[0].datasetUuid, models: map(.slug)})'
+cargo-ai storage model list | jq '.models | group_by(.datasetUuid) | map({datasetUuid: .[0].datasetUuid, models: map(.slug)})'
 # → See which models (tables) belong to each dataset
 
 # 3. Inspect a model's columns

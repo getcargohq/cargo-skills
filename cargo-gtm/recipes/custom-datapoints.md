@@ -97,13 +97,13 @@ A price here means **credits per account**, which for a row-billed action is not
 
 | What you want to know | Cheapest catalog path | Credits/account | Coverage to expect |
 |---|---|---|---|
-| Function headcount, seniority mix, SDR:AE ratio, eng-as-share-of-total | `salesNavigator.findEmployeesDistribution` (0.25 **+ 0.2 ID**), or `linkedin.findCustomHeadcount` (0.5) when the role you care about isn't one of the buckets — it counts by keyword | 0.25–0.5 **+ ID** | High where a LinkedIn company page exists |
-| Headcount growth or decline | `salesNavigator.findCompanyMetrics` (0.25 **+ 0.2 ID**), or `companyEnrich.getWorkforce` (0.25 — historical headcount **by department**) | 0.25 | Medium–High |
+| Function headcount, seniority mix, SDR:AE ratio, eng-as-share-of-total | `salesNavigator.findEmployeesDistribution` (0.25 **+ 0.5 ID**), or `linkedin.findCustomHeadcount` (0.5) when the role you care about isn't one of the buckets — it counts by keyword | 0.25–0.5 **+ ID** | High where a LinkedIn company page exists |
+| Headcount growth or decline | `salesNavigator.findCompanyMetrics` (0.25 **+ 0.5 ID**), or `companyEnrich.getWorkforce` (0.25 — historical headcount **by department**) | 0.25 | Medium–High |
 | Revenue band, NAICS / industry codes | `companyEnrich.enrichByDomain` (0.25) — same call also returns employees, funding and socials, so it can fill several rows at once | 0.25 | Medium — banded, not exact; private companies are estimates |
-| Tech stack | `builtwith.getDomainSummary` (**0**) first, then `builtwith.enrichDomain` (1, flat) or `theirStack.searchTechnologies` (0.5/row) | 0 to start; 1 flat, or **0.5 × rows** — cap with `limit` | Medium — detection favors client-side and vendor-declared tech; back-office tools are near-invisible |
-| Hiring intent — which roles, how many, how recent | `theirStack.searchJobs` (0.5) or `linkedin.searchJobs` (0.5) | **0.5 × postings returned** — cap with `limit` | Medium–High |
+| Tech stack | `builtwith.getDomainSummary` (**0**) first, then `builtwith.enrichDomain` (1, flat) or `theirStack.searchTechnologies` (0.5, flat per call, `fields.company_domain`) | 0 to start; then 1 or 0.5 flat | Medium — detection favors client-side and vendor-declared tech; back-office tools are near-invisible |
+| Hiring intent — which roles, how many, how recent | `theirStack.searchJobs` (0.5 per posting) or `linkedin.searchJobs` (0.5 flat per call) | **0.5 × postings returned** for theirStack — cap with `limit`; 0.5 for linkedin | Medium–High |
 | Funding, M&A | `enrichCrm.getFunding` | 1 | High for VC-backed, structurally absent for bootstrapped |
-| Positioning or website change | `firecrawl.scrape` (0.05) → `anthropic.instruct` haiku (0.2), diffed against the stored copy | ~0.25 | Medium — needs a stored baseline, or there is nothing to diff |
+| Positioning or website change | `firecrawl.scrape` (0.05) → `anthropic.instruct` haiku (0.05 per 1k tokens), diffed against the stored copy | ~0.1 | Medium — needs a stored baseline, or there is nothing to diff |
 | Stated challenges, competitive landscape | `firecrawl.scrape` (0.05) → `anthropic.instruct` (0.2), or `linkup.instruct` (1, sourced) | 0.25–1 | Medium |
 | **Anything stated on one specific page** — trust center, store locator, supported currencies, integration directory, entity list | `firecrawl.scrape` (0.05) → `anthropic.instruct` haiku (0.2) | ~0.25 | Entirely determined by whether that page exists — probe it |
 | A question no structured provider carries | `linkup.instruct` (1, sourced) or `perplexity.instruct` (0.3–1) | 0.3–1 | Always answers; whether it answers *correctly* is what the probe measures |
@@ -117,12 +117,12 @@ The `firecrawl.scrape` → `anthropic.instruct` row is the workhorse of this rec
 
 Two cost mechanics change the arithmetic. The first is an **ID prerequisite** — a per-account entry fee before the attribute's own price, and the most common reason a shortlist under-quotes:
 
-- Every `salesNavigator.find*` action (`findEmployeesDistribution`, `findCompanyMetrics`, `findEmployeesCount`, `findCompanyInsights`) keys on a LinkedIn **`companyId`**, not a domain. Accounts sourced through `salesNavigator.searchAccounts` already carry it; a list that arrived from a CRM export or a domain column does not, and resolving it costs 0.2/account through `searchAccounts`. It amortizes across every `find*` attribute on the same account — but it is easy to miss, because these actions look self-contained.
+- Every `salesNavigator.find*` action (`findEmployeesDistribution`, `findCompanyMetrics`, `findEmployeesCount`, `findCompanyInsights`) keys on a LinkedIn **`companyId`**, not a domain. Accounts sourced through `salesNavigator.searchAccounts` already carry it (`sales_navigator_company_id`); a list that arrived from a CRM export or a domain column does not, and resolving it costs 0.5/account through `linkedin.enrichCompanyFromDomain` (returns `company_id`; `searchAccounts` has no domain or name filter, so it cannot look one account up). It amortizes across every `find*` attribute on the same account — but it is easy to miss, because these actions look self-contained.
 - **Search-shaped actions bill per returned row; the `find*` actions do not.** `theirStack.searchJobs`, `salesNavigator.searchAccounts` / `searchLeads` / `extract*` charge for every record they return, so keep `limit` strict and size the pool with `limit: 1` first ([`../references/cost-discipline.md`](../references/cost-discipline.md) §4). The `salesNavigator.find*` calls above are flat per account regardless of what comes back — don't budget them per row.
 
 That second mechanic is the one that breaks estimates quietly, because a row-billed action *looks* like a flat per-account price in a table. A hiring-velocity field over an account with 8 open postings costs 4 credits, not 0.5 — and the accounts with the most postings are exactly the high-growth ones the field exists to find, so the overrun concentrates on the rows you care about. `cost-discipline.md` uses this precise case as its worked example of an estimate missing by 2×. **Price a row-billed attribute as `unit cost × rows you will actually accept`, and set `limit` to that number** so the cap is enforced rather than hoped for. Step 5 is where you measure the multiplier.
 
-Doing that arithmetic can also flip which provider is cheaper. Tech stack is the clearest case: `theirStack.searchTechnologies` at 0.5/row undercuts `builtwith.enrichDomain` at a flat 1 only while an account returns one technology. At three rows it is 1.5 — the flat action wins, and it wins by more on exactly the dense stacks worth scoring. Compare per-account totals, never unit prices.
+Doing that arithmetic can also flip which provider is cheaper. Lookalikes are the clearest case: `aiArk.searchCompanies` with `lookalikeDomains` at 0.01/row undercuts `linkedin.extractSimilarCompanies` at a flat 0.25 only while you accept fewer than 25 companies per seed set. At 100 rows it is 1.00, and the flat action wins. Compare per-account totals, never unit prices.
 
 Anything left with no row here is a research note, not a datapoint. Say that plainly in the deliverable — "valuable, no obtainable source" is a legitimate and useful line item, and it is the honest version of what the exercise usually pads with.
 
@@ -142,7 +142,7 @@ The deliverable is a costed table, not an essay. Present it and stay in AWAIT_AP
 >
 > | # | Field | Type | Source | Cost/acct | Probe hit | Refresh | Decision it changes |
 > |---|---|---|---|---:|---:|---|---|
-> | — | *LinkedIn `companyId`* | *prereq* | `salesNavigator.searchAccounts` — needed once for #1–#2 | 0.20 | 9/10 | Once | — |
+> | — | *LinkedIn `companyId`* | *prereq* | `linkedin.enrichCompanyFromDomain` — needed once for #1–#2 | 0.50 | 9/10 | Once | — |
 > | 1 | `eng_headcount_est` | number | `salesNavigator.findEmployeesDistribution` | 0.25 | 9/10 | Monthly | Tier + seat-count estimate |
 > | 2 | `has_platform_team` | boolean | same call, title parse | 0.00 | 9/10 | Monthly | Routes to the technical persona |
 > | 3 | `soc2_status` | enum | `firecrawl.scrape` /security + extract | 0.25 | 6/10 | Quarterly | Kills or unlocks enterprise motion |
@@ -154,15 +154,15 @@ The deliverable is a costed table, not an essay. Present it and stay in AWAIT_AP
 >
 > **Cut, with reason:** exact competitor spend (no source at any price) · contract renewal date (not public) · "is growing" (not discriminating) · industry (already a column).
 >
-> **Full-list arithmetic:** 3.45 credits/account (1 prereq + 6 attributes) × 4,100 accounts = **~14,100 credits**. Balance is 12,000 — the full fan-out does not fit, which is the point of quoting it before running it.
-> **Cheaper cut (recommended):** drop #4 and #6, the two quarterly/monthly enrichment rows → **~9,000 credits** (2.20/account), keeps 80% of the scoring signal. Neither carries an ID fee, so the saving here is exactly their own price — 1.25/account, no more.
-> **Narrower cut:** run all 6 on the 900 accounts already in the Tier-1 segment → **~3,100 credits**.
+> **Full-list arithmetic:** 3.75 credits/account (1 prereq + 6 attributes) × 4,100 accounts = **~15,400 credits**. Balance is 12,000 — the full fan-out does not fit, which is the point of quoting it before running it.
+> **Cheaper cut (recommended):** drop #4 and #6, the two quarterly/monthly enrichment rows → **~10,300 credits** (2.50/account), keeps 80% of the scoring signal. Neither carries an ID fee, so the saving here is exactly their own price — 1.25/account, no more.
+> **Narrower cut:** run all 6 on the 900 accounts already in the Tier-1 segment → **~3,400 credits**.
 
 Three shaped options, a default, the reconciled balance — the standard approval shape from [`../references/cost-discipline.md`](../references/cost-discipline.md).
 
 Two things in that table are worth copying into your own version, because both are places the arithmetic silently stops reconciling:
 
-- **Cutting an attribute can cut its ID fee too.** Dropping #4 and #6 saves exactly their own price, because neither needs an id. Dropping #1 *and* #2 would save more than theirs, because it also retires the 0.05 `companyId` prereq — while dropping only one of them retires nothing, since the other still needs it. Recompute the prereqs per option instead of subtracting attribute prices from the total.
+- **Cutting an attribute can cut its ID fee too.** Dropping #4 and #6 saves exactly their own price, because neither needs an id. Dropping #1 *and* #2 would save more than theirs, because it also retires the 0.50 `companyId` prereq — while dropping only one of them retires nothing, since the other still needs it. Recompute the prereqs per option instead of subtracting attribute prices from the total.
 - **A row-billed field needs its multiplier and its cap shown**, not just a number. `1.50` in a costed table is only true because `limit: 3` makes it true; without the cap, the same row is an open-ended price that lands hardest on the fastest-growing accounts.
 
 That arithmetic is the whole reason the feasibility gate exists. Designing ten attributes is free. Filling ten attributes across a TAM is a four-figure credit line, and the user should see it before agreeing rather than after.
@@ -203,7 +203,7 @@ Turn each cadence into a play — [`save-as-play.md`](save-as-play.md). Before d
 
 Scope each play to the fields whose cadence is actually due. In the Step 6 schema the monthly-cadence fields are #1, #2, and #6 — 0.50 credits/account, so **~2,050 credits every month** across 4,100 accounts, not once.
 
-Putting all six on one monthly play instead costs ~13,300/month and is wrong in both directions: #5 is a weekly field that a monthly sweep lets go stale, while #3 and #4 are quarterly ones it re-bills three times more often than they can change. One play per cadence, not one play per schema. The ID prereq is the one thing no refresh re-pays — once `companyId` is a column, every later run skips it, which is why the refresh rate (3.25/account) is below the first-fill rate (3.30).
+Putting all six on one monthly play instead costs ~13,300/month and is wrong in both directions: #5 is a weekly field that a monthly sweep lets go stale, while #3 and #4 are quarterly ones it re-bills three times more often than they can change. One play per cadence, not one play per schema. The ID prereq is the one thing no refresh re-pays — once `companyId` is a column, every later run skips it, which is why the refresh rate (3.25/account) is below the first-fill rate (3.75).
 
 **Do the annual arithmetic on the fastest field before you schedule it.** #5 at 1.50/account weekly across 4,100 accounts is ~6,200 credits *per week* — more than the entire first fill of every other field combined, and about 320,000 a year. Weekly cadence belongs on the segment where timing actually changes a decision (the 900 Tier-1 accounts, ~1,350/week), not on the full list. The cheapest version of a fast signal is a narrow audience, not a lower price.
 

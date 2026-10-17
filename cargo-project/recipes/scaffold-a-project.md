@@ -33,7 +33,7 @@ cargo-ai project types                     # types config against this workspace
 ```
 
 Not required to deploy, but it makes `defineConnector`/`defineModel` config and
-`integrations.*` in workflow bodies type-check. See
+connector actions called through `uses` in workflow bodies type-check. See
 [`../guides/typed-config.md`](../guides/typed-config.md).
 
 ## 4. Set secrets
@@ -50,7 +50,7 @@ A missing env var fails the deploy with an unresolved `${NAME}` placeholder.
 ## 5. Plan, then deploy
 
 ```bash
-cargo-ai project plan                      # offline diff — review what will be created
+cargo-ai project plan                      # diff against the deploy state — review what will be created
 cargo-ai project deploy                    # create everything, record it in the deploy state
 ```
 

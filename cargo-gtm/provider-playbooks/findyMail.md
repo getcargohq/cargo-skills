@@ -12,7 +12,7 @@ Mid-tier email finder with a phone lookup and a verify on the side. `findEmail` 
 
 | Action | Cost | Inputs | Use for |
 |---|---|---|---|
-| `verifyEmail` | 0.25 | `email` | Bounce-risk check. Off-default — `waterfall.verifyEmail` (0.1) is cheaper. |
+| `verifyEmail` | 0.25 | `objectType` (required, const `"email"`), `email` (required) | Bounce-risk check; output `email`, `verified`, `provider`. Off-default — `waterfall.verifyEmail` (0.1) is cheaper. |
 | `findEmail` | 0.5 | `name, domain, linkedinUrl` | Mid-tier email finder; the 0.5-tier option that takes a LinkedIn URL. |
 | `findPhone` | 5 | `linkedinUrl` (required) | Mid-rung phone lookup between prospeo (3) and FullEnrich (6). |
 

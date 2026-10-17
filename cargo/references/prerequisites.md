@@ -21,7 +21,7 @@ cargo-ai login --oauth --workspace-uuid <uuid>
 
 **A new account starts with 100 free credits, no card required** — `--email` and `--oauth` both create the account on first use, so signing up and running real paid work can happen in a single agent turn. Quote the free balance to a first-time user before the first paid call.
 
-`--oauth` runs the OAuth 2.0 Device Authorization Flow — no client setup. For CI / scripts, use `--token` with a workspace-scoped API token from **Settings > API**. Token values are shown only once; store immediately in a secrets manager.
+`--oauth` runs the OAuth 2.0 Device Authorization Flow — no client setup. For CI / scripts, use `--token` with a workspace-scoped API token from **Settings > API**. Store the token in a secrets manager; `token list` also returns your own tokens' values, so treat its output as a secret.
 
 ## Verify
 
@@ -36,7 +36,7 @@ Always confirm `workspace.name` before any write — there is no dry-run mode fo
 
 - All commands output **JSON to stdout**.
 - Successful commands exit `0`.
-- Failed commands exit non-zero and return `{"errorMessage": "..."}` — read this field for the cause.
+- Failed commands exit non-zero and print `{"error": "...", "status": ..., "body": {...}}` to **stderr** (a human-readable `✗` line on a TTY). The API's own `errorMessage` sits inside `body`: read it for the cause.
 - Async commands (`run create`, `batch create`, `message create`, `action execute`, `action execute-batch`) return a UUID and a status that starts as `pending` / `running`. Pass `--wait-until-finished` to block, or poll the matching `get` command. See [`cargo-orchestration/references/polling.md`](../../cargo-orchestration/references/polling.md) for intervals and retry guidance.
 
 ## Permission prompts
@@ -50,7 +50,7 @@ Some domains require a token with **admin access** on the workspace:
 - All of `cargo-billing` (usage metrics, subscription, invoices).
 - Most of `cargo-workspace-management` (users, roles, tokens — folder and report writes work with non-admin tokens).
 
-If a command returns `{"errorMessage":"forbidden"}` or `unauthorized`, the token likely lacks admin scope. Re-issue with an admin user, or ask a workspace admin to run the command.
+If a command fails with `Permission denied` (status 403, exit code 4) or `Not authenticated` (401, exit code 3), the token likely lacks admin scope or has expired. Re-issue with an admin user, or ask a workspace admin to run the command.
 
 ## When the CLI fails
 

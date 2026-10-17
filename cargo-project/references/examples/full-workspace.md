@@ -8,7 +8,7 @@ worked pipeline comes from `cargo-ai project add cookbook/<slug>`.
 ## The graph
 
 ```
-hubspot (connector) ──dataset──▶ contacts (model) ──model──────────┬─▶ onboarding (play)
+hubspot (connector) ─connector─▶ contacts (model) ──model──────────┬─▶ onboarding (play)
                                                                     ├─▶ sdr (agent)
 openai (connector) ──connector──▶ enricher (agent) ──subAgent──▶ sdr│
                     └────────connector──────────────────▶ sdr ─────┘
@@ -26,17 +26,17 @@ acme-gtm/
   tsconfig.json           # include: ["**/*.ts", ".cargo-ai/**/*.d.ts"]
   .gitignore              # .cargo-ai/, cargo.state.lock, cargo.state.bak.json, cargo.state.audit.jsonl
   connectors/hubspot.ts   # defineConnector + secret()
-  connectors/openai.ts    # defineConnector adopt: true
+  connectors/openai.ts    # defineConnector default: true
   folders/crm.ts          # defineFolder (per-kind)
-  models/contacts.ts      # defineModel dataset: hubspot
+  models/contacts.ts      # defineModel connector: hubspot
   tools/enrich.ts         # defineWorkflow + defineTool
   agents/enricher.ts      # defineAgent (sub-agent)
   agents/sdr.ts           # defineAgent (model + tool + sub-agent + trigger + evaluator)
   plays/onboarding.ts     # definePlay + defineWorkflow
   mcp/crm.ts              # defineMcpServer
-  context/context.ts      # defineContext dir: "context" (+ context/*.md)
+  context/context.ts      # defineContext path: "context" (+ context/*.md)
   files/playbook.ts       # defineFile (+ playbook.md)
-  workers/webhook.ts      # defineWorker (+ webhook/ built bundle)
+  workers/webhook.ts      # defineWorker (+ webhook/ bundle source)
   apps/dashboard.ts       # defineApp (+ dashboard/ Vite app)
 ```
 
@@ -56,7 +56,7 @@ export const hubspot = defineConnector("hubspot", {
 
 // models/contacts.ts
 export const contacts = defineModel("contacts", {
-  dataset: hubspot,                       // handle → connector deployed first, dataset injected
+  connector: hubspot,                     // handle → connector deployed first, dataset injected
   extractSlug: "fetchRecords",
   config: { objectType: "contacts", columnSelectionMode: "all" },
   folder: modelsFolder,
@@ -68,9 +68,11 @@ export const sdr = defineAgent("sdr", {
   connector: openai,
   languageModel: "gpt-4o",
   systemPrompt: "You qualify inbound leads and route hot ones to Slack.",
-  models: [{ ref: contacts, readOnly: true }],
-  tools: [enrich],
-  subAgents: [{ ref: enricher, waitUntilFinished: true }],
+  uses: [
+    { ref: contacts, readOnly: true },
+    enrich,
+    { ref: enricher, waitUntilFinished: true },
+  ],
   folder: agentsFolder,
 });
 ```
@@ -86,7 +88,7 @@ export HUBSPOT_API_KEY=...      # matches secret("HUBSPOT_API_KEY")
 
 cargo-ai project plan
 # → lists every resource as create / update / no-op, in dependency order:
-#   create connector:hubspot, create connector:open_ai (adopt), create folder:crm-models, …
+#   create connector:hubspot, create connector:open_ai (default), create folder:crm-models, …
 
 cargo-ai project deploy
 # → creates each in order, recording each in the workspace-held deploy state.

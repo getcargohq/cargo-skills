@@ -11,11 +11,11 @@ Use this recipe when the user wants to detect job changes among a list of contac
 ## Why this recipe exists
 
 Job change is one of the highest-intent signals in B2B GTM:
-- **MOVED contacts at target accounts** → re-engage at the new company; the relationship is warm.
-- **MOVED contacts at customer accounts** → renewal / churn risk; the original champion is gone.
-- **MOVED prospects in old segments** → trigger fresh outreach; previous reasons not to buy may no longer apply.
+- **`moved` contacts at target accounts** → re-engage at the new company; the relationship is warm.
+- **`moved` contacts at customer accounts** → renewal / churn risk; the original champion is gone.
+- **`moved` prospects in old segments** → trigger fresh outreach; previous reasons not to buy may no longer apply.
 
-`waterfall.detectJobChange` returns one of: `MOVED`, `LEFT`, `NO_CHANGE`, `UNKNOWN` — plus updated person info when `MOVED`.
+`waterfall.detectJobChange` returns `job_change_status`, one of `moved`, `left`, `no_change`, `unknown` (lowercase), plus updated person info under `person` (`person.company_name`, `person.company_domain`, `person.title`) when `moved`.
 
 ## Recipe
 
@@ -47,18 +47,23 @@ cargo-ai orchestration action execute-batch \
   --wait-until-finished > /tmp/job-changes.json
 ```
 
-**Identifier strategy:** pass as many identifiers as you have. Best coverage: `contact_linkedin` + `company_domain`. Email-only inputs often return `UNKNOWN`.
+**Identifier strategy:** pass as many identifiers as you have. Best coverage: `contact_linkedin` + `company_domain`. Email-only inputs often return `unknown`.
 
-### Step 3 — Filter to MOVED contacts
+### Step 3 — Filter to moved contacts
+
+`/tmp/job-changes.json` is the batch object, not the rows. The rows are a CSV behind `batch download`: the input columns plus each output key prefixed `cargo_`, with `person` expanded into dotted columns (`cargo_person.company_name`).
 
 ```bash
-jq -c '[.results[] | select(.status == "MOVED")]' /tmp/job-changes.json > /tmp/moved.json
+URL=$(cargo-ai orchestration batch download --uuid "$(jq -r .batch.uuid /tmp/job-changes.json)" | jq -r .url)
+curl -fsSL "$URL" \
+  | python3 -c 'import csv,json,sys; json.dump(list(csv.DictReader(sys.stdin)), sys.stdout)' \
+  | jq -c '[.[] | select(.cargo_job_change_status == "moved")]' > /tmp/moved.json
 ```
 
-The `MOVED` rows include the **new** company and (sometimes) the new title. Use these to:
+The status is lowercase: a `"MOVED"` comparison matches nothing. The `moved` rows include the **new** company (`cargo_person.company_name`, `cargo_person.company_domain`) and (sometimes) the new title (`cargo_person.title`). Use these to:
 - Update the contact's `current_company` column in the cargo Contacts model.
 - Surface as a "Job Changes — Last 30 Days" segment for outbound timing.
-- Write a Slack notification per MOVED row.
+- Write a Slack notification per `moved` row.
 
 ### Step 4 — (Optional) Write back to the model
 
@@ -69,7 +74,7 @@ If a `current_company` or `last_job_change_at` column exists on the Contacts mod
 # See ../../cargo-storage/SKILL.md.
 ```
 
-For pushing the MOVED set to a CRM (HubSpot custom property, Salesforce field), compose ad hoc with `hubspot.upsertRecords` / `salesforce.upsert` — discover the action via `cargo-ai connection integration get hubspot` and run it via `orchestration action execute-batch`.
+For pushing the `moved` set to a CRM (HubSpot custom property, Salesforce field), compose ad hoc with `hubspot.upsertRecords` / `salesforce.upsertRecords` — discover the action via `cargo-ai connection integration get hubspot` and run it via `orchestration action execute-batch`.
 
 ## Recurring monitoring (cron / play)
 
@@ -77,7 +82,7 @@ For continuous monitoring (e.g. weekly job-change scan), build a play:
 1. Trigger: weekly cron.
 2. Source: a saved segment of contacts to monitor.
 3. Action node: `waterfall.detectJobChange`.
-4. Output: write `MOVED` rows to a "Job Changes — Recent" segment.
+4. Output: write `moved` rows to a "Job Changes — Recent" segment.
 
 To make this recurring, follow [`save-as-play.md`](save-as-play.md) — it walks the tool-vs-play choice, the cadence defaults per signal, and the recurring-cost approval. Play mechanics: [`../../cargo-orchestration/references/examples/plays.md`](../../cargo-orchestration/references/examples/plays.md).
 
@@ -108,7 +113,7 @@ Pass as many as you have. More identifiers = better coverage.
 
 ## Output retrieval
 
-For batch runs, use `cargo-ai orchestration run download-outputs --workflow-uuid <uuid> --output-node-slug <slug>` to retrieve results. See [`../references/output-retrieval.md`](../references/output-retrieval.md).
+For an `execute-batch` run, `cargo-ai orchestration batch download --uuid <batch-uuid>` returns `{"url": "<signed CSV URL>"}` (step 3). For a saved play or tool, use `cargo-ai orchestration run download-outputs --workflow-uuid <uuid> --output-node-slug <slug>`. See [`../references/output-retrieval.md`](../references/output-retrieval.md).
 
 ## Cargo-unique strength
 

@@ -1,6 +1,6 @@
 # Prompt library — lead scoring
 
-Prompts that turn enriched records into scores, tiers, and disqualifications with explicit rubrics — so two runs on the same data agree. Run through `anthropic.instruct` with `temperature: 0` (0.2 max) (bulk tier only — some judgment-tier models reject non-default sampling parameters with a 400; see [`../../provider-playbooks/anthropic.md`](../../provider-playbooks/anthropic.md) and omit the override when in doubt); scoring wants determinism. All JSON outputs are parse-ready for downstream filter/branch nodes.
+Prompts that turn enriched records into scores, tiers, and disqualifications with explicit rubrics — so two runs on the same data agree. Run through `anthropic.instruct` with `temperature: 0` (0.2 max) (bulk tier only — Cargo silently drops `temperature` on models that removed sampling parameters (`claude-sonnet-5`, the Opus 5 and Fable 5 families, `claude-opus-4-8`, `claude-opus-4-7`); see [`../../provider-playbooks/anthropic.md`](../../provider-playbooks/anthropic.md) and omit the override when in doubt); scoring wants determinism. All JSON outputs are parse-ready for downstream filter/branch nodes.
 
 ### icp-fit-score
 

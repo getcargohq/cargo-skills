@@ -56,7 +56,8 @@ On breach, **each action in `--actions` is fired as its own run** through the or
   {"kind":"agent","agentUuid":"…","config":{ "message":"…" }},
   {"kind":"connector","integrationSlug":"…","actionSlug":"…","config":{ … }},
   {"kind":"tool","toolUuid":"…","config":{ … }},
-  {"kind":"native","actionSlug":"…","config":{ … }}
+  {"kind":"native","actionSlug":"…","config":{ … }},
+  {"kind":"worker","workerUuid":"…","method":"POST","path":"/…","config":{ … }}
 ]
 ```
 

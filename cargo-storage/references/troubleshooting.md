@@ -51,7 +51,7 @@ Common errors and recovery steps for `cargo-storage` commands.
 | Symptom | Cause | Fix |
 |---------|-------|-----|
 | `record list` returns empty | No records in the model, or wrong model UUID | Verify with `model list`; check that data has been synced |
-| Need filtered record access | `record list` doesn't support filtering | Use `segmentation segment fetch` from the `cargo-orchestration` skill for filtering, sorting, and pagination |
+| Need filtered record access | `record list` doesn't support filtering | Use `segmentation segment fetch` from the `cargo-segmentation` skill for filtering, sorting, and pagination |
 
 ## Queries (`storage query execute` / `storage query download`)
 
@@ -61,4 +61,4 @@ Common errors and recovery steps for `cargo-storage` commands.
 | `errorMessage` with syntax error | SQL dialect mismatch | Check whether your storage backend is BigQuery, Snowflake, etc. and adjust syntax accordingly. `storage model get-ddl` reports `language` |
 | `reason: "clientNotFound"` | No storage client configured | Verify the workspace has an active storage connection |
 | Query returns empty `rows` | Filter too restrictive, or wrong model | Try a broader query first (`SELECT * FROM <dataset>.<model> LIMIT 5`) |
-| Column not found | Wrong column slug | Run `storage column list --model-uuid <uuid>` to get exact slugs |
+| Column not found | Wrong column slug, or an added column queried without its storage prefix | Run `storage column list --model-uuid <uuid>` to get exact storage names (`custom__<slug>`, `computed__<slug>`, ...) |

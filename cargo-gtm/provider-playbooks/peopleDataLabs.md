@@ -6,49 +6,49 @@ last-reviewed: 2026-04-27
 
 # peopleDataLabs (People Data Labs)
 
-Heavyweight people / company database. **Six credits-based actions, all flat 3 credits each.** Use as **backfill** when cheaper sources miss, or as the **primary** source when you need query power salesNavigator's filters can't express.
+Heavyweight people / company database. **Six credits-based actions at 3 credits**: `enrichPerson` / `enrichCompany` bill 3 per call, the four search and query actions 3 **per returned record**. Use as **backfill** when cheaper sources miss, or as the **primary** source when you need query power salesNavigator's filters can't express.
 
 Two filter shapes — pick the right one:
 
-- **`searchPeople` / `searchCompanies`** use cargo's standard segment-filter shape: `{filter: {conjonction, groups: [{conjonction, conditions: [{propertyName, operator, value}, ...]}]}}`. Operators: `is`, `isNot`, `contains`, `notContains`, `lowerThan`, `lowerThanOrEquals`, `greaterThan`, `greaterThanOrEquals`. Use when criteria are simple key/operator/value AND/OR combinations.
+- **`searchPeople` / `searchCompanies`** use cargo's standard segment-filter shape: `{filter: {conjonction, groups: [{conjonction, conditions: [{propertyName, operator, values | value}, ...]}]}}`. `is`, `isNot`, `contains`, `notContains` take **`values`** (one value or an array); `lowerThan`, `lowerThanOrEquals`, `greaterThan`, `greaterThanOrEquals` take **`value`**. A `value` on a `contains` condition is dropped and the condition matches the literal string `undefined`. Use when criteria are simple key/operator/value AND/OR combinations.
 - **`queryPeople` / `queryCompanies`** take a **SQL string** — PDL's SQL API. Use when you need joins, OR-of-AND combinations beyond what the cargo filter shape supports cleanly, or when you already have a SQL query from PDL's documentation. **NOT Elasticsearch — it's PDL SQL.**
 
 ## Credits-based actions
 
 | Action | Cost | Inputs | Use for |
 |---|---|---|---|
-| `searchPeople` | 3 | `filter, limit, pretty, titlecase` | People search with cargo's `{conjonction, groups, conditions}` filter shape. |
-| `searchCompanies` | 3 | `filter, limit, pretty, titlecase` | Company search with the same cargo filter shape. |
-| `queryPeople` | 3 | `query: <SQL string>, limit, pretty, titlecase` | People search via PDL **SQL** query. Required for joins / complex bool combinations. |
-| `queryCompanies` | 3 | `query: <SQL string>, limit, pretty, titlecase` | Company search via PDL **SQL** query. Best for investor / funding / complex-filter sourcing. |
+| `searchPeople` | 3 per record | `filter, limit, pretty, titlecase` | People search with cargo's `{conjonction, groups, conditions}` filter shape. |
+| `searchCompanies` | 3 per record | `filter, limit, pretty, titlecase` | Company search with the same cargo filter shape. |
+| `queryPeople` | 3 per record | `query: <SQL string>, limit, pretty, titlecase` | People search via PDL **SQL** query. Required for joins / complex bool combinations. |
+| `queryCompanies` | 3 per record | `query: <SQL string>, limit, pretty, titlecase` | Company search via PDL **SQL** query. Best for funding-stage / complex-filter sourcing. |
 | `enrichPerson` | 3 | `parameters, options` | Fill missing person fields. Default backfill when cargo + waterfall miss. |
 | `enrichCompany` | 3 | `parameters, options` | Fill missing company fields. Default backfill when cargo + waterfall miss. |
 
 ## When to use peopleDataLabs (vs the alternatives)
 
-- ✅ **Investor / funding / VC-portfolio sourcing**: `queryCompanies` SQL with a `WHERE` clause on PDL's investor / funding fields — salesNavigator can't express this.
+- ✅ **Funding sourcing**: `queryCompanies` SQL with a `WHERE` clause on `latest_funding_stage`, `total_funding_raised` or `last_funding_date` — salesNavigator can't express this. PDL carries **no investor field** (`summary` is a free-text description), so investor / VC-portfolio sourcing goes to `theirStack.searchCompanies` (`company_investors_partial_match_or`).
 - ✅ **Complex multi-axis filters** that salesNavigator's UI-style filters can't combine: e.g., "fintech in EMEA AND Series B+ AND > 100 engineers AND running Snowflake".
 - ✅ **Heavyweight backfill**: after `aiArk.enrichPerson/Company` and `waterfall.enrich*` both return empty, peopleDataLabs is the deepest source in the catalog.
 - ❌ **Cheap at-scale sourcing**: 3 cred is 15× more expensive than salesNavigator (0.2), and 60–300× more than aiArk (0.01–0.05). Don't default here for volume work.
 
 ## Patterns
 
-### Pattern A — Investor portfolio sourcing (queryCompanies, SQL)
+### Pattern A — Funding-stage sourcing (queryCompanies, SQL)
 
-`queryCompanies` accepts a SQL string (PDL's SQL API). Use it when criteria don't fit cargo's `{conjonction, groups, conditions}` shape — typically anything involving array containment (e.g., "investors includes X") or complex OR-of-AND combinations.
+`queryCompanies` accepts a SQL string (PDL's SQL API). Use it when criteria don't fit cargo's `{conjonction, groups, conditions}` shape — typically anything involving array containment (e.g., "tags includes X") or complex OR-of-AND combinations.
 
 ```bash
-# "Find every company backed by Sequoia Capital, USA, 50-500 employees"
+# "Find every Series B or C company, USA, 50-500 employees"
 cargo-ai orchestration action execute \
   --action '{"kind":"connector","integrationSlug":"peopleDataLabs","actionSlug":"queryCompanies"}' \
   --data '{
-    "query": "SELECT * FROM company WHERE summary.investors LIKE %Sequoia Capital% AND employee_count >= 50 AND employee_count <= 500 AND location.country = '\''united states'\''",
+    "query": "SELECT * FROM company WHERE latest_funding_stage IN ('\''series_b'\'', '\''series_c'\'') AND employee_count >= 50 AND employee_count <= 500 AND location.country = '\''united states'\''",
     "limit": 200
   }' \
   --wait-until-finished
 ```
 
-Common PDL SQL fields: `industry`, `employee_count`, `founded`, `total_funding_raised`, `summary.investors`, `location.country`, `location.locality`, `tags`. See PDL's SQL reference for the full schema; cargo passes the SQL through verbatim.
+Common PDL SQL fields: `industry`, `employee_count`, `size`, `founded`, `latest_funding_stage`, `total_funding_raised`, `last_funding_date`, `location.country`, `location.locality`, `tags`. See PDL's SQL reference for the full schema; cargo passes the SQL through verbatim.
 
 ### Pattern B — Backfill missing person details
 
@@ -81,11 +81,10 @@ cargo-ai orchestration action execute \
       "groups": [{
         "conjonction": "and",
         "conditions": [
-          {"propertyName": "job_title", "operator": "contains", "value": "head of engineering"},
-          {"propertyName": "job_company_industry", "operator": "is", "value": "financial services"},
-          {"propertyName": "location_locality", "operator": "is", "value": "new york"},
-          {"propertyName": "job_company_size", "operator": "greaterThanOrEquals", "value": 50},
-          {"propertyName": "job_company_size", "operator": "lowerThanOrEquals", "value": 500}
+          {"propertyName": "job_title", "operator": "contains", "values": ["head of engineering"]},
+          {"propertyName": "job_company_industry", "operator": "is", "values": ["financial services"]},
+          {"propertyName": "location_locality", "operator": "is", "values": ["new york"]},
+          {"propertyName": "job_company_size", "operator": "is", "values": ["51-200", "201-500"]}
         ]
       }]
     },
@@ -94,9 +93,9 @@ cargo-ai orchestration action execute \
   --wait-until-finished
 ```
 
-**Note the spelling**: `conjonction` (with two `o`s, no `u`) — same intentional cargo-platform-wide convention. Typo here fails silently with empty results.
+**Note the spelling**: `conjonction` (with two `o`s, no `u`) — same intentional cargo-platform-wide convention. `conjonction` is required, so a `conjunction` typo fails validation before the search runs.
 
-If cargo's filter shape can't express the criteria (e.g., array-membership filters like `summary.investors LIKE %X%`), drop down to `queryPeople` SQL.
+`job_company_size` is a range string (`"51-200"`, `"201-500"`), not a number, so match it with `is` rather than a numeric comparison. If cargo's filter shape can't express the criteria (e.g., array-membership filters on `tags`), drop down to `queryPeople` SQL.
 
 ## Common pitfalls
 
@@ -110,7 +109,7 @@ If cargo's filter shape can't express the criteria (e.g., array-membership filte
 
 - **Flat records on the enrich actions.** `enrichPerson`/`enrichCompany` batch records need the `parameters` wrapper — `{"parameters":{"email":"…"}}`, NOT `{"email":"…"}`. Flat records fail validation or silently enrich nothing.
 - **Elasticsearch queries in `queryX`.** The `query` field is a **PDL SQL string** (`SELECT * FROM company WHERE …`), never an Elasticsearch DSL object. This is the single most common PDL misuse.
-- **`conjunction` spelling in `searchX` filters.** It's `conjonction` (two o's, no u) — the cargo-wide convention; the typo returns empty results with no error.
+- **`conjunction` spelling in `searchX` filters.** It's `conjonction` (two o's, no u) — the cargo-wide convention; the typo is stripped and the call fails validation on the missing `conjonction`.
 - **Search without a strict `limit`.** All PDL searches are billed per returned row at 3 credits each — an uncapped exploratory query is the most expensive mistake in the priority stack. Probe with `limit: 1`, then pull the approved scope ([`../references/cost-discipline.md`](../references/cost-discipline.md)).
 
 ## Action shape

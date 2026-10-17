@@ -1,7 +1,7 @@
 ---
 name: cargo-context
 description: "Read and write the workspace GTM knowledge base — the git-backed repository of markdown describing ICPs, personas, plays, proof points, objections, competitors, and signals — plus its runtime sandbox and typed knowledge graph. Triggers: \"document our ICP\", \"write up this persona\", \"what is our positioning\", \"add a battlecard\", \"capture this objection\", \"what do we know about <segment>\", \"update our context\", \"what is in the context repo\", \"who do we sell to\". Skip when: discovering who actually buys from you by analyzing won/lost data — that is cargo-gtm (this skill writes the conclusion down, it does not derive it); storing structured records rather than prose — use cargo-storage; attaching documents to an agent for RAG — use cargo-content."
-version: "1.3.0"
+version: "1.4.0"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -22,7 +22,7 @@ metadata:
 
 The **context** is a git-backed repository of typed markdown/MDX files that captures a workspace's GTM knowledge (company narrative, ICPs, personas, plays, proof, objections, etc.) and is read/written by both humans and agents. The `cargo-ai context` domain has two subdomains you'll use:
 
-- **runtime** — browse, read, write, edit, and execute against the workspace's runtime sandbox (a checked-out copy of the context repo). `write`/`edit` are pushed to the default branch; `execute` runs are **not** pushed.
+- **runtime** — browse, read, write, edit, and execute against the workspace's runtime sandbox (a checked-out copy of the context repo). `write`/`edit` are pushed to the default branch, and `execute` auto-commits and pushes any tracked working-tree changes its command leaves behind.
 - **graph** — build/load the knowledge graph derived from every markdown/MDX file in the context repo.
 
 > The canonical example of a context repository is [`getcargohq/cargo-workspaces`](https://github.com/getcargohq/cargo-workspaces). Read its `README.md` to understand the domain layout and file conventions before writing new entries.
@@ -47,7 +47,7 @@ cargo-ai login --email you@company.com  # emailed code, no browser; creates the 
 cargo-ai whoami                         # confirm the active workspace before any write
 ```
 
-Every command prints JSON to stdout; failures exit non-zero with `{"errorMessage": "..."}`. Anything that creates a run or a batch is async — pass `--wait-until-finished` or poll the matching `get`. `runtime write` and `runtime edit` commit and push to the workspace's context repo, so confirming `workspace.name` first is non-negotiable. When the full skill bundle is installed, [`../cargo/references/prerequisites.md`](../cargo/references/prerequisites.md) adds the CLI version pin, token scopes, and the admin-only surface.
+Every command prints JSON to stdout; failures exit non-zero and print the error to stderr (piped: `{"error": "...", "status": <http>, "body": {"reason": "..."}}`, where `body.reason` is the machine-readable cause). Anything that creates a run or a batch is async — pass `--wait-until-finished` or poll the matching `get`. `runtime write` and `runtime edit` commit and push to the workspace's context repo, so confirming `workspace.name` first is non-negotiable. When the full skill bundle is installed, [`../cargo/references/prerequisites.md`](../cargo/references/prerequisites.md) adds the CLI version pin, token scopes, and the admin-only surface.
 
 ## Discover the context first
 
@@ -65,8 +65,8 @@ cargo-ai context graph get                      # full knowledge graph derived f
 cargo-ai context runtime browse [--path <path>]
 cargo-ai context runtime read --path <path> [--start-line <n>] [--end-line <n>]
 cargo-ai context runtime write --path <path> --content <content> [--commit-message <message>]
-cargo-ai context runtime edit --path <path> --old-string <old> --new-string <new> [--commit-message <message>]
-cargo-ai context runtime execute --command <command> [--args <json>]
+cargo-ai context runtime edit --path <path> --old-string <old> --new-string <new> [--replace-all] [--commit-message <message>]
+cargo-ai context runtime execute --command <command> [--args <json>] [--commit-message <message>]
 
 # Knowledge graph
 cargo-ai context graph get
@@ -79,7 +79,7 @@ The **runtime sandbox** is a checked-out, executable copy of the context reposit
 Two important behaviors to remember:
 
 - **`write` and `edit` push to the default branch** of the context repo. They are not local-only.
-- **`execute` does *not* push.** Changes made to files by a shell command run via `execute` stay in the sandbox and are discarded — use `execute` for builds, tests, or inspection, not for committing edits.
+- **`execute` pushes too.** When the command leaves tracked files added, changed, deleted, or renamed, those changes are auto-committed (subject `context(runtime): execute <command>`, or `--commit-message`) and pushed to the default branch. Gitignored paths are skipped. A `sed -i` or `rm` run through `execute` lands in git.
 
 **Uploaded content files are available read-only under `.files/`.** The workspace's `content file` uploads (PDFs, CSVs, text — see [`cargo-content`](../cargo-content/SKILL.md)) appear in the sandbox under a `.files/` directory, so a command run via `execute` (or `read`/`browse`) can consume them — e.g. `cargo-ai context runtime execute --command ls --args '["-1",".files"]'`. It sits **outside the committed context tree**: the sandbox's auto-commit skips it, so nothing under `.files/` is ever pushed to the context repo, and you can't add or change content files from here (use `cargo-ai content file …` instead).
 
@@ -113,7 +113,7 @@ cargo-ai context runtime read --path play/inbound-trial-to-paid.md --start-line 
 
 `write` creates (or overwrites) a file and pushes a commit to the default branch.
 
-Begin every `.md`/`.mdx` file with a YAML frontmatter block setting `title` and `description`. Frontmatter is **not validated** — a file with missing, empty, or malformed frontmatter is still written and committed; it just indexes poorly in the graph (a missing `title` falls back to the filename, the node summary to the first paragraph). `write` can still fail for other reasons — `repositoryNotFound`, `syncConflict`, `syncFailed`, `failedToWrite`, or `deniedPath` (e.g. writing under `.files/`); see `references/response-shapes.md`.
+Begin every `.md`/`.mdx` file with a YAML frontmatter block setting `title` and `description`. Frontmatter is **not validated** — a file with missing, empty, or malformed frontmatter is still written and committed; it just indexes poorly in the graph (a missing `title` falls back to the filename, the node summary to the first paragraph). `write` can still fail for other reasons — `repositoryNotFound`, `failedToWrite` (including a push that did not land), or `deniedPath` (e.g. writing under `.files/`); see `references/response-shapes.md`.
 
 ```bash
 cargo-ai context runtime write \
@@ -158,9 +158,9 @@ EOF
 
 ### Edit an existing file
 
-`edit` replaces a single exact substring. `--old-string` must occur **exactly once** in the file; pass an empty `--new-string` to delete the match.
+`edit` replaces a single exact substring. `--old-string` must occur **exactly once** in the file (unless `--replace-all` is passed); pass an empty `--new-string` to delete the match. The strings are taken literally: `\n` inside ordinary double quotes is a backslash and an `n`, not a newline, so use bash `$'...'` quoting for multi-line matches.
 
-`edit` does not validate frontmatter — an edit that strips or empties `title`/`description` still applies, so keep the block intact to keep the node discoverable. `edit` can fail for other reasons, though: `stringNotFound` / `stringNotUnique` (the `--old-string` match), `fileNotFound`, `noOp` (new string equals old), `syncConflict` / `syncFailed`, `failedToEdit`, or `deniedPath`.
+`edit` does not validate frontmatter — an edit that strips or empties `title`/`description` still applies, so keep the block intact to keep the node discoverable. `edit` can fail for other reasons, though: `stringNotFound` / `stringNotUnique` (the `--old-string` match), `fileNotFound`, `noOp` (new string equals old), `failedToEdit` (including a push that did not land), or `deniedPath`.
 
 ```bash
 # Replace one specific sentence
@@ -173,7 +173,7 @@ cargo-ai context runtime edit \
 # Delete a line (pass empty --new-string)
 cargo-ai context runtime edit \
   --path persona/vp-sales-mid-market.md \
-  --old-string "\n- Outdated stat: 4.2x pipeline\n" \
+  --old-string $'\n- Outdated stat: 4.2x pipeline\n' \
   --new-string ""
 ```
 
@@ -181,7 +181,7 @@ For larger restructures, prefer `write` (full-file overwrite) over many sequenti
 
 ### Execute a command in the sandbox
 
-`execute` runs a shell command in the sandbox. Useful for inspecting structure or running checks; **changes are not pushed**.
+`execute` runs a shell command in the sandbox (90-second timeout). Useful for inspecting structure or running checks; **tracked file changes it leaves are committed and pushed**, so keep inspection commands read-only.
 
 ```bash
 # Find every file that cross-references a specific slug
@@ -222,7 +222,7 @@ The Cargo context repo is a typed knowledge base. The canonical example — and 
 ### File conventions
 
 - **Filename:** `kebab-case.md` (e.g. `vp-sales-mid-market.md`).
-- **Frontmatter:** start every `.md`/`.mdx` file with YAML frontmatter setting `title` and `description`. This is a **strong convention, not enforced** — a write with missing, empty, or malformed frontmatter is still created and committed; it just indexes poorly. The graph reads `title` (fallback: filename) and `summary` (fallback: the file's first paragraph); it does **not** read `description`, so add a `summary:` if you want to control the node summary. See [Source references and graph edges](#source-references-and-graph-edges).
+- **Frontmatter:** start every `.md`/`.mdx` file with YAML frontmatter setting `title` and `description`. This is a **strong convention, not enforced** — a write with missing, empty, or malformed frontmatter is still created and committed; it just indexes poorly. The graph reads `title` (fallback: filename) and `summary` (fallback: `description`, then the file's first paragraph), so add a `summary:` only if you want the node summary to differ from `description`. See [Source references and graph edges](#source-references-and-graph-edges).
 - **Cross-references:** use the `domain/slug` form, **no `.md` extension** (e.g. `persona/vp-sales-mid-market`). To register as a graph **edge** a reference must use one of the three link forms below — a bare `domain/slug` (or file path) in plain prose creates no edge.
 - **Templates:** each domain ships an `_template.md`. Read it (`cargo-ai context runtime read --path persona/_template.md`) before authoring a new entry. `_template.*` files are excluded from the graph — never reference them.
 
@@ -246,7 +246,7 @@ Key constraints:
 
 - **Never cite a source as a bare path in prose** (e.g. a `Source:` line that just mentions `outputs/sales-notes/foo.md` as text) — it is not parsed and creates **no** edge.
 - **Prefer root-relative paths** (resolved from the repo root first, then relative to the citing file) so links work regardless of where the document lives.
-- **Extensions are optional** — the resolver auto-tries `.md`, `.mdx`, `.yaml`, `.yml` in that order. Including the extension is fine.
+- **Extensions are optional for wikilinks and frontmatter `references:`**: the resolver auto-tries `.md`, `.mdx`, `.yaml`, `.yml` in that order. A **Markdown link** only counts as an edge when its target ends in `.md`, `.mdx`, `.yaml`, or `.yml`, so keep the extension there.
 - **The target must exist** or the edge is **broken** (a dead link in the graph UI). Verify with `runtime browse` before citing.
 - For docs with a **Source**/**Evidence** section, cite the files in frontmatter `references:`; use inline markdown links when the citation needs surrounding prose. Full rules: `references/conventions.md`.
 
@@ -286,7 +286,7 @@ The repetition threshold (how many calls a claim must appear in before it lands 
 cargo-ai context graph get
 ```
 
-The response includes the parsed frontmatter and outbound `domain/slug` references for each node — pipe it through `jq` to slice it. See `references/examples/graph-queries.md` for ready-to-run queries.
+The response is `{"graph": {"nodes", "edges", "broken", "computedAt"}}`: each node carries `id` (the file path, extension included), `title`, `summary`, and `cluster` (top-level folder); each edge carries `source`, `target`, and `origin` (`frontmatter`, `wikilink`, or `mdlink`); `broken` lists edges whose target does not exist. Pipe it through `jq` to slice it. See `references/examples/graph-queries.md` for ready-to-run queries.
 
 ## Help
 

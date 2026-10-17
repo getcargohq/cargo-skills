@@ -16,11 +16,11 @@ JSON response structures returned by Cargo CLI commands used in the `cargo-ai` s
       "triggers": [],
       "deployedRelease": {
         "uuid": "release-uuid",
-        "version": "3",
+        "version": "1.0.3",
         "description": "Added email step",
         "systemPrompt": "You are a sales research assistant...",
         "languageModelSlug": "gpt-4o",
-        "integrationSlug": "openai",
+        "integrationSlug": "openAi",
         "temperature": 0.3,
         "maxSteps": 10,
         "actions": [],
@@ -68,12 +68,12 @@ Same structure as a single item from `agent list`, nested under `agent`:
     {
       "uuid": "release-uuid",
       "agentUuid": "agent-uuid",
-      "version": "3",
+      "version": "1.0.3",
       "status": "deployed",
       "description": "Added research actions",
       "systemPrompt": "You are a sales research assistant...",
       "languageModelSlug": "gpt-4o",
-      "integrationSlug": "openai",
+      "integrationSlug": "openAi",
       "temperature": 0.3,
       "maxSteps": 10,
       "withReasoning": false,
@@ -101,12 +101,12 @@ Supports `--agent-uuid`, `--limit`, `--offset`.
   "release": {
     "uuid": "release-uuid",
     "agentUuid": "agent-uuid",
-    "version": "3",
+    "version": "1.0.3",
     "status": "deployed",
     "description": "Added research actions",
     "systemPrompt": "You are a sales research assistant...",
     "languageModelSlug": "gpt-4o",
-    "integrationSlug": "openai",
+    "integrationSlug": "openAi",
     "connectorUuid": null,
     "temperature": 0.3,
     "maxSteps": 10,
@@ -116,7 +116,7 @@ Supports `--agent-uuid`, `--limit`, `--offset`.
         "kind": "connector",
         "integrationSlug": "clearbit",
         "connectorUuid": "connector-uuid",
-        "actionSlug": "company_enrich",
+        "actionSlug": "enrichCompany",
         "slug": "enrich_company",
         "name": "Enrich Company",
         "description": "Enriches company data",
@@ -198,14 +198,13 @@ Each element of `templates[]` is returned in full. There is no `template get` su
 
 ```json
 {
-  "template": {
     "slug": "lead-researcher",
     "name": "Lead Researcher",
     "kind": "agent",
     "description": "...",
     "systemPrompt": "You are a lead research assistant...",
     "languageModelSlug": "gpt-4o",
-    "integrationSlug": "openai",
+    "integrationSlug": "openAi",
     "temperature": 0.3,
     "maxSteps": 10,
     "withReasoning": false,
@@ -220,7 +219,6 @@ Each element of `templates[]` is returned in full. There is no `template get` su
     "author": { ... },
     "createdAt": "2025-01-01T00:00:00Z",
     "updatedAt": "2025-01-15T00:00:00Z"
-  }
 }
 ```
 
@@ -239,12 +237,17 @@ Each element of `templates[]` is returned in full. There is no `template get` su
         {
           "kind": "tool",
           "slug": "search_docs",
+          "toolUuid": "tool-uuid",
+          "templateSlug": null,
+          "waitUntilFinished": true,
           "name": "Search Docs",
           "description": "Searches internal documentation",
           "isBulkAllowed": false,
           "config": {}
         }
       ],
+      "resources": [],
+      "capabilities": [],
       "createdAt": "2025-01-01T00:00:00Z",
       "updatedAt": "2025-01-15T00:00:00Z"
     }
@@ -252,7 +255,7 @@ Each element of `templates[]` is returned in full. There is no `template get` su
 }
 ```
 
-**Key fields:** `uuid`, `name`, `actions` (discovered actions from the MCP server).
+**Key fields:** `uuid`, `name`, `actions` / `resources` / `capabilities` (what this server exposes, as set on `create` / `update`).
 
 ## cargo-ai ai memory list
 
@@ -274,7 +277,6 @@ Each element of `templates[]` is returned in full. There is no `template get` su
 
 **Memory scopes:**
 
-- `workspace` — shared across all agents and users in the workspace. Has `workspaceUuid`.
 - `user` — specific to a user. Has `userUuid`.
 - `agent` — specific to an agent. Has `agentUuid` and `workspaceUuid`.
 

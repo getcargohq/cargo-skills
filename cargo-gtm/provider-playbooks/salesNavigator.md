@@ -12,7 +12,7 @@ LinkedIn-anchored search for accounts and leads — `searchLeads` and `searchAcc
 
 | Action | Cost | Inputs | Use for |
 |---|---|---|---|
-| `searchLeads` | 0.2 | `keywords, company, role, personal, recentUpdates, identityIds, limit` | At-scale lead search by company / title / keywords. **Default LinkedIn-native people sourcing.** |
+| `searchLeads` | 0.2 | `keywords, company, role, personal, recentUpdates, identityIds, limit` (`company`, `role`, `personal`, `recentUpdates` are objects) | At-scale lead search by company / title / keywords. **Default LinkedIn-native people sourcing.** |
 | `searchAccounts` | 0.2 | `companyHeadcounts, headquarterLocationIds, industryCodes, numOfFollowers, …` | At-scale account search by industry / size / geo. **Default LinkedIn-native company sourcing.** |
 | `extractLeadSearch` | 0.2 | `url, identityIds, limit` | Extract leads from a saved Sales Navigator search URL. |
 | `extractAccountSearch` | 0.2 | `url, identityIds, limit` | Extract accounts from a saved Sales Navigator search URL. |
@@ -33,23 +33,23 @@ LinkedIn-anchored search for accounts and leads — `searchLeads` and `searchAcc
 ## Common pitfalls
 
 - **Don't use `searchLeadsLegacy`** unless `searchLeads` literally cannot express your filter. The cost difference is enormous.
-- **`identityIds` filter** scopes the search to specific LinkedIn member identities. Useful for "find leads currently or recently at company X" — combine with `company` filter.
-- **`recentUpdates: true`** narrows to leads who posted recently, useful for warm-outreach signal but reduces volume.
-- **Pagination**: results are paginated. `limit` caps a single call; for large pulls, iterate with the cursor returned in the response.
+- **`identityIds` is not a filter.** It picks which connected LinkedIn seat(s) run the search. To find leads at company X, use `company.currentCompanyIds` (or `pastCompanyIds`) with LinkedIn company IDs as strings.
+- **`recentUpdates` is an object**: `{"postedOnLinkedin": true}` narrows to leads who posted recently (also `changedJobs`, `mentionedInNews`), useful for warm-outreach signal but reduces volume.
+- **Pagination is internal.** The action pages through results itself until it reaches `limit` (default 25; max 10,000 for `searchLeads`, 5,000 for `searchAccounts`). There is no cursor to iterate.
 
 ## Anti-patterns
 
-- **String filter values where LinkedIn codes are required.** `industryCodes`, `headquarterLocationIds`, `companyHeadcounts`, and `role.function`/`role.seniority` take LinkedIn's **internal enums/IDs** (`[43]`, `["B","C","D"]`, `[103644278]`), not names like `"fintech"` or `"50-200"`. Passing strings fails or silently mismatches — inspect the autocomplete schema via `connection integration get salesNavigator` first.
-- **Pulling the full volume to "see what's there."** Search is billed per **returned** record. Size the pool with `limit: 1` (the response's total match count is free beyond that one row), decide the filter, then pull exactly the approved scope — see [`../references/cost-discipline.md`](../references/cost-discipline.md).
+- **Names where LinkedIn codes are required.** `industryCodes`, `headquarterLocationIds`, `companyHeadcounts`, and `role.functions`/`role.seniorityLevels` take LinkedIn's **internal codes, as strings**: `industryCodes: ["43"]` (Financial Services), `headquarterLocationIds: ["103644278"]` (United States), `companyHeadcounts: ["D","E"]` (51-200, 201-500; `B` is 1-10, `C` 11-50), `role.seniorityLevels: ["310"]` (CXO). Names like `"fintech"` or `"50-200"` silently match nothing, and bare numbers fail validation. Resolve a name to its code with `cargo-ai connection connector autocomplete --connector-uuid <uuid> --slug listIndustries --params '{}' --value fintech` (`listGeoCodes` for locations).
+- **Pulling the full volume to "see what's there."** Search is billed per **returned** record, and the search response carries the records only, not a total match count. To size the market first, run `searchCompanyMetrics` or `searchPersonMetrics` on the search URL (0.25 credits, exact total). Then pull a small `limit` first, check the rows fit, decide the filter, then pull exactly the approved scope — see [`../references/cost-discipline.md`](../references/cost-discipline.md).
 - **`searchLeadsLegacy` as a shortcut** — 30× the cost of `searchLeads` for marginal filter gains.
 
 ## Position in the waterfall
 
-**First rung for LinkedIn-shaped sourcing** at 0.2/record. When the filter fits `aiArk` (lookalike seeds, education, skills, tenure, past company), start there instead: 0.01/company and 0.05/person. Demote for a batch only when the pilot shows its LinkedIn-shaped coverage misses your segment (local SMBs → `serper.searchPlaces`; tech-stack-first → `theirStack`; funding/investor filters → `peopleDataLabs.queryCompanies`).
+**First rung for LinkedIn-shaped sourcing** at 0.2/record. When the filter fits `aiArk` (lookalike seeds, education, skills, tenure, past company), start there instead: 0.01/company and 0.05/person. Demote for a batch only when the pilot shows its LinkedIn-shaped coverage misses your segment (local SMBs → `serper.searchPlaces`; tech-stack-first, funding or investor filters → `theirStack.searchCompanies`).
 
 ## Sample payloads
 
-### Account search — 100 fintech companies in US, 50–500 headcount
+### Account search — 100 financial services companies in US, 51–500 headcount
 
 ```json
 {
@@ -63,21 +63,21 @@ Per-record `--data`:
 
 ```json
 {
-  "companyHeadcounts": ["B", "C", "D"],
-  "industryCodes": [43],
-  "headquarterLocationIds": [103644278],
+  "companyHeadcounts": ["D", "E"],
+  "industryCodes": ["43"],
+  "headquarterLocationIds": ["103644278"],
   "limit": 100
 }
 ```
 
-(Headcount enums and industry/location IDs are LinkedIn's internal codes — use `connection integration get salesNavigator` to inspect the autocomplete schema.)
+(Headcount enums and industry/location IDs are LinkedIn's internal codes, passed as strings. Resolve them with the `listIndustries` / `listGeoCodes` autocompletes above.)
 
 ### Lead search — CTOs at a known account
 
 ```json
 {
-  "company": ["acme-inc"],
-  "role": {"function": [13], "seniority": [5, 7]},
+  "company": {"currentCompanyIds": ["<linkedin company id>"]},
+  "role": {"functions": ["8", "13"], "seniorityLevels": ["310"]},
   "limit": 5
 }
 ```
@@ -93,7 +93,7 @@ Per-record `--data`:
 
 ## Fallback chain
 
-If `salesNavigator.searchAccounts` doesn't have your filter (e.g., you need to filter by investor or funding round → not in salesNavigator), escalate to `peopleDataLabs.queryCompanies` (3 credits, PDL **SQL** query). Never escalate to `searchLeadsLegacy`.
+If `salesNavigator.searchAccounts` doesn't have your filter (e.g., you need to filter by investor or funding round → not in salesNavigator), escalate to `theirStack.searchCompanies` (`company_investors_partial_match_or`, `funding_stage_or`, `min_funding_usd`; 0.5 per company). PDL has no investor field. Never escalate to `searchLeadsLegacy`.
 
 For people search niches salesNavigator misses:
 - **Local SMBs**: `serper.searchPlaces` (Google Maps).

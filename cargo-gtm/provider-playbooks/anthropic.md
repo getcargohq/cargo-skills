@@ -20,8 +20,9 @@ Claude through a single `instruct` action — the **default judgment-tier LLM of
 |---|---|---|
 | Haiku | `claude-3-5-haiku-latest` | **0.05** |
 | Sonnet | `claude-sonnet-5`, `claude-sonnet-4-6`, `claude-sonnet-4-5-20250929`, `claude-sonnet-4-20250514` (schema default), `claude-3-7-sonnet-latest`, `claude-3-5-sonnet-latest` (deprecated) | 0.2 |
-| Opus | `claude-opus-4-8`, `claude-opus-4-7`, `claude-opus-4-6`, `claude-opus-4-1-20250805`, `claude-opus-4-20250514` | 2 |
-| Fable | `claude-fable-5` | 4 |
+| Opus 5.5 | `claude-opus-5-5` | 1.6 |
+| Opus | `claude-opus-5`, `claude-opus-4-8`, `claude-opus-4-7`, `claude-opus-4-6`, `claude-opus-4-1-20250805`, `claude-opus-4-20250514` | 2 |
+| Fable | `claude-fable-5-1`, `claude-fable-5` | 4 |
 
 `advancedSettings.withWebSearch: true` adds a **fixed 0.4 credits per call** on top of the token rate, at any tier. Rate limit: 4,000 calls/min per model. (`claude-3-opus-latest` is in the model enum but has no published credit rule — avoid it.)
 
@@ -47,6 +48,7 @@ cargo-ai orchestration action execute-batch \
 ## Input quirks
 
 - **Temperature range is 0–1** — not 0–2 like openAi/gemini/perplexity. A pipeline-wide `temperature: 1.5` that works elsewhere is out of range here.
+- **`temperature` is dropped (not sent) on `claude-sonnet-5`, `claude-fable-5-1`, `claude-fable-5`, `claude-opus-5-5`, `claude-opus-5`, `claude-opus-4-8` and `claude-opus-4-7`**: those models reject sampling parameters, so `temperature: 0` does not make their output deterministic.
 - **`advancedSettings.maxTokens` is required whenever `advancedSettings` is present** (default 4096). Include it any time you set `temperature` or `systemPrompt`.
 - **No structured-output config.** Unlike openAi/gemini/perplexity, `instruct` has no `output.responseFormat` — JSON shape is enforced in the prompt ("emit ONLY the JSON object"), which is exactly how the prompt-library extraction prompts are written.
 - Model ids must match the enum verbatim — copy them from the tier table above.

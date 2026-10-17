@@ -1,7 +1,7 @@
 ---
 name: cargo-quickstart
 description: "Guided first-run demo for Cargo — one persona question to the accounts that match it, with a free pool count and a cost receipt, in under two minutes, ending by saving the pull as a recurring play. Triggers: \"show me what Cargo can do\", \"give me a demo\", \"take me on a tour\", \"quickstart\", \"getting started with Cargo\", \"I just installed Cargo\", \"my workspace is empty\", \"does this actually work\". Skip when: the user has a real job to run (build an account list, enrich a CSV) — use cargo-gtm; when they want CLI reference or routing — use the cargo router skill."
-version: "1.0.4"
+version: "1.1.0"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 ---
@@ -23,7 +23,7 @@ cargo-ai login --email you@company.com  # emailed code, no browser; creates the 
 cargo-ai whoami                         # confirm the active workspace before any write
 ```
 
-Every command prints JSON to stdout; failures exit non-zero with `{"errorMessage": "..."}`. Anything that creates a run or a batch is async — pass `--wait-until-finished` or poll the matching `get`. When the full skill bundle is installed, [`../cargo/references/prerequisites.md`](../cargo/references/prerequisites.md) adds the CLI version pin, token scopes, and the admin-only surface.
+Every command prints JSON to stdout; failures exit non-zero and print `{"error": "...", "status": ..., "body": {...}}` to stderr. Anything that creates a run or a batch is async — pass `--wait-until-finished` or poll the matching `get`. When the full skill bundle is installed, [`../cargo/references/prerequisites.md`](../cargo/references/prerequisites.md) adds the CLI version pin, token scopes, and the admin-only surface.
 
 ## The one question
 
@@ -96,14 +96,14 @@ Filter notes worth knowing before you improvise:
 
 1. `aiArk.searchCompanies` (0.01/record, managed connection) — primary.
 2. `salesNavigator.searchAccounts` (0.2/record) — same idea by industry, headcount and geo. 25 rows ≈ 5 credits, well over the demo cap, so **say the number before running it**: "about 5 credits instead of the quarter-credit planned — still only 5 of your 100 free credits."
-3. `theirStack.searchCompanies` (0.5/call, flat) — reframe as "companies hiring for your persona's role right now". Needs its own connector, so it is a rung, not the default.
+3. `theirStack.searchCompanies` (0.5/record, billed per returned company) — reframe as "companies hiring for your persona's role right now". At 50 times the primary's price, it is a rung, not the default.
 4. Nothing connected at all → run the free path: `cargo-ai connection integration list | head`, show what *could* be wired, and offer to connect one (browser auth) — the demo resumes after.
 
 ## The receipt (mandatory, verbatim discipline)
 
 The demo is itself the pilot from [`../cargo-gtm/references/cost-discipline.md`](../cargo-gtm/references/cost-discipline.md). Close it with a receipt:
 
-- Credits spent + balance remaining (`cargo-ai billing subscription get` — remaining = `subscriptionAvailableCreditsCount − subscriptionCreditsUsedCount`). For a brand-new account, frame it against the **100 free starting credits** rather than as a bare number — "0.25 spent, 99.75 of your 100 free credits left" lands very differently from "99.75 credits remaining".
+- Credits spent + balance remaining (`cargo-ai billing subscription get` — remaining = `subscriptionAvailableCreditsCount + additionalAvailableCreditsCount − subscriptionCreditsUsedCount` on `.subscription`). For a brand-new account, frame it against the **100 free starting credits** rather than as a bare number — "0.25 spent, 99.75 of your 100 free credits left" lands very differently from "99.75 credits remaining".
 - Hit-rate: "25 of 25 returned" (or what actually came back, and which rows look off), against the free pool count from step 1.
 
 ## Minute 3 — save it as a play

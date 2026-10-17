@@ -28,7 +28,7 @@ Response:
 
 Each item has a `slug` (usage type) and `count`. When `--group-by` is used, `groupBy` contains the resource UUID/slug.
 
-**`count` is not always credits.** Unqualified, the array interleaves all three usage units: `integration.*` / `native.*` slugs are credits, `success` / `error` are **node executions** (credits = count / 100), `insert` is records written. Isolate one with `--unit billing.credits`, `--unit orchestration.executions`, or `--unit storage.records` — the only three accepted values.
+**`count` is not always credits.** Unqualified, the array interleaves all three usage units: `integration.*` / `native.*` slugs are credits, `success` / `error` are **node executions** (credits = count / 100), `insert` is records written. Isolate one with `--unit billing.credits`, `--unit orchestration.executions`, or `--unit storage.records` (`hosting.events` is the fourth accepted value).
 
 ## Isolate the execution charge
 
@@ -137,7 +137,7 @@ cargo-ai billing usage get-metrics \
 ```bash
 cargo-ai billing usage get-metrics \
   --from 2025-01-01 --to 2025-01-31 \
-  --unit credits
+  --unit billing.credits
 ```
 
 ## Combine group-by with filter
@@ -166,13 +166,14 @@ Response:
     "subscriptionStatus": "active",
     "subscriptionAvailableCreditsCount": 10000,
     "subscriptionCreditsUsedCount": 3200,
+    "additionalAvailableCreditsCount": 0,
     "startAt": "2025-01-01T00:00:00Z",
     "resetAt": "2025-02-01T00:00:00Z"
   }
 }
 ```
 
-Remaining credits = `subscriptionAvailableCreditsCount - subscriptionCreditsUsedCount`.
+Remaining credits = `subscriptionAvailableCreditsCount + additionalAvailableCreditsCount - subscriptionCreditsUsedCount`.
 
 ```bash
 # Invoice history (amounts in cents — divide by 100 for dollars)

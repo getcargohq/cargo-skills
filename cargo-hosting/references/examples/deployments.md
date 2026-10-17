@@ -28,7 +28,7 @@ cargo-ai hosting deployment create --app-uuid <app-uuid> --source ./my-app \
 ```bash
 # Builds are async — poll until the status field is terminal
 cargo-ai hosting deployment get <deployment-uuid>
-# when terminal (built/succeeded), promote:
+# when status is "success", promote:
 cargo-ai hosting deployment promote --uuid <deployment-uuid>
 ```
 

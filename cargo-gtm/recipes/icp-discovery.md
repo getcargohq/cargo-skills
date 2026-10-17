@@ -80,31 +80,37 @@ funding stage isn't plausibly an ICP signal for this business.
 
 For each feature (industry, size band, tech, funding stage, …), compute the % of Won vs % of Lost showing that feature, then sort by absolute difference. Largest deltas = strongest ICP signals.
 
-This is best done in Python or via `anthropic.instruct` with structured output:
+This is best done in Python or via `anthropic.instruct` with a JSON-only prompt:
+
+The six step-2 files hold batch objects, not rows. Each batch's rows are a CSV
+behind `batch download`: the input `domain` column plus every output key as
+`cargo_<key>`.
 
 ```bash
-# Concatenate enrichment results into a structured comparison input
-jq -s '{
-  won:  [.[0].results[], .[1].results[], .[2].results[]] | group_by(.domain) | map(reduce .[] as $r ({}; . * $r)),
-  lost: [.[3].results[], .[4].results[], .[5].results[]] | group_by(.domain) | map(reduce .[] as $r ({}; . * $r))
-}' \
-  /tmp/won-enrichCompany.json \
-  /tmp/won-getDomainSummary.json \
-  /tmp/won-getFunding.json \
-  /tmp/lost-enrichCompany.json \
-  /tmp/lost-getDomainSummary.json \
-  /tmp/lost-getFunding.json > /tmp/comparison.json
+rows() {  # rows <file written by execute-batch> → JSON array of CSV rows
+  curl -fsSL "$(cargo-ai orchestration batch download --uuid "$(jq -r .batch.uuid "$1")" | jq -r .url)" \
+    | python3 -c 'import csv,json,sys; json.dump(list(csv.DictReader(sys.stdin)), sys.stdout)'
+}
+
+# Merge the three enrichments per domain, then build the comparison input
+for src in won lost; do
+  for action in enrichCompany getDomainSummary getFunding; do rows /tmp/$src-$action.json; done \
+    | jq -s 'add | group_by(.domain) | map(reduce .[] as $r ({}; . * $r))' > /tmp/$src-merged.json
+done
+jq -n --slurpfile won /tmp/won-merged.json --slurpfile lost /tmp/lost-merged.json \
+  '{won: $won[0], lost: $lost[0]}' > /tmp/comparison.json
 
 # Use anthropic to surface differentiating signals
 cargo-ai orchestration action execute \
   --action '{"kind":"connector","integrationSlug":"anthropic","actionSlug":"instruct"}' \
   --data '{
     "model": "claude-sonnet-4-6",
-    "prompt": "Two arrays: Closed-Won companies and Closed-Lost companies. Compare feature distributions and surface the top 10 signals that differentiate Won from Lost. Return JSON: [{signal, won_rate, lost_rate, difference_pct, why_it_matters}]. Data: <paste /tmp/comparison.json>",
-    "output": {"type": "jsonSchema", "jsonSchema": {"type": "array", "items": {"type": "object"}}}
+    "prompt": "Two arrays: Closed-Won companies and Closed-Lost companies. Compare feature distributions and surface the top 10 signals that differentiate Won from Lost. Return ONLY a JSON array: [{signal, won_rate, lost_rate, difference_pct, why_it_matters}]. Data: <paste /tmp/comparison.json>"
   }' \
   --wait-until-finished
 ```
+
+`anthropic.instruct` takes `model`, `prompt` and optional `advancedSettings`; it has no structured-output field, so the JSON shape is enforced in the prompt.
 
 For deal sets > 100 records, do the diff in Python directly — LLM is more reliable for pattern *interpretation* on small samples than for *aggregation* on large ones.
 
@@ -116,18 +122,18 @@ For each surfaced signal, validate by running it as a filter against the Won seg
 # Example: signal is "uses Snowflake" → confirm it's a catalog-recognized technology
 cargo-ai orchestration action execute \
   --action '{"kind":"connector","integrationSlug":"theirStack","actionSlug":"searchTechnologies"}' \
-  --data '{"fields":{"keywords":"snowflake"},"limit":1}' \
+  --data '{"fields":{"technology_slug_or":["snowflake"]},"limit":1}' \
   --wait-until-finished
 ```
 
-If the technology is in theirStack's catalog and the Won-rate is significantly higher than Lost-rate, lock the signal in for prospecting.
+If that slug returns a row (`technology.slug`), the technology is in theirStack's catalog; if it is and the Won-rate is significantly higher than Lost-rate, lock the signal in for prospecting.
 
 ### Step 5 — Encode signals as ICP filters
 
 Take the top 5–10 signals and translate them into filter syntax for prospecting providers:
 - Industry / size / geo → `salesNavigator.searchAccounts` filters.
-- Tech stack → `theirStack.searchCompanies.techFields.technologies`.
-- Funding range → `peopleDataLabs.queryCompanies` ES query.
+- Tech stack → `theirStack.searchCompanies` `fields.company_technology_slug_or`.
+- Funding range → `peopleDataLabs.queryCompanies` PDL SQL query (`latest_funding_stage`, `total_funding_raised`).
 
 Hand the encoded filters to `cargo-tam-build` to build the next prospecting list.
 
@@ -158,7 +164,7 @@ If any are missing, ask **once** before running — don't guess on the SQL.
 
 ## Output retrieval
 
-For batch enrichments, use `cargo-ai orchestration run download-outputs --workflow-uuid <uuid> --output-node-slug <slug>`.
+For `execute-batch` enrichments, use `cargo-ai orchestration batch download --uuid <batch-uuid>` (signed CSV URL, step 3). For a saved play or tool, use `cargo-ai orchestration run download-outputs --workflow-uuid <uuid> --output-node-slug <slug>`.
 
 ## Output deliverable
 

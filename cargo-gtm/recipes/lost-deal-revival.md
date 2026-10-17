@@ -17,7 +17,7 @@ Most Closed-Lost deals stay lost. But specific lost-reason categories have speci
 |---|---|
 | `champion_left` / `no_decision_maker` | Original contact moved to a new company (`waterfall.detectJobChange`) — warm intro at the new account. |
 | `price` / `budget` / `no_budget` | Company raised a fresh round (`enrichCrm.getFunding`, compared against the deal's close date). |
-| `wrong_time` / `timing` | A re-org or new exec hire (`salesNavigator.searchLeads` with `seniority: ["VP+", "C-Level"]` filter, joined date < 90d). |
+| `wrong_time` / `timing` | A re-org or new exec hire (`salesNavigator.searchLeads` with `role.seniorityLevels: ["300", "310"]` (VP, CXO) and `recentUpdates.changedJobs`). |
 | `feature_gap` / `missing_feature` | Manual — replay based on your product release date vs. deal close date. |
 | `competitor_won` | Annual revisit at renewal time — check competitor satisfaction signals if available. |
 
@@ -35,9 +35,11 @@ cargo-ai segmentation segment fetch \
   --model-uuid "$DEALS_MODEL" \
   --filter '{"conjonction":"and","groups":[{"conjonction":"and","conditions":[
     {"kind":"string","columnSlug":"stage","operator":"is","values":["Closed Lost"]},
-    {"kind":"date","columnSlug":"closed_at","operator":"olderThan","values":["90d"]}
+    {"kind":"date","columnSlug":"closed_at","operator":"lowerThan","value":"'"$CUTOFF"'"}
   ]}]}' > /tmp/lost-deals.json
 ```
+
+`CUTOFF` is the ISO date 90 days ago (e.g. `2026-07-18`): date conditions take an absolute `value` with `is`, `isNot`, `greaterThan`, `lowerThan` or `between`; there is no relative `olderThan` operator.
 
 The 90-day floor avoids re-touching deals while they're still mentally fresh with the buyer. Adjust to match the workspace's cooling convention.
 
@@ -51,18 +53,32 @@ jq -c '[.records[] | select(.lost_reason == "wrong_time" or .lost_reason == "tim
 
 ### Step 3a — Champion-left branch: detect job changes
 
+`execute-batch --wait-until-finished` prints the batch object, not rows. Rows come from `batch download`: a signed CSV of each input record's columns plus every output key as `cargo_<key>` (nested objects as dotted columns, e.g. `cargo_person.company_name`). This helper turns it into JSON for jq:
+
 ```bash
-cargo-ai orchestration action execute-batch \
+batch_rows() {
+  curl -fsSL "$(cargo-ai orchestration batch download --uuid "$1" | jq -r .url)" \
+    | python3 -c 'import csv,json,sys; json.dump(list(csv.DictReader(sys.stdin)), sys.stdout)'
+}
+```
+
+```bash
+# deal_id rides along in each record so it comes back as a CSV column; the
+# action ignores it
+B=$(cargo-ai orchestration action execute-batch \
   --action '{"kind":"connector","integrationSlug":"waterfall","actionSlug":"detectJobChange"}' \
   --records "$(jq -c '[.[] | {
+    deal_id,
     professional_email: .primary_contact_email,
     contact_linkedin: .primary_contact_linkedin,
     company_domain: .account_domain
   }]' /tmp/lost-champion.json)" \
-  --wait-until-finished > /tmp/champion-changes.json
+  --wait-until-finished | jq -r '.batch.uuid')
+batch_rows "$B" > /tmp/champion-changes.json
 
-# Keep MOVED rows — the contact is at a new (target) company
-jq -c '[.results[] | select(.status == "MOVED")]' /tmp/champion-changes.json > /tmp/revive-champion.json
+# Keep moved rows (job_change_status is lowercase) — the contact is at a new
+# (target) company, given under person.*
+jq -c '[.[] | select(.cargo_job_change_status == "moved")]' /tmp/champion-changes.json > /tmp/revive-champion.json
 ```
 
 ### Step 3b — Budget branch: detect fresh funding
@@ -72,50 +88,63 @@ There is no since-timestamp event feed in the catalog, so "fresh round" is a
 post-dates the deal's close date.
 
 ```bash
-cargo-ai orchestration action execute-batch \
+B=$(cargo-ai orchestration action execute-batch \
   --action '{"kind":"connector","integrationSlug":"enrichCrm","actionSlug":"getFunding"}' \
   --records "$(jq -c '[.[] | {domain: .account_domain}]' /tmp/lost-budget.json)" \
-  --wait-until-finished > /tmp/budget-funding.json
+  --wait-until-finished | jq -r '.batch.uuid')
+batch_rows "$B" > /tmp/budget-funding.json
 
 # Keep deals where a funding round closed AFTER the original deal lost, and
 # carry deal_id through — step 4 merges on it and getFunding does not return it.
+# The input `domain` column comes back alongside cargo_lastFundingDate.
 jq -c --slurpfile lost /tmp/lost-budget.json '
   ($lost[0] | map({key: .account_domain, value: .}) | from_entries) as $deal
-  | [ .results[]
+  | [ .[]
       | . as $f
+      | select(($f.cargo_lastFundingDate // "") != "")
       | $deal[$f.domain]
-      | select($f.lastFundingDate > (.closed_at // "9999"))
-      | {deal_id, account_domain: $f.domain, lastFundingDate: $f.lastFundingDate} ]
+      | select($f.cargo_lastFundingDate > (.closed_at // "9999"))
+      | {deal_id, account_domain: $f.domain, lastFundingDate: $f.cargo_lastFundingDate} ]
 ' /tmp/budget-funding.json > /tmp/revive-budget.json
 ```
 
 ### Step 3c — Timing branch: detect new exec hires at the account
 
-```bash
-cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"salesNavigator","actionSlug":"searchLeads"}' \
-  --records "$(jq -c '[.[] | {
-    company_domain: .account_domain,
-    seniority: ["VP+", "C-Level"],
-    function: ["Sales","Revenue Operations","Engineering"],
-    joined_within_days: 90
-  }]' /tmp/lost-timing.json)" \
-  --wait-until-finished > /tmp/timing-execs.json
+searchLeads has no domain filter: it scopes to a company by its LinkedIn company id (`company.currentCompanyIds`). This assumes the deal carries it as `account_linkedin_id`; when it doesn't, resolve it first with `linkedin.enrichCompanyFromDomain` (0.5, returns `company_id`).
 
-# Keep accounts with at least one fresh exec hire
-jq -c '[.results[] | select((.leads // []) | length > 0)]' /tmp/timing-execs.json > /tmp/revive-timing.json
+```bash
+# Codes are LinkedIn's, as strings: seniority "300" VP, "310" CXO;
+# functions "25" Sales, "18" Operations, "8" Engineering
+B=$(cargo-ai orchestration action execute-batch \
+  --action '{"kind":"connector","integrationSlug":"salesNavigator","actionSlug":"searchLeads"}' \
+  --records "$(jq -c '[.[] | select(.account_linkedin_id) | {
+    deal_id, account_domain,
+    company: {currentCompanyIds: [.account_linkedin_id]},
+    role: {seniorityLevels: ["300", "310"], functions: ["25", "18", "8"]},
+    recentUpdates: {changedJobs: true},
+    limit: 5
+  }]' /tmp/lost-timing.json)" \
+  --wait-until-finished | jq -r '.batch.uuid')
+batch_rows "$B" > /tmp/timing-execs.json
+
+# Keep accounts with at least one fresh exec hire. The leads array lands in
+# one `cargo` column as JSON; recently_hired marks the new joiners
+jq -c '[.[] | (.cargo // "" | if . == "" then [] else fromjson end | map(select(.recently_hired == true))) as $l
+        | select($l | length > 0) | {deal_id, account_domain, leads: $l}]' \
+  /tmp/timing-execs.json > /tmp/revive-timing.json
 ```
 
-Adjust the function list to match where your buyer typically sits.
+Adjust the function list to match where your buyer typically sits (other function codes: "15" Marketing, "13" Information Technology; resolve a name with the salesNavigator `listFunctions` autocomplete). Names like `"Sales"` match nothing.
 
 ### Step 4 — Merge into a single revive segment
 
 ```bash
 # `inputs` is a generator, not an array — slurp it before indexing.
 jq -c -n '[inputs] as $in
-  | ([$in[0][] | {deal_id: .deal_id, account_domain: .company_domain, revival: "champion_changed", details: .new_company}] +
+  | ([$in[0][] | {deal_id: .deal_id, account_domain: .company_domain, revival: "champion_changed",
+                   details: {company_name: .["cargo_person.company_name"], company_domain: .["cargo_person.company_domain"], title: .["cargo_person.title"]}}] +
      [$in[1][] | {deal_id: .deal_id, account_domain: .account_domain, revival: "fresh_funding", details: {lastFundingDate: .lastFundingDate}}] +
-     [$in[2][] | {deal_id: .deal_id, account_domain: .company_domain, revival: "new_exec", details: .leads[0]}])
+     [$in[2][] | {deal_id: .deal_id, account_domain: .account_domain, revival: "new_exec", details: .leads[0]}])
 ' /tmp/revive-champion.json /tmp/revive-budget.json /tmp/revive-timing.json > /tmp/lost-revival.json
 ```
 
@@ -128,7 +157,7 @@ Pass `/tmp/lost-revival.json` to [`outreach-activation.md`](outreach-activation.
 For ongoing revival:
 
 1. Trigger: monthly cron (lost deals don't churn signals fast enough for weekly).
-2. Source: Closed-Lost deals segment with `closed_at older than 90d`.
+2. Source: Closed-Lost deals segment with `closed_at` more than 90 days ago.
 3. Nodes: branch by `lost_reason` → run matching detector → union → write to "Lost — revival candidates" segment.
 
 For play setup, see [`../../cargo-orchestration/references/examples/plays.md`](../../cargo-orchestration/references/examples/plays.md).
@@ -141,8 +170,8 @@ For a 300-deal Closed-Lost cohort, scanned monthly:
 |---|---|---|---|
 | `waterfall.detectJobChange` | 3 | 100 | 300 |
 | `enrichCrm.getFunding` | 1 | 100 | 100 |
-| `salesNavigator.searchLeads` | 2 | 100 | 200 |
-| **Total monthly** | — | 300 | **600** |
+| `salesNavigator.searchLeads` | 0.2 per lead returned (`limit: 5`, ≤ 1 per account) | 100 | ≤ 100 |
+| **Total monthly** | — | 300 | **≤ 500** |
 
 Much cheaper than the broader [`re-engagement.md`](re-engagement.md) scan because each branch only runs on the relevant subset.
 
@@ -152,7 +181,7 @@ Every action follows: `{"kind":"connector","integrationSlug":"<slug>","actionSlu
 
 ## Output retrieval
 
-For batch runs, use `cargo-ai orchestration run download-outputs --workflow-uuid <uuid> --output-node-slug <slug>`. See [`../references/output-retrieval.md`](../references/output-retrieval.md).
+For batch runs, use `cargo-ai orchestration batch download --uuid <batch-uuid>` (the `batch_rows` helper above): an ad-hoc `execute-batch` has no workflow, so `run download-outputs --workflow-uuid` does not apply. See [`../references/output-retrieval.md`](../references/output-retrieval.md).
 
 ## Related
 

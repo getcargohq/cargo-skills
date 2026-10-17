@@ -11,7 +11,7 @@ cargo-ai hosting app init ./territories --template territories-overview --name "
 
 # 2. Create the workspace slot. --slug is unique per workspace; the host adds a workspace suffix.
 cargo-ai hosting app create --name "Territories" --slug territories
-# → { "uuid": "<app-uuid>", "slug": "territories", "url": "https://territories-1a2b3c4d.app.getcargo.run", ... }
+# → { "app": { "uuid": "<app-uuid>", "slug": "territories", "url": "https://territories-1a2b3c4d.app.getcargo.run", ... } }
 
 # 3. (optional) Develop locally — write the .env.local the app needs, then run Vite
 cargo-ai hosting app env <app-uuid> > ./territories/.env.local
@@ -20,7 +20,7 @@ cd ./territories && npm install && npm run dev
 # 4. Build & upload (source = package root, not dist/). The backend runs `npm ci --ignore-scripts`,
 #    then the app's `build` script (or the framework default, `vite build` here).
 cargo-ai hosting deployment create --app-uuid <app-uuid> --source ./territories
-# → { "uuid": "<deployment-uuid>", "status": "...", ... }
+# → { "deployment": { "uuid": "<deployment-uuid>", "status": "...", ... }, "stats": { "fileCount": n } }
 
 # 5. Poll until the build is terminal
 cargo-ai hosting deployment get <deployment-uuid>

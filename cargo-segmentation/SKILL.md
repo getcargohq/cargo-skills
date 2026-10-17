@@ -1,7 +1,7 @@
 ---
 name: cargo-segmentation
-description: "Define and use segments — named, saved filters over a Cargo model that become the audience for a batch run, a play trigger, or an export. Triggers: \"build a segment of\", \"filter my contacts where\", \"who matches this criteria\", \"save this as a list\", \"how many companies match\", \"the Closed-Won segment\", \"everyone who has not been emailed\", \"target only accounts that\", \"what is in this segment\", \"narrow this down to\". Filter JSON uses `conjonction` (not `conjunction`) — misspelling it fails silently. Skip when: running something over the segment — use cargo-orchestration; exporting its rows — use cargo-analytics; ad-hoc SQL over the model — use cargo-storage."
-version: "1.0.1"
+description: "Define and use segments — named, saved filters over a Cargo model that become the audience for a batch run, a play trigger, or an export. Triggers: \"build a segment of\", \"filter my contacts where\", \"who matches this criteria\", \"save this as a list\", \"how many companies match\", \"the Closed-Won segment\", \"everyone who has not been emailed\", \"target only accounts that\", \"what is in this segment\", \"narrow this down to\". Filter JSON uses `conjonction` (not `conjunction`); misspelling it gets the call rejected with a 400. Skip when: running something over the segment — use cargo-orchestration; exporting its rows — use cargo-analytics; ad-hoc SQL over the model — use cargo-storage."
+version: "1.1.0"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -37,7 +37,7 @@ cargo-ai login --email you@company.com  # emailed code, no browser; creates the 
 cargo-ai whoami                         # confirm the active workspace before any write
 ```
 
-Every command prints JSON to stdout; failures exit non-zero with `{"errorMessage": "..."}`. Anything that creates a run or a batch is async — pass `--wait-until-finished` or poll the matching `get`. When the full skill bundle is installed, [`../cargo/references/prerequisites.md`](../cargo/references/prerequisites.md) adds the CLI version pin, token scopes, and the admin-only surface.
+Every command prints JSON to stdout; failures exit non-zero and print `{"error": "...", "status": ..., "body": ...}` to stderr. Anything that creates a run or a batch is async — pass `--wait-until-finished` or poll the matching `get`. When the full skill bundle is installed, [`../cargo/references/prerequisites.md`](../cargo/references/prerequisites.md) adds the CLI version pin, token scopes, and the admin-only surface.
 
 ## Key concepts
 
@@ -81,7 +81,7 @@ cargo-ai segmentation record fetch --model-uuid <uuid> --ids <id[,id…]>
 
 ## Building a filter
 
-The full condition catalogue — every `kind` (`string`, `number`, `date`, `boolean`, `array`, `relation`) and every operator — is in [`../cargo-orchestration/references/filter-syntax.md`](../cargo-orchestration/references/filter-syntax.md). The shape:
+The full condition catalogue — every `kind` (`string`, `number`, `date`, `boolean`, `array`, `object`, `objectProperty`, `any`, `vector`, `sql`, `segment`, `occurrence`, `enrollment`) and every operator — is in [`../cargo-orchestration/references/filter-syntax.md`](../cargo-orchestration/references/filter-syntax.md). The shape:
 
 ```json
 {
@@ -98,7 +98,9 @@ The full condition catalogue — every `kind` (`string`, `number`, `date`, `bool
 }
 ```
 
-> **`conjonction`, not `conjunction`.** The French spelling is intentional and it is the single most expensive typo in the CLI: a misspelled key does not error — the filter silently matches nothing, and you conclude the data is empty. Grep your JSON for `conjunction` before every call.
+> **`conjonction`, not `conjunction`.** The French spelling is intentional and required at both levels (the filter and every group): a misspelled key fails validation and the API returns a 400 naming `conjonction`. Grep your JSON for `conjunction` before every call.
+>
+> **Every group needs at least one condition.** A group with `"conditions": []` is rejected (`Filter groups must contain at least one condition`); match everything with `"groups": []` instead.
 
 Match-everything filter: `{"conjonction":"and","groups":[]}`.
 
@@ -107,12 +109,12 @@ Match-everything filter: `{"conjonction":"and","groups":[]}`.
 Counting is free; running anything over an audience is not. Establish the size first, then decide.
 
 ```bash
-# 1. How many records match? — inline filter, no saved object, 1 row back
+# 1. How many records match? — inline filter, no saved object, 1 row back; read `count`
 cargo-ai segmentation segment fetch \
   --model-uuid <uuid> \
   --filter '{"conjonction":"and","groups":[{"conjonction":"and","conditions":[
       {"kind":"number","columnSlug":"employee_count","operator":"greaterThan","value":100}]}]}' \
-  --limit 1
+  --fetching-limit 1 --sync false --enrich false
 
 # 2. Happy with the shape? Save it as the real audience.
 cargo-ai segmentation segment create \
@@ -123,17 +125,17 @@ cargo-ai segmentation segment create \
   --tracking-column-slugs "employee_count,funding_stage"
 ```
 
-`segment get <uuid>` then reports `recordsCount` — the authoritative size. Cite that number, not your own estimate, before proposing a paid run over the segment.
+`segment fetch` returns the match total as `count` (use `--fetching-limit`, not `--limit`: `--limit` caps membership, so `--limit 1` reports a count of 1). `segment get <uuid>` then reports `recordsCount` — the authoritative size. Cite that number, not your own estimate, before proposing a paid run over the segment.
 
 ## Fetch vs download vs record fetch
 
 | Command | Returns | Use for |
 |---|---|---|
 | `segment fetch --model-uuid --filter` | Records inline as JSON, paginated (`--fetching-limit`, `--fetching-offset`) | Inspecting a handful of rows, counting, previewing a filter before saving it |
-| `segment download --model-uuid --filter` | A signed URL to the full dataset | Handing the whole audience to the user or another tool — see [`../cargo-analytics/SKILL.md`](../cargo-analytics/SKILL.md) |
+| `segment download --model-uuid --filter` | Signed URLs (`urls[]`) to the full dataset | Handing the whole audience to the user or another tool — see [`../cargo-analytics/SKILL.md`](../cargo-analytics/SKILL.md) |
 | `record fetch --model-uuid --ids <ids>` | Specific records by id | Re-reading rows a change feed just told you about |
 
-`segment fetch --sync` refreshes the underlying data sources before evaluating; `--enrich` returns joined/derived values. Both cost time, so leave them off for a size check.
+`segment fetch` refreshes the model before evaluating (`--sync`) and adds a `_segments` membership column (`--enrich`). Both default to on when omitted and cost time, so pass `--sync false --enrich false` for a size check.
 
 **Never page a large segment into the conversation.** Use `--limit 3` to see the shape, then `download` for the rest.
 
@@ -163,7 +165,7 @@ A segment's most recent delta is also inlined on `segment list` / `segment get` 
 Segments are an input, not an outcome. Once one exists:
 
 - **Run something over it** — batch a connector action or workflow across every member: [`../cargo-orchestration/SKILL.md`](../cargo-orchestration/SKILL.md). Batches enroll from a segment; sample 10–20 records and get explicit approval before enrolling the full audience.
-- **Trigger a play on entry** — a play whose trigger is a segment fires as records enter it. Play triggers use `kind: "filter"` and generate their own `GENERATED_PLAY_SEGMENT`; see [`../cargo-orchestration/references/examples/plays.md`](../cargo-orchestration/references/examples/plays.md).
+- **Trigger a play on entry** — a play fires as records enter its audience. A play is created from a `--model-uuid`, a `--filter`, and `--change-kinds`, and generates its own `GENERATED_PLAY_SEGMENT`; see [`../cargo-orchestration/references/examples/plays.md`](../cargo-orchestration/references/examples/plays.md).
 - **Export it** — [`../cargo-analytics/SKILL.md`](../cargo-analytics/SKILL.md) (`segment download` needs `--model-uuid`, *not* `--segment-uuid` — a frequent 400).
 - **Watch it** — alert when the audience empties, stalls, or spikes: [`../cargo-observability/SKILL.md`](../cargo-observability/SKILL.md).
 - **Act on it as GTM** — signal segments (job change, funding, tech intent) drive the recipes in [`../cargo-gtm/SKILL.md`](../cargo-gtm/SKILL.md).
@@ -171,7 +173,7 @@ Segments are an input, not an outcome. Once one exists:
 
 ## Gotchas
 
-- **`conjonction`, never `conjunction`** — silent empty result, no error.
+- **`conjonction`, never `conjunction`** — the call is rejected with a 400.
 - **`segment download` takes `--model-uuid`, not `--segment-uuid`.** The filter travels with the request; the segment UUID is not a valid input there.
 - **`change fetch` needs `--uuid` (the *change* UUID) plus `--kinds`.** Passing the segment UUID returns a 400.
 - **`change list` needs `--segment-uuid`.** Calling it bare returns a 400 complaining that `segmentUuid` is undefined.

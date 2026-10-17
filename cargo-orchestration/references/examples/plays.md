@@ -10,8 +10,8 @@ Key properties of a play:
 - **`workflowUuid`** — the underlying workflow that executes
 - **`modelUuid`** — the data model the play operates on
 - **`segmentUuid`** — the segment that triggers runs
-- **`changeKinds`** — which segment changes trigger a run (`added`, `updated`, `removed`)
-- **`schedule`** — optional cron schedule for periodic re-evaluation
+- **`changeKinds`** — which segment changes trigger a run (`added`, `updated`, `removed`, `unchanged`)
+- **`schedule`** — how the play is triggered (`type`: `watch`, `realtime`, `cron`, `dbt`, or `dependency`), or `null`
 - **`isEnabled`** — whether the play is active
 
 ## List all plays
@@ -33,8 +33,7 @@ Response:
       "segmentUuid": "segment-uuid",
       "changeKinds": ["added", "updated"],
       "isEnabled": true,
-      "schedule": null,
-      "description": "Enriches companies when they enter the segment"
+      "schedule": null
     }
   ]
 }
@@ -116,14 +115,14 @@ cargo-ai orchestration release deploy-draft \
 > **`run create` is not compatible with play workflows** — it will return
 > `playNotCompatible`. Always use `batch create` for plays.
 >
-> Allowed batch data kinds for plays: `segment`, `change`, `filter`, `recordIds`.
+> Every batch data kind except `file` is accepted for plays (`file` is tools only).
 
 ### By filter (query the model)
 
 ```bash
 cargo-ai orchestration batch create \
   --workflow-uuid <play.workflowUuid> \
-  --data '{"kind":"filter","modelUuid":"<play.modelUuid>","filter":{"field":"domain","operator":"is","value":"acme.com"},"limit":10}'
+  --data '{"kind":"filter","modelUuid":"<play.modelUuid>","filter":{"conjonction":"and","groups":[{"conjonction":"and","conditions":[{"kind":"string","columnSlug":"domain","operator":"is","values":["acme.com"]}]}]},"limit":10}'
 ```
 
 ### By record IDs
@@ -204,6 +203,10 @@ cargo-ai orchestration node validate --nodes '[
         "connectorUuid": "<openai-connector-uuid>",
         "languageModelSlug": "gpt-4.1-mini",
         "temperature": 0.1
+      },
+      "output": {
+        "type": "jsonSchema",
+        "jsonSchema": {"type": "object", "properties": {"score": {"type": "number"}, "reasoning": {"type": "string"}}, "required": ["score", "reasoning"]}
       }
     },
     "childrenUuids": ["99999999-9999-4999-a999-999999999999"], "fallbackOnFailure": false,
@@ -213,8 +216,8 @@ cargo-ai orchestration node validate --nodes '[
     "uuid": "99999999-9999-4999-a999-999999999999", "slug": "end", "kind": "native", "actionSlug": "end",
     "config": {
       "variables": [
-        {"name": "score", "type": "number", "value": {"kind": "templateExpression", "expression": "{{nodes.score.score}}", "instructTo": "none", "fromRecipe": false}},
-        {"name": "reasoning", "type": "string", "value": {"kind": "templateExpression", "expression": "{{nodes.score.reasoning}}", "instructTo": "none", "fromRecipe": false}}
+        {"name": "score", "type": "number", "value": {"kind": "templateExpression", "expression": "{{nodes.score.answer.score}}", "instructTo": "none", "fromRecipe": false}},
+        {"name": "reasoning", "type": "string", "value": {"kind": "templateExpression", "expression": "{{nodes.score.answer.reasoning}}", "instructTo": "none", "fromRecipe": false}}
       ]
     },
     "childrenUuids": [], "fallbackOnFailure": false,
@@ -236,7 +239,7 @@ cargo-ai orchestration batch create \
 
 # Step 7 — Poll until finished (every 5s)
 cargo-ai orchestration batch get <batch-uuid>
-# → Done when .status is "success", "error", or "cancelled"
+# → Done when .status is "success", "error", "cancelled", or "skipped"
 
 # Alternative to steps 6+7 — block until finished in one command
 cargo-ai orchestration batch create \

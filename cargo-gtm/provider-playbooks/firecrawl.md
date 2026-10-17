@@ -12,11 +12,12 @@ Web scraping, crawling, and web search at **0.05 credits per item** — the defa
 
 | Action | Cost | Inputs | Use for |
 |---|---|---|---|
-| `scrape` | 0.05 / item | `url` | Turn one URL into clean data (markdown, html, links, metadata). |
+| `scrape` | 0.05 / item | `url`, `includeFullPage`, `formats` (`markdown` default, `html`, `rawHtml`, `links`) | Turn one URL into clean data (markdown, html, links, metadata). |
 | `search` | 0.05 / item | `query`, `limit` (1–100) | Web search when no structured provider has the data. |
-| `crawl` | 0.05 / **page** | `url`, `maxDepth`, `limit`, `includesPaths`, `excludesPaths`, `options` | Recursively gather a site's pages (docs, job boards, portfolio pages). |
+| `crawl` | 0.05 / **page** | `url`, `maxDepth`, `limit`, `includePaths`, `excludePaths`, `options` | Recursively gather a site's pages (docs, job boards, portfolio pages). |
+| `map` | 0.05 / call | `url`, `search`, `limit` (1–100,000), `sitemap` (`include` / `skip` / `only`), `includeSubdomains` | List a site's URLs without scraping them; returns `{ links: [{ url, title, description }] }`. |
 
-All three bill **per item returned**, not per call. In credits mode the connector is rate-limited (15/min, spread), so large crawls take time as well as credits.
+`scrape`, `search` and `crawl` bill **per item returned**, not per call (`map` returns one `links` object, so it bills once per call). In credits mode the connector is rate-limited (15/min, spread), so large crawls take time as well as credits.
 
 ## What it's for
 
@@ -24,7 +25,7 @@ All three bill **per item returned**, not per call. In credits mode the connecto
 - ✅ **Niche signals no structured provider covers** — industry job boards ([`../recipes/tech-intent.md`](../recipes/tech-intent.md)), investor portfolio pages ([`../recipes/portfolio-prospecting.md`](../recipes/portfolio-prospecting.md)), "companies that mention X on their site".
 - ✅ **Cheap web search** — `search` at 0.05/result is the lowest-cost web-search rung in the sourcing map.
 - ❌ **Firmographics / tech stack at scale** — `aiArk.enrichCompany` (0.01) and `builtwith.getDomainSummary` (**free**) return structured fields directly; scraping + LLM-extracting the same facts costs more end-to-end and parses worse.
-- ❌ **Jobs on major boards** — `theirStack.searchJobs` (0.5) already covers LinkedIn, Indeed, etc. Crawl only the niche boards theirStack misses.
+- ❌ **Jobs on major boards** — `theirStack.searchJobs` (0.5 / item) already covers LinkedIn, Indeed, etc. Crawl only the niche boards theirStack misses.
 
 ## Patterns
 
@@ -59,7 +60,7 @@ cargo-ai orchestration action execute \
     "url": "https://jobs.nicheboard.io",
     "maxDepth": 1,
     "limit": 50,
-    "includesPaths": ["/jobs/*"]
+    "includePaths": ["/jobs/*"]
   }' \
   --wait-until-finished
 ```
@@ -69,7 +70,7 @@ cargo-ai orchestration action execute \
 ## Common pitfalls
 
 - **Unbounded crawls.** `crawl` bills 0.05 per page crawled — an uncapped crawl of a large site burns hundreds of credits. **Always set `limit`** and start with `maxDepth: 1`; widen only if the pilot shows you need more.
-- **Path-filter key spelling.** The action's input schema names the filters `includesPaths` / `excludesPaths` (note the plural "includes"), while the UI labels them include/exclude paths. If a filter appears ignored, check the spelling against the schema.
+- **Path-filter key spelling.** The action's input schema names the filters `includePaths` / `excludePaths`, while the UI labels them Includes/Excludes. A misspelled key (e.g. `includesPaths`) is stripped and the crawl runs unfiltered.
 - **`allowExternalLinks` on a crawl.** It lets the crawler leave the target domain — combined with a loose `limit` this is the fastest way to pay for pages you didn't want.
 
 ## Anti-patterns
@@ -79,7 +80,7 @@ cargo-ai orchestration action execute \
 
 ## Position in the waterfall
 
-**Web-research default** (see [`../references/stage-action-map.md`](../references/stage-action-map.md), Web research): `firecrawl` first at 0.05/item, escalating to `linkup.search` (0.5) when you need structured answers, or `perplexity.instruct` (0.3) for cited synthesis. As a sourcing rung, `search` is the last-resort coverage fallback after salesNavigator / theirStack / serper.
+**Web-research default** (see [`../references/stage-action-map.md`](../references/stage-action-map.md), Web research): `firecrawl` first at 0.05/item, escalating to `linkup.search` (0.5 standard, 2 deep) when you need structured answers, or `perplexity.instruct` (from 0.3 / 1k tokens) for cited synthesis. As a sourcing rung, `search` is the last-resort coverage fallback after salesNavigator / theirStack / serper.
 
 Firecrawl's `crawl` also exists as an **extractor** — usable to sync a website into a connector-backed knowledge library (see the `cargo-content` skill) rather than as a one-off action.
 

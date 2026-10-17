@@ -45,7 +45,7 @@ cargo-ai connection connector list                           # is the CRM connec
 
 Surprisingly often the answer is a `SELECT` away, or one CRM sync. Say so and stop.
 
-**Tier 1 — the catalog, by input type.** [`../references/stage-action-map.md`](../references/stage-action-map.md) maps input type → cheapest credits-based action per stage; [`../references/credits-cost-table.md`](../references/credits-cost-table.md) has the per-action cost for all 145. Pull 2–3 candidates, not one.
+**Tier 1 — the catalog, by input type.** [`../references/stage-action-map.md`](../references/stage-action-map.md) maps input type → cheapest credits-based action per stage; [`../references/credits-cost-table.md`](../references/credits-cost-table.md) has the per-action cost for all 180. Pull 2–3 candidates, not one.
 
 **Tier 2 — general web.** When no structured provider carries the field: `serper` (SERP), `firecrawl` (scrape a known page), `linkup` (sourced answers), or an LLM with search grounding. Cheap per call, unbounded per question, and the answer quality depends entirely on the prompt — read [`../references/prompt-library/index.md`](../references/prompt-library/index.md) before writing one.
 
@@ -80,11 +80,11 @@ Do not proceed on your own judgment. Present the costed comparison and stop:
 > | Source | Probe hit rate | Cost/row | Cost/hit | Note |
 > |---|---|---|---|---|
 > | `theirStack.searchTechnologies` | 3/10 | 0.5 | 1.7 | Only detects platform vendors |
-> | `firecrawl` on `/security` | 7/10 | 0.5 | 0.7 | Needs an LLM extract step (+0.01) |
+> | `firecrawl` on `/security` | 7/10 | ~0.06 | 0.09 | 0.05 per page + an LLM extract step (+0.01) |
 > | `serper` + LLM judge | 8/10 | ~0.3 | 0.4 | Noisiest; 1 of 3 spot-checks wrong |
 >
-> **Recommendation:** firecrawl on `/security`, ~1,360 answers for ~1,020 credits. Balance is 4,200.
-> **Alternative if budget matters more than coverage:** serper + judge, ~40% cheaper, with a manual spot-check on the positives.
+> **Recommendation:** firecrawl on `/security`, ~1,360 answers for ~120 credits. Balance is 4,200.
+> **Alternative if coverage matters more than budget:** serper + judge, ~80% vs 70% coverage at ~5× the cost (~580 credits), with a manual spot-check on the positives.
 > **What I'd drop:** theirStack — it answers a different question than the one asked.
 
 Three shaped options, a default, and the reconciled balance — the standard approval shape from [`../references/cost-discipline.md`](../references/cost-discipline.md). Stay in AWAIT_APPROVAL until the user picks.

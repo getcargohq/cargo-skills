@@ -1,7 +1,7 @@
 ---
 name: cargo
-description: "Router for the Cargo CLI skill bundle — load first for anything Cargo, and whenever a task spans two Cargo domains. Explains what each skill owns, declarative workspace-as-code (cargo-project) vs the imperative CLI, the UUID and slug flow between skills, async polling of runs and batches, end-to-end use cases, and the gotchas that fail silently (`conjonction` spelling, run vs batch, model-uuid vs segment-uuid). Triggers: \"set up Cargo\", \"what can Cargo do\", \"which Cargo skill\", \"bootstrap my workspace\", \"I have a Cargo account\", \"cargo-ai …\", or any `cargo-ai` command whose domain you are unsure of. Skip when: the task obviously belongs to one skill — load that skill directly."
-version: "1.27.2"
+description: "Router for the Cargo CLI skill bundle — load first for anything Cargo, and whenever a task spans two Cargo domains. Explains what each skill owns, declarative workspace-as-code (cargo-project) vs the imperative CLI, the UUID and slug flow between skills, async polling of runs and batches, end-to-end use cases, and the gotchas that fail silently (misnamed action inputs dropped without an error, run vs batch, model-uuid vs segment-uuid). Triggers: \"set up Cargo\", \"what can Cargo do\", \"which Cargo skill\", \"bootstrap my workspace\", \"I have a Cargo account\", \"cargo-ai …\", or any `cargo-ai` command whose domain you are unsure of. Skip when: the task obviously belongs to one skill — load that skill directly."
+version: "1.28.0"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -66,13 +66,13 @@ cargo-ai whoami
 
 `--email` is the one to reach for in an **agent or sandbox shell**: it never opens a browser, and where there is no terminal to prompt at, the first call sends the code and exits so you re-run with `--code`. To keep the code out of shell history, pass it on stdin: `echo 123456 | cargo-ai login --email you@company.com --code -`. Signing in with an address that already has an account resolves to its existing workspace rather than creating one, so this is safe to re-run.
 
-`--oauth` runs the same OAuth 2.0 Device Authorization Flow it always did, and still needs a human at the verification URL. Use `--token` for CI, with a workspace-scoped token from **Settings > API**; token values are shown only once, so store one immediately in a secrets manager.
+`--oauth` runs the same OAuth 2.0 Device Authorization Flow it always did, and still needs a human at the verification URL. Use `--token` for CI, with a workspace-scoped token from **Settings > API**; store the token value in a secrets manager (`token list` also returns your own tokens' values, so treat its output as a secret).
 
 Without a global install, prefix every command with `npx @cargo-ai/cli` instead of `cargo-ai`.
 
 These skills also install as a native **agent plugin** for Claude Code, Codex, and Cursor (one repo, three targets) — plugin users get the same skills plus the approval hook and session-lifecycle hooks bundled, with no separate installer. See the repo `README.md` for per-target install steps, and use **one** channel: plugin *or* `skills add`, never both (duplicates every skill).
 
-All commands output JSON to stdout. Failed commands exit non-zero and return `{"errorMessage": "..."}`. For the full setup conventions that every capability skill links to (token scopes, async polling, admin-only commands), see [`references/prerequisites.md`](references/prerequisites.md).
+All commands output JSON to stdout. Failed commands exit non-zero and print `{"error": "...", "status": ..., "body": {...}}` to stderr (the API's own `errorMessage` sits inside `body`). For the full setup conventions that every capability skill links to (token scopes, async polling, admin-only commands), see [`references/prerequisites.md`](references/prerequisites.md).
 
 ## Every Cargo session has three jobs
 
@@ -266,7 +266,7 @@ establish which one is meant before replying:
 
 | | What it is | Skill |
 |---|---|---|
-| **Hosted server** | Cargo's own endpoint at `https://mcp.getcargo.io/mcp`. Thirteen platform tools (discover, price, execute, poll, read models), plus whatever this workspace published. The way to drive Cargo with no CLI installed. | [`cargo-mcp`](../cargo-mcp/SKILL.md) |
+| **Hosted server** | Cargo's own endpoint at `https://mcp.getcargo.io/mcp`. Seventeen fixed platform tools (discover, price, execute, poll, read models, read context, usage). A workspace's curated servers are served separately, at `/v1/ai/mcpServers/<uuid>/mcp`. The way to drive Cargo with no CLI installed. | [`cargo-mcp`](../cargo-mcp/SKILL.md) |
 | **Workspace server** | A curated set *this workspace* publishes (`ai mcp-server create --actions … --resources …`), served to any stdio client by `cargo-ai mcp`. | [`cargo-ai`](../cargo-ai/SKILL.md) |
 | **Agent MCP client** | Somebody else's MCP server attached *to* a Cargo agent (`release update-draft --mcp-clients`). | [`cargo-ai`](../cargo-ai/SKILL.md) |
 
@@ -321,7 +321,7 @@ They are listed here so you recognize them when a user names one — not as a ro
 | `cargo-ai start` (alias `onboard`) | Signs the user in if needed, then continues into one of: a coding agent (`--continue claude\|cursor\|codex\|gemini`), `code` to scaffold a project, `cli` for the palette, or `demo` for the guided tour. Takes `--email`/`--code`/`--oauth`, `--workspace-name`, `--directory`, `--icp`. |
 | `cargo-ai ask` | Chat in the terminal. Defaults to **Claude Code on this machine** against the working directory (`--dir`); `--agent-uuid` attaches a workspace agent to that same local session. `--print` gives one turn as JSON on stdout, `--continue` reopens the last chat. Also reachable as `cargo-ai --chat`. |
 | `cargo-ai book-demo` | Opens the calendar to book a demo with Cargo sales. `--no-open` prints the URL instead. |
-| `cargo-ai` (bare) | The interactive palette, when the terminal can render it. Inside a CDK project, bare `cargo-ai project` does `info`; outside one it does `init`. |
+| `cargo-ai` (bare) | The interactive palette, when the terminal can render it. Bare `cargo-ai project` prints the group help; it does not run `info` or `init`. |
 
 Two of these overlap work the skills describe by hand: `doctor` is a better first step than
 hand-checking the pin, and `start --continue demo` is the CLI's own version of the
@@ -468,12 +468,12 @@ The non-obvious rules for each skill — the things that fail silently or cost m
 
 - See the decision flowchart at the top of `../cargo-orchestration/SKILL.md` for when to use `action execute` vs `run create` vs `batch create`.
 - **Never enroll a full batch on the first attempt.** `batch create` / `action execute-batch` fan out across every record in the source. Sample **10–20 records**, report observed cost + hit-rate, then ask the user to approve the full enrollment — quoting the **record count** and the **credit estimate**. Mechanics: `../cargo-orchestration/SKILL.md` → "Create a batch"; spend rules: `../cargo-gtm/references/cost-discipline.md` §1.
-- **Search for the action; never browse the catalog for it.** `cargo-ai orchestration action list <keywords> [--kind connector|native|tool|agent] [--integration-slug <slug>] [--limit 20]` covers the integration catalog, Cargo native actions, workspace tools, and agents in one free call, and returns a ready-to-paste `action` object (`connectorUuid` resolved) plus the action's **credit costs**. Its sibling `cargo-ai connection action search <keywords>` is connector-only but adds `--credits-only` and `--category`, the two filters `action list` lacks. Both beat paging `connection integration list`; reach for `integration get <slug>` only once you have picked the action and need its full input schema.
-- **Omit `config` on `action execute` / `action execute-batch`** — inputs go in `--data` / `--records`. That is the shape `action list` returns, so its result pastes straight in. **`action get-output-schema` is the exception and still requires it** (`400` at `action.config` without `"config": {}`), as do workflow **nodes**, alert `--actions`, play `healthAlertActions`, and agent / MCP-server `--actions`. Inputs misplaced in `config` are now dropped rather than rejected — the action runs with no input and the error never mentions `config`.
+- **Search for the action; never browse the catalog for it.** `cargo-ai orchestration action list <keywords> [--kind connector|native|tool|agent] [--integration-slug <slug>] [--limit 20]` covers the integration catalog, Cargo native actions, workspace tools, and agents in one free call, and returns a ready-to-paste `action` object (`connectorUuid` resolved) plus the action's **credit costs**. Its sibling `cargo-ai connection action search <keywords>` is connector-only but adds `--credits-only`, the one filter `action list` lacks. Both beat paging `connection integration list`; reach for `integration get <slug>` only once you have picked the action and need its full input schema.
+- **Omit `config` on `action execute` / `action execute-batch`** — inputs go in `--data` / `--records`. That is the shape `action list` returns, so its result pastes straight in. `action get-output-schema` takes the same shape (inputs, when its schema depends on them, in `--data`). Workflow **nodes**, alert `--actions`, play `healthAlertActions`, and agent / MCP-server `--actions` still carry `config`. Inputs misplaced in `config` are now dropped rather than rejected — the action runs with no input and the error never mentions `config`.
 - **`action execute` is the default for running an operation; `node execute` is debug-only.** Use `node execute` only to test a single node of a workflow you're authoring — it requires `--workflow-uuid`, `--release-uuid`, `--node`, `--computed-config` and `--context` (all five). Anything else — enrich a record, call a connector action, invoke a tool or agent — goes through `action execute` / `action execute-batch`.
 - **Build node graphs from dedicated actions + expressions, in this order:** (1) a dedicated action, found first with `orchestration action list <keywords>` (connector actions, and native ones like `agent`, `modelUpsert`, `branch`, `group`); (2) an expression for the glue, since it's inline JavaScript in the field that needs the value; (3) HTTP, only if no action exists for that API; (4) a `script`/`python` node, only if the logic can't fit in an expression. See `../cargo-orchestration/references/node-selection.md`.
 - **Show a node graph, don't describe it.** Before deploying a draft, and whenever the user asks what a workflow or play does: `cargo-ai orchestration node diagram --workflow-uuid <uuid> --raw` (free, runs nothing, CLI ≥ 1.0.54; `references/node-diagram.md`). Routing, fallback edges, and which nodes bill are what's being approved. Let the command draw it rather than transcribing — node **slugs repeat within a release**, so a hand-drawn diagram keyed on slug merges nodes that aren't the same.
-- Filter JSON uses `conjonction` (not `conjunction`) — breaks silently if misspelled.
+- Filter JSON uses `conjonction` (not `conjunction`). It is a required key, so a misspelling is rejected with a 400.
 - Query orchestration runtime tables (ClickHouse) with `cargo-ai orchestration query execute "<sql>"` against `runs`, `batches`, `spans`, `records` (no schema prefix; workspace scoping is automatic).
 - For SQL against workspace storage (Companies, Contacts, …), use `cargo-ai storage query execute "<sql>"` — documented in `cargo-storage`.
 - All operations are async — poll or pass `--wait-until-finished`. See [Async polling](#async-polling).
@@ -493,8 +493,8 @@ The non-obvious rules for each skill — the things that fail silently or cost m
 
 - Requires a token with **admin access**.
 - Invoice amounts are in cents — divide by 100 for dollars.
-- `subscriptionAvailableCreditsCount - subscriptionCreditsUsedCount` from `subscription get` = remaining credits.
-- **Every node execution bills 0.01 credits (1 per 100)** — structural natives included, errored executions included. It is attributed to *no* node (`executions[].creditsUsedCount` is provider cost only), so any estimate or per-node profile built without it under-counts. Only `usage get-metrics --unit orchestration.executions` shows it; `--unit` takes exactly `billing.credits` / `orchestration.executions` / `storage.records`, and with no `--unit` those three interleave in one `items[]` array with different meanings for `count`.
+- `subscriptionAvailableCreditsCount + additionalAvailableCreditsCount - subscriptionCreditsUsedCount` from `subscription get` (under `.subscription`) = remaining credits.
+- **Every node execution bills 0.01 credits (1 per 100)** — structural natives included, errored executions included. It is attributed to *no* node (`executions[].creditsUsedCount` is provider cost only), so any estimate or per-node profile built without it under-counts. Only `usage get-metrics --unit orchestration.executions` shows it; `--unit` takes exactly `billing.credits` / `orchestration.executions` / `storage.records` / `hosting.events`, and with no `--unit` those four interleave in one `items[]` array with different meanings for `count`.
 
 ### cargo-diagnostics
 
@@ -531,8 +531,8 @@ The non-obvious rules for each skill — the things that fail silently or cost m
 
 **Critical rules:**
 
-- Filter JSON uses `conjonction` (not `conjunction`). A misspelling is **not** an error — the filter silently matches nothing.
-- **Size before you spend.** `segment fetch --limit 1` counts an inline filter for free; a saved segment's `recordsCount` is the authoritative size. Quote it before proposing any paid run over the audience.
+- Filter JSON uses `conjonction` (not `conjunction`). It is required at the filter and the group level, so a misspelling is rejected with a 400, and a group with `conditions: []` is rejected too.
+- **Size before you spend.** `segment fetch --fetching-limit 1` counts an inline filter for free (read `count`; `--limit` caps the membership itself, so `--limit 1` reports 1); a saved segment's `recordsCount` is the authoritative size. Quote it before proposing any paid run over the audience.
 - `segment download` takes `--model-uuid` **plus the filter**, never `--segment-uuid`.
 - `change list` needs `--segment-uuid`; `change fetch` needs the **change** UUID plus `--kinds` (`added`/`updated`/`removed`/`unchanged`).
 - `updatedRecordsCount` stays `0` unless the segment was created with `--tracking-column-slugs` — those columns define what "updated" means.
@@ -577,7 +577,7 @@ See `../cargo-ai/SKILL.md` for model and temperature guidance by use case.
 **Critical rules:**
 
 - `runtime write` / `runtime edit` commit and push. `runtime execute` is ephemeral — use it for `grep`/`ls`/inspection, never for persistent changes.
-- `runtime edit --old-string` must match the file content **exactly once**. Read first, copy whitespace verbatim.
+- `runtime edit --old-string` must match the file content **exactly once** (unless `--replace-all`). Read first, copy whitespace verbatim.
 - Set `title` + `description` frontmatter on every `.md`/`.mdx` file — a **strong convention, not enforced**: missing/malformed frontmatter is still committed, it just indexes poorly (graph falls back to filename + first paragraph, and reads `summary`, not `description`).
 - Graph **edges** form only from frontmatter `references:`, markdown links, or wikilinks — a bare path in prose creates no edge. Cite source files in `references:`.
 - For domains, conventions, and per-domain templates, see `../cargo-context/references/conventions.md`.
@@ -594,7 +594,7 @@ See `../cargo-ai/SKILL.md` for model and temperature guidance by use case.
 **Critical rules:**
 
 - `--slug` is unique **per workspace**; the live host is `<slug>-<workspace prefix>.<root>`, and apps and workers have different roots. Read `url` from `get` instead of composing it. App → worker calls are therefore **cross-origin**: the worker must answer CORS.
-- **`CARGO_API_TOKEN` is never injected.** `createCargoApi` throws without it. Mint a token and store it as a secret env var: workspace-wide with `workspaceManagement envVar create --secret`, or per worker via CDK `defineWorker({ env })` / `POST /v1/hosting/env-vars`, since the `hosting` CLI has no env command at 1.0.96. Env vars bind at promote, so **redeploy + promote after any change**.
+- **`CARGO_API_TOKEN` is never injected.** `createCargoApi` throws without it. Mint a token and store it as a secret env var: workspace-wide with `workspaceManagement envVar create --secret`, or per worker with `hosting worker env set --worker-uuid <uuid> --key CARGO_API_TOKEN --secret` (value from `--value -` on stdin, or the local variable of the same name), or CDK `defineWorker({ env })`. Env vars bind at promote, so **redeploy + promote after any change**.
 - A worker `catch` that returns a sanitized error must `console.error(err)` first. Only uncaught errors reach the logs with a stack.
 - **Deploying ≠ going live.** `deployment create` builds; the URL only moves on `deployment promote`. `deployment get-promoted` shows what's live.
 - `--source` is the **package root**, not `dist/` — the build runs server-side: the app's own `build` script if `package.json` declares one (it owns the whole build), otherwise the detected framework's default (`vite build`, `next build`, …); bundling for workers.
@@ -615,17 +615,17 @@ every imperative capability skill — route with "Declarative vs imperative" abo
 
 **Lifecycle:** `project init` (scaffold from `getcargohq/cargo-manifest` — context, cadence
 and evals, with the resources it deploys in `infra/`) → `project types` (type config
-against the workspace) → author `define*` files → `project plan` (offline diff) →
+against the workspace) → author `define*` files → `project plan` (diff against the workspace-held state; creates nothing) →
 `project deploy` (create/update, write state) → `project destroy`. Plus `refresh` (drift),
 `import` (adopt existing), `pull` (generate `define*` from a live workspace and adopt it),
-`rollback`, `check` (validate, no state), `info` (what is here), `state` (inspect/repoint).
+`rollback`, `check` (validate offline, no state), `info` (what is here), `state` (inspect/repoint/remove).
 
 **Critical rules:**
 
 - **Commit `cargo.state.json`** — but know it is a **pointer** (`{"stateUuid": "…"}`),
   not the state. The deploy state lives in the workspace and is the *only* handle on
   deployed plays/agents/alerts (no slug); lose the pointer and `project state bind`
-  recovers it, lose the state and they orphan. `project state list|create|bind`.
+  recovers it, lose the state and they orphan. `project state list|create|bind|remove`.
 - **Wire by handle, not `.uuid`** — pass a `define*` handle or `xxRef("uuid")`.
 - **Three value helpers, not one.** `secret("ENV_VAR")` reads *your* environment at
   deploy and stays out of state and the content hash (so a rotated secret needs
@@ -662,7 +662,7 @@ copies into the project and adapts, not a template to fill in:
 
 **Critical rules:**
 
-- **A mailbox is a *monthly, recurring* credit charge**, not a per-record one — 100–160 credits per mailbox per month (`mailboxManagement pricing get` for live figures), for as long as it exists. `mailbox remove` is the only way to stop it; there is no pause. Quote the fleet size and the **credit estimate** per month, and get an explicit yes, before the first `create`.
+- **A mailbox is a *monthly, recurring* credit charge**, not a per-record one — 100–125 credits per mailbox per month (shared and private 100, google 125; `mailboxManagement pricing get` for live figures), for as long as it exists. `mailbox remove` is the only way to stop it; there is no pause. Quote the fleet size and the **credit estimate** per month, and get an explicit yes, before the first `create`.
 - **This domain does not send.** Delivery is the native action `sendEmail` (`{"kind":"native","actionSlug":"sendEmail"}`, inputs in `--data`), **0.1 credits per send**, run through `cargo-orchestration`. A play that calls it **re-bills** — and re-contacts — on every run.
 - **Volume is a ramp, not a setting.** Real sends go 5/day → 40/day linearly over 45 days from `warmupStartedAt`. A mailbox that never ran `start-warmup` is pinned at 5/day forever, `stop-warmup` resets the anchor to day 0, and `dailySendLimit` can only *tighten* the ramp, never loosen it.
 - **Every send is gated by `../cargo-gtm/references/acceptable-use.md` §3** (basis, suppression, relevance). Suppression is workspace-wide, checked before every send, has no removal command, and `List-Unsubscribe` writes to it automatically. Raising the ramp — or spreading one campaign across extra mailboxes to clear the same volume — is the §2 evasion refusal.
@@ -677,7 +677,7 @@ copies into the project and adapts, not a template to fill in:
 
 - Most commands require a token with **admin access**.
 - `workspaceManagement token create` requires `--name` (the legacy `--from-user` flag was removed). Pick a name that makes the token's purpose obvious in `token list` later.
-- Token values are only shown **once** at creation — store immediately in a secrets manager (GitHub Secrets, AWS Secrets Manager, etc.).
+- Token values are secrets, and `token list` returns them for your own tokens (and service-user tokens, for admins), not only `token create`. Store them in a secrets manager (GitHub Secrets, AWS Secrets Manager, etc.) and never paste `token list` output.
 - **Always send a `workspaceManagement report create`** when the CLI errors, is being used incorrectly, or you (user or agent) are struggling to make progress on a CLI task — see the section at the top of this file and `../cargo-workspace-management/references/examples/reports.md`.
 
 ### cargo-mcp
@@ -687,8 +687,8 @@ copies into the project and adapts, not a template to fill in:
 - **`whoami` first, every session.** The token binds the session to exactly one workspace with no override. A wrong-workspace session returns real records belonging to someone else, which reads as success.
 - **Never loop `execute_action` over a list** — `execute_action_batch` is cheaper, observable, and returns one object plus an output CSV.
 - `search_actions` returns each action's `credits[].cost`, so quote the price before running it, and sample 10–20 records before a full fan-out.
-- `query_models` is not SQL: it lists records with a limit and offset, and will not aggregate or join. Route those to `cargo-storage`.
-- The tool list varies by workspace — the endpoint serves the platform tools plus whatever that workspace published with `defineMcpServer`.
+- `query_models` runs one read-only SQL `SELECT` (joins, aggregates and CTEs allowed) with a small row cap (default 20, max 50): aggregate in SQL rather than paging rows out. Full exports go to `cargo-storage`.
+- The platform endpoint serves the same fixed tool list to every workspace. A server published with `defineMcpServer` / `ai mcp-server create` is a separate endpoint (`cargo-ai mcp --server <uuid>`).
 
 ## Async polling
 
@@ -720,4 +720,4 @@ See [`references/use-cases.md`](references/use-cases.md) — 8 worked recipes (s
 
 ## Common gotchas
 
-See [`references/gotchas.md`](references/gotchas.md) — silent-failure footguns and frequently confused command pairs (`conjonction` spelling, `run create` vs `batch create`, `--model-uuid` vs `--segment-uuid`, storage query table naming, token-shown-once, invoice cents, third-party connector rate limits, `context runtime execute` vs `write`/`edit`, …).
+See [`references/gotchas.md`](references/gotchas.md) — silent-failure footguns and frequently confused command pairs (`conjonction` spelling, `run create` vs `batch create`, `--model-uuid` vs `--segment-uuid`, storage query table naming, token values are secrets, invoice cents, third-party connector rate limits, `context runtime execute` vs `write`/`edit`, …).

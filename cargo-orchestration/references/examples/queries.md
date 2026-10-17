@@ -32,7 +32,7 @@ Tables are referenced **without** a schema prefix. The query engine scopes every
 | `spans`   | Flattened per-node execution rows (one row per node execution)             |
 | `records` | Materialized view over `runs` keyed by record id                           |
 
-Common columns: `workspace_uuid`, `workflow_uuid`, `batch_uuid`, `release_uuid`, `status`, `created_at`, `updated_at`, `finished_at`, `credits_used_count`. See the migration files in `apps/backend/src/domains/orchestration/migrations/` for the full schema.
+Common columns: `workspace_uuid`, `workflow_uuid`, `batch_uuid`, `release_uuid`, `status`, `created_at`, `updated_at`, `finished_at`. Credits: `credits_used_count` on `batches`, `execution_credits_used_count` on `spans` (`runs` has no top-level credits column, only inside its `executions` array). See the migration files in `apps/backend/src/domains/orchestration/migrations/` for the full schema.
 
 ## Example queries
 

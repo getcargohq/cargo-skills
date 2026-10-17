@@ -1,7 +1,7 @@
 ---
 name: cargo-content
 description: "Manage the knowledge a Cargo workspace holds — upload files (PDF, CSV, text), rename and organize them, and build native or connector-backed libraries that sync from an external source, so agents can retrieve them (RAG). Triggers: \"upload this PDF\", \"add these docs as knowledge\", \"build a knowledge base\", \"sync our help center into Cargo\", \"what files are in the workspace\", \"index this folder\", \"attach our pricing sheet\". Skip when: wiring the file or library into an agent — use cargo-ai; uploading a CSV that drives a batch run — that is a workspace-management file upload."
-version: "1.0.1"
+version: "1.1.0"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -79,9 +79,9 @@ cargo-ai content file remove <file-uuid>
 
 ## Libraries
 
-A library groups files into one resource an agent can reference. There are two kinds:
+A library groups files. Agent release `resources` take file or folder items, not a library UUID, so an agent reaches a library through its files or the folder they land in. There are two kinds:
 
-- **`native`** — workspace-managed collections of uploaded files.
+- **`native`** — workspace-managed collections of uploaded files (not creatable from the CLI: `library create` is connector-only).
 - **`connector`** — synced from an external source (e.g. a help center or knowledge base) through an unstructured-data extractor (`--extractor-slug`). Get the `connectorUuid` from [`cargo-connection`](../cargo-connection/SKILL.md).
 
 ```bash

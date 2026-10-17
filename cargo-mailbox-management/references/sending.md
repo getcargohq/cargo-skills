@@ -26,7 +26,7 @@ No `config` on the action — inputs go in `--data`, as with every action
 | `inReplyTo` | — | `Message-ID` this message replies to. |
 | `references` | — | Every `Message-ID` in the thread so far, **oldest first**. |
 
-Output: `{ messageUuid, rfcMessageId, providerMessageId, sentAt }`.
+Output: `{ messageUuid, rfcMessageId, providerMessageId, sentAt, threadUuid }`.
 
 **Cost: 0.1 credits per send**, fixed, regardless of size or outcome.
 
@@ -64,30 +64,34 @@ silent success. Read the reason; it decides whether retrying is pointless.
 | --- | --- | --- |
 | `recipientSuppressed` | The address is on the workspace suppression list | ❌ Needs a human — and the answer is not to remove the suppression |
 | `mailboxNotActive` | Mailbox is `pending`, or the provider disabled it (`errorCode` 401 auth / 402 spam) | ❌ Fix the mailbox |
+| `mailboxSendingPaused` | The mailbox's `dailySendLimit` is `0`, which pauses outreach from it | ❌ Until the override is lifted |
 | `transportNotSupported` | An `outlook` mailbox — Graph delivery has not shipped | ❌ Permanent |
 | `mailboxNotFound` | Bad `mailboxUuid` | ❌ |
 | `dailyLimitReached` | The ramp's allowance is exhausted for the rolling 24h | ✅ Lifts on its own |
 | `credentialsMissing` | Provisioning has not finished issuing SMTP credentials | ✅ Resolves itself |
 | `deliveryFailed` | The transport rejected it; `errorMessage` carries the detail | ✅ |
 
-The distinction matters at batch scale: three of these will never succeed on retry, so a batch
+The distinction matters at batch scale: the first five will never succeed on retry, so a batch
 full of `recipientSuppressed` is a list problem, not a transient one.
 
 ## Pacing
 
-The action is rate-limited **per mailbox**, keyed `mailboxManagement:mailboxes:<uuid>`, with a
-`spread` strategy — one send per slot, slots sized as `24h ÷ dailyLimit`. Two effects:
+The action is rate-limited **per mailbox**, keyed `mailboxManagement:mailboxes:pacing:<uuid>`:
+at most `dailyLimit` sends per rolling day, with a random gap of 1 to 3 minutes between two sends
+(the gap is not a slice of the day). Two effects:
 
-- Sends from one mailbox are spaced across the day rather than bursting, which is the pattern
-  mailbox providers reward.
-- A burst larger than the remaining allowance **fails fast** rather than parking. With 40 left,
-  the 41st of 100 fails immediately with `dailyLimitReached` instead of waiting a day.
+- Sends from one mailbox are spaced minutes apart rather than bursting, and the jitter keeps them
+  off an exact metronome that reads as automation.
+- A burst larger than the remaining allowance **waits** rather than failing. With 40 left, 40 of
+  100 go out and the other 60 wait for the window to roll, the day after if the backlog is deeper.
+  A workflow run lives about 15 days, so a backlog deeper than ~15 days of allowance (about 600
+  sends on a warmed mailbox) outlives the run waiting for it.
 
-When the allowance cannot be read at all, pacing falls back to **1 per day** rather than
-unlimited — an unanswered question slows sending to a crawl by design.
+Two cases refuse immediately instead of waiting: a `mailboxUuid` that resolves to no mailbox in
+the workspace, and a mailbox whose `dailySendLimit` is `0`.
 
 So: call `mailbox get-send-allowance <uuid>` and read `remainingCount` **before** enrolling a
-batch. Rows past the allowance each burn a run and deliver nothing.
+batch, and size the batch to days of allowance, not to one day.
 
 ## What Cargo adds to every message
 

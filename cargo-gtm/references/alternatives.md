@@ -1,6 +1,6 @@
 # Alternative provider chains
 
-When the priority stack (salesNavigator / cargo / aiArk / waterfall / FullEnrich / apolloio / theirStack / peopleDataLabs) can't serve the user's criteria, swap in providers from the long tail.
+When the priority stack (salesNavigator / aiArk / waterfall / FullEnrich / apolloio / theirStack / peopleDataLabs) can't serve the user's criteria, swap in providers from the long tail.
 
 For every alternative, see [`stage-action-map.md`](stage-action-map.md) for the cheapest credits-based action per stage across the full 136-integration catalog.
 
@@ -18,11 +18,11 @@ Default rule: **don't swap to chase 2× cheaper if hit-rate drops 30%**. The tot
 
 | Goal | Priority | Alternative | When to swap |
 |---|---|---|---|
-| At-scale lead search | FullEnrich.searchPeople (**0**) **or** salesNavigator.searchLeads (0.2) | icypeas.findPeople (0.02) | When LinkedIn coverage is thin (e.g., privacy-focused industries). |
+| At-scale lead search | FullEnrich.searchPeople (**0**) **or** salesNavigator.searchLeads (0.2) | icypeas.findPeople (0.02 per 100 records) | When LinkedIn coverage is thin (e.g., privacy-focused industries). |
 | At-scale account search | FullEnrich.searchCompanies (**0**), salesNavigator.searchAccounts (0.2) **or** aiArk.searchCompanies (0.01) | oceanio.searchCompanies (1) | aiArk is 20× cheaper and takes lookalike seeds (≤5 domains), oceanio when the filter is technographic / web-traffic shaped. |
-|   |   | peopleDataLabs.searchCompanies (3) for cargo-filter shape, or queryCompanies (3) for SQL | When salesNavigator's filters miss (funding, investor, complex bool). |
-| Tech-intent sourcing | theirStack.searchJobs / searchCompanies (0.5) | (no priority alternative — theirStack IS priority) | n/a |
-| SMB / local | (none in priority — priority skips SMB) | serper.searchPlaces (0.05), firecrawl.scrape (0.05) | Always for local/storefront. |
+|   |   | peopleDataLabs.searchCompanies (3) for cargo-filter shape, or queryCompanies (3) for SQL | When salesNavigator's filters miss (funding, complex bool). PDL has no investor field: investor sourcing goes to `theirStack.searchCompanies` (`company_investors_partial_match_or`). |
+| Tech-intent sourcing | theirStack.searchJobs / searchCompanies (0.5 per returned item) | (no priority alternative — theirStack IS priority) | n/a |
+| SMB / local | (none in priority — priority skips SMB) | serper.searchPlaces (0.05), firecrawl.scrape (0.05 / item) | Always for local/storefront. |
 | Visitor de-anonymization | (none — niche) | snitcher.searchSessions (0) | Always for visitor ID — free credits-tier. |
 | Warm-intro sourcing | (none — niche) | theSwarm.searchWarmIntrosToCompany (2) | When the goal is intros, not pure prospecting. |
 
@@ -32,7 +32,7 @@ Default rule: **don't swap to chase 2× cheaper if hit-rate drops 30%**. The tot
 |---|---|---|---|
 | Person enrichment (LinkedIn URL in hand) | aiArk.enrichPerson (0.1) | linkedin.enrichProfile (0.25) | When you only need LinkedIn-anchored details and no email. |
 |   |   | prospeo.enrichLinkedin (0.5) | Second opinion on a URL-anchored miss. |
-| Person enrichment (name + company) | waterfall.enrichContact (2) | apolloio.enrichPerson (1, **3** with phone reveal, priority) | The niche-coverage rung — promote per-batch when a pilot shows Apollo hits where aiArk/waterfall miss (investor-backed, portfolio niches). |
+| Person enrichment (name + company) | waterfall.enrichContact (2) | apolloio.enrichPerson (1, **9** with phone reveal, priority) | The niche-coverage rung — promote per-batch when a pilot shows Apollo hits where aiArk/waterfall miss (investor-backed, portfolio niches). |
 |   |   | hunter.enrichPerson (1) | Cheap mid-tier alternative. |
 | Reverse email → person | (none in priority) | FullEnrich.reverseEmailLookup (1) | Always for email → LinkedIn. |
 | Person backfill (heavyweight) | peopleDataLabs.enrichPerson (3) | (none cheaper for heavyweight) | n/a |

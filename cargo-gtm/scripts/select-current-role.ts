@@ -60,7 +60,9 @@ const TITLE_KEYS = ["title", "jobTitle", "position"];
 const COMPANY_KEYS = ["companyName", "company", "organization"];
 const START_KEYS = ["startDate", "start_date", "dateFrom"];
 const END_KEYS = ["endDate", "end_date", "dateTo"];
-const CURRENT_KEYS = ["current", "isCurrent", "jobStillWorking"];
+// is_current: linkedin.enrichProfile experiences (alongside split start_year /
+// start_month / end_year / end_month, read by extractSplitWhen below).
+const CURRENT_KEYS = ["current", "isCurrent", "is_current", "jobStillWorking"];
 
 function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -121,10 +123,14 @@ function compareOptional(a: YearMonth | undefined, b: YearMonth | undefined): nu
   return compareYearMonth(a, b);
 }
 
+/** Title fields are strings or objects like {"name": "VP Sales"} (peopleDataLabs). */
 function extractString(exp: Record<string, unknown>, keys: string[]): string {
   for (const key of keys) {
     const value = exp[key];
     if (typeof value === "string" && value.trim()) return value.trim();
+    if (isObject(value) && typeof value.name === "string" && value.name.trim()) {
+      return value.name.trim();
+    }
   }
   return "";
 }
@@ -149,6 +155,14 @@ function extractWhen(exp: Record<string, unknown>, keys: string[]): YearMonth | 
   return undefined;
 }
 
+/** Split numeric fields, e.g. start_year: 2021, start_month: 3 (linkedin.enrichProfile). */
+function extractSplitWhen(exp: Record<string, unknown>, prefix: "start" | "end"): YearMonth | undefined {
+  const year = Number(exp[`${prefix}_year`]);
+  if (!Number.isInteger(year) || year < 1000 || year > 9999) return undefined;
+  const month = Number(exp[`${prefix}_month`]);
+  return { year, month: Number.isInteger(month) && month >= 1 && month <= 12 ? month : 1 };
+}
+
 function extractCurrentFlag(exp: Record<string, unknown>): boolean | undefined {
   for (const key of CURRENT_KEYS) {
     const parsed = parseBoolish(exp[key]);
@@ -162,8 +176,8 @@ function parseExperience(exp: Record<string, unknown>, index: number): ParsedExp
     index,
     title: extractString(exp, TITLE_KEYS),
     company: extractCompany(exp),
-    start: extractWhen(exp, START_KEYS),
-    end: extractWhen(exp, END_KEYS),
+    start: extractWhen(exp, START_KEYS) ?? extractSplitWhen(exp, "start"),
+    end: extractWhen(exp, END_KEYS) ?? extractSplitWhen(exp, "end"),
     currentFlag: extractCurrentFlag(exp),
   };
 }

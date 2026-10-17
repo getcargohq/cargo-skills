@@ -14,7 +14,7 @@ LinkedIn-URL-anchored contact info — emails and phones from a profile URL, plu
 |---|---|---|---|
 | `enrich` (company) | **0** | `objectType:"company"`, `companyDomain` | Free company profile from a domain (size, industry, revenue, funding, …). |
 | `enrich` (contact) | 1 / 2 / 3 | `objectType:"contact"`, `linkedinUrl`, `includePhone`, `emailType` | Contact from a LinkedIn URL. 1 = profile only; 2 = + emails (`emailType` set); 3 = `includePhone: true`. |
-| `search` | 1 or 3 **per item** | `objectType:"people"|"company"`, `filters`, `dataTypes`, `revealInfo` | People/company search. People: 1/item; `revealInfo: true` (emails + phones in response) = 3/item. |
+| `search` | 1 or 3 **per item** | `objectType:"people"|"company"`, `filters`, `dataTypes`, `revealInfo` | People/company search. People: 1/item; `revealInfo: true` (emails + phones in response) = 3/item. Company search (`objectType:"company"`) has no credit rule and bills **0**; its filters are `name` / `domain` / `location` (`values`), `size` / `industries` / `min_revenue` / `max_revenue` (`autocompleteValues`), `hq_only` (`booleanValue`), `year_founded_from` / `year_founded_to` (`value`). |
 
 Cost is driven by the **config you request**, not the data returned: asking for phone (`includePhone: true`) prices the contact enrich at 3 even before you know a phone exists.
 

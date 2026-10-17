@@ -73,7 +73,7 @@ JSON response structures returned by Cargo CLI commands used in the `cargo-works
 }
 ```
 
-**Note:** Token values are not returned in `token list`. The actual token string is only returned once at creation time.
+**Note:** Each entry also carries `token` (the secret value) and `description`; the example omits them. `token list` returns your own tokens, plus service-user tokens when you have workspace-management write access.
 
 **Key fields:**
 
@@ -98,7 +98,7 @@ JSON response structures returned by Cargo CLI commands used in the `cargo-works
 }
 ```
 
-**Important:** Save the `token` value immediately — it is shown only once and cannot be retrieved again. The `name` you pass via `--name` is echoed back in the response and shown in `token list`. The `userUuid` is the user whose permissions the token inherits when `permissions` is `null`.
+**Important:** Save the `token` value immediately and treat it as a secret (`token list` also returns it). The `name` you pass via `--name` is echoed back in the response and shown in `token list`. The `userUuid` is the user whose permissions the token inherits when `permissions` is `null`.
 
 ### Permission shape (when not null)
 
@@ -121,9 +121,9 @@ When a token has been explicitly scoped (via API or app), `permissions` is an ar
 
 - `effect`: `"allow"` or `"deny"`.
 - `resources`: array of resource UUIDs (workflow, folder, etc.) that the rule applies to, or `null` for workspace-wide.
-- `actions`: array of dotted action strings, e.g. `"orchestration:*"`, `"orchestration:workflow:read"`, `"workspaceManagement:folder:write"`, `"ai:agent:write"`. The `*` wildcard at any level grants every action below it.
+- `actions`: array of colon-separated action strings, e.g. `"orchestration:*"`, `"orchestration:workflow:read"`, `"workspaceManagement:folder:write"`, `"ai:agent:write"`. The `*` wildcard at any level grants every action below it.
 
-When `permissions` is non-null, the rules are evaluated independently of the owning user — the token's access is exactly what the rules describe, regardless of what `userUuid` can do.
+When `permissions` is non-null, the token's access is the intersection of these rules and what `userUuid` can do: scoping narrows a token, it never grants more than its user has.
 
 ## cargo-ai workspaceManagement folder list
 
@@ -146,7 +146,7 @@ When `permissions` is non-null, the rules are evaluated independently of the own
 }
 ```
 
-**Key fields:** `uuid`, `name`, `kind` (`play`, `tool`, `agent`, or `file`), `emojiSlug`, `parentUuid` (null for root folders).
+**Key fields:** `uuid`, `name`, `kind` (`play`, `tool`, `agent`, `file`, `mcpServer`, `model`, `app`, `worker`, `alert`, or `mailbox`), `emojiSlug`, `parentUuid` (null for root folders).
 
 ## cargo-ai workspaceManagement file list-columns
 

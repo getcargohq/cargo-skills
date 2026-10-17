@@ -16,7 +16,7 @@ GET /v1/domainManagement/domains/search?name=tryacme.com
 Authorization: Bearer <accessToken>
 selected-workspace-uuid: <workspace uuid>
 
--> { "name": "tryacme.com", "available": true, "priceCredits": 1200 }
+-> { "result": { "name": "tryacme.com", "available": true, "priceCredits": 1200 } }
 ```
 
 The token is in `~/.config/cargo-ai/credentials.json` after `cargo-ai login`.

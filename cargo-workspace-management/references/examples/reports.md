@@ -50,7 +50,7 @@ cargo-ai workspaceManagement report create \
 ```bash
 cargo-ai workspaceManagement report create \
   --title "segment fetch returns 0 records despite UI showing matches" \
-  --description "Ran: cargo-ai segmentation segment fetch --model-uuid <uuid> --filter '{\"conjonction\":\"and\",\"groups\":[{\"conjonction\":\"and\",\"conditions\":[{\"kind\":\"string\",\"columnSlug\":\"country\",\"operator\":\"is\",\"values\":[\"US\"]}]}]}'. Got 0 records. The same filter in the app UI shows 1,200 matches. Tried 'conjunction' and 'conjonction' spellings — both return 0."
+  --description "Ran: cargo-ai segmentation segment fetch --model-uuid <uuid> --filter '{\"conjonction\":\"and\",\"groups\":[{\"conjonction\":\"and\",\"conditions\":[{\"kind\":\"string\",\"columnSlug\":\"country\",\"operator\":\"is\",\"values\":[\"US\"]}]}]}'. Got 0 records. The same filter in the app UI shows 1,200 matches. Checked the spelling is 'conjonction' at both levels."
 ```
 
 ### Agent is struggling with the CLI after multiple retries

@@ -13,7 +13,7 @@ A discrete operation that an AI agent or workflow can perform. Actions come in f
 A string identifier for a specific action on a workflow node. Present on both `kind: "native"` and `kind: "connector"` nodes.
 
 - **Native nodes** — built-in Cargo actions discovered via `cargo-ai connection native-integration get` (keys of the `actions` object): `start`, `end`, `branch`, `filter`, `variables`, `agent`, `python`, `script`, etc. These are generic platform actions, not third-party service actions.
-- **Connector nodes** — third-party service-specific actions discovered via `cargo-ai connection integration get <slug>` (e.g. `integration get hubspot`). Examples: `company_enrich`, `create_contact`, `send_message`. **Do not use `native-integration get` for these** — it will not return HubSpot, Salesforce, or other connector-specific actions.
+- **Connector nodes** — third-party service-specific actions discovered via `cargo-ai connection integration get <slug>` (e.g. `integration get hubspot`). Examples: `enrichCompany` (clearbit), `upsertRecords` (hubspot), `postMessage` (slack). **Do not use `native-integration get` for these** — it will not return HubSpot, Salesforce, or other connector-specific actions.
 
 **agent**
 An AI resource with configured instructions, a language model, and optional actions. Created and configured via `cargo-ai`. Used in workflows as a `kind: "agent"` node, or messaged directly via `cargo-orchestration`.
@@ -48,15 +48,15 @@ A skill that documents one CLI domain (orchestration, storage, connection, AI, c
 A conversation session between a user and an agent. Created with `ai chat create --agent-uuid <uuid>`. Messages are sent to a chat via `ai message create --chat-uuid <uuid>`.
 
 **conjonction**
-The intentional French spelling used as the key name in Cargo filter JSON objects. Always `"conjonction"`, never `"conjunction"`. A typo here silently returns no records — no error is thrown.
+The intentional French spelling used as the key name in Cargo filter JSON objects. Always `"conjonction"`, never `"conjunction"`. It is a required key, so a typo is rejected with a 400 rather than ignored.
 
 **column**
 A typed field on a Cargo model. Each column has a `slug`, `type` (see **column type** below), `label`, and `kind` (see **column kind** below). Columns have no `uuid` — they are identified by `slug` within the model. Managed via `cargo-storage` (`storage column list|create|update|remove|reorder`). Column `slug` values are used in filter conditions and in `storage query execute` SQL queries.
 
 **column type**
-The data type of a model column. Stored as the `type` field on the column object. Set on `column create --type <value>` and returned as `type` in `column list` and `model list` responses.
+The data type of a model column. Stored as the `type` field on the column object. Set on `column create --type <value>` and returned as `type` on the column objects in `model get` / `model list` responses (`column list` returns only storage names).
 
-When building a filter condition, the condition's `kind` field must match the target column's `type`. A mismatch silently returns no records.
+When building a filter condition, the condition's `kind` field must match the target column's `type`. A mismatch is rejected with a 400 (`invalidFilter`).
 
 | `type`    | Use for                  | Filter condition operators (when used as `kind`)                                                            |
 | --------- | ------------------------ | ----------------------------------------------------------------------------------------------------------- |

@@ -6,7 +6,7 @@ last-reviewed: 2026-10-02
 
 # FullEnrich
 
-Premium contact-detail provider, and now a **free** sourcing source. Four paid actions fill email + phone + LinkedIn gaps — higher cost than cheap email finders, but **better hit rate**, and the only provider in the priority stack that does **reverse-email lookup**. Four more — `searchPeople`, `searchCompanies`, `lookupPerson`, `lookupCompany` — bill **0 credits**, as do the `fetchPeople` / `fetchCompanies` extractors that pull the same searches into a model. That makes FullEnrich the cheapest search in the catalog: size and pull a list here before paying `aiArk` (0.01–0.05) or `salesNavigator` (0.2) per record.
+Premium contact-detail provider, and now a **free** sourcing source. Four paid actions fill email + phone + LinkedIn gaps — higher cost than cheap email finders, but **better hit rate**, and one of two providers in the priority stack with **reverse-email lookup** (the other is `aiArk.reverseLookup`, 0.05). Four more — `searchPeople`, `searchCompanies`, `lookupPerson`, `lookupCompany` — bill **0 credits**, as do the `fetchPeople` / `fetchCompanies` extractors that pull the same searches into a model. That makes FullEnrich the cheapest search in the catalog: size and pull a list here before paying `aiArk` (0.01–0.05) or `salesNavigator` (0.2) per record.
 
 ## Credits-based actions
 
@@ -15,7 +15,7 @@ Premium contact-detail provider, and now a **free** sourcing source. Four paid a
 | `findEmail` | 1 | `firstName, lastName, domainName, companyName, linkedinUrl` | Default email finder in the priority stack. |
 | `findPhone` | 6 | `firstName, lastName, domainName, companyName, linkedinUrl` | Premium phone lookup. Escalate from `prospeo.findPhone` (3). |
 | `findPhoneAndEmail` | 7 | `firstName, lastName, domainName, companyName, linkedinUrl` | Combined call when both are needed and you'd otherwise pay 1+6=7 anyway. **No discount over running both separately.** |
-| `reverseEmailLookup` | 1 | `email` | **Unique action.** Email → LinkedIn URL + company info. |
+| `reverseEmailLookup` | 1 | `email` | Email → LinkedIn URL + company info. |
 | `searchPeople` | 0 | person filters (`peopleInfo`, `personLocation`, `jobRole`, `skills`, `education`, `languages`, `tenure`, `pastCompany`) + current-company filters (`companyInfo`, `industry`, `companyType`, `headquarters`, `specialties`, `technologies`, `headcount`, `foundedYear`) + `limit` (default 10, max 2,000) | **Free people search.** Title, seniority, function, location, skills, tenure, past company, and the company they work at. |
 | `searchCompanies` | 0 | company filters (as above) + `keywords` + `limit` (default 10, max 2,000) | **Free company search.** Industry, headcount, HQ, technologies, specialties, founded year, description keywords. |
 | `lookupPerson` | 0 | `linkedinUrl` **or** `linkedinId` **or** `fullName` + (`companyDomain` / `companyLinkedinUrl` / `companyLinkedinId`) | One person you already have an identifier for → profile, title, current employer. No match, no record. |
@@ -29,7 +29,7 @@ Two extractors, `fetchPeople` and `fetchCompanies`, take the same filters as the
 
 - ✅ **Free sourcing** — `searchPeople` / `searchCompanies` (0) as the first rung for people and company lists. Pilot it before `aiArk` and `salesNavigator`; demote only when a pilot shows its coverage or filters miss your segment.
 - ✅ **Recurring list into a model** — `fetchPeople` / `fetchCompanies` (0) as the extractor behind a model that a play then enriches.
-- ✅ **Default email finder** in the prospecting spine — better hit rate than cheap providers (`hunter`/`icypeas` at 0.5 cred), worth the 2× cost when conversion matters.
+- ✅ **Default email finder** in the prospecting spine — better hit rate than cheap providers (`hunter` at 0.5 cred, `icypeas` at 0.1), worth the 2× cost when conversion matters.
 - ✅ **Reverse-email lookup** — given an email, retrieve LinkedIn + company. Critical for de-anonymizing email-only data sources.
 - ✅ **Phone lookup with multi-input flexibility** — accepts any combination of name/domain/company/linkedin.
 

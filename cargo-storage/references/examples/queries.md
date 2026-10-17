@@ -2,7 +2,7 @@
 
 Run SQL against workspace storage with `cargo-ai storage query execute`. Tables are referenced as `<datasetSlug>.<modelSlug>` and rewritten to the underlying storage table under the hood. No DDL lookup is required for the table name — just use the dataset and model slugs.
 
-For column slugs, run `cargo-ai storage column list --model-uuid <uuid>` or `cargo-ai storage model get-ddl <model-uuid>` (the DDL also shows column types and the SQL dialect).
+For column names, run `cargo-ai storage column list --model-uuid <uuid>` (it returns storage names: added columns carry a `custom__`, `computed__`, `metric__` or `lookup__` prefix, and that prefixed name is what SQL reads) or `cargo-ai storage model get-ddl <model-uuid>` (the DDL also shows column types and the SQL dialect).
 
 ## Basic query flow
 
@@ -20,6 +20,7 @@ Success response:
 
 ```json
 {
+  "isRefreshing": false,
   "rows": [
     { "name": "Acme Corp", "domain": "acme.com", "employee_count": 500 },
     { "name": "Globex", "domain": "globex.com", "employee_count": 1200 }
@@ -67,7 +68,7 @@ cargo-ai storage query execute \
 
 ## Pagination
 
-Page through large result sets with SQL `LIMIT` and `OFFSET` clauses. Always include an `ORDER BY` so pages are stable across calls.
+Page through large result sets with SQL `LIMIT` and `OFFSET` clauses. `query execute` clamps the top-level `LIMIT` to 10,000 rows. Always include an `ORDER BY` so pages are stable across calls.
 
 ```bash
 # First page
@@ -81,7 +82,7 @@ cargo-ai storage query execute \
 
 ## Download full results
 
-For exporting full result sets to a file, use `storage query download`. The response is a signed URL.
+For exporting full result sets to a file, use `storage query download`. The response is `{"isRefreshing": false, "urls": [...]}`: signed URLs, possibly several files.
 
 ```bash
 cargo-ai storage query download \
