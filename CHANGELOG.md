@@ -10,6 +10,10 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### Repo: list the hosted MCP server in the official MCP Registry
+
+`server.json` at the repo root describes `https://mcp.getcargo.io/mcp` as `io.github.getcargohq/cargo` ("Cargo GTM"), and `.github/workflows/publish-mcp-registry.yml` publishes it to `registry.modelcontextprotocol.io` on a release or a manual dispatch, authenticating with GitHub OIDC so no secret is involved. `server.json` carries the bundle version, and `skills-lint` now fails when it drifts from `cargo/SKILL.md`, the same lockstep the three plugin manifests already keep. No skill content changes.
+
 ### `cargo-gtm` → 2.2.0 — FullEnrich search, lookup and fetch are free; reverse email lookup drops to 1
 
 getcargohq/cargo#6063 adds four FullEnrich actions and two extractors, all billed **0 credits** on Cargo's managed connection: `searchPeople`, `searchCompanies` (up to 2,000 per action run), `lookupPerson`, `lookupCompany`, and the `fetchPeople` / `fetchCompanies` extractors (up to 10,000 rows into a model, contacts unified on LinkedIn URL, accounts on domain + LinkedIn URL). The same PR moves `reverseEmailLookup` from 2 credits to **1**.
