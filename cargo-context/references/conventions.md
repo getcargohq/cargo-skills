@@ -22,7 +22,7 @@ The conventions below are inherited from the canonical context repository [`getc
 ## File conventions
 
 - **Filename:** `kebab-case.md` (e.g. `vp-sales-mid-market.md`). Use ASCII letters, digits, and hyphens only.
-- **Frontmatter:** YAML with `title` and `description` on every `.md`/`.mdx` file. This is a **strong convention, not enforced** — a write with missing, empty, or malformed frontmatter is still committed; it just indexes poorly. The graph reads `title` (fallback: filename) and `summary` (fallback: first paragraph), **not** `description`. See [Source references and the knowledge graph](#source-references-and-the-knowledge-graph).
+- **Frontmatter:** YAML with `title` and `description` on every `.md`/`.mdx` file. This is a **strong convention, not enforced** — a write with missing, empty, or malformed frontmatter is still committed; it just indexes poorly. The graph reads `title` (fallback: filename) and `summary` (fallback: `description`, then the first paragraph). See [Source references and the knowledge graph](#source-references-and-the-knowledge-graph).
 - **Cross-references:** `domain/slug` form, **no `.md` extension** (e.g. `persona/vp-sales-mid-market`). To register as a graph **edge**, a reference must appear as a wikilink, a markdown link, or a frontmatter `references:` entry (see below) — a bare `domain/slug` or file path in plain prose is not parsed.
 - **Templates:** each domain ships an `_template.md`. Read it (`cargo-ai context runtime read --path <domain>/_template.md`) before authoring a new entry. `_template.*` files are excluded from the graph — never reference them.
 - **Bidirectional links:** keep cross-refs symmetric when it makes sense — a `play` that targets a `persona` should appear in the persona's `Preferred channels` or `How we land` sections when relevant.
@@ -54,11 +54,11 @@ The graph is built from **every `.md`, `.mdx`, `.yaml`, and `.yml` file** in the
 
 - **Never cite a source as a bare path in prose.** A `Source:` line that just mentions `outputs/sales-notes/foo.md` as plain text is **not** parsed and creates **no** edge. Always use one of the three forms above.
 - **Prefer root-relative paths.** Paths resolve root-relative first (from the repo root), then relative to the citing file's directory. Root-relative paths work regardless of where the citing document lives.
-- **Extensions are optional.** The resolver auto-tries `.md`, `.mdx`, `.yaml`, `.yml` (in that preference order). Including the extension is fine too.
+- **Extensions are optional for wikilinks and frontmatter `references:`.** The resolver auto-tries `.md`, `.mdx`, `.yaml`, `.yml` (in that preference order). Including the extension is fine too. A **Markdown link** only registers when its target ends in `.md`, `.mdx`, `.yaml`, or `.yml`, so keep the extension there.
 - **The target must exist.** A reference only resolves if the target file is actually in the repo — nonexistent targets become **broken** edges (dead links in the graph UI). Verify the path before citing it (`cargo-ai context runtime browse --path <dir>`).
 - **`_template.*` files are excluded** from the graph — don't reference `_template.md` / `.mdx` / `.yaml` / `.yml`.
-- **YAML data files:** `title`, `summary`, and `references` are read from top-level keys; YAML bodies produce no link edges.
-- **Node title/summary:** titles come from frontmatter `title:` (fallback: filename); summaries from frontmatter `summary:` (fallback: the body's first paragraph, truncated to 280 chars). The graph does **not** read `description` — set a `summary:` if you want the node summary to differ from the first paragraph. Always set `title` so the node is discoverable.
+- **YAML data files:** `title`, `summary` (fallback: `description`), and `references` are read from top-level keys; YAML bodies produce no link edges.
+- **Node title/summary:** titles come from frontmatter `title:` (fallback: filename); summaries from frontmatter `summary:` (fallback: `description`, then the body's first paragraph, truncated to 280 chars). Set a `summary:` only if you want the node summary to differ from `description`. Always set `title` so the node is discoverable.
 
 ### Citing sources in insight / learning documents
 

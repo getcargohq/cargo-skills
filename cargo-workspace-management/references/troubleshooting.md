@@ -16,7 +16,7 @@ Common errors and recovery steps for `cargo-workspace-management` commands.
 
 | Symptom | Cause | Fix |
 |---------|-------|-----|
-| `{"errorMessage": "..."}` with non-zero exit | Any CLI error | Read the `errorMessage` — it usually says exactly what's wrong |
+| `{"error": "...", "status": ..., "body": ...}` on stderr with non-zero exit | Any CLI error | Read `error` and `body` — they usually say exactly what's wrong |
 | `command not found: cargo-ai` | CLI not installed or not in PATH | Run `npm install -g @cargo-ai/cli` or prefix with `npx @cargo-ai/cli` |
 | `Unauthorized` or `Forbidden` | Bad or expired credentials, or insufficient permissions | Re-run `cargo-ai login --oauth` (browser sign-in) or `cargo-ai login --token <token>`; verify with `cargo-ai whoami`; use an admin account/token for workspace management |
 
@@ -25,8 +25,8 @@ Common errors and recovery steps for `cargo-workspace-management` commands.
 | Symptom | Cause | Fix |
 |---------|-------|-----|
 | `user create` fails with permission error | Token lacks admin access | Use a token belonging to a workspace admin |
-| `user create` fails with "role not found" | Wrong role UUID | Run `workspaceManagement role list` to get valid role UUIDs |
-| `user remove` fails | Attempting to remove the last admin | Promote another user to admin before removing |
+| `user create` fails with `roleNotFound` | Wrong `--role-slug` | Run `workspaceManagement role list` and pass a valid role `slug` |
+| `user remove` fails with `cannotRemoveSelf` or `userNotFound` | Removing your own user, or a wrong UUID | Have another admin remove you; re-run `user list` for the right UUID |
 | User can't log in after being created | Email invitation not accepted | Ask the user to check their email for the workspace invitation |
 
 ## Tokens
@@ -35,7 +35,7 @@ Common errors and recovery steps for `cargo-workspace-management` commands.
 |---------|-------|-----|
 | `token create` exits with `error: required option '--name <name>' not specified` | `--name` is required since the named-token migration | Pass `--name "<descriptive label>"` (e.g. `--name "CI/CD pipeline"`) |
 | `token create` rejected with `error: unknown option '--from-user'` | Legacy flag — removed when tokens gained `name` and `permissions` | Drop `--from-user`; use `--name <name>` instead. CLI-created tokens already inherit the creating user's permissions (`permissions: null`) |
-| Lost the token value after creation | Token value only shown once | Remove the token and create a new one (with the same `--name`); store the new value securely |
+| Lost the token value after creation | Not stored at creation | `workspaceManagement token list` returns the `token` value of your own tokens; or rotate: create a new one and remove the old |
 | `token remove` fails | Token is currently in use by active processes | Wait for processes to finish, or rotate to a new token first then remove the old one |
 | `Unauthorized` errors in CI/CD with a CLI-created token | Token mirrors the creating user's permissions; that user lost access (role downgraded, removed, etc.) | Verify the token still exists with `workspaceManagement token list`; check the role of the user in `userUuid` (`workspaceManagement user list`); restore the user's permissions, or recreate the token under a user with the access you need |
 | `Unauthorized` errors in CI/CD with an explicitly scoped token | `permissions` array is too narrow for the action being attempted | Inspect the token's `permissions` field via `workspaceManagement token list`; widen via the API/app, or replace with a `permissions: null` token created by a user that has the required access |
@@ -45,7 +45,7 @@ Common errors and recovery steps for `cargo-workspace-management` commands.
 
 | Symptom | Cause | Fix |
 |---------|-------|-----|
-| `folder remove` fails | Folder still contains resources | Move or remove all resources from the folder before deleting it |
+| Resources moved after `folder remove` | Removing a folder moves its resources and subfolders up to its parent (or the root) | Expected; re-file them with the resource's update command if needed |
 | `folder get` returns not found | Wrong folder UUID | Re-run `folder list` to get the correct UUID |
 
 ## Files

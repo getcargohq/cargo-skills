@@ -1,7 +1,7 @@
 ---
 name: cargo-project
 description: "Manage a whole Cargo workspace as code — declare connectors, models, plays, tools, agents, MCP servers, segments, context, folders, files, workers, and apps in TypeScript, then reconcile them with `cargo-ai project` (init → types → plan → deploy), the way you would run Pulumi or the AWS CDK. Triggers: \"as code\", \"in git\", \"version-controlled\", \"reproducible\", \"Terraform for Cargo\", \"set up a whole workspace\", \"staging and production\", \"deploy the workspace from CI\", \"review this in a PR\", \"cargo.state.json\", \"scaffold from a template\", \"is there a cookbook for this\", \"start from a cookbook\". Skills with a CDK example (TAM building, account scoring, call capture, inbound qualification, CRM enrichment, standup) live in gtm-skills; menu in references/cookbooks.md. Skip when: it is a one-off operation, a read, or an ad-hoc query — use the matching capability skill."
-version: "3.1.0"
+version: "3.2.0"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -103,7 +103,7 @@ cargo-ai project types          generate per-workspace types for typed config (o
         │
    (author define* files)   importing a .ts file IS registration — no manifest
         │
-cargo-ai project plan           offline: compile the graph, diff against the deploy state
+cargo-ai project plan           compile the graph, diff against the deploy state (creates nothing)
         │
 cargo-ai project deploy         create/update resources in dependency order, write state
         │
@@ -131,7 +131,7 @@ pre-deploy state snapshot) · `cargo-ai project state` (inspect and repoint the 
 its unit is the change, and it exits non-zero so CI can gate on it. `info` answers *what
 is here* — its unit is the resource, and it never fails. `check` is `plan` minus the diff:
 it needs no state, so it is what an editor or a pre-commit hook runs. Running `cargo-ai
-project` with no arguments does `info` inside a project and `init` outside one.
+project` with no subcommand prints its help.
 
 ## 4) Documentation hierarchy
 
@@ -155,7 +155,7 @@ project` with no arguments does `info` inside a project and `init` outside one.
 |---|---|---|
 | Writing `define*` files, wiring resources, `secret()`/`env()`, `defineWorkflow` bodies (tool/play logic) | [`guides/authoring-resources.md`](guides/authoring-resources.md) | The builder catalog, the handle/ref model, secrets, and how workflow bodies compile. |
 | `plan` / `deploy` / `destroy`, the state file, drift, adopting existing resources, CI | [`guides/deploy-and-state.md`](guides/deploy-and-state.md) | The deploy lifecycle, `cargo.state.json` semantics, drift/import/rollback, async builds. |
-| Typed config, `cargo-ai project types`, tsconfig wiring, `integrations.*` in workflow bodies | [`guides/typed-config.md`](guides/typed-config.md) | What `project types` generates and how to wire it into your project. |
+| Typed config, `cargo-ai project types`, tsconfig wiring, `uses.<key>.<action>` connector calls in workflow bodies | [`guides/typed-config.md`](guides/typed-config.md) | What `project types` generates and how to wire it into your project. |
 | A field/spec/output for a specific builder | [`references/resources.md`](references/resources.md) | Every builder → spec fields → which ref each takes → outputs. |
 | Exact command flags | [`references/commands.md`](references/commands.md) | Every `cargo-ai project` subcommand and its flags. |
 | A deploy error / footgun | [`references/troubleshooting.md`](references/troubleshooting.md) | The known failure modes and fixes. |
@@ -222,7 +222,7 @@ acceptance test, and always review `cargo-ai project plan` before deploying.
 |---|---|
 | [`recipes/scaffold-a-project.md`](recipes/scaffold-a-project.md) | Standing up a new project from scratch (`init` → types → plan → deploy). |
 | [`recipes/add-connector-and-model.md`](recipes/add-connector-and-model.md) | Adding a data source + a model sourced from it, wired by handle. |
-| [`recipes/build-an-agent.md`](recipes/build-an-agent.md) | Composing a model + tool + agent (with `uses` / `models` / `tools`) and deploying. |
+| [`recipes/build-an-agent.md`](recipes/build-an-agent.md) | Composing a model + tool + agent (wired through `uses`) and deploying. |
 | [`recipes/migrate-existing-workspace.md`](recipes/migrate-existing-workspace.md) | Bringing an already-live workspace under a project via `project import`. |
 | [`recipes/deploy-from-ci.md`](recipes/deploy-from-ci.md) | Deploying non-interactively from CI (token auth + committed state). |
 
@@ -258,8 +258,8 @@ acceptance test, and always review `cargo-ai project plan` before deploying.
   what moves it: the map goes onto a new state, the file becomes a pointer, and you
   commit it. Don't migrate without telling the team, since a teammate who deploys
   before pulling the new pointer is deploying from a state that no longer exists.
-  (Deleting a state — `state remove` — is in the CDK README but is **not** in CLI
-  1.0.96; it lands in the next release.)
+  (Deleting a state: `cargo-ai project state remove <uuid>` drops the state without
+  touching the live resources it tracked; `--force` if `cargo.state.json` points at it.)
 - **Three ways to get a value in, and they are not interchangeable.**
   - `secret("ENV_VAR")` — read from **your** environment at deploy time, excluded
     from the content hash and from state. Export the env var before deploying; a
@@ -284,13 +284,13 @@ acceptance test, and always review `cargo-ai project plan` before deploying.
   resource isn't re-applied. Roll it with `deploy --refresh`, or any other edit to
   that resource. `workspaceEnv()` has no such step; that is most of its appeal.
 - **Wire by handle, never by `.uuid`.** Pass a `define*` handle directly
-  (`dataset: hubspot`, `tools: [enrich]`), or `xxRef("uuid")` for a resource you
+  (`connector: hubspot`, `uses: [enrich]`), or `xxRef("uuid")` for a resource you
   didn't define in code (`connectorRef`, `modelRef`, `folderRef`, `toolRef`,
   `agentRef`, …). Where a reference needs per-call options, wrap it as
-  `{ ref, …options }` (e.g. `models: [{ ref: contacts, readOnly: true }]`).
+  `{ ref, …options }` (e.g. `uses: [{ ref: contacts, readOnly: true }]`).
 - **Run `cargo-ai project types` after workspace integrations change** — it
   regenerates `.cargo-ai/` so `defineConnector`/`defineModel` config (and
-  `integrations.*` in workflow bodies) type-check against the real schemas. Typing
+  connector actions called through `uses` in workflow bodies) type-check against the real schemas. Typing
   is a bonus, never a gate: deploy works without it.
 - **Any subdirectory of the repo is fine (CLI ≥ 1.0.83).** Commands walk **up** to
   the package root where `@cargo-ai/cdk` is declared, then back **down** to the
@@ -307,8 +307,8 @@ acceptance test, and always review `cargo-ai project plan` before deploying.
   play is usually a batch over the whole segment — and a scheduled play re-bills
   every node on every run. Before enrolling everything (or enabling a schedule),
   run the deployed workflow on **10–20 records** — `cargo-ai orchestration batch
-  create --data '{"kind":"filter","modelUuid":"…","filter":…,"limit":15}'`, or
-  `batch create --file ./plays/x.ts` to test-run the module without deploying —
+  create --workflow-uuid <uuid> --data '{"kind":"filter","modelUuid":"…","filter":…,"limit":15}'`, or
+  `batch create --file ./plays/x.ts --data '…'` to test-run the module without deploying —
   then ask the user to approve the full enrollment with the **record count** and
   **credit estimate**. Read the provider's playbook
   (`../cargo-gtm/provider-playbooks/<slug>.md`, esp. its *Recurring use* section)
@@ -323,12 +323,14 @@ acceptance test, and always review `cargo-ai project plan` before deploying.
   provider. Scope/threshold and firing semantics:
   [`../cargo-observability/SKILL.md`](../cargo-observability/SKILL.md).
 - **`defineMailbox` bills monthly, and `defineDomain` rewrites a DNS zone.** A
-  mailbox is 100–160 credits *per month* for as long as it exists (`cargo-ai
+  mailbox is 100–125 credits *per month* (shared/private 100, google 125) for as long as it exists (`cargo-ai
   mailboxManagement pricing get` for live figures), so a `+ create mailbox:…` line
   in the plan is a recurring charge the user approves, not a one-off. Its `domain`,
   `username` and `type` are **create-only** — changing any of them is destroy +
-  recreate, i.e. a brand-new inbox back at the bottom of a 45-day warm-up ramp. The
-  deploy polls `refreshStatus` for up to 5 minutes waiting for `active`. On
+  recreate, i.e. a brand-new inbox back at the bottom of a 45-day warm-up ramp. Before
+  creating a mailbox the deploy polls the domain's `refreshStatus` for up to 5 minutes
+  waiting for the domain to be `active`; it does not wait for the new mailbox, which
+  stays `pending` until the provider issues credentials. On
   `defineDomain`, `dnsRecords` is the **whole zone, not a patch**: declaring it
   replaces every live record (including the ones the registrar wrote at purchase),
   and omitting it leaves the zone untouched. `redirectUrl`, `dmarcEmail` and

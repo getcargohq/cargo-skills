@@ -7,7 +7,7 @@ Every token has a human-readable `name` and a `permissions` field. The CLI's `to
 ```bash
 cargo-ai workspaceManagement token list
 # → Each entry includes `uuid`, `name`, `permissions`, `userUuid`, `workspaceUuid`, `createdAt`, `deletedAt`
-# (the actual token value is not shown — it is only returned once, at creation)
+# plus `token` (the secret value): list returns your own tokens, and service-user tokens for admins
 ```
 
 ## Create a new token
@@ -18,7 +18,7 @@ cargo-ai workspaceManagement token list
 cargo-ai workspaceManagement token create --name "CI/CD pipeline"
 ```
 
-The response includes the `token` field — this is the only time the token value is shown. Store it immediately in a secrets manager.
+The response includes the `token` field. Store it immediately in a secrets manager; `token list` also returns it, so treat that output as a secret too.
 
 > The new token inherits the permissions of the user running `token create`. If you need a token with broader or narrower access than your user, create it under the appropriate user account, or scope it explicitly via the API / Cargo app after creation.
 

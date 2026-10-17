@@ -38,12 +38,13 @@ Also open the [provider playbook](../provider-playbooks/) of **every paid node**
 # 1. Create the tool shell
 cargo-ai orchestration tool create \
   --name "Weekly RevOps-lead pull" \
+  --icon-kind emoji --icon-emoji-slug <emoji-slug> \
   --description "Saved from ad-hoc run: salesNavigator.searchLeads for <persona>, limit 25"
 # → Extract tool.uuid and tool.workflowUuid
 
 # 2. Rebuild the ad-hoc run as a node graph: start → the exact action(s) you just
-#    ran (same integrationSlug/actionSlug/config, connectorUuid at node top level)
-#    → end node exposing the output fields. Validate before deploying:
+#    ran (same integrationSlug/actionSlug, the ad-hoc --data as the node's config,
+#    connectorUuid at node top level) → end node exposing the output fields. Validate before deploying:
 cargo-ai orchestration node validate --nodes '[...start → action → end...]'
 # → { "outcome": "valid" }
 
@@ -84,7 +85,7 @@ For chains that should re-run whenever records change (enrich every new company,
 cargo-ai orchestration play create \
   --name "Enrich new companies" \
   --model-uuid <model-uuid> \
-  --change-kinds created \
+  --change-kinds added \
   --run-creation-rule once \
   --description "Saved from ad-hoc enrichment chain"
 # → Extract play.uuid and play.workflowUuid

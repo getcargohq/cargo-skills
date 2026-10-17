@@ -16,7 +16,8 @@ Pass the **handle** a builder returned — never `handle.uuid`:
 
 ```ts
 export const contacts = defineModel("contacts", {
-  dataset: hubspot, // ← the connector handle, not hubspot.datasetUuid
+  connector: hubspot, // ← the connector handle, not hubspot.datasetUuid
+  extractSlug: "fetchRecords",
 });
 ```
 
@@ -32,12 +33,13 @@ literal uuid:
 import { defineModel, connectorRef } from "@cargo-ai/cdk";
 
 export const leads = defineModel("leads", {
-  dataset: connectorRef("6f0c…"), // an already-authenticated connector, by uuid
+  connector: connectorRef("6f0c…"), // an already-authenticated connector, by uuid
+  extractSlug: "fetchRecords",
 });
 ```
 
-Ref helpers: `connectorRef`, `datasetRef`, `modelRef`, `folderRef`, `playRef`,
-`memberRef` (from `@cargo-ai/cdk`) and `toolRef`, `agentRef` (re-exported from the
+Ref helpers: `connectorRef`, `modelRef`, `folderRef`, `playRef`, `segmentRef`,
+`memberRef`, `workflowRef`, `connectorActionRef`, `nativeActionRef`, … (from `@cargo-ai/cdk`) and `toolRef`, `agentRef` (re-exported from the
 workflow SDK). Each is branded by kind, so a model can't be passed where a
 connector is expected.
 
@@ -45,9 +47,11 @@ connector is expected.
 `{ ref, …options }`:
 
 ```ts
-models: [{ ref: contacts, readOnly: true }],   // handle + options
-subAgents: [{ ref: enricher, waitUntilFinished: true }],
-tools: [enrich],                               // bare handle when no options
+uses: [
+  { ref: contacts, readOnly: true },          // handle + options
+  { ref: enricher, waitUntilFinished: true },
+  enrich,                                     // bare handle when no options
+],
 ```
 
 ## Secrets — `secret()` + `env()`
@@ -77,16 +81,17 @@ Data & schema:
 ```ts
 // Connector — a data source or LLM provider. Creating a data connector
 // auto-creates a dataset that models source from. OAuth connectors that can't be
-// declared in code use `adopt: true` to link the existing authenticated instance.
+// declared in code use `default: true` (formerly `adopt: true`) to link the existing
+// authenticated instance.
 export const hubspot = defineConnector("hubspot", {
   integration: "hubspot",
   config: { method: "privateApp", accessToken: secret("HUBSPOT_API_KEY") },
 });
-export const openai = defineConnector("open_ai", { integration: "openAi", adopt: true });
+export const openai = defineConnector("open_ai", { integration: "openAi", default: true });
 
 // Model — a table sourced from a connector's dataset by an extractor.
 export const contacts = defineModel("contacts", {
-  dataset: hubspot,                 // connector handle → its dataset is injected
+  connector: hubspot,               // connector handle → its dataset is injected
   extractSlug: "fetchRecords",
   config: { objectType: "contacts", columnSelectionMode: "all" },
   folder: modelsFolder,
@@ -115,21 +120,23 @@ export const onboarding = definePlay("onboarding", {
   schedule: { type: "watch" },
 });
 
-// Agent — references models, tools, sub-agents, connector actions, and the LLM
-// connector, each by handle.
+// Agent: the LLM connector by handle, and everything it can call or read (models,
+// tools, sub-agents, connector actions) in one `uses` array.
 export const sdr = defineAgent("sdr", {
   connector: openai,
   languageModel: "gpt-4o",
   systemPrompt: "Qualify inbound leads.",
-  models: [{ ref: contacts, readOnly: true }],
-  tools: [enrich],
-  subAgents: [{ ref: enricher, waitUntilFinished: true }],
-  connectorActions: [{ integration: "hunter", actionSlug: "emailFinder" }],
+  uses: [
+    { ref: contacts, readOnly: true },
+    enrich,
+    { ref: enricher, waitUntilFinished: true },
+    hunter.actions.findEmail,       // a connector action, off a defineConnector handle
+  ],
   folder: agentsFolder,
 });
 
 // MCP server — bundles tools, agents, and models behind one MCP endpoint.
-export const crm = defineMcpServer("crm", { tools: [enrich], agents: [sdr], models: [{ ref: contacts }] });
+export const crm = defineMcpServer("crm", { uses: [enrich, sdr, contacts] });
 ```
 
 Organization & knowledge:
@@ -156,7 +163,7 @@ export const playbook = defineFile("playbook", {
 
 // Context — the workspace's git-backed GTM knowledge base, declared here. Singleton;
 // additive (files added in the UI are left in place).
-export const context = defineContext({ dir: "context" });
+export const context = defineContext({ path: "context" });
 ```
 
 Revenue org & segmentation:
@@ -165,17 +172,19 @@ Revenue org & segmentation:
 // Segment — a saved view over a model (filter is required; model is immutable).
 export const hotLeads = defineSegment("hot-leads", { model: contacts, filter: { /* … */ } });
 
-// Capacity / Territory — revenue-org planning over members and a model.
+// Capacity / Territory — revenue-org planning (a capacity allocates over a model;
+// a territory routes to members).
 export const capacity = defineCapacity("ae-capacity", { model: contacts, /* … */ });
-export const territory = defineTerritory("west", { model: contacts, members: [memberRef("…")] });
+export const territory = defineTerritory("west", { label: "West", members: [{ ref: memberRef("…") }] });
 ```
 
 Hosting (async builds — see [`deploy-and-state.md`](deploy-and-state.md)):
 
 ```ts
-// Worker — the hosted worker slot. `path` points at a BUILT bundle dir
-// (index.js + manifest.json + package.json + package-lock.json). Author the
-// runtime code with createWorker from @cargo-ai/worker-sdk and build to index.js.
+// Worker — the hosted worker slot. `path` points at the bundle source dir
+// (manifest.json + package.json + an entrypoint: src/index.ts, src/index.js,
+// index.ts or index.js); it is built server-side. Author the runtime code with
+// createWorker from @cargo-ai/worker-sdk.
 export const webhook = defineWorker("webhook", {
   path: new URL("./webhook", import.meta.url).pathname,
   description: "Receives inbound lead webhooks.",
@@ -201,7 +210,7 @@ export const syncErrors = defineAlert("crm-sync-errors", {
     // Bare { ref, config } for an agent; config is templated against the firing
     // context. Typed connector/tool actions use the alertConnectorAction /
     // alertToolAction helpers (config checked against the action's input schema).
-    { ref: sdr, config: { message: "CRM sync error rate at {{event.value}}% — {{alert.url}}" } },
+    { ref: sdr, config: { prompt: "CRM sync error rate at {{event.value}}% — {{alert.url}}" } },
   ],
 });
 ```
@@ -226,9 +235,9 @@ defineWorkflow(
   {
     input: z.object({ email: z.string() }),
     output: z.object({ welcomed: z.boolean(), message: z.string() }),
-    uses: { enrich }, // reference tools/agents by handle here (or toolRef/agentRef)
+    uses: { enrich }, // reference tools/agents/connectors by handle here (or toolRef/agentRef)
   },
-  ({ input, uses, ai, integrations, native }) => {
+  ({ input, uses, ai }) => {
     const enriched = uses.enrich({ email: input.email }); // typed to the tool's I/O
     const message = ai(`Welcome ${input.email} at ${enriched.company}.`);
     return { welcomed: true, message };
@@ -238,9 +247,11 @@ defineWorkflow(
 
 - **`uses.<key>(input)`** calls a referenced tool/agent; it's typed to that
   resource's input and returns a `Ref` you can dot-access (`enriched.company`).
-- **`integrations.<slug>.<action>({…})`** calls a connector action. The
-  `integrations` registry is **empty until you run `cargo-ai project types`** (see
-  [`typed-config.md`](typed-config.md)); `native.*` works without a sync.
+- **`uses.<key>.<action>({…})`** calls a connector action, where `<key>` maps to a
+  `defineConnector` handle in `uses`. Its actions are typed only after you run
+  `cargo-ai project types` (see [`typed-config.md`](typed-config.md)); unsynced, any
+  slug is accepted. Native actions are standalone helpers in the body's scope
+  (`model.*`, `sendEmail`, `delay`, `allocate`, `classify`, `scoring`, …) and need no sync.
 - Control flow lowers idiomatically: `if/else` → branch, `else if` → switch,
   `for (const x of xs)` → group. `ai("…")` inline-completes; `js(({nodes}) => …)`
   is the escape hatch for logic outside the supported subset — it runs as a

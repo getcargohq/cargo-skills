@@ -22,7 +22,7 @@ Common errors and recovery steps for `cargo-billing` commands.
 
 | Symptom | Cause | Fix |
 |---------|-------|-----|
-| `subscription get` returns `Forbidden` | Token lacks billing permissions | Use a token with admin access; check workspace settings under **Settings > API** |
+| `subscription get` (or any billing command) returns `Not authenticated: unauthorized` while `whoami` works | Token lacks the `billing:read` permission (`billing:write` for card, plan and top-up changes); the API answers 401 `{"reason":"unauthorized"}`, not 403 | Use a token with admin access; check workspace settings under **Settings > API** |
 | Invoice amounts look wrong | Amounts are in cents, not dollars | Divide `amount` by 100 for the dollar value |
 | `create-portal-session` returns an error | Subscription not active or no Stripe setup | Verify the workspace has an active paid subscription |
 

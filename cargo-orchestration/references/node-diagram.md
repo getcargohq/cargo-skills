@@ -50,7 +50,7 @@ Pass exactly one source: `--nodes` (or `-` to read stdin), `--file <path>`,
 | `--title <text>` | Title rendered above the diagram. |
 | `--direction TD\|LR` | Mermaid flow direction (default `TD`; `LR` reads better for long linear graphs). Ignored by `--format ascii`. |
 | `--paid <slugs>` | Comma-separated node slugs/uuids that bill credits — marked 💳. |
-| `--highlight <slugs>` | Comma-separated slugs/uuids to mark — red in Mermaid, `◀━` in ASCII. The failing node in a trace. |
+| `--highlight <slugs>` | Comma-separated slugs/uuids to mark — red in Mermaid, `←` in ASCII. The failing node in a trace. |
 | `--raw` | Print the diagram itself instead of JSON: plain text for `ascii`, a fenced block for `mermaid`. |
 
 Without `--raw` it returns `{"diagram": "...", "format": "ascii"|"mermaid", "warnings": [...]}`
@@ -112,7 +112,7 @@ hit against a live workspace, not imagined:
   broken one — an orphaned node never runs.
 - **`tool` and `agent` nodes are drawn from `toolUuid` / `agentUuid`** (top-level
   node fields; these nodes have no `actionSlug`), so the box reads `tool e487d28e`.
-  Resolve the real name with `orchestration tool get` / `ai agent get` when it
+  Resolve the real name with `orchestration tool list` / `ai agent get` when it
   matters to the reader.
 - **Mark the paid nodes.** Which action bills is not in the release — check the
   provider playbook (`../../cargo-gtm/provider-playbooks/<slug>.md`) or
@@ -214,7 +214,7 @@ Send to #best-leads     Update record
 | `┌───┴───┐` | a **fork**: a branch whose paths never reconverge. Nothing continues past it |
 | `┆` with `on failure` | a `fallbackChildUuid` edge: where the run goes if that step *errors*, as distinct from returning nothing |
 | `💳` | the step bills credits (`--paid`) |
-| `◀━` | the step was named in `--highlight` |
+| `←` | the step was named in `--highlight` |
 | `↑ <name>` | a step already drawn above, not repeated |
 
 Each step is two lines: the system it runs on over what it does, both resolved
@@ -229,7 +229,7 @@ reported against the loop.
 
 **Width.** Rails stack rightward and each must clear the one below it, so a graph
 branching at nearly every step of a long chain gets wide. A 29-node provider
-waterfall draws at 57 columns; past 120 the command adds a warning pointing at
+waterfall draws at 57 columns; past 100 the command adds a warning pointing at
 `--format mermaid`. It never truncates — a diagram that silently dropped an edge
 would be worse than a wide one. Report that warning rather than pasting a drawing
 that will wrap in the user's terminal.

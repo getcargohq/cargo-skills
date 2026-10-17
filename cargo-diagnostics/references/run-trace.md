@@ -8,7 +8,7 @@ Use this when you have (or can find) a single run UUID and need to answer "what 
 
 Every step below needs a run UUID. Work down this ladder and stop at the first rung that matches what the user actually gave you — most of the time it's a symptom and a company name, not a UUID.
 
-> **`run list` cannot answer "the last run".** `cargo-ai orchestration run list` **requires** `--workflow-uuid`; there is no unfiltered form, and a play's UUID is not a workflow UUID. Orchestration SQL has no such requirement, so it — not `run list` — is the entry point whenever you don't already know the workflow. Concluding "the run data isn't accessible" because `run list` refused is a wrong answer: `runs` is queryable with no filter at all.
+> **`run list` cannot answer "the last run" on its own.** `cargo-ai orchestration run list` without `--workflow-uuid` is refused unless you pass `--created-after` with a window of at most 30 days (`createdAfter is required when workflowUuid is omitted.`), and a play's UUID is not a workflow UUID. Orchestration SQL has no such requirement, so it — not `run list` — is the entry point whenever you don't already know the workflow. Concluding "the run data isn't accessible" because `run list` refused is a wrong answer: `runs` is queryable with no filter at all.
 
 **"Look at the last run" / "what just ran"** — no UUID, no workflow, nothing:
 

@@ -40,7 +40,7 @@ Field notes:
 - `recordsCount` — current membership. The authoritative size; do not re-derive it by paging.
 - `slug` — short stable handle, distinct from `uuid`. Some surfaces accept either; prefer `uuid`.
 - `fromPlay: true` — created and owned by a play. Treat as read-only.
-- `syncedAt` — absent until the segment has been evaluated at least once. A missing `syncedAt` with `recordsCount: 0` means "never synced", not "empty".
+- `syncedAt` — `null` until the segment has been evaluated at least once. A null `syncedAt` with `recordsCount: 0` means "never synced", not "empty".
 - `lastChange` — inlined most recent delta, so "what moved?" usually needs no second call.
 
 ## `segmentation segment get <uuid>`
@@ -55,22 +55,24 @@ Returns the created/updated segment object. `create` requires `--name`, `--model
 
 ```json
 {
-  "records": [ { "id": "…", "name": "Acme Corp", "domain": "acme.com" } ],
-  "columns": [ { "slug": "name", "type": "string", "label": "Name", "modelUuid": "…" } ]
+  "records": [ { "_id": "…", "name": "Acme Corp", "domain": "acme.com" } ],
+  "columns": [ { "slug": "name", "type": "string", "label": "Name", "modelUuid": "…" } ],
+  "count": 1,
+  "isRefreshing": false
 }
 ```
 
-- Paginated with `--fetching-limit` (page size) and `--fetching-offset`.
+- Paginated with `--fetching-limit` (page size, max 200) and `--fetching-offset`. `count` is the total match count, capped by `--limit`.
 - `--limit` caps total membership considered, which is **not** the same as the page size.
-- `--sync` re-syncs upstream data sources first (slower); `--enrich` returns joined/derived values.
+- `--sync` refreshes the model first (slower); `--enrich` adds a `_segments` membership column. Both default to on; pass `--sync false --enrich false` to skip them. `isRefreshing: true` means a refresh was still running and very recent writes may be missing.
 
 ## `segmentation segment download`
 
 ```json
-{ "url": "https://…signed…" }
+{ "urls": ["https://…signed…"] }
 ```
 
-A signed URL to the full dataset. Fetch it separately; the URL expires.
+Signed URLs to the full dataset (an array, possibly more than one file). Fetch it separately; the URL expires.
 
 ## `segmentation change list --segment-uuid <uuid>`
 
@@ -105,7 +107,8 @@ A signed URL to the full dataset. Fetch it separately; the URL expires.
     { "slug": "_title", "type": "string", "label": "_title", "modelUuid": "…" },
     { "slug": "_time", "type": "date", "label": "_time", "modelUuid": "…" }
   ],
-  "records": [ { "_kind": "added", "_id": "…", "_title": "Acme Corp", "_time": "…" } ]
+  "records": [ { "_kind": "added", "_id": "…", "_title": "Acme Corp", "_time": "…" } ],
+  "count": 1
 }
 ```
 
@@ -122,7 +125,9 @@ Both `--model-uuid` and `--ids` are required. An unknown id yields an empty `rec
 ## Errors
 
 ```json
-{ "error": "API error (400): RequestError: [ … zod issues … ]", "status": 400, "body": "…" }
+{ "error": "API error (400): [ … zod issues … ]", "status": 400, "body": { "errorMessage": "…" } }
 ```
+
+Printed to stderr, with a non-zero exit.
 
 The `body` carries the validation detail — read `path` to learn which argument the API rejected (e.g. `["segmentUuid"]` means the flag was omitted, not malformed).

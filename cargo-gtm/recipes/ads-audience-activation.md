@@ -73,7 +73,7 @@ Create once, then batch the members in. Both `createAudience` calls return the i
 cargo-ai orchestration action execute \
   --action '{"kind":"connector","integrationSlug":"googleAds","actionSlug":"createAudience"}' \
   --data '{
-    "customerId": "123-456-7890",
+    "customerId": "1234567890",
     "name": "Closed-Won lookalike seed 2026-Q3",
     "membershipLifeSpan": 540
   }' --wait-until-finished
@@ -93,7 +93,7 @@ cargo-ai segmentation segment fetch --model-uuid <uuid> \
 cargo-ai orchestration action execute-batch \
   --action '{"kind":"connector","integrationSlug":"googleAds","actionSlug":"addContactToAudience"}' \
   --records "$(jq -c '[.records[] | {
-    customerId: "123-456-7890",
+    customerId: "1234567890",
     userListId: "987654321",
     email: .personal_email
   }]' /tmp/audience.json)" \
@@ -138,7 +138,7 @@ cargo-ai orchestration action execute-batch \
 ```bash
 cargo-ai orchestration action execute \
   --action '{"kind":"connector","integrationSlug":"googleAds","actionSlug":"createReport"}' \
-  --data '{"customerId": "123-456-7890", "userListId": "987654321"}' \
+  --data '{"customerId": "1234567890", "userListId": "987654321"}' \
   --wait-until-finished
 ```
 

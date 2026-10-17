@@ -11,9 +11,9 @@ cargo-ai orchestration action list --kind connector
 cargo-ai orchestration action list --kind native
 ```
 
-Omit `--limit` so both return the full set, then render one row per action. Each `credits` entry is one of three shapes: `fixed` bills `cost` per call; `unit` bills `cost` per `unit` consumed; `package` bills `cost` per block of `unitsCount` `unit`. For `unit` and `package`, `fixedCost` is a base charge that **adds to** the metered rate rather than replacing it — a search billed `0.175` `fixedCost` + `0.025` per item costs `0.2` for one item. Several entries mean the price depends on config, and each entry's `config.jsonSchema` const/enum is what selects it; those go in the per-config section at the end rather than the main table.
+Omit `--limit` so both return the full set, then render one row per action. Each `credits` entry is one of three shapes: `fixed` bills `cost` per call; `unit` bills `cost` per `unit` consumed; `package` bills `cost` per block of `unitsCount` `unit`. For `unit` and `package`, `fixedCost` is a base charge that **adds to** the metered rate rather than replacing it — a search billed `0.175` `fixedCost` + `0.025` per item costs `0.2` for one billable item. (`exa.search` and `parallel.search` count only the results past the first 10 as billable items, so up to 10 results cost the `fixedCost` alone.) `package` rounds up: a partial block bills as a full one. Several entries mean the price depends on config, and each entry's `config.jsonSchema` const/enum is what selects it; those go in the per-config section at the end rather than the main table.
 
-Generated: 2026-08-28
+Generated: 2026-08-28. Hand-corrected 2026-10-16 against the product source (no generator script ships in this repo): new and changed rows below; the action counts in the first paragraph are from the 2026-08-28 snapshot.
 
 | Cost | Provider | Category | Action | Description |
 |---|---|---|---|---|
@@ -24,11 +24,11 @@ Generated: 2026-08-28
 | 0 / item | `snitcher` | enrichment | `searchSessions` | Search and retrieve website visitor sessions with filtering options for date ranges, URLs, and referrers |
 | 0–1 / person | `apolloio` | enrichment | `searchPeople` | Search Apollo's people database by person, company, technology, and hiring filters |
 | 0–3 | `contactOut` | enrichment | `enrich` | Find data from an email. It returns data person / company information as the response |
-| 0.006–0.5 / 1k token + base | `openAi` | freeform | `instruct` | Instruct prompt |
+| 0.003–0.5 / 1k token + base | `openAi` | freeform | `instruct` | Instruct prompt |
 | 0 | `FullEnrich` | enrichment | `lookupCompany` | Look up one company by domain or LinkedIn URL or ID |
 | 0 | `FullEnrich` | enrichment | `lookupPerson` | Look up one person by LinkedIn URL or ID, or by full name with a company domain or LinkedIn URL |
-| 0 | `FullEnrich` | enrichment | `searchCompanies` | Search for companies matching company filters |
-| 0 | `FullEnrich` | enrichment | `searchPeople` | Search for people matching person and company filters |
+| 0 / item | `FullEnrich` | enrichment | `searchCompanies` | Search for companies matching company filters |
+| 0 / item | `FullEnrich` | enrichment | `searchPeople` | Search for people matching person and company filters |
 | 0.01 | `aiArk` | enrichment | `enrichCompany` | Retrieve firmographics for a single company from its domain or LinkedIn URL |
 | 0.01 / item | `aiArk` | enrichment | `searchCompanies` | Search for companies matching company filters or lookalike domains |
 | 0.01 / organization | `apolloio` | enrichment | `searchOrganizations` | Search Apollo's company database by firmographic, funding, technology, and hiring filters |
@@ -37,26 +37,29 @@ Generated: 2026-08-28
 | 0.01–0.25 / 1k token + base | `gemini` | freeform | `instruct` | Instruct prompt |
 | 0.02 / 100 item | `icypeas` | enrichment | `findCompanies` | Search the Icypeas lead database for companies matching the given criteria. Returns a paginated list of matching compani… |
 | 0.02 / 100 item | `icypeas` | enrichment | `findPeople` | Search the Icypeas lead database for people matching the given criteria. Returns a paginated list of matching profiles. |
+| 0.01 / 1k token | `native` | platform | `classify` | Ask typed yes/no, choice, and score questions about a record, message, or document, and get structured answers with their probabilities |
+| 0.01 / 1k token | `typesafe` | freeform | `evaluate` | Ask typed yes/no, choice, and score questions about a record, message, or document, and get structured answers with their probabilities |
 | 0.02 / 1k token | `native` | platform | `fileSearch` | Search files |
-| 0.02 | `x` | enrichment | `getFollowers` | Get the followers of an X account |
-| 0.02 | `x` | enrichment | `getFollowing` | Get the accounts an X account is following |
-| 0.02 | `x` | enrichment | `getPostComments` | Get the replies (comments) on an X post |
-| 0.02 | `x` | enrichment | `getPostDetails` | Get a single X post (tweet) with its engagement metrics |
-| 0.02 | `x` | enrichment | `getPostLikers` | Get the X accounts that liked a post |
-| 0.02 | `x` | enrichment | `getQuoteTweets` | Get the posts that quote-tweeted an X post |
-| 0.02 | `x` | enrichment | `getRetweeters` | Get the X accounts that reposted (retweeted) a post |
-| 0.02 | `x` | enrichment | `getUserLikes` | Get the posts recently liked by an X account |
-| 0.02 | `x` | enrichment | `getUserMedia` | Get the recent media posts (photos/videos) of an X account |
-| 0.02 | `x` | enrichment | `getUserPosts` | Get the recent posts (tweets) published by an X account |
-| 0.02 | `x` | enrichment | `getUserProfile` | Get the profile of an X account (bio, followers, links, …) |
-| 0.02 | `x` | enrichment | `getUserReplies` | Get the recent replies posted by an X account |
-| 0.02 | `x` | enrichment | `searchPeople` | Search X accounts (people) by keyword |
-| 0.02 | `x` | enrichment | `searchPosts` | Search X posts (tweets) by keyword or advanced query |
+| 0.02 / 20 item | `x` | enrichment | `getFollowers` | Get the followers of an X account |
+| 0.02 / 20 item | `x` | enrichment | `getFollowing` | Get the accounts an X account is following |
+| 0.02 / 100 item | `x` | enrichment | `getPostComments` | Get the replies (comments) on an X post |
+| 0.02 / 100 item | `x` | enrichment | `getPostDetails` | Get a single X post (tweet) with its engagement metrics |
+| 0.02 / 100 item | `x` | enrichment | `getPostLikers` | Get the X accounts that liked a post |
+| 0.02 / 100 item | `x` | enrichment | `getQuoteTweets` | Get the posts that quote-tweeted an X post |
+| 0.02 / 100 item | `x` | enrichment | `getRetweeters` | Get the X accounts that reposted (retweeted) a post |
+| 0.02 / 100 item | `x` | enrichment | `getUserLikes` | Get the posts recently liked by an X account |
+| 0.02 / 100 item | `x` | enrichment | `getUserMedia` | Get the recent media posts (photos/videos) of an X account |
+| 0.02 / 100 item | `x` | enrichment | `getUserPosts` | Get the recent posts (tweets) published by an X account |
+| 0.02 / 100 item | `x` | enrichment | `getUserProfile` | Get the profile of an X account (bio, followers, links, …) |
+| 0.02 / 100 item | `x` | enrichment | `getUserReplies` | Get the recent replies posted by an X account |
+| 0.02 / 100 item | `x` | enrichment | `searchPeople` | Search X accounts (people) by keyword |
+| 0.02 / 100 item | `x` | enrichment | `searchPosts` | Search X posts (tweets) by keyword or advanced query |
 | 0.025 / url | `parallel` | enrichment | `extract` | Extract relevant content from specific web URLs using Parallel AI |
 | 0.05 | `aiArk` | enrichment | `analyzePersonality` | Analyze a LinkedIn profile to get personality insights (OCEAN, DISC) and tailored selling and hiring guidance |
 | 0.05 | `aiArk` | enrichment | `reverseLookup` | Find a person's full profile from an email address or a phone number |
 | 0.05 / item | `aiArk` | enrichment | `searchPeople` | Search for people matching person and company filters |
 | 0.05 / item | `firecrawl` | enrichment | `crawl` | Recursively search through a urls subdomains, and gather the content |
+| 0.05 / item | `firecrawl` | enrichment | `map` | List the URLs of a website without scraping them, optionally ranked by a search term |
 | 0.05 / item | `firecrawl` | enrichment | `scrape` | Turn any url into clean data |
 | 0.05 / item | `firecrawl` | enrichment | `search` | Search the web using Firecrawl |
 | 0.05 | `kitt` | sales | `verifyEmail` | Verify an email address |
@@ -74,6 +77,7 @@ Generated: 2026-08-28
 | 0.05 | `serper` | enrichment | `searchPlaces` | Retrieve Google places |
 | 0.05–4 / 1k token + base | `anthropic` | freeform | `instruct` | Instruct prompt |
 | 0.1 | `aiArk` | enrichment | `enrichPerson` | Enrich a person's full profile and find their verified email from a LinkedIn URL or an AI-Ark person ID |
+| 0.1 | `bounceban` | enrichment | `verifyEmail` | Verify a person's email, including accept-all (catch-all) and SEG-protected addresses |
 | 0.1 | `brightData` | enrichment | `scrapeFacebookPagePosts` | Scrape Facebook page posts by URL including content, engagement metrics, and attachments |
 | 0.1 | `brightData` | enrichment | `scrapeFacebookProfile` | Scrape Facebook page or profile data by URL including name, followers, contact info, and business details |
 | 0.1 | `brightData` | enrichment | `scrapeInstagramProfile` | Scrape Instagram profile data by URL including follower count, posts, bio, and engagement metrics |
@@ -88,8 +92,8 @@ Generated: 2026-08-28
 | 0.1 | `waterfall` | enrichment | `verifyEmail` | Verify a person's email |
 | 0.1 | `zeroBounce` | enrichment | `verifyEmail` | Verify a person's email status. |
 | 0.125–60 | `parallel` | enrichment | `createTask` | Execute a web research task using Parallel AI. Supports complex queries that require deep research, analysis, and struct… |
-| 0.125 + 0.025 / item | `parallel` | enrichment | `search` | Search the web with Parallel AI and return ranked results with relevant excerpts |
-| 0.025 / item + base | `exa` | enrichment | `search` | Search the web with Exa and return ranked results |
+| 0.125 + 0.025 / item past 10 | `parallel` | enrichment | `search` | Search the web with Parallel AI and return ranked results with relevant excerpts |
+| 0.025 / item past 10 + base | `exa` | enrichment | `search` | Search the web with Exa and return ranked results |
 | 0.2 | `neverBounce` | enrichment | `verifyEmail` | Verify an email address |
 | 0.2 / item | `salesNavigator` | enrichment | `extractAccountSearch` | Retrieve accounts from Sales Navigator |
 | 0.2 / item | `salesNavigator` | enrichment | `extractLeadSearch` | Retrieve leads from Sales Navigator |
@@ -161,7 +165,6 @@ Generated: 2026-08-28
 | 1 | `oceanio` | enrichment | `searchPeople` | Search for people |
 | 1 | `proxycurl` | enrichment | `enrich` | Retrieve information about a person/organization |
 | 1 / item | `proxycurl` | enrichment | `search` | Retrieve object records |
-| 1 | `reverseContact` | enrichment | `enrichCompanyFromLinkedin` | Retrieve information about a company from Linkedin |
 | 1 | `rocketreach` | enrichment | `lookupPerson` | Lookup person and company |
 | 1 | `waterfall` | enrichment | `enrichCompany` | Retrieve company data |
 | 1–3 / item | `contactOut` | enrichment | `search` | Search person / company data from linkedin URL |
@@ -180,7 +183,7 @@ Generated: 2026-08-28
 | 3 / item | `peopleDataLabs` | enrichment | `searchCompanies` | Search for companies |
 | 3 / item | `peopleDataLabs` | enrichment | `searchPeople` | Search for people |
 | 3 | `prospeo` | enrichment | `findPhone` | Find a person's phone number using linkedin url |
-| 3 | `waterfall` | enrichment | `detectJobChange` | Detect if a contact has changed jobs. Returns the job change status (MOVED, LEFT, NO_CHANGE, UNKNOWN) and updated person… |
+| 3 | `waterfall` | enrichment | `detectJobChange` | Detect if a contact has changed jobs. Returns `job_change_status` (moved, left, no_change, unknown) and updated person… |
 | 3 / item | `waterfall` | enrichment | `searchProspects` | Search contacts and their companies |
 | 4 | `mixrank` | enrichment | `findCompany` | Retrieve a person or company information |
 | 4 | `mixrank` | enrichment | `findPerson` | Find a person using various identifiers like email, phone, name, or company details |
@@ -222,6 +225,9 @@ These bill differently depending on how the node is configured, so the range abo
 
 | Config | Cost |
 |---|---|
+| model=gpt-6-astra, advancedSettings.withWebSearch=true | 0.4 + 0.5 / 1k token |
+| model=gpt-6-sol, advancedSettings.withWebSearch=true | 0.4 + 0.1 / 1k token |
+| model=gpt-6-luna, advancedSettings.withWebSearch=true | 0.4 + 0.003 / 1k token |
 | model=gpt-5.6-sol, advancedSettings.withWebSearch=true | 0.4 + 0.2 / 1k token |
 | model=gpt-5.6-terra, advancedSettings.withWebSearch=true | 0.4 + 0.03 / 1k token |
 | model=gpt-5.6-luna, advancedSettings.withWebSearch=true | 0.4 + 0.006 / 1k token |
@@ -243,6 +249,9 @@ These bill differently depending on how the node is configured, so the range abo
 | model=gpt-4o-mini, advancedSettings.withWebSearch=true | 0.4 + 0.02 / 1k token |
 | model=gpt-4o, advancedSettings.withWebSearch=true | 0.4 + 0.5 / 1k token |
 | model=gpt-3.5-turbo, advancedSettings.withWebSearch=true | 0.4 + 0.5 / 1k token |
+| model=gpt-6-astra, advancedSettings.withWebSearch=false | 0.5 / 1k token |
+| model=gpt-6-sol, advancedSettings.withWebSearch=false | 0.1 / 1k token |
+| model=gpt-6-luna, advancedSettings.withWebSearch=false | 0.003 / 1k token |
 | model=gpt-5.6-sol, advancedSettings.withWebSearch=false | 0.2 / 1k token |
 | model=gpt-5.6-terra, advancedSettings.withWebSearch=false | 0.03 / 1k token |
 | model=gpt-5.6-luna, advancedSettings.withWebSearch=false | 0.006 / 1k token |
@@ -295,7 +304,10 @@ These bill differently depending on how the node is configured, so the range abo
 | Config | Cost |
 |---|---|
 | model=claude-sonnet-5, advancedSettings.withWebSearch=true | 0.4 + 0.2 / 1k token |
+| model=claude-fable-5-1, advancedSettings.withWebSearch=true | 0.4 + 4 / 1k token |
 | model=claude-fable-5, advancedSettings.withWebSearch=true | 0.4 + 4 / 1k token |
+| model=claude-opus-5-5, advancedSettings.withWebSearch=true | 0.4 + 1.6 / 1k token |
+| model=claude-opus-5, advancedSettings.withWebSearch=true | 0.4 + 2 / 1k token |
 | model=claude-opus-4-8, advancedSettings.withWebSearch=true | 0.4 + 2 / 1k token |
 | model=claude-opus-4-7, advancedSettings.withWebSearch=true | 0.4 + 2 / 1k token |
 | model=claude-opus-4-6, advancedSettings.withWebSearch=true | 0.4 + 2 / 1k token |
@@ -308,7 +320,10 @@ These bill differently depending on how the node is configured, so the range abo
 | model=claude-3-5-sonnet-latest, advancedSettings.withWebSearch=true | 0.4 + 0.2 / 1k token |
 | model=claude-3-5-haiku-latest, advancedSettings.withWebSearch=true | 0.4 + 0.05 / 1k token |
 | model=claude-sonnet-5, advancedSettings.withWebSearch=false | 0.2 / 1k token |
+| model=claude-fable-5-1, advancedSettings.withWebSearch=false | 4 / 1k token |
 | model=claude-fable-5, advancedSettings.withWebSearch=false | 4 / 1k token |
+| model=claude-opus-5-5, advancedSettings.withWebSearch=false | 1.6 / 1k token |
+| model=claude-opus-5, advancedSettings.withWebSearch=false | 2 / 1k token |
 | model=claude-opus-4-8, advancedSettings.withWebSearch=false | 2 / 1k token |
 | model=claude-opus-4-7, advancedSettings.withWebSearch=false | 2 / 1k token |
 | model=claude-opus-4-6, advancedSettings.withWebSearch=false | 2 / 1k token |
@@ -334,14 +349,14 @@ These bill differently depending on how the node is configured, so the range abo
 | processor=ultra2x | 15 |
 | processor=ultra4x | 30 |
 | processor=ultra8x | 60 |
-| any config | 0.625 |
+| any config (processor unset: falls back to the `core` default) | 0.625 |
 
 ### `exa.search` — varies by `searchType`
 
 | Config | Cost |
 |---|---|
-| searchType=deep | 0.3 + 0.025 / item |
-| any config | 0.175 + 0.025 / item |
+| searchType=deep | 0.3 + 0.025 / item past 10 |
+| any config | 0.175 + 0.025 / item past 10 |
 
 ### `perplexity.instruct` — varies by `model`, `searchContextSize`
 

@@ -47,8 +47,9 @@ cargo-ai mailboxManagement mailbox refresh-status <uuid>   # repeat until status
 Still `pending` after ~10 minutes, or `refresh-status` returns `providerMailboxNotFound`?
 Provisioning did not complete at the provider. File a report with the mailbox UUID.
 
-A send before `active` fails with `credentialsMissing` — which retries, so a batch launched too
-early recovers on its own rather than losing rows.
+A send before `active` fails with `mailboxNotActive`, which does **not** retry, so a batch
+launched too early loses those rows. Wait for `active` before enrolling. (`credentialsMissing`,
+which does retry, is the rarer case of an `active` mailbox still waiting on SMTP credentials.)
 
 ### The mailbox went `inactive`
 
@@ -68,7 +69,7 @@ or `private`.
 
 | Symptom | Cause | Fix |
 | --- | --- | --- |
-| `warmupAlreadyStarted` | `start-warmup` on a running warm-up | Use `update-warmup` to change the target |
+| `warmupAlreadyStarted` | `start-warmup` on a running warm-up, including the one that starts on its own when a mailbox first goes `active` | Use `update-warmup` to change the target |
 | `warmupNotStarted` | `update-warmup` or `get-warmup-stats` on a mailbox that never started (or that is `disabled` / `failed`) | `start-warmup` first |
 | `warmupNotSupported` | The provider cannot warm this flavour | Nothing to do |
 | `mailboxNotActive` | Still `pending`, or provider-disabled | Resolve the status first |
@@ -86,12 +87,15 @@ or `private`.
 - **`recipientSuppressed`** — the address opted out, bounced, complained, or was suppressed
   manually. Suppression is workspace-wide and absolute; the fix is to remove the row from your
   audience, never to remove the suppression.
-- **`dailyLimitReached`** — the ramp's allowance is spent. It retries and lifts on its own, but
-  a batch larger than `remainingCount` burns a run per excess row. Check
-  `mailbox get-send-allowance` first.
+- **`dailyLimitReached`** — the ramp's allowance is spent. It retries and lifts on its own, and
+  orchestration's pacing normally holds excess sends until the window rolls rather than failing
+  them, so a batch larger than `remainingCount` drains over several days. A backlog deeper than
+  ~15 days of allowance outlives its run. Check `mailbox get-send-allowance` first.
+- **`mailboxSendingPaused`** — the mailbox's `dailySendLimit` is `0`. It does not retry; lift
+  the override.
 - **A batch that "ran" but delivered nothing** — read the run errors, not the run count. Three
   reasons never succeed on retry (`recipientSuppressed`, `mailboxNotActive`,
-  `transportNotSupported`), so a batch full of them is a list or a mailbox problem, not a
+  `mailboxSendingPaused`, `transportNotSupported`), so a batch full of them is a list or a mailbox problem, not a
   transient one. [`../../cargo-diagnostics/SKILL.md`](../../cargo-diagnostics/SKILL.md) sweeps a
   batch by root cause.
 
@@ -103,7 +107,7 @@ rendered HTML, the signature, and the unsubscribe footer as the recipient will.
 | Symptom | Cause |
 | --- | --- |
 | Filtering `--statuses success` returns nothing | `success` is not a list status — a delivered message reads as `sent`. See [`response-shapes.md`](response-shapes.md) |
-| `--statuses sent, replied` returns nothing | The space. CSV flags are comma-separated with **no spaces** |
+| `--statuses sent, replied` drops `replied` | The unquoted space ends the shell argument, so the flag only receives `sent,`. Drop the space or quote the list (the CLI trims each value) |
 | Zero bounces on a list you expect to bounce | `bounced` has **no producer yet** — nothing parses delivery-status notifications. Do not read the empty count as a clean list |
 | `mailbox list` has no `count` | Only that list omits it; count the array |
 | A list stopped at 50 rows | `message` / `thread` / `event` default to `--limit 50` (max 200). `mailbox` and `suppression` have no default (max 1000) |

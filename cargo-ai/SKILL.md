@@ -1,7 +1,7 @@
 ---
 name: cargo-ai
 description: "Build and configure AI agents inside Cargo — create an agent, choose its model and temperature, write its prompt, attach knowledge for retrieval (RAG), connect MCP tool servers, manage memories, and deploy releases. Triggers: \"create an agent\", \"make an agent that\", \"give the agent our docs\", \"attach this knowledge base\", \"attach this library to the agent\", \"add resources to the agent release\", \"connect an MCP server\", \"expose our tools as an MCP server\", \"use Cargo from Claude Desktop or ChatGPT\", \"change the agent model\", \"what does the agent remember\", \"deploy the agent\", \"the agent is answering wrong\". Skip when: uploading the knowledge files themselves — use cargo-content; sending the agent a message or running it over records — use cargo-orchestration."
-version: "2.4.0"
+version: "2.5.0"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -148,7 +148,7 @@ cargo-ai ai release update-draft --agent-uuid <uuid> \
 
 # Deploy the draft release (makes it live)
 cargo-ai ai release deploy-draft --agent-uuid <uuid> \
-  --integration-slug openai \
+  --integration-slug openAi \
   --language-model-slug gpt-4o \
   --actions '[]' \
   --mcp-clients '[]' \
@@ -171,13 +171,13 @@ The generic `--options` flag does **not** carry these — the API's `options` on
 
 ```bash
 # Structured (JSON Schema) output on the draft release
-curl -sS -X PUT "$CARGO_API_BASE/v1/ai/releases/draft/update" \
-  -H "Authorization: Bearer $CARGO_TOKEN" -H "Content-Type: application/json" \
+curl -sS -X PUT "$CARGO_BASE_URL/v1/ai/releases/draft/update" \
+  -H "Authorization: Bearer $CARGO_API_TOKEN" -H "Content-Type: application/json" \
   -d '{"agentUuid":"<uuid>","output":{"type":"jsonSchema","jsonSchema":{"type":"object","properties":{"score":{"type":"number"}},"required":["score"]}}}'
 # Deploy carries the same fields — POST .../v1/ai/releases/draft/deploy
 ```
 
-Send these payloads alongside the other fields you're updating (the endpoint replaces the draft config). **File a `workspaceManagement report`** (see [`../cargo-workspace-management/SKILL.md`](../cargo-workspace-management/SKILL.md)) to request first-class `--output` / `--heartbeat` flags — this is the documented feedback channel for CLI/UI parity gaps.
+`draft/update` is a partial update: fields you omit keep their current draft values. `draft/deploy` requires `actions`, `mcpClients`, `resources`, `capabilities` and `suggestedActions` in the body. **File a `workspaceManagement report`** (see [`../cargo-workspace-management/SKILL.md`](../cargo-workspace-management/SKILL.md)) to request first-class `--output` / `--heartbeat` flags — this is the documented feedback channel for CLI/UI parity gaps.
 
 **Agent configuration workflow:**
 
@@ -206,10 +206,10 @@ Templates include a system prompt, actions, resources, and recommended model set
 
 | Use case | Recommended model | Temperature |
 |---|---|---|
-| Classification, extraction, scoring | `gpt-4o-mini` or `claude-3-5-haiku` | `0.0` – `0.2` |
-| Research, summarization, analysis | `gpt-4o` or `claude-3-5-sonnet` | `0.2` – `0.5` |
-| Copywriting, personalization | `gpt-4o` or `claude-3-5-sonnet` | `0.5` – `0.8` |
-| Brainstorming, creative ideation | `gpt-4o` or `claude-opus` | `0.7` – `1.0` |
+| Classification, extraction, scoring | `gpt-4o-mini` or `claude-3-5-haiku-latest` | `0.0` – `0.2` |
+| Research, summarization, analysis | `gpt-4o` or `claude-3-5-sonnet-latest` | `0.2` – `0.5` |
+| Copywriting, personalization | `gpt-4o` or `claude-3-5-sonnet-latest` | `0.5` – `0.8` |
+| Brainstorming, creative ideation | `gpt-4o` or `claude-opus-4-8` | `0.7` – `1.0` |
 
 Low temperature (`0.0`–`0.2`) = deterministic, consistent outputs. High temperature (`0.7`+) = creative, varied outputs. For production workflows processing thousands of records, prefer low temperature.
 
@@ -236,14 +236,14 @@ MCP (Model Context Protocol) runs both ways in Cargo, and the two surfaces are u
 | Who calls it | Any MCP client — Claude Code, Claude Desktop, Cursor, ChatGPT | Your Cargo agents, during a chat or a workflow run |
 | Wired via | `cargo-ai mcp --server <uuid>` (stdio bridge, below) | `release update-draft --mcp-clients …` |
 
-**Before building one, check whether the platform MCP already covers it.** Cargo now serves a first-party MCP at `https://mcp.getcargo.io/mcp` — every workspace member, nothing to deploy — with a small fixed toolset for operating the workspace (`whoami`, `get_usage`, `search_actions`, `get_action_schema`, `autocomplete_action`, `execute_action`, `execute_action_batch`, `get_run`, `get_batch`, `list_runs`, `list_models`, `describe_model`, `query_models`). Hosted clients (ChatGPT connectors, Claude.ai, Cursor over HTTP) point at that URL and sign in with OAuth; the consent screen picks the workspace when the user belongs to several. `ai mcp-server` is for the other job: a **curated, named** subset — this tool, that agent, this filtered model — for a client that should see exactly that and nothing else.
+**Before building one, check whether the platform MCP already covers it.** Cargo now serves a first-party MCP at `https://mcp.getcargo.io/mcp` — every workspace member, nothing to deploy — with a small fixed toolset for operating the workspace (`whoami`, `get_usage`, `search_actions`, `get_action_schema`, `autocomplete_action`, `execute_action`, `execute_action_batch`, `get_run`, `get_batch`, `list_runs`, `list_models`, `describe_model`, `query_models`, plus the read-only context tools `map_context`, `search_context`, `browse_context`, `read_context`). Hosted clients (ChatGPT connectors, Claude.ai, Cursor over HTTP) point at that URL and sign in with OAuth; the consent screen picks the workspace when the user belongs to several. `ai mcp-server` is for the other job: a **curated, named** subset — this tool, that agent, this filtered model — for a client that should see exactly that and nothing else.
 
 ### Publishing a workspace MCP server
 
 ```bash
 cargo-ai ai mcp-server list
 cargo-ai ai mcp-server create --name "CRM tools" \
-  --actions '[{"slug":"<tool-uuid>","kind":"tool","name":null,"description":null,"isBulkAllowed":false,"config":{}}]' \
+  --actions '[{"slug":"<action-slug>","kind":"tool","toolUuid":"<tool-uuid>","templateSlug":null,"waitUntilFinished":true,"name":null,"description":null,"isBulkAllowed":false,"config":{}}]' \
   --resources '[{"kind":"model","slug":"<slug>","name":"Accounts","description":null,"integrationSlug":"hubspot","modelUuid":null,"filter":null,"selectedColumnSlugs":null,"limit":null,"prompt":null,"isReadOnly":true}]'
 cargo-ai ai mcp-server update --uuid <mcp-server-uuid> --name "Updated name"
 cargo-ai ai mcp-server remove <mcp-server-uuid>
@@ -256,7 +256,7 @@ cargo-ai ai mcp-server remove <mcp-server-uuid>
   cargo-ai ai mcp-server create --name "Research" \
     --capabilities '[{"slug":"webSearch","config":{}}]'
   ```
-  The nine slugs are `sandbox`, `memory`, `context`, `app`, `document`, `webSearch`, `model`, `file`, and `documentationSearch` — the same set an **agent** release takes in its own `--capabilities`, which is why the examples above pass `'[]'` rather than omitting it. In a CDK project the same field accepts a bare slug (`capabilities: ["webSearch"]`).
+  The eleven slugs are `sandbox`, `memory`, `context`, `app`, `document`, `webSearch`, `action`, `model`, `file`, `documentationSearch`, and `suggestedActions` — the same set an **agent** release takes in its own `--capabilities`, which is why the examples above pass `'[]'` rather than omitting it. In a CDK project the same field accepts a bare slug (`capabilities: ["webSearch"]`).
 - `update` replaces `--actions` / `--resources` / `--capabilities` wholesale rather than merging — read the current server with `mcp-server list` and pass the full array back.
 
 ### Serving it to a coding agent — `cargo-ai mcp`
@@ -286,14 +286,11 @@ cargo-ai ai mcp-client connect --name "My MCP" --url https://mcp.example.com/sse
 
 ## Memories
 
-Memories are pieces of information an agent stores from conversations for future reference. They can be scoped to a workspace, user, or specific agent.
+Memories are pieces of information an agent stores from conversations for future reference. They are scoped to a user or to a specific agent (`--scope user|agent`; there is no workspace scope).
 
 ```bash
 # List agent memories
 cargo-ai ai memory list --scope agent --agent-uuid <uuid>
-
-# List workspace-wide memories
-cargo-ai ai memory list --scope workspace
 
 # List user-scoped memories
 cargo-ai ai memory list --scope user

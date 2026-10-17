@@ -22,7 +22,7 @@ The folder UUID passed to `--folder-uuid` does not exist. Folders are managed by
 If `agent get` shows `deployedRelease: null`, the agent has never been deployed. Follow the release workflow:
 1. `cargo-ai ai release get-draft --agent-uuid <uuid>`
 2. `cargo-ai ai release update-draft --agent-uuid <uuid> --language-model-slug gpt-4o --system-prompt "..."`
-3. `cargo-ai ai release deploy-draft --agent-uuid <uuid> --language-model-slug gpt-4o --integration-slug openai`
+3. `cargo-ai ai release deploy-draft --agent-uuid <uuid> --language-model-slug gpt-4o --integration-slug openAi --actions '[]' --mcp-clients '[]' --resources '[]' --capabilities '[]' --suggested-actions '[]'` (those five array flags are required)
 
 ## Releases
 
@@ -33,7 +33,7 @@ The agent does not have a draft release. This can happen if the agent was just c
 The `--parent-uuid` passed to `release update-draft` does not match a valid release. Omit it or use a UUID from `release list`.
 
 **`invalidReleaseVersion`**
-The version string is invalid. Version must be a non-empty string (not a number).
+The `--version` string is invalid. It must be a small semver such as `1.2.3` (each segment at most 9999, patch at most 99999). Omit it to auto-increment.
 
 **`invalidConnector`**
 A connector UUID referenced in the release actions or configuration does not exist. Verify connector UUIDs with `cargo-ai connection connector list`.
@@ -67,4 +67,4 @@ MCP servers are connected to agents via MCP clients on the release. After creati
 The `mem0Id` does not match any existing memory. Run `cargo-ai ai memory list` with the correct `--scope` and `--agent-uuid` to find valid memory IDs.
 
 **Wrong scope**
-Memory operations require the correct scope. An agent-scoped memory needs `--scope agent --agent-uuid <uuid>`. A workspace-scoped memory needs `--scope workspace`. Mismatched scopes return not-found errors.
+Memory operations require the correct scope. An agent-scoped memory needs `--scope agent --agent-uuid <uuid>`. A user-scoped memory needs `--scope user`. There is no workspace scope. Mismatched scopes return not-found errors.

@@ -133,8 +133,9 @@ export function readJson<T>(path: string): T {
 }
 
 function rowsFromJson(data: unknown): Row[] {
-  // Accept `orchestration action execute-batch` output directly: rows live
-  // under a top-level "results" (or "records") key rather than at the root.
+  // Accept a wrapped export as well as a bare array: rows may live under a
+  // top-level "results" (or "records") key. execute-batch itself prints only
+  // the batch object; its rows come from `orchestration batch download`.
   if (data !== null && typeof data === "object" && !Array.isArray(data)) {
     const wrapped = data as { results?: unknown; records?: unknown };
     if (Array.isArray(wrapped.results)) data = wrapped.results;
@@ -225,7 +226,19 @@ export async function fetchRunOutputRows(options: ApiModeOptions): Promise<Row[]
   });
   const response = await fetch(url);
   if (!response.ok) fail(`failed to download outputs (${response.status})`);
-  return rowsFromJson(await response.json());
+  // JSON export rows nest the first node's input under `input` and the output
+  // node's result under `output`; lift both to top-level columns so header
+  // detection (email, email_status, experiences, ...) sees them.
+  const data = await response.json();
+  const flattened = Array.isArray(data)
+    ? data.map((item: Record<string, unknown>) => {
+        const { input, output, ...rest } = item ?? {};
+        const lift = (value: unknown) =>
+          value !== null && typeof value === "object" && !Array.isArray(value) ? value : {};
+        return { ...rest, ...lift(input), ...lift(output) };
+      })
+    : data;
+  return rowsFromJson(flattened);
 }
 
 /**

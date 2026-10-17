@@ -10,7 +10,7 @@ cargo-ai workspaceManagement folder list
 
 ## Create a folder
 
-Requires `--name`, `--emoji-slug`, and `--kind`. Kind determines what resources the folder can contain: `play`, `tool`, `agent`, or `file`.
+Requires `--name`, `--emoji-slug`, and `--kind`. Kind determines what resources the folder can contain: `play`, `tool`, `agent`, `file`, `mcpServer`, `model`, `app`, `worker`, `alert`, or `mailbox`.
 
 ```bash
 cargo-ai workspaceManagement folder create --name "Q1 Campaigns" --emoji-slug "rocket" --kind "play"
@@ -35,7 +35,7 @@ cargo-ai workspaceManagement folder update --uuid <folder-uuid> --parent-uuid <p
 ## Remove a folder
 
 ```bash
-# Remove all resources from the folder first (via the Cargo app or by updating each resource)
+# Resources and subfolders inside it move up to the folder's parent (or the root)
 cargo-ai workspaceManagement folder remove <folder-uuid>
 ```
 

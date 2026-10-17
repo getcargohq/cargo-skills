@@ -20,7 +20,7 @@ Common errors and recovery steps for `cargo-orchestration` commands.
 | Batch never finishes                | Individual runs may be erroring or stuck           | List runs for the batch: `run list --workflow-uuid <uuid> --batch-uuid <uuid>` and check for errors         |
 | `Workflow not found`                | Wrong UUID                                         | Re-run `play list` or `tool list` and double-check the `workflowUuid`                                       |
 | `playNotCompatible` on `run create` | Used a play's `workflowUuid` with `run create`     | Plays don't support `run create` — use `batch create` instead                                               |
-| `invalidDataKind` on `batch create` | Data kind not allowed for the workflow type        | Plays accept: `segment`, `change`, `filter`, `recordIds`. Tools accept: `file`, `records`                   |
+| `invalidDataKind` on `batch create` | Data kind not allowed for the workflow type        | Only `file` is refused on a play's workflow (tools only); every other kind is accepted by both                |
 | Run finishes with `error` status    | Workflow step failed                               | Get run details with `run get <uuid>` — the error usually points to a specific node                         |
 
 ## AI agents
@@ -38,12 +38,12 @@ Common errors and recovery steps for `cargo-orchestration` commands.
 
 | Symptom                                                  | Cause                                            | Fix                                                                                                            |
 | -------------------------------------------------------- | ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------- |
-| `errorMessage` with "Table … doesn't exist"              | Used a schema-prefixed name                      | Reference tables as `runs`, `batches`, `spans`, `records` — no schema prefix                                   |
+| `errorMessage` "Schema-qualified table references are not allowed" or "Table … is not allowed or does not exist" | Used a schema-prefixed or unknown table name | Reference tables as `runs`, `batches`, `spans`, `records` — no schema prefix                                   |
 | `errorMessage: "Code: 158. Memory limit exceeded"`       | Scanned too many rows                            | Narrow the time window (`created_at > now() - INTERVAL N DAY`) or aggregate before returning                   |
 | `errorMessage: "Code: 159. Timeout exceeded"`            | Query took longer than 30s                       | Push more work into a `WHERE` filter or reduce columns selected                                                |
 | `errorMessage: "Code: 497. ... ACCESS_DENIED"`           | Used a forbidden function or table               | Only `SELECT` against `runs`/`batches`/`spans`/`records`; no table functions, dictionaries, or introspection   |
 | Query returns empty `rows`                               | Filter too restrictive, or wrong status enum     | Confirm enum values (`status` is `success`/`error`/`pending`/`running`/`cancelled`/…) and broaden the filter   |
-| Result truncated at 10 000 rows                          | Hit `max_result_rows` cap                        | Aggregate (`count`, `GROUP BY`) instead of returning raw rows, or paginate with `LIMIT` + `WHERE created_at`   |
+| `errorMessage` about too many result rows (over 10 000)  | Hit `max_result_rows` cap (the query fails, it is not truncated) | Aggregate (`count`, `GROUP BY`) instead of returning raw rows, or paginate with `LIMIT` + `WHERE created_at`   |
 
 ## Debugging a workflow run
 
@@ -55,7 +55,7 @@ A run can finish with `status: "success"` and still be wrong — wrong branch ta
 cargo-ai orchestration run get <run-uuid>
 ```
 
-Don't have the UUID? `run list` won't help — it **requires** `--workflow-uuid` and has no "most recent run" form. Query the runtime table instead, which needs no filter: `cargo-ai orchestration query execute "SELECT uuid, workflow_uuid, record_title, status, created_at FROM runs ORDER BY created_at DESC LIMIT 10"`. The full discovery ladder (by symptom, by company/domain via `record_title`, by play name) is [`../../cargo-diagnostics/references/run-trace.md`](../../cargo-diagnostics/references/run-trace.md) § 0.
+Don't have the UUID? `run list` without `--workflow-uuid` works only alongside `--created-after` inside a 30-day window, and is capped at 100 rows per page. Query the runtime table instead, which needs no filter: `cargo-ai orchestration query execute "SELECT uuid, workflow_uuid, record_title, status, created_at FROM runs ORDER BY created_at DESC LIMIT 10"`. The full discovery ladder (by symptom, by company/domain via `record_title`, by play name) is [`../../cargo-diagnostics/references/run-trace.md`](../../cargo-diagnostics/references/run-trace.md) § 0.
 
 The response has three top-level fields:
 

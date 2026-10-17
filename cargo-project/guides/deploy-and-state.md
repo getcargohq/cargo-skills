@@ -10,7 +10,7 @@ For every flag, see [`../references/commands.md`](../references/commands.md).
 ## plan → deploy → destroy
 
 ```bash
-# Offline: compile the graph and diff against cargo.state.json. No API calls.
+# Compile the graph and diff against the deploy state cargo.state.json points at. Creates nothing.
 cargo-ai project plan --dir my-workspace
 
 # Create/update resources in dependency order; write cargo.state.json.
@@ -24,8 +24,9 @@ cargo-ai project destroy --dir my-workspace --all                     # everythi
 
 Re-running `deploy` only changes what changed — an unchanged workspace is a no-op.
 `deploy` is idempotent: for each resource it updates by uuid if state has one,
-otherwise adopts a slug-addressable match (connector/model) that already exists,
-otherwise creates.
+otherwise creates. There is no implicit same-slug adoption: a live resource that
+already holds the slug fails the create with a `duplicateSlug` error naming the
+`cargo-ai project import` command to bind it (only a connector's `default: true`, or `adopt: true` on a domain, mailbox or role, links on purpose).
 
 ## The deploy state, and the pointer you commit
 
@@ -43,8 +44,7 @@ per resource — **never secret values**.
 **Commit the pointer.** Without the uuid a fresh checkout cannot find its state, and
 a deploy will *not* quietly create a replacement — that would orphan everything the
 old state tracks. The state is still the only handle on a deployed **play**,
-**agent** or **alert**, which have no slug (unlike connectors and models, which
-self-heal by slug). If the pointer is lost, recover it with `state bind` below, or
+**agent** or **alert**, which have no slug. If the pointer is lost, recover it with `state bind` below, or
 re-establish links one resource at a time with `import`.
 
 ### One state per repo, ten per workspace
@@ -59,9 +59,9 @@ cargo-ai project state bind <uuid>     # point cargo.state.json at an existing s
 already names one, and `--json` to print the created state. `state list` takes
 `--json`. All of them take `--dir <path>`.
 
-Deleting a state (`state remove <uuid>`, which drops the state without touching the
-live resources it tracked) is documented in the CDK README but is **not** in CLI
-1.0.96 — it ships in the next release.
+Deleting a state: `state remove <uuid>` drops the state without touching the live
+resources it tracked. It refuses the state `cargo.state.json` points at unless you
+pass `--force`, and takes `--json`.
 
 ### Migrating a pre-remote-state project
 
@@ -132,15 +132,16 @@ cargo-ai project import model:contacts 6f0c8e2a-… --dir my-workspace
 
 The code id is `kind:slug` (e.g. `connector:hubspot`, `model:contacts`,
 `agent:sdr`). After import, `deploy` updates that resource instead of creating a
-duplicate. Slug-addressable kinds (connector, model) can also self-adopt on deploy
-by matching slug; uuid-only kinds (play, agent, capacity, territory, segment) need
-`import` to recover a lost link. See
+duplicate. No kind self-adopts on deploy by matching slug: a lost link is recovered
+with `import` (or `state bind` for the whole state), and a connector authorized
+outside the repo is linked with `default: true` (formerly `adopt: true`). See
 [`../recipes/migrate-existing-workspace.md`](../recipes/migrate-existing-workspace.md).
 
 ## Recovery — `rollback`
 
-`deploy` snapshots the pre-deploy state to `cargo.state.bak.json`. If a deploy went
-wrong, restore the snapshot:
+`deploy`, `destroy` and `import` snapshot the state as it was before the run (on the
+workspace-held state; in `cargo.state.bak.json` for a legacy inline file). If a run
+went wrong, restore the snapshot:
 
 ```bash
 cargo-ai project rollback --dir my-workspace
@@ -154,8 +155,10 @@ follow with a corrected `deploy`.
 Most resources create synchronously. **Workers and apps build server-side**: on
 deploy the reconciler uploads the bundle, waits for the build, and promotes it —
 so a deploy touching a worker/app takes longer. Author worker runtime code with
-`createWorker` (`@cargo-ai/worker-sdk`) and build to `index.js` before deploying;
-the CDK validates the bundle files (`index.js`, `manifest.json`, `package.json`,
-`package-lock.json`) exist at define time. The live URL is exposed on the handle
+`createWorker` (`@cargo-ai/worker-sdk`); the bundle is uploaded as source and the
+hosting build runs `npm ci` and compiles the entrypoint (`src/index.ts`,
+`src/index.js`, `index.ts` or `index.js`). At define time the CDK checks that
+`manifest.json`, `package.json` and one entrypoint exist (an app needs only
+`package.json`); `package-lock.json` is checked at upload. The live URL is exposed on the handle
 (`webhook.url`, `dashboard.url`). For imperative one-off hosting operations, see
 [`../../cargo-hosting/SKILL.md`](../../cargo-hosting/SKILL.md).

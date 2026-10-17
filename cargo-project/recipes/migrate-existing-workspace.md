@@ -16,7 +16,7 @@ want to address it by:
 ```ts
 // models/contacts.ts — describe the live model
 export const contacts = defineModel("contacts", {
-  dataset: connectorRef("<connector-uuid>"),
+  connector: connectorRef("<connector-uuid>"),
   extractSlug: "fetchRecords",
   config: { objectType: "contacts", columnSelectionMode: "all" },
 });
@@ -42,10 +42,10 @@ cargo-ai project import agent:sdr <agent-uuid> --dir acme-gtm
 ```
 
 - The id is `kind:slug` — the same id the plan output uses.
-- **Slug-addressable kinds** (connector, model) can also self-adopt on the next
-  `deploy` by matching slug, so `import` is optional for them. **Uuid-only kinds**
-  (play, agent, capacity, territory, segment) have no slug — `import` is the only
-  way to bind them one at a time. If you lost only the *pointer*, `project state list`
+- **No kind self-adopts by slug.** A `deploy` that meets a live resource already
+  holding the slug fails with `duplicateSlug` and prints the `import` command to run,
+  so `import` (or `cargo-ai project pull`, which generates the `define*` and adopts
+  in one step) is how every kind is bound one at a time. If you lost only the *pointer*, `project state list`
   then `project state bind <uuid>` recovers everything at once; `import` is for when the
   state itself is gone.
 

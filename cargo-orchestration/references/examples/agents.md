@@ -38,7 +38,7 @@ Message create response:
 cargo-ai ai message get <assistant-msg-uuid>
 ```
 
-Poll until `status` is `success` or `error`:
+Poll until `status` is `success`, `error`, or `cancelled`:
 
 ```json
 {
@@ -53,7 +53,7 @@ Poll until `status` is `success` or `error`:
 }
 ```
 
-Status values: `pending` → `generating` → `success` or `error`. On `error`, read `.message.errorMessage`.
+Status values: `pending` → `generating` → `success` or `error` (`cancelling` → `cancelled` after `message cancel`). On `error`, read `.message.errorMessage`.
 
 ## Multi-turn conversation
 
@@ -106,9 +106,11 @@ Give the agent access to specific actions for enrichment, CRM actions, etc.
 cargo-ai ai message create \
   --chat-uuid <chat-uuid> \
   --parts '[{"type":"text","text":"Enrich this lead and add to Salesforce"}]' \
-  --actions '[{"slug":"clearbit","kind":"tool","toolUuid": "<tool-uuid>","config":{}},{"slug":"salesforce","kind":"tool","config":{}}]'
+  --actions '[{"slug":"clearbit","name":null,"description":null,"isBulkAllowed":false,"kind":"tool","toolUuid":"<enrich-tool-uuid>","templateSlug":null,"waitUntilFinished":true,"config":{}},{"slug":"salesforce","name":null,"description":null,"isBulkAllowed":false,"kind":"tool","toolUuid":"<crm-tool-uuid>","templateSlug":null,"waitUntilFinished":true,"config":{}}]'
 # → The agent can use these actions during its response
 ```
+
+Every key above is required, even when `null`: `name`, `description`, `isBulkAllowed`, `config`, and for a tool `toolUuid`, `templateSlug`, `waitUntilFinished`. A shorter object is refused with a 400. The same holds for a model resource (`name`, `description`, `prompt`, `integrationSlug`, `modelUuid`, `filter`, `selectedColumnSlugs`, `limit`, `isReadOnly`).
 
 ## Send a message with model resources
 
@@ -122,7 +124,7 @@ cargo-ai storage model list
 cargo-ai ai message create \
   --chat-uuid <chat-uuid> \
   --parts '[{"type":"text","text":"Find all companies in France with more than 100 employees"}]' \
-  --resources '[{"slug":"companies","kind":"model","integrationSlug":"salesforce","modelUuid":"<model-uuid>"}]'
+  --resources '[{"slug":"companies","kind":"model","name":null,"description":null,"prompt":null,"integrationSlug":"salesforce","modelUuid":"<model-uuid>","filter":null,"selectedColumnSlugs":null,"limit":null,"isReadOnly":true}]'
 ```
 
 ## Use a specific language model and temperature
@@ -145,8 +147,8 @@ Full example combining all options.
 cargo-ai ai message create \
   --chat-uuid <chat-uuid> \
   --parts '[{"type":"text","text":"Research Acme Corp, enrich their data, and update our CRM"}]' \
-  --actions '[{"slug":"clearbit","kind":"tool","config":{}},{"slug":"salesforce","kind":"tool","config":{}}]' \
-  --resources '[{"slug":"companies","kind":"model","integrationSlug":"salesforce","modelUuid":"<model-uuid>"}]' \
+  --actions '[{"slug":"clearbit","name":null,"description":null,"isBulkAllowed":false,"kind":"tool","toolUuid":"<enrich-tool-uuid>","templateSlug":null,"waitUntilFinished":true,"config":{}},{"slug":"salesforce","name":null,"description":null,"isBulkAllowed":false,"kind":"tool","toolUuid":"<crm-tool-uuid>","templateSlug":null,"waitUntilFinished":true,"config":{}}]' \
+  --resources '[{"slug":"companies","kind":"model","name":null,"description":null,"prompt":null,"integrationSlug":"salesforce","modelUuid":"<model-uuid>","filter":null,"selectedColumnSlugs":null,"limit":null,"isReadOnly":true}]' \
   --language-model-slug gpt-4o \
   --temperature 0.3 \
   --max-steps 10
@@ -210,7 +212,7 @@ cargo-ai ai chat create \
 cargo-ai ai message create \
   --chat-uuid <chat-uuid> \
   --parts '[{"type":"text","text":"Research the VP of Sales at acme.com. Find their name, LinkedIn URL, and email address."}]' \
-  --actions '[{"slug":"find_email","kind":"tool","toolUuid":"<email-finder-tool-uuid>","config":{}}]' \
+  --actions '[{"slug":"find_email","name":null,"description":null,"isBulkAllowed":false,"kind":"tool","toolUuid":"<email-finder-tool-uuid>","templateSlug":null,"waitUntilFinished":true,"config":{}}]' \
   --max-steps 10
 # → Extract assistantMessage.uuid
 

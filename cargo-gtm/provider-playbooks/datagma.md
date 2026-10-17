@@ -6,7 +6,7 @@ last-reviewed: 2026-07-09
 
 # datagma
 
-Contact-info finder: one mid-tier email action and two premium phone actions. `findEmail` (1) is an **alt mid-tier rung** of the find-email chain ([`../references/stage-action-map.md`](../references/stage-action-map.md)) — same price as the `FullEnrich` default, so it earns a slot only as an escalation with a different underlying source. `findPhone` / `findPhoneAndEmail` (8) are the **second-most-expensive phone tier in the catalog** — last resort before `cleon1` (15), never the first stop.
+Contact-info finder: one mid-tier email action, two premium phone actions, and two person-enrich actions. `findEmail` (1) is an **alt mid-tier rung** of the find-email chain ([`../references/stage-action-map.md`](../references/stage-action-map.md)) — same price as the `FullEnrich` default, so it earns a slot only as an escalation with a different underlying source. `findPhone` / `findPhoneAndEmail` (8) are the **second-most-expensive phone tier in the catalog** — last resort before `cleon1` (15), never the first stop.
 
 ## Credits-based actions
 
@@ -15,6 +15,8 @@ Contact-info finder: one mid-tier email action and two premium phone actions. `f
 | `findEmail` | 1 | `firstName, lastName, companyName` (all required) | Escalation rung on the find-email chain when cheaper sources miss. |
 | `findPhone` | 8 | `email`, `personLinkedInUrl` | Phone lookup from an email or LinkedIn URL. **Last-rung pricing.** |
 | `findPhoneAndEmail` | 8 | `firstName, lastName, companyName` (all required) | Phone + email in one call from name + company. |
+| `enrichPerson` | 8 | `linkedInUrl` **or** `email` (professional), optional `countryCode` (two-letter, avoids namesakes) | Full person profile plus `emails[]` and `phones[]`, same price as `findPhoneAndEmail`. Note the key is `linkedInUrl` here, not `personLinkedInUrl`. |
+| `enrichPersonFromPersonalEmail` | 2 | `email` (required, a **personal** address) | Profile (`personalInformation.{displayName, firstName, lastName, headline, companyName, linkedInUrl, …}`, positions, schools) from a personal email; outside the EU only. |
 
 ## What it's for
 

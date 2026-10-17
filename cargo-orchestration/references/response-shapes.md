@@ -17,7 +17,6 @@ JSON response structures returned by Cargo CLI commands used in the `cargo-orche
       "runCreationRule": "always",
       "isEnabled": true,
       "schedule": null,
-      "description": "Enriches companies when they enter the segment",
       "healthThreshold": 80,
       "folderUuid": "folder-uuid-or-null",
       "createdAt": "2025-01-01T00:00:00Z",
@@ -38,7 +37,6 @@ JSON response structures returned by Cargo CLI commands used in the `cargo-orche
       "uuid": "tool-uuid",
       "name": "Company Enrichment",
       "workflowUuid": "workflow-uuid",
-      "description": "Enriches a company record with firmographic data",
       "creditsCost": { "kind": "minMax" },
       "triggers": [],
       "isReadOnly": false,
@@ -50,7 +48,7 @@ JSON response structures returned by Cargo CLI commands used in the `cargo-orche
 }
 ```
 
-**Key fields:** `name` (match by name), `workflowUuid` (needed for run/batch commands), `description`.
+**Key fields:** `name` (match by name), `workflowUuid` (needed for run/batch commands). Tools carry no `description` field.
 
 ## cargo-ai orchestration workflow list
 
@@ -73,8 +71,7 @@ JSON response structures returned by Cargo CLI commands used in the `cargo-orche
       },
       "deployedRelease": {
         "uuid": "...",
-        "version": "3",
-        "description": "Added email step",
+        "version": "1.0.3",
         "deployedAt": "2025-01-10T09:00:00Z"
       },
       "createdAt": "2025-01-01T00:00:00Z",
@@ -96,7 +93,6 @@ JSON response structures returned by Cargo CLI commands used in the `cargo-orche
     {
       "uuid": "agent-uuid",
       "name": "Sales Research Agent",
-      "description": "Researches leads and enriches data",
       "isReadOnly": false,
       "folderUuid": "...",
       "createdAt": "2025-01-01T00:00:00Z",
@@ -183,7 +179,7 @@ JSON response structures returned by Cargo CLI commands used in the `cargo-orche
 
 With `--wait-until-finished`, returns the terminal run state (same shape as `run get`).
 
-**Status values:** `pending`, `running`, `success`, `error`, `cancelled`.
+**Status values:** `idle`, `pending`, `running`, `success`, `error`, `cancelling`, `cancelled`, `skipped`.
 
 ## cargo-ai orchestration action execute-batch
 
@@ -214,7 +210,7 @@ With `--wait-until-finished`, returns the terminal batch state (same shape as `b
 }
 ```
 
-**Status values:** `pending`, `running`, `success`, `error`, `cancelled`.
+**Status values:** `idle`, `pending`, `running`, `success`, `error`, `cancelling`, `cancelled`, `skipped`.
 
 ## cargo-ai orchestration run get
 
@@ -240,10 +236,7 @@ With `--wait-until-finished`, returns the terminal batch state (same shape as `b
         "nextNodeUuid": "...",
         "status": "success",
         "title": "✅ {\"qualified\":true,\"score\":8,...}",
-        "creditsUsedCount": 1,
-        "startedAt": "...",
-        "updatedAt": "...",
-        "finishedAt": "..."
+        "creditsUsedCount": 1
       }
     ],
     "createdAt": "2025-01-15T10:00:00Z",
@@ -309,7 +302,7 @@ the graph — [diagramming it](node-diagram.md), reading a node's config — rea
 }
 ```
 
-Poll until `status` is `success`, `error`, or `cancelled`. Note: `batch get` also returns `releaseUuid` — needed to discover output node slugs via `release get`.
+Poll until `status` is `success`, `error`, `cancelled`, or `skipped` (in-flight values: `pending`, `syncing`, `querying`, `running`, `cancelling`). Note: `batch get` also returns `releaseUuid` — needed to discover output node slugs via `release get`.
 
 ## cargo-ai ai chat create
 
@@ -345,7 +338,7 @@ Poll until `status` is `success`, `error`, or `cancelled`. Note: `batch get` als
 }
 ```
 
-**Key field:** `assistantMessage.uuid` (needed for polling).
+**Key field:** `assistantMessage.uuid` (needed for polling). If the chat is still busy with an earlier turn, the response carries only `userMessage` (queued, answered once the turn ahead finishes) and no `assistantMessage`.
 
 ## cargo-ai ai message get
 
@@ -363,7 +356,7 @@ Poll until `status` is `success`, `error`, or `cancelled`. Note: `batch get` als
 }
 ```
 
-**Status values:** `pending`, `generating`, `success`, `error`.
+**Status values:** `pending`, `generating`, `success`, `error`, `cancelling`, `cancelled`.
 
 ## cargo-ai segmentation segment fetch
 
@@ -412,7 +405,7 @@ Tables (`spans`, `runs`, `batches`, `records`) are referenced without a schema p
 **Failure (non-zero exit):**
 
 ```json
-{ "errorMessage": "Code: 60. Table orchestration.unknown doesn't exist" }
+{ "errorMessage": "Table \"unknown\" is not allowed or does not exist." }
 ```
 
 ```json
@@ -427,7 +420,7 @@ Tables (`spans`, `runs`, `batches`, `records`) are referenced without a schema p
     {
       "uuid": "release-uuid",
       "workflowUuid": "...",
-      "version": "3",
+      "version": "1.0.3",
       "description": "Added email step",
       "createdAt": "2025-01-10T09:00:00Z"
     }
@@ -445,7 +438,7 @@ Supports `--workflow-uuid`, `--limit`, `--offset`.
     "uuid": "release-uuid",
     "workflowUuid": "...",
     "userUuid": "...",
-    "version": "3",
+    "version": "1.0.3",
     "description": "Added email step",
     "nodes": [
       {

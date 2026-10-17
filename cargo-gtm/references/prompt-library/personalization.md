@@ -1,6 +1,6 @@
 # Prompt library — personalization
 
-Prompts for per-record LLM personalization steps (cold-email lines, connection notes, subject lines). Run through `anthropic.instruct` with the substituted prompt in each record's `prompt` field; `temperature: 0.3` is the proven default for this family (bulk tier only — some judgment-tier models reject non-default sampling parameters with a 400; see [`../../provider-playbooks/anthropic.md`](../../provider-playbooks/anthropic.md) and omit the override when in doubt). Every prompt returns plain text (or `NULL` when the inputs can't support a good line — filter those rows out before the sequencer sees them).
+Prompts for per-record LLM personalization steps (cold-email lines, connection notes, subject lines). Run through `anthropic.instruct` with the substituted prompt in each record's `prompt` field; `temperature: 0.3` is the proven default for this family (bulk tier only — Cargo silently drops `temperature` on models that removed sampling parameters (`claude-sonnet-5`, the Opus 5 and Fable 5 families, `claude-opus-4-8`, `claude-opus-4-7`); see [`../../provider-playbooks/anthropic.md`](../../provider-playbooks/anthropic.md) and omit the override when in doubt). Every prompt returns plain text (or `NULL` when the inputs can't support a good line — filter those rows out before the sequencer sees them).
 
 ### cold-email-first-line
 

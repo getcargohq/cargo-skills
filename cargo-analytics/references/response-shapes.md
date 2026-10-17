@@ -17,6 +17,7 @@ JSON response structures returned by Cargo CLI commands used in the `cargo-analy
       "runningExecutionsCount": 10,
       "successExecutionsCount": 950,
       "errorExecutionsCount": 30,
+      "cancellingExecutionsCount": 0,
       "cancelledExecutionsCount": 5,
       "skippedExecutionsCount": 0,
       "creditsUsedCount": 450
@@ -59,11 +60,11 @@ To compute an error rate: `errorExecutionsCount / totalExecutionsCount`.
 
 ## cargo-ai segmentation segment download
 
-Returns raw data as a downloadable payload (typically CSV or JSON depending on the CLI output format). The response is streamed to stdout.
+Returns `{"urls": ["..."]}`: signed URLs to the exported file(s), **not** the data on stdout.
 
 ## cargo-ai orchestration batch download
 
-Returns `{"url": "..."}` — a signed URL to a file, **not** the data on stdout. Each row is a batch record joined to its run's output for the chosen node (defaulting to the last executed node), so a record whose run errored comes back with its input fields and no output.
+Returns `{"url": "..."}` — a signed URL to a file, **not** the data on stdout. Each row is a batch record joined to its run's output for the chosen node (defaulting to the last executed node), so a record whose run errored comes back with its input fields and no output. Output keys become `cargo_<key>` columns (a non-object output lands in a single `cargo` column). The batch must be finished (`batchNotFinished` otherwise), and the CSV is cached per batch on first download: a later call with a different `--output-node-slug` returns the same file.
 
 ## cargo-ai orchestration run download
 

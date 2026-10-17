@@ -4,7 +4,7 @@ Complete reference for building segment filter conditions in the Cargo CLI.
 
 > **CRITICAL — common silent failure:**
 > Every filter object uses the key `conjonction` — **not** `conjunction`.
-> This is intentional (French spelling). A typo here does **not** throw an error — it simply returns no records.
+> This is intentional (French spelling). On `segment fetch`, `segment create` and `batch create` a misspelled key fails validation with a 400; inside a node's config (a `modelSearch` filter) only the top level is checked, so a typo in a group can slip through.
 > Double-check this spelling every time you write a filter. Search for `conjunction` in your JSON before running.
 
 ## Structure
@@ -93,10 +93,10 @@ Same structure as `number` but `value`/`firstValue`/`lastValue` are ISO date str
 ```json
 { "kind": "object", "columnSlug": "metadata", "operator": "isNull" }
 { "kind": "object", "columnSlug": "metadata", "operator": "isNotNull" }
-{ "kind": "object", "columnSlug": "metadata", "operator": "matchConditions" }
+{ "kind": "object", "columnSlug": "metadata", "operator": "matchConditions", "conjonction": "and", "propertyConditions": [{ "kind": "objectProperty", "columnSlug": "metadata", "propertyName": "industry", "operator": "is", "value": "SaaS" }] }
 ```
 
-For `matchConditions`, nest `objectProperty` conditions inside.
+`matchConditions` requires `conjonction` and `propertyConditions` (an array of `objectProperty` conditions). `array` columns take the same three operators.
 
 ### objectProperty
 

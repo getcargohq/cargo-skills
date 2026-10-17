@@ -233,24 +233,29 @@ cargo-ai context runtime read --path persona/head-of-revops.md --start-line 18 -
 
 cargo-ai context runtime edit \
   --path persona/head-of-revops.md \
-  --old-string "- Stitching together 6 point tools that don't talk to each other\n" \
+  --old-string $'- Stitching together 6 point tools that don\'t talk to each other\n' \
   --new-string "" \
   --commit-message "Drop outdated pain point on Head of RevOps"
 ```
 
 ## Rename / move an entry
 
-There's no `rename` command. Use `write` at the new path, then delete the old file with `execute` + push by overwriting it with `write` after removing — easier path: write the new file, then leave the old one in place until you're ready to remove it (a follow-up `write` with empty content is not supported; deletes happen via the GitHub UI or via `execute` followed by a manual commit step in the Cargo app).
+There's no `rename` command, but `execute` auto-commits and pushes tracked file changes, so a move or delete run through it lands in git:
+
+```bash
+cargo-ai context runtime execute --command git --args '["mv","persona/old-slug.md","persona/new-slug.md"]' --commit-message "Rename persona/old-slug to persona/new-slug"
+cargo-ai context runtime execute --command rm --args '["persona/stale-entry.md"]' --commit-message "Remove stale persona"
+```
 
 For most renames, the cleanest sequence is:
 
-1. `write` the new file at the new path.
+1. Move the file (`execute` + `git mv`, above), or `write` the new file at the new path.
 2. Update every file that cross-refs the old slug — find them with `execute` + `grep`:
    ```bash
    cargo-ai context runtime execute --command grep --args '["-r","-l","persona/old-slug","."]'
    ```
 3. For each match, `edit` the cross-ref `persona/old-slug` → `persona/new-slug`.
-4. Delete the stale file via the GitHub UI (file the rename in a single PR if your context repo uses PR review).
+4. If you wrote a new file instead of moving, delete the stale one with `execute` + `rm`. Each call commits straight to the default branch, so if your context repo uses PR review, do the rename in GitHub instead.
 
 ## Verify your work
 
@@ -259,5 +264,6 @@ For most renames, the cleanest sequence is:
 cargo-ai context runtime read --path persona/head-of-revops.md
 
 # Confirm it lights up in the graph and its cross-refs resolve
-cargo-ai context graph get | jq '.nodes[] | select(.slug == "persona/head-of-revops")'
+cargo-ai context graph get | jq '.graph.nodes[] | select(.id == "persona/head-of-revops.md")'
+cargo-ai context graph get | jq '.graph.broken[] | select(.source == "persona/head-of-revops.md")'
 ```

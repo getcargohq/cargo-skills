@@ -23,7 +23,7 @@ Warm-intro path discovery — **two actions, both 2 credits**, scoring the relat
 - ✅ **Champion-led plays** — find who at your company knows the buying committee, filtered by `jobFunctions` / `seniorities` so paths land on the right people.
 - ✅ **Person-level check before a big ask** — `searchWarmIntrosToPerson` with the prospect's LinkedIn URL for exec-level outreach.
 - ❌ **Pure prospecting** — theSwarm doesn't find new prospects; it maps relationships to ones you already have. Source with `salesNavigator` first.
-- ❌ **Whole-TAM sweeps** — 2 credits/lookup across 5,000 accounts is 10,000 credits, mostly returning "no path". Reserve it for scored/tiered accounts.
+- ❌ **Whole-TAM sweeps** — 2 credits per lookup that finds a path, up to 10,000 credits across 5,000 accounts. Reserve it for scored/tiered accounts.
 
 ## Patterns
 
@@ -35,13 +35,13 @@ cargo-ai orchestration action execute \
   --data '{
     "matchingCompanyDomain": "yourco.com",
     "targetCompanyDomain": "acme.com",
-    "jobFunctions": ["engineering"],
-    "seniorities": ["vp", "c_suite"]
+    "jobFunctions": ["information technology & engineering"],
+    "seniorities": ["vp", "c-level"]
   }' \
   --wait-until-finished
 ```
 
-`jobFunctions` / `seniorities` values shown are **illustrative** — fetch the accepted values from the `listJobFunctions` and `listSeniorities` autocompletes on `connection integration get theSwarm` first. Both accept a single string or an array.
+`jobFunctions` / `seniorities` take lowercase provider labels: seniorities are `c-level`, `director`, `vp`, `owner`, `partner`, `manager`, `senior`, `junior`; job functions are long labels such as `information technology & engineering` or `sales & business development`. Fetch the full lists with `cargo-ai connection connector autocomplete --connector-uuid <uuid> --slug listJobFunctions --params '{}'` (and `--slug listSeniorities`). Both accept a single string or an array.
 
 ### Pattern B — Warm path to one person
 
@@ -57,9 +57,9 @@ cargo-ai orchestration action execute \
 
 ## Common pitfalls
 
-- **Swapping the domains.** `matchingCompanyDomain` is *your* domain, `targetCompanyDomain` the prospect's. Reversed, the call runs and bills 2 credits — for paths into your own company.
+- **Swapping the domains.** `matchingCompanyDomain` is *your* domain, `targetCompanyDomain` the prospect's. Reversed, the call runs and bills 2 credits whenever it returns paths, into your own company.
 - **Guessed enum values.** `jobFunctions` / `seniorities` are provider-defined strings; resolve them via the autocompletes or the filter silently narrows to nothing.
-- **Fixed cost, path or no path.** 2 credits per lookup regardless of result — gate it on account tier, not on the whole list ([`../references/cost-discipline.md`](../references/cost-discipline.md)).
+- **Fixed cost when a path comes back.** 2 credits per lookup that returns paths; a "no path" result comes back as an empty list, which bills 0. Gate it on account tier, not on the whole list ([`../references/cost-discipline.md`](../references/cost-discipline.md)).
 - **Network coverage drives hit rate.** A thin mapped network returns thin results; that's account state, not an API failure — don't burn retries on it.
 
 ## Position in the waterfall
@@ -78,5 +78,5 @@ cargo-ai orchestration action execute \
 ## Recurring use
 
 - **Re-checks can flip "no path" to "path"** — results improve as the team maps its network (see intro), so periodically re-running `searchWarmIntrosToCompany` on strategic accounts that previously returned no path is justified; keep it slow (monthly-ish) and only after the mapped network has actually grown.
-- **In-play gate:** 2 credits path-or-no-path — gate on account tier AND an empty warm-path result column; once a path is found, that row never re-bills, and re-checks target only the tier-1 no-path subset.
-- **Never a whole-TAM cron** — the whole-TAM-sweep warning above compounds on a schedule (10,000 credits per sweep, mostly "no path", every interval).
+- **In-play gate:** 2 credits per lookup that returns paths — gate on account tier AND an empty warm-path result column; once a path is found, that row never re-bills, and re-checks target only the tier-1 no-path subset.
+- **Never a whole-TAM cron** — the whole-TAM-sweep warning above compounds on a schedule (up to 10,000 credits per sweep, every interval).

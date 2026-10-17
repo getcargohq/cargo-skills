@@ -33,13 +33,18 @@ cargo-ai connection connector list --integration-slug clearbit
 ## Create a connector
 
 ```bash
+# Interactive: opens the hosted form in a browser and waits
+cargo-ai connection connector create --integration-slug clearbit
+
+# Non-interactive: --config is what skips the browser, and --slug / --name are required with it
 cargo-ai connection connector create \
   --integration-slug clearbit \
   --slug clearbit_production \
-  --name "Clearbit - Production"
+  --name "Clearbit - Production" \
+  --config '<integration-specific JSON>'
 ```
 
-`--slug` is a unique identifier (no spaces), `--name` is the display name. For credit-based integrations (`useCredits: true`), this is all that's needed. For credential-based integrations, pass `--config` with the integration-specific credentials JSON.
+`--slug` is a unique identifier (no spaces), `--name` is the display name. Both are rejected without `--config`, because the hosted form asks for them.
 
 ## Update a connector
 
@@ -131,6 +136,6 @@ Some connectors have rate limits (visible in the `rateLimit` field from `connect
 
 ```bash
 cargo-ai connection connector list
-# → Check rateLimit.unit (day/hour/minute) and rateLimit.max for each connector
+# → Check rateLimit.unit (day/hour/minute/second) and rateLimit.max for each connector
 # → Design batches to stay within these limits
 ```

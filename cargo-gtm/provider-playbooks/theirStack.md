@@ -6,21 +6,21 @@ last-reviewed: 2026-04-27
 
 # theirStack (Their Stack)
 
-Tech-stack and jobs-posted intent signals. **Three credits-based actions, all 0.5 credits each**, covering the "find companies by what they use or what they're hiring for" pattern. Cargo's primary intent-signal provider for technographics-driven outreach.
+Tech-stack and jobs-posted intent signals. **Three credits-based actions at 0.5 credits**: `searchJobs` and `searchCompanies` bill **0.5 per returned item** (job or company), `searchTechnologies` bills 0.5 per call. They cover the "find companies by what they use or what they're hiring for" pattern. Cargo's primary intent-signal provider for technographics-driven outreach.
 
 ## Credits-based actions
 
 | Action | Cost | Inputs | Use for |
 |---|---|---|---|
-| `searchTechnologies` | 0.5 | `fields, limit` | Find what technologies a set of companies / domains uses. |
-| `searchJobs` | 0.5 | `fields, companyFields, limit` | Find currently-posted jobs matching role / location / company filters. **Hiring-intent signal.** |
-| `searchCompanies` | 0.5 | `fields, jobFields, techFields, limit` | Find companies by tech stack and/or job-posting filters combined. |
+| `searchTechnologies` | 0.5 per call | `fields, limit` | Find what technologies a company uses (`fields.company_domain` or `company_name`). |
+| `searchJobs` | 0.5 per job returned | `fields, companyFields, limit` | Find currently-posted jobs matching role / location / company filters. **Hiring-intent signal.** |
+| `searchCompanies` | 0.5 per company returned | `fields, jobFields, techFields, limit` | Find companies by tech stack and/or job-posting filters combined. |
 
 ## What it's for
 
 - ✅ **"Everyone hiring for role X"** — `searchJobs` with title and posting-window filters → list of companies actively recruiting that role.
 - ✅ **"Companies running tech stack Y"** — `searchTechnologies` with stack filter → list of companies using a specific framework, infra, or SaaS.
-- ✅ **Combined intent + tech-stack** — `searchCompanies` with both `jobFields` and `techFields` → companies running stack Y AND hiring for role X.
+- ✅ **Combined intent + tech-stack** — `searchCompanies` with `fields.company_technology_slug_or` and `jobFields` → companies running stack Y AND hiring for role X.
 - ❌ **Generic firmographic search** — for "fintech in US, 50-500 headcount" without intent signals, salesNavigator (0.2) or `aiArk.searchCompanies` (0.01) is cheaper per company. Use theirStack only when the intent signal is the primary filter.
 
 ## Patterns
@@ -33,19 +33,20 @@ cargo-ai orchestration action execute \
   --action '{"kind":"connector","integrationSlug":"theirStack","actionSlug":"searchJobs"}' \
   --data '{
     "fields": {
-      "job_titles": ["Head of RevOps", "VP RevOps", "Director of RevOps"],
+      "job_title_or": ["Head of RevOps", "VP RevOps", "Director of RevOps"],
       "posted_at_max_age_days": 30,
-      "locations": ["United States"]
+      "job_country_code_or": ["US"]
     },
     "companyFields": {
-      "employeeCounts": ["50-200", "200-500"]
+      "min_employee_count": 50,
+      "max_employee_count": 500
     },
     "limit": 200
   }' \
   --wait-until-finished
 ```
 
-Result includes both job postings and the companies that posted them. Dedup on company to get the unique account list.
+Billed 0.5 per job returned, so `limit: 200` can cost up to 100 credits. Each job carries the company that posted it (`company_object`). Dedup on company to get the unique account list.
 
 ### Pattern B — Tech-stack-driven sourcing
 
@@ -54,12 +55,10 @@ Result includes both job postings and the companies that posted them. Dedup on c
 cargo-ai orchestration action execute \
   --action '{"kind":"connector","integrationSlug":"theirStack","actionSlug":"searchCompanies"}' \
   --data '{
-    "techFields": {
-      "technologies": ["snowflake", "dbt"]
-    },
     "fields": {
-      "industries": ["software", "saas"],
-      "headcountMin": 100
+      "company_technology_slug_and": ["snowflake", "dbt"],
+      "industry_id_or": ["4"],
+      "min_employee_count": 100
     },
     "limit": 500
   }' \
@@ -73,9 +72,8 @@ cargo-ai orchestration action execute \
 cargo-ai orchestration action execute \
   --action '{"kind":"connector","integrationSlug":"theirStack","actionSlug":"searchCompanies"}' \
   --data '{
-    "techFields": {"technologies": ["snowflake"]},
-    "jobFields": {"job_titles": ["Data Engineer"], "posted_at_max_age_days": 60},
-    "fields": {"industries": ["software"]},
+    "fields": {"company_technology_slug_or": ["snowflake"], "industry_id_or": ["4"]},
+    "jobFields": {"job_title_or": ["Data Engineer"], "posted_at_max_age_days": 60},
     "limit": 200
   }' \
   --wait-until-finished
@@ -85,19 +83,19 @@ This is the unique strength of theirStack — combined tech-stack AND hiring-int
 
 ## Common pitfalls
 
-- **`searchTechnologies` returns technology metadata, not company lists.** Use it to discover canonical technology slugs, then plug those into `searchCompanies.techFields.technologies`.
+- **`searchTechnologies` returns one company's technologies, not company lists.** Each row carries `technology.slug`; plug those slugs into `searchCompanies` `fields.company_technology_slug_or` (any) or `_and` (all). `industry_id_or` takes theirStack's industry ids as strings (`"4"` is Software Development), and `job_country_code_or` / `company_country_code_or` take ISO codes (`"US"`).
 - **Don't over-filter.** Combining 5+ filters can collapse the result set to zero. Start broad (1–2 filters), inspect counts, then narrow.
 - **Posting-window matters.** `posted_at_max_age_days` defaults loose; for "currently hiring" intent, use 30 or 60 days.
 
 ## Anti-patterns
 
-- **Free-text technology names.** `techFields.technologies` wants theirStack's canonical slugs — discover them via `searchTechnologies` first, then plug the slugs into `searchCompanies`. Guessing (`"Snowflake"` vs `"snowflake"` vs `"snowflake-db"`) silently narrows results.
+- **Free-text technology names.** `company_technology_slug_or` wants theirStack's canonical slugs (case sensitive): resolve them with the `listTechnologies` autocomplete or read `technology.slug` from `searchTechnologies`. Unknown field names are dropped silently, so a misspelled filter key runs the search unfiltered and bills per row. Guessing (`"Snowflake"` vs `"snowflake"` vs `"snowflake-db"`) silently narrows results.
 - **theirStack for plain firmographics.** No intent signal in the filter → salesNavigator (0.2) is 2.5× cheaper and `aiArk.searchCompanies` (0.01) 50×. theirStack earns its cost only when the job-posting or tech-stack signal IS the filter.
 - **Skipping the count check.** Start with 1–2 filters and a small `limit`, read the result count, then narrow — over-filtered queries return zero and the credits for the probe calls add up.
 
 ## Position in the waterfall
 
-**Primary intent-signal source** (rung 1 for hiring/tech-stack-driven sourcing); falls to `builtwith` for per-domain tech detail, and to `peopleDataLabs` when the filter needs fields theirStack lacks (funding, investors).
+**Primary intent-signal source** (rung 1 for hiring/tech-stack-driven sourcing); falls to `builtwith` for per-domain tech detail. Funding and investor filters are native here: `min_funding_usd`, `funding_stage_or`, `last_funding_round_date_gte`, `company_investors_or` and `company_investors_partial_match_or` in `fields` (`companyFields` on `searchJobs`).
 
 ## Action shape
 

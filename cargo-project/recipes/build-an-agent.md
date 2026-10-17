@@ -11,7 +11,7 @@ An agent needs a language-model provider connector. Adopt an existing one:
 ```ts
 // connectors/openai.ts
 import { defineConnector } from "@cargo-ai/cdk";
-export const openai = defineConnector("open_ai", { integration: "openAi", adopt: true });
+export const openai = defineConnector("open_ai", { integration: "openAi", default: true });
 ```
 
 ## 2. A tool, backed by a workflow
@@ -23,16 +23,18 @@ as the tool's release. Reference other resources inside the body via `uses`.
 // tools/enrich.ts
 import { defineTool, defineWorkflow } from "@cargo-ai/cdk";
 import { z } from "zod";
+import { hunter } from "../connectors/hunter"; // a defineConnector("hunter", { integration: "hunter", … }) handle
 
 const enrichFlow = defineWorkflow(
   "enrich-contact",
   {
     input: z.object({ email: z.string() }),
     output: z.object({ company: z.string(), enriched: z.boolean() }),
+    uses: { hunter },
   },
-  ({ input, integrations }) => {
-    const found = integrations.hunter.companyEnrichment({ domain: input.email });
-    return { company: found.name, enriched: true };
+  ({ input, uses }) => {
+    const found = uses.hunter.enrichPerson({ email: input.email });
+    return { company: found.data.employment.name, enriched: true };
   },
 );
 
@@ -43,8 +45,9 @@ export const enrich = defineTool("enrich", {
 });
 ```
 
-> `integrations.*` is typed and callable only after `cargo-ai project types` (it reads
-> your workspace's integrations). `native.*` works without it. See
+> `uses.<connector>.<action>` is typed only after `cargo-ai project types` (it reads
+> your workspace's integrations); unsynced, any action slug is accepted. Native
+> helpers (`sendEmail`, `model.*`, …) need no sync. See
 > [`../guides/typed-config.md`](../guides/typed-config.md).
 
 ## 3. The agent, referencing model + tool + connector
@@ -65,21 +68,20 @@ export const sdr = defineAgent("sdr", {
   systemPrompt: "You qualify inbound leads and enrich missing contact info.",
   maxSteps: 12,
   capabilities: ["webSearch", "memory"],
-  models: [{ ref: contacts, readOnly: true }],
-  tools: [enrich],
+  uses: [{ ref: contacts, readOnly: true }, enrich],
   triggers: [{ type: "cron", cron: "0 9 * * *", text: "Daily qualification" }],
   evaluator: { rubric: "Did it correctly qualify the lead?", threshold: 0.8 },
 });
 ```
 
-Add a sub-agent with `subAgents: [{ ref: enricher, waitUntilFinished: true }]`, or a
-raw connector action with
-`connectorActions: [{ integration: "hunter", actionSlug: "emailFinder" }]`.
+Add a sub-agent to `uses` as `{ ref: enricher, waitUntilFinished: true }`, or a
+connector action as `hunter.actions.findEmail` (or
+`connectorActionRef(hunter, "findEmail")`).
 
 ## 4. Deploy
 
 ```bash
-cargo-ai project types      # so integrations.* in the workflow body typecheck
+cargo-ai project types      # so uses.hunter.* in the workflow body typechecks
 cargo-ai project plan       # orders: connector → tool (+ its workflow) → model → agent
 cargo-ai project deploy
 git add cargo.state.json && git commit -m "Add SDR agent"

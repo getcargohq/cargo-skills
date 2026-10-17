@@ -25,7 +25,7 @@ cargo-ai hosting deployment get-promoted --app-uuid <app-uuid>   # verify what's
 The build runs server-side in a sandbox (`npm ci --ignore-scripts` then the app's `build` script, or the framework default, for apps; entrypoint bundling for workers). A failed build usually means:
 
 - **The app's own `build` script failed.** If `package.json` declares one, Cargo runs it verbatim, including any `tsc` pass, `--mode`, or `prebuild`/`postbuild` hook. Run `npm run build` locally first.
-- **No `index.html` in the output directory.** Output must land in the detected framework's directory (`dist` for Vite/Astro/undetected, `out` for Next.js, `build` for SvelteKit/CRA, `public` for Gatsby, `.output/public` for Nuxt).
+- **No `index.html` in the output directory.** Output must land in the detected framework's directory (`dist` for Vite/Astro/Parcel/Webpack/undetected, `build` for CRA, `public` for Gatsby). Next.js, SvelteKit and Nuxt are not detected, so their `build` script must export static files into `dist/`.
 
 - **`--source` points at the wrong directory.** Pass the **package root** (where `package.json` lives), not a pre-built `dist/`.
 - **`npm ci` can't resolve the lockfile.** Ensure `package-lock.json` is present and in sync with `package.json`, and that it isn't in the ignore list.
@@ -45,11 +45,11 @@ The folder UUID doesn't exist. Folders are managed by the [`cargo-workspace-mana
 
 ## `app env` writes the wrong API URL
 
-By default `hosting app env` points at `https://api.getcargo.io`. For a different environment, override it: `cargo-ai hosting app env <app-uuid> --api-url <url>`. Workers have no `env` command. Run them locally with `npm run dev` and export what they need (see below).
+By default `hosting app env` points at `https://api.getcargo.io`. For a different environment, override it: `cargo-ai hosting app env <app-uuid> --api-url <url>`. `hosting worker env` is different: it manages the worker's env vars (`list` / `set` / `remove`), it does not print a `.env.local`. Run a worker locally with `npm run dev` and export what it needs (see below).
 
 ## Worker throws `Missing CARGO_API_TOKEN`
 
-`createCargoApi(c.env)` needs a workspace API token, and Cargo does **not** inject one (it only binds `CARGO_API_URL`, `CARGO_WORKSPACE_UUID`, `CARGO_WORKER_UUID`). Create one and store it as a secret, then **deploy and promote again**:
+`createCargoApi(c.env)` needs a workspace API token, and Cargo does **not** inject one unless the worker has a service user set (`hosting worker update --uuid <uuid> --run-as-user-uuid <service-user-uuid>`, which binds a temporary token at promote). Otherwise create one and store it as a secret, then **deploy and promote again**:
 
 ```bash
 cargo-ai workspaceManagement token create --name "worker: <slug>"
@@ -61,13 +61,13 @@ To scope it to one worker, see `SKILL.md` → "Worker env vars and secrets". Loc
 
 ## I set an env var but the worker doesn't see it
 
-Env vars are bound when a deployment is **promoted**, and non-secret values are also compiled into the bundle. The running deployment keeps the values it was promoted with. Run `deployment create` + `promote` again. To check which keys exist, list them: `workspaceManagement envVar list`, or `GET /v1/hosting/env-vars?workerUuid=<uuid>` for worker-level entries.
+Env vars are bound when a deployment is **promoted**, and non-secret values are also compiled into the bundle. The running deployment keeps the values it was promoted with. Run `deployment create` + `promote` again. To check which keys exist, list them: `workspaceManagement envVar list`, or `hosting worker env list --worker-uuid <uuid>` (`GET /v1/hosting/env-vars?workerUuid=<uuid>`) for worker-level entries.
 
 Don't debug this by shipping an endpoint that echoes `Object.keys(c.env)`. The listing above answers the same question without a deploy.
 
 ## Worker returns 502/500 but the logs show no cause
 
-`createWorker()` logs an **uncaught** exception with its stack. If your route catches the error and returns a sanitized message, only the HTTP line reaches the logs. Add `console.error(err)` in the `catch` before returning, then redeploy. Everything a request writes through `console.*` is captured (the first 50 lines per request). Read logs in the web app or via `POST /v1/hosting/logs/list` with `{"workerUuid":"<uuid>","levels":["error"]}`.
+`createWorker()` logs an **uncaught** exception with its stack. If your route catches the error and returns a sanitized message, only the HTTP line reaches the logs. Add `console.error(err)` in the `catch` before returning, then redeploy. Everything a request writes through `console.*` is captured (the first 50 lines per request). Read logs with `cargo-ai hosting worker logs list --worker-uuid <uuid> --levels error`, in the web app, or via `POST /v1/hosting/logs/list` with `{"workerUuid":"<uuid>","levels":["error"]}`.
 
 ## Browser blocks the app's calls to the worker (CORS)
 

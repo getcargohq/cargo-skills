@@ -1,7 +1,7 @@
 ---
 name: cargo-billing
 description: "Understand what Cargo is costing — remaining credits, usage broken down by workflow, connector, or agent, subscription state, and invoice history. Triggers: \"how many credits do I have left\", \"what did that cost\", \"why is my bill so high\", \"am I about to run out\", \"will this fit in our budget\", \"show me my invoices\", \"how much have I spent this month\", \"what plan am I on\", \"what do I get for free\", \"how many free credits\", \"can I afford this run\", \"add a card\", \"update my payment method\", \"why was my card declined\". Needs a token with admin access. Skip when: attributing spend to specific nodes or cutting a play cost — use cargo-diagnostics."
-version: "2.0.1"
+version: "2.1.0"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -37,7 +37,7 @@ cargo-ai login --email you@company.com  # emailed code, no browser; creates the 
 cargo-ai whoami                         # confirm the active workspace before any write
 ```
 
-Every command prints JSON to stdout; failures exit non-zero with `{"errorMessage": "..."}`. Anything that creates a run or a batch is async — pass `--wait-until-finished` or poll the matching `get`. **Admin-only:** every command in this skill requires a token with admin access on the workspace. Non-admin tokens return `{"errorMessage":"forbidden"}`. When the full skill bundle is installed, [`../cargo/references/prerequisites.md`](../cargo/references/prerequisites.md) adds the CLI version pin, token scopes, and the admin-only surface.
+Every command prints JSON to stdout; failures exit non-zero with `{"errorMessage": "..."}`. Anything that creates a run or a batch is async — pass `--wait-until-finished` or poll the matching `get`. **Admin-only:** every command in this skill requires a token with admin access on the workspace (the `billing:read` permission; card, plan and top-up changes need `billing:write`). A token without it gets a 401 `{"reason":"unauthorized"}`, which the CLI reports as `Not authenticated: unauthorized`: that is a permission gap, not an expired login. When the full skill bundle is installed, [`../cargo/references/prerequisites.md`](../cargo/references/prerequisites.md) adds the CLI version pin, token scopes, and the admin-only surface.
 
 ## Discover resources first
 
@@ -70,7 +70,7 @@ Before triggering a large batch, estimate credit consumption to avoid unexpected
 
 ```bash
 cargo-ai billing subscription get
-# → subscriptionAvailableCreditsCount - subscriptionCreditsUsedCount = remaining credits
+# → subscriptionAvailableCreditsCount + additionalAvailableCreditsCount - subscriptionCreditsUsedCount = remaining credits
 ```
 
 **Step 2 — Estimate cost from a sample run:**
@@ -98,7 +98,7 @@ estimated_cost = (credits_per_record × number_of_records)      # provider actio
 
 The second term is the 0.01-credit-per-execution platform charge ("The execution charge" below). A sample run measures it for free — the record's execution count is `length(run.executions)`, or one row of `--unit orchestration.executions` for the sample window. Leave it out and every step-heavy graph is under-quoted.
 
-Compare against `subscriptionAvailableCreditsCount - subscriptionCreditsUsedCount` before proceeding.
+Compare against `subscriptionAvailableCreditsCount + additionalAvailableCreditsCount - subscriptionCreditsUsedCount` before proceeding.
 
 **Step 4 — Monitor during the batch:**
 
@@ -142,19 +142,19 @@ cargo-ai billing usage get-metrics --from <start-date> --to <end-date> --agent-u
 cargo-ai billing usage get-metrics --from <start-date> --to <end-date> --connector-uuid <uuid>
 cargo-ai billing usage get-metrics --from <start-date> --to <end-date> --integration-slug <slug>
 
-# One unit at a time — the three below are the only accepted values
+# One unit at a time (the fourth accepted value, hosting.events, counts hosted worker events)
 cargo-ai billing usage get-metrics --from <start-date> --to <end-date> --unit billing.credits
 cargo-ai billing usage get-metrics --from <start-date> --to <end-date> --unit orchestration.executions
 cargo-ai billing usage get-metrics --from <start-date> --to <end-date> --unit storage.records
 ```
 
-`--group-by` values: `workflow_uuid`, `connector_uuid`, `model_uuid`, `integration_slug`, `agent_uuid`.
+`--group-by` values: `workflow_uuid`, `connector_uuid`, `model_uuid`, `integration_slug`, `agent_uuid`, `user_uuid`.
 
 Available filters: `--workflow-uuid`, `--model-uuid`, `--connector-uuid`, `--integration-slug`, `--slug`, `--agent-uuid`. Combine with `--group-by` and `--unit`.
 
-### The three usage units
+### The usage units
 
-`--unit` takes exactly `billing.credits`, `orchestration.executions`, or `storage.records` — anything else is a `400` that lists them. **With no `--unit`, all three come back interleaved in the same `items[]` array**, and their `count` fields are not the same quantity. Read the unit off the slug:
+`--unit` takes exactly `billing.credits`, `orchestration.executions`, `storage.records`, or `hosting.events` — anything else is a `400` that lists them. **With no `--unit`, the units come back interleaved in the same `items[]` array**, and their `count` fields are not the same quantity. Read the unit off the slug:
 
 | Unit | Slugs in `items[]` | What `count` is |
 |---|---|---|
@@ -206,7 +206,7 @@ cargo-ai billing subscription update-payment-method   # add or replace the card 
 cargo-ai billing subscription create-portal-session   # Stripe portal URL for self-service billing
 ```
 
-Remaining credits = `subscriptionAvailableCreditsCount - subscriptionCreditsUsedCount` from `subscription get`.
+Remaining credits = `subscriptionAvailableCreditsCount + additionalAvailableCreditsCount - subscriptionCreditsUsedCount` from `subscription get`.
 
 **Note:** Invoice amounts are returned in cents. Divide by 100 for the dollar value.
 

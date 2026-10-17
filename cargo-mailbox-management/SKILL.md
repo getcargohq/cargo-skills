@@ -1,7 +1,7 @@
 ---
 name: cargo-mailbox-management
 description: "Send mail from inboxes Cargo owns — provision mailboxes on a sending domain, run provider warm-up and the 5→40/day send ramp, deliver with the `sendEmail` action, and read back threads, replies, delivery events, and the workspace suppression list. Triggers: \"set up a sending mailbox\", \"provision inboxes for outbound\", \"warm up this mailbox\", \"how many sends do I have left today\", \"send this from Cargo\", \"did they reply\", \"who unsubscribed\", \"suppress this recipient\", \"take me off your list\", \"never email them again\", \"what do mailboxes cost\", \"my mailbox is stuck pending\". A mailbox is a recurring monthly credit charge, and every send is gated on basis, suppression, and relevance. Skip when: writing the copy or building the audience — use cargo-gtm; the mailbox belongs in git — use cargo-project."
-version: "1.2.0"
+version: "1.3.0"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -99,7 +99,7 @@ mis-read a mailbox's health.
 | --- | --- | --- |
 | Measures | **Your** real outreach | The provider's **dummy** warm-up traffic |
 | Window | Rolling 24 hours | Today, UTC |
-| Returns | `dailyLimit`, `sentCount`, `remainingCount` | `sentCount`, `deliveredCount`, `spamCount`, `inboxRate`, `spamRate` |
+| Returns | `dailyLimit`, `rampLimit`, `sentCount`, `remainingCount` | `sentCount`, `deliveredCount`, `spamCount`, `inboxRate`, `spamRate` |
 | Answers | "How many more may I send?" | "Is this inbox landing in the inbox or in spam?" |
 
 `dailyLimit` is not a setting — it is derived from how long warm-up has been running. The
@@ -152,7 +152,7 @@ cargo-ai mailboxManagement mailbox refresh-status <uuid>   # repeat until status
 
 `create` returns immediately with `status: "pending"` — the provider has not issued credentials
 yet. It reaches `active` when `refresh-status` says so, or on its own within five minutes; a
-send attempted before then fails with `credentialsMissing`.
+send attempted before then fails with `mailboxNotActive`, which does not retry.
 
 ```bash
 cargo-ai mailboxManagement mailbox list                        # every mailbox
@@ -176,11 +176,13 @@ cargo-ai mailboxManagement mailbox remove <uuid>               # deletes at the 
 ### Warm it up
 
 A mailbox that never starts warm-up is pinned at **5 real sends a day, forever**. Warm-up is
-what moves it, and it takes 45 days to finish.
+what moves it, and it takes 45 days to finish. Warm-up starts on its own (target 40) the first
+time a mailbox goes `pending` → `active`; `start-warmup` is the retry after a failed enrolment or
+after `stop-warmup`, and on a mailbox already warming it returns `warmupAlreadyStarted`.
 
 ```bash
 cargo-ai mailboxManagement mailbox start-warmup <uuid> --daily-target 40
-cargo-ai mailboxManagement mailbox get-warmup-stats <uuid>                    # next CLI release
+cargo-ai mailboxManagement mailbox get-warmup-stats <uuid>
 
 cargo-ai mailboxManagement mailbox update-warmup --uuid <uuid> --status paused
 cargo-ai mailboxManagement mailbox update-warmup --uuid <uuid> --daily-target 25
@@ -199,11 +201,14 @@ cargo-ai mailboxManagement mailbox stop-warmup <uuid>                         # 
 
 ```bash
 cargo-ai mailboxManagement mailbox get-send-allowance <uuid>
-# → {"allowance":{"dailyLimit":12,"sentCount":4,"remainingCount":8}}
+# → {"allowance":{"dailyLimit":12,"rampLimit":12,"sentCount":4,"remainingCount":8}}
 ```
 
-Read `remainingCount` before enrolling a batch. Sends past it do not queue for tomorrow — they
-fail immediately with `dailyLimitReached`, one wasted run per row.
+Read `remainingCount` before enrolling a batch. Sends past it do not fail: they wait for the
+rolling 24h window to free a slot, so a backlog drains over the following days. A workflow run
+lives at most about 15 days, so a backlog deeper than ~15 days of allowance (about 600 sends on a
+warmed mailbox) outlives the run waiting for it. `rampLimit` is where the ramp stands before any
+`dailySendLimit` override tightens it.
 
 ### Read what happened
 
@@ -275,12 +280,13 @@ cargo-ai orchestration action execute \
 - Optional `bodyText` (generated from the HTML when omitted), `inReplyTo`, and `references`.
 - **To keep a reply threaded, send the whole chain.** `references` is every `Message-ID` in the
   thread so far, oldest first — not just the parent. Mail clients break the thread otherwise.
-- The action is rate-limited **per mailbox** to that mailbox's own daily limit, spread across
-  the day. A burst of 100 on a mailbox with 40 left fails the 41st immediately rather than
-  parking it for a day.
+- The action is rate-limited **per mailbox**: capped at that mailbox's own daily limit, with a
+  random 1 to 3 minute gap between two sends. A burst of 100 on a mailbox with 40 left sends 40
+  and the other 60 wait for the window to roll rather than failing.
 - **A refused send is a node error, not a thrown exception.** `recipientSuppressed`,
-  `mailboxNotActive`, and `transportNotSupported` need a human and do not retry;
-  `dailyLimitReached`, `credentialsMissing`, and `deliveryFailed` retry on their own.
+  `mailboxNotActive`, `mailboxSendingPaused`, `mailboxNotFound`, and `transportNotSupported`
+  need a human and do not retry; `dailyLimitReached`, `credentialsMissing`, and
+  `deliveryFailed` retry on their own.
 - **There is no dry run from the CLI.** The engine has one, but no `action execute` flag reaches
   it — the send is live the moment you run the command. Send to yourself first.
 
@@ -323,8 +329,8 @@ out loud before provisioning anything.
   order.
 - **A play or scheduled tool that calls `sendEmail` re-bills on every run** — and re-contacts
   the same people on every run, which is the §6 cadence gate in `acceptable-use.md` as much as a
-  spend gate. Check `get-send-allowance` before enrolling a batch: rows past the allowance burn
-  a run each and deliver nothing.
+  spend gate. Check `get-send-allowance` before enrolling a batch: rows past the allowance wait
+  for later windows, and a backlog deeper than ~15 days of allowance outlives its run.
 - The full spend rules — sampling before a full enrollment, the approval message, the receipt —
   are [`../cargo-gtm/references/cost-discipline.md`](../cargo-gtm/references/cost-discipline.md).
 

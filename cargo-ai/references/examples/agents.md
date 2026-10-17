@@ -58,7 +58,7 @@ cargo-ai ai release update-draft --agent-uuid <agent-uuid> \
 
 # 4. Deploy the draft
 cargo-ai ai release deploy-draft --agent-uuid <agent-uuid> \
-  --integration-slug openai \
+  --integration-slug openAi \
   --language-model-slug gpt-4o-mini \
   --actions '[]' \
   --mcp-clients '[]' \

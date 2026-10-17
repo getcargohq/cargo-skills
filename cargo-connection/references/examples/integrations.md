@@ -59,7 +59,7 @@ Returns plain text documentation for the integration, including available action
 
 ```bash
 cargo-ai connection integration get hubspot
-# → Returns HubSpot-specific actions (e.g. "create_contact", "update_deal") and extractors
+# → Returns HubSpot-specific actions (e.g. "insertRecord", "updateRecords", "findRecords") and extractors
 # → Each action includes its config.jsonSchema for building workflow nodes
 
 cargo-ai connection integration get-documentation hubspot
@@ -88,11 +88,8 @@ Use `actionSlug` values in workflow node configs (see `cargo-orchestration/refer
 cargo-ai connection integration list --search "hubspot"
 # → Extract the "slug" value
 
-# 2. Create the connector
-cargo-ai connection connector create \
-  --integration-slug hubspot \
-  --slug hubspot_production \
-  --name "HubSpot - Production"
+# 2. Create the connector (hosted form; add --slug, --name and --config to skip the browser)
+cargo-ai connection connector create --integration-slug hubspot
 # → Note the returned connector UUID
 
 # 3. Get the integration details to discover available actions

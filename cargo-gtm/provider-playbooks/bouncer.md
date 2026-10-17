@@ -36,7 +36,7 @@ cargo-ai orchestration action execute-batch \
   --wait-until-finished
 ```
 
-The catalog dump documents no output schema for this action — inspect the first run's output (resolve the action's output schema via `cargo-orchestration`, or read the run's `runContext`) before filtering on field names.
+Output fields: `email`, `status` (Bouncer's verdict), `reason`, `score`, `provider`, `toxic`, `toxicity`, plus `domain.{name, acceptAll, disposable, free}`, `account.{role, disabled, fullMailbox}` and `dns.{type, record}`. An `undeliverable` verdict returns **no data at all** (the row is empty, the run title carries the reason), so filter on an empty output, not on `status = "undeliverable"`.
 
 ## Cost traps
 

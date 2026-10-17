@@ -30,7 +30,7 @@ JSON response structures returned by Cargo CLI commands used in the `cargo-billi
 | `success`, `error` | `orchestration.executions` | Node executions — **credits = count / 100** |
 | `insert` | `storage.records` | Records written |
 
-`--unit` takes exactly `billing.credits`, `orchestration.executions`, or `storage.records`; any other value returns `400` listing those three. Pass it whenever the number feeds an estimate. The execution rows reconcile one-for-one with `SELECT execution_status, count() FROM spans` in `orchestration query execute`.
+`--unit` takes exactly `billing.credits`, `orchestration.executions`, `storage.records`, or `hosting.events`; any other value returns `400` listing them. Pass it whenever the number feeds an estimate. The execution rows reconcile one-for-one with `SELECT execution_status, count() FROM spans` in `orchestration query execute`.
 
 When `--group-by` is specified, `groupBy` contains the resource identifier:
 
@@ -80,7 +80,7 @@ The response has exactly one top-level key, `metrics`. There is no `totalUsage` 
 
 **Key fields:** `plan` (`self-serve` or `enterprise`), `subscriptionStatus`, `subscriptionAvailableCreditsCount`, `subscriptionCreditsUsedCount`, `startAt`, `resetAt`.
 
-Remaining credits = `subscriptionAvailableCreditsCount - subscriptionCreditsUsedCount`.
+Remaining credits = `subscriptionAvailableCreditsCount + additionalAvailableCreditsCount - subscriptionCreditsUsedCount`.
 
 ## cargo-ai billing subscription get-invoices
 

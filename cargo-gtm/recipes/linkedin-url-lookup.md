@@ -21,14 +21,22 @@ The fix is **strict cross-validation**: never trust the first hit. Always verify
 
 Use `linkedin.findProfileUrl` (0.25 cred) — cheapest credible source.
 
+`execute-batch --wait-until-finished` prints the batch object, not rows. Rows come from `batch download`: a signed CSV of each input record's columns plus every output key as `cargo_<key>`. This helper turns it into JSON for jq:
+
 ```bash
-cargo-ai orchestration action execute-batch \
+batch_rows() {
+  curl -fsSL "$(cargo-ai orchestration batch download --uuid "$1" | jq -r .url)" \
+    | python3 -c 'import csv,json,sys; json.dump(list(csv.DictReader(sys.stdin)), sys.stdout)'
+}
+
+B=$(cargo-ai orchestration action execute-batch \
   --action '{"kind":"connector","integrationSlug":"linkedin","actionSlug":"findProfileUrl"}' \
   --records '[
     {"fullName":"John Smith","companyName":"Acme"},
     ...
   ]' \
-  --wait-until-finished > /tmp/candidates.json
+  --wait-until-finished | jq -r '.batch.uuid')
+batch_rows "$B" > /tmp/candidates.json   # URL in cargo_linkedin_profile_url
 ```
 
 ### Step 2 — Validate by enriching the candidate profile
@@ -36,19 +44,22 @@ cargo-ai orchestration action execute-batch \
 Run `linkedin.enrichProfile` (0.25 cred) on the candidate URL. Compare the returned company against the input company.
 
 ```bash
-cargo-ai orchestration action execute-batch \
+# fullName and companyName ride along so the gate can compare against them
+B=$(cargo-ai orchestration action execute-batch \
   --action '{"kind":"connector","integrationSlug":"linkedin","actionSlug":"enrichProfile"}' \
-  --records "$(jq -c '[.results[] | {linkedinUrl: .url}]' /tmp/candidates.json)" \
-  --wait-until-finished > /tmp/enriched.json
+  --records "$(jq -c '[.[] | select((.cargo_linkedin_profile_url // "") != "")
+                       | {linkedinUrl: .cargo_linkedin_profile_url, fullName, companyName}]' /tmp/candidates.json)" \
+  --wait-until-finished | jq -r '.batch.uuid')
+batch_rows "$B" > /tmp/enriched.json
 ```
 
 ### Step 3 — Apply the validation gate
 
 A candidate is **valid** only if **all** of these hold:
 
-1. The enriched profile's `currentCompany.name` or `currentCompany.domain` matches the input company (case-insensitive, allow common variations like "Inc", "GmbH", "Ltd" stripped).
-2. The enriched profile's name matches the input first+last name (case-insensitive; allow accents normalized).
-3. The profile's `currentRole.startDate` is more recent than 1990 (sanity check that the profile is real and active).
+1. The enriched profile's current `company` or `company_domain` (CSV `cargo_company`, `cargo_company_domain`) matches the input company (case-insensitive, allow common variations like "Inc", "GmbH", "Ltd" stripped).
+2. The enriched profile's `full_name` matches the input first+last name (case-insensitive; allow accents normalized).
+3. The profile's `current_company_join_year` is more recent than 1990 (sanity check that the profile is real and active).
 
 If any check fails, **reject the candidate** rather than guess.
 
@@ -63,7 +74,7 @@ cargo-ai orchestration action execute-batch \
   --wait-until-finished > /tmp/reverse.json
 ```
 
-`reverseEmailLookup` returns LinkedIn URL alongside a company match — apply the same validation gate from step 3.
+`reverseEmailLookup` returns the LinkedIn URL as `profile.linkedin_url` and the current company as `profile.position.company` (`name`, `domain`) — apply the same validation gate from step 3.
 
 If that also fails: mark the row as "unresolved" and surface to the user. Do **not** return a low-confidence URL.
 
@@ -84,7 +95,7 @@ Only the rows that passed the validation gate get written back. Mark unresolved 
 
 - **Don't skip step 3.** A first-pass `findProfileUrl` hit rate is ~70%; an unvalidated rate is ~50% (false positives bring it down). Validation gate is mandatory.
 - **Don't normalize the company name aggressively.** "Acme Corp" matching "Acme Inc" is fine; "Acme Software" matching "Acme Pharmaceuticals" is not — keep the suffix awareness loose, the noun-phrase strict.
-- **Don't accept candidates with `currentCompany == null`.** That usually means the person is between jobs; the LinkedIn profile may be stale or the resolver's match was wrong.
+- **Don't accept candidates with an empty `company`.** That usually means the person is between jobs; the LinkedIn profile may be stale or the resolver's match was wrong.
 
 ## Action shape rules
 

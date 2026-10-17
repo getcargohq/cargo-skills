@@ -15,7 +15,7 @@ So the whole playbook is one question: **does this need a filter no cheaper rung
 | Action | Cost | Inputs | Use for |
 |---|---|---|---|
 | `enrich` | 1 fixed | `objectType` (`person` \| `company` \| `role` \| `job`) + `filters[]`, or `url` for `job` | Resolve one entity from attribute filters rather than a URL. |
-| `search` | **1 / item** | `objectType` (`person` \| `company`) + `filters[]` + `limit` | Search on LinkedIn attributes the other providers don't filter on. |
+| `search` | **1 / item** | `objectType` (`person` \| `company` \| `job`) + `filters[]` + `limit` (default 5, max 10) | Search on LinkedIn attributes the other providers don't filter on. |
 
 `enrich` is filter-based, not URL-based — that's what separates it from `linkedin.enrichProfile` (0.25) and `aiArk.enrichPerson` (0.1), which both need the profile URL you may not have. Its `objectType: "role"` variant (`role` + `company_name`) answers "who holds this title at this company" without a URL at all.
 
@@ -35,15 +35,14 @@ Everything else has a cheaper home. **Education** (`education`, `school_id_or`, 
 
 ## Cost math before you run anything
 
-`search` bills **per item returned**, and `limit` is the bill:
+`search` bills **per item returned**, and `limit` is the bill. `limit` defaults to 5 and the schema caps it at 10 per call (profiles are always enriched):
 
 | `limit` | Cost |
 |---|---|
-| 10 | 10 |
-| 25 | 25 |
-| 100 | 100 |
+| 5 (default) | 5 |
+| 10 (max) | 10 |
 
-100 records here is 100 credits; the same 100 from `salesNavigator.searchLeads` is 2. Set `limit` to what you will act on, quote it to the user before running, and treat any `search` over ~25 as needing explicit approval — [`../references/cost-discipline.md`](../references/cost-discipline.md) §1.
+100 records here is 10 calls and 100 credits; the same 100 from `salesNavigator.searchLeads` is 20. Set `limit` to what you will act on, quote it to the user before running, and treat any run of repeated `search` calls past ~25 records as needing explicit approval — [`../references/cost-discipline.md`](../references/cost-discipline.md) §1.
 
 ## Patterns
 
@@ -78,7 +77,7 @@ cargo-ai orchestration action execute \
       {"name": "current_role_after", "value": "2026-05-01"},
       {"name": "current_company_employee_count_min", "value": "200"}
     ],
-    "limit": 15
+    "limit": 10
   }' \
   --wait-until-finished
 ```
@@ -104,13 +103,13 @@ cargo-ai orchestration action execute \
 
 ## Common pitfalls
 
-- **`value` where the filter wants `autocompleteValue`.** Location, country, industry, and company-type filters take `autocompleteValue`, not `value` — the schema is an `anyOf` and the wrong key is a validation failure, not a silent miss. Resolve the accepted values first:
+- **`value` where the filter wants `autocompleteValue`.** Country, industry, and company-type filters (`country`, `current_company_country`, `current_company_industry`, `current_company_type`; on companies `country`, `industry`, `type`) take `autocompleteValue`, not `value` — the schema is an `anyOf` and the wrong key is a validation failure, not a silent miss. Resolve the accepted values first:
   ```bash
   cargo-ai connection connector autocomplete \
     --connector-uuid <uuid> --slug listFilterValues \
     --params '{"filterName":"current_company_industry"}' --value "software"
   ```
-- **Leaving `limit` unset or large.** Per-item billing turns an exploratory query into a three-figure charge. Always set it.
+- **Leaving `limit` unset or large.** Per-item billing compounds across calls; the default is 5 and the schema maximum is 10 per call. Always set it.
 - **Using `search` to count.** It bills for what it returns. `aiArk.countPeople` / `aiArk.countCompanies` are **free** — size the audience there first, then decide whether to pay for records.
 - **Paying here for a filter aiArk has.** Education, degree, school, skills, tenure length, total experience, employer funding: all `aiArk.searchPeople` at 0.05. Check its filter list before opening this one.
 - **Not deduping.** `public_identifier_not_in_list` exists so you don't pay 1 credit each for people already in the model. Pass the identifiers you hold.
@@ -140,6 +139,6 @@ Needs a ProxyCurl API key on the connector. Caching is supported — a repeated 
 
 ## Recurring use
 
-- **Per-item billing on a schedule compounds.** A weekly `search` at `limit: 25` is 25 credits a week, ~1,300 a year — and mostly the same people, re-billed.
+- **Per-item billing on a schedule compounds.** A weekly `search` at `limit: 10` is 10 credits a week, ~520 a year — and mostly the same people, re-billed.
 - **Make each run pay only for what is new.** Move `current_role_after` forward with the schedule, and pass `public_identifier_not_in_list` with everyone already in the model. Without both, a recurring search is a standing order for duplicates.
 - **In-play gate:** cap `limit` in the node itself, never from an upstream variable that can grow.

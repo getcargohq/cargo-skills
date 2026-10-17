@@ -6,7 +6,7 @@ last-reviewed: 2026-07-09
 
 # icypeas
 
-The **cheap tier** of the contact stack, three ways: `verifyEmail` at **0.01** is the cheapest verification in the entire catalog (10× cheaper than the `waterfall.verifyEmail` default), `findEmail` at 0.1 is the cheap last resort of the find-email chain, and `findPeople`/`findCompanies` at 0.02/record are a far cheaper non-LinkedIn sourcing alternative to `salesNavigator` (0.2). Prefer it for very large lists where unit cost dominates; avoid it as the lead email finder when hit rate matters — that's `FullEnrich.findEmail` ([`../references/alternatives.md`](../references/alternatives.md)).
+The **cheap tier** of the contact stack, three ways: `verifyEmail` at **0.01** is the cheapest verification in the entire catalog (10× cheaper than the `waterfall.verifyEmail` default), `findEmail` at 0.1 is the cheap last resort of the find-email chain, and `findPeople`/`findCompanies` at 0.02 per 100 records are a far cheaper non-LinkedIn sourcing alternative to `salesNavigator` (0.2 / record). Prefer it for very large lists where unit cost dominates; avoid it as the lead email finder when hit rate matters — that's `FullEnrich.findEmail` ([`../references/alternatives.md`](../references/alternatives.md)).
 
 ## Credits-based actions
 
@@ -15,16 +15,16 @@ The **cheap tier** of the contact stack, three ways: `verifyEmail` at **0.01** i
 | `verifyEmail` | **0.01** | `email` | **Cheapest verify in the catalog.** Very large verify batches. |
 | `findEmail` | 0.1 | `firstName, lastName, domainOrCompany` (all required) | Cheap last-resort rung of the find-email chain. |
 | `scanDomain` | 0.1 | `domainOrCompany` | Discover **role-based** addresses on a domain (contact@, admin@, …). |
-| `findPeople` | 0.02/record | `currentJobTitle, currentCompanyName, location, keyword, limit` | Cheapest non-LinkedIn people sourcing. |
-| `findCompanies` | 0.02/record | `name, industry, location, keyword, headcountMin, headcountMax, limit` | Cheapest company sourcing. |
+| `findPeople` | 0.02 / 100 records | `currentJobTitle, currentCompanyName, location, keyword, limit` | Cheapest non-LinkedIn people sourcing. |
+| `findCompanies` | 0.02 / 100 records | `name, industry, location, keyword, headcountMin, headcountMax, limit` | Cheapest company sourcing. |
 
-`findPeople`/`findCompanies` are package-billed per 100 records and paginated (`paginationToken` in the response meta); `limit` defaults to 100, max 10,000.
+`findPeople`/`findCompanies` are package-billed at 0.02 per page of up to 100 records (a partial page bills as a full one) and paginated (`paginationToken` in the response meta); `limit` defaults to 100, max 10,000.
 
 ## What it's for
 
 - ✅ **Verification at scale** — 10,000 emails = 100 credits. Use over `waterfall.verifyEmail` (0.1) when the list is large enough for the 10× saving to matter.
 - ✅ **Last-resort email finding** — rung 4 of the chain (FullEnrich → hunter → peopleDataLabs → icypeas), per [`../references/waterfall-strategy.md`](../references/waterfall-strategy.md).
-- ✅ **Cheap sourcing when LinkedIn coverage is thin** — `findPeople` (0.02) is 10× cheaper than `salesNavigator.searchLeads` (0.2), on a different database; useful for privacy-focused industries.
+- ✅ **Cheap sourcing when LinkedIn coverage is thin** — `findPeople` (0.02 per 100 records) is roughly 1,000× cheaper per record than `salesNavigator.searchLeads` (0.2 / record), on a different database; useful for privacy-focused industries.
 - ✅ **Role-based address discovery** — `scanDomain` is the only action in the stack that enumerates generic mailboxes on a domain.
 
 ## Patterns
@@ -83,7 +83,7 @@ Filters are coarse (title, company, location, keyword) — nothing like salesNav
 
 ## Recurring use
 
-- **Scheduled sourcing fits:** a weekly `findPeople`/`findCompanies` pull (persona/company-search cadence, see [`../recipes/save-as-play.md`](../recipes/save-as-play.md)) is the cheapest recurring source at 0.02/record — dedupe new rows against the model before any paid enrichment runs downstream.
+- **Scheduled sourcing fits:** a weekly `findPeople`/`findCompanies` pull (persona/company-search cadence, see [`../recipes/save-as-play.md`](../recipes/save-as-play.md)) is the cheapest recurring source at 0.02 per 100 records — dedupe new rows against the model before any paid enrichment runs downstream.
 - **Re-verify before send waves:** `verifyEmail` (0.01) is the natural pre-send gate — run it on rows entering the send segment or whose last verify is stale, never on a blanket timer over the whole list; even at 0.01, the free cull comes first (see Pattern A).
 - **In-play `findEmail` gate:** the last rung stays conditional — run only where the FullEnrich, hunter, AND peopleDataLabs email columns are all still empty. Found emails are stable data; never re-find on a schedule.
 - **Cadence × rate limit:** at 30 requests/minute (see Common pitfalls), large recurring batches run long — size scheduled pulls so one run finishes before the next fires.

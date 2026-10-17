@@ -50,8 +50,8 @@ Inventory what's already in the repo so we only fill gaps, never overwrite:
 cargo-ai context runtime browse > /tmp/ctx-browse.json
 cargo-ai context graph get > /tmp/ctx-graph.json
 
-# Count entries per domain (excluding _template.md)
-jq -r '.files[] | select(.path | test("^[^/]+/[^_].*\\.md$")) | (.path | split("/")[0])' /tmp/ctx-browse.json \
+# Count entries per domain (the graph already excludes _template.*; browse lists one level only)
+jq -r '.graph.nodes[].id | select(test("^[^/]+/[^/]+\\.mdx?$")) | split("/")[0]' /tmp/ctx-graph.json \
   | sort | uniq -c
 ```
 
@@ -99,7 +99,7 @@ For each digest, require a `source_url` per claim. **Skip anything you cannot so
 
 ### Step 5 — Synthesize and write per domain
 
-For each domain you intend to populate, read the template first so frontmatter (`title`, `description`) and section structure are valid. Missing `title` or `description` **breaks the knowledge graph**.
+For each domain you intend to populate, read the template first so frontmatter (`title`, `description`) and section structure are valid. Missing `title` or `description` does not fail the write, but the node indexes poorly (filename as title, first paragraph as summary).
 
 ```bash
 # Always read the template first
@@ -153,11 +153,11 @@ Re-run the graph to confirm the writes landed and surface any orphan cross-refs:
 cargo-ai context graph get > /tmp/ctx-graph-after.json
 
 # Node delta
-echo "Before: $(jq '.nodes | length' /tmp/ctx-graph.json)"
-echo "After:  $(jq '.nodes | length' /tmp/ctx-graph-after.json)"
+echo "Before: $(jq '.graph.nodes | length' /tmp/ctx-graph.json)"
+echo "After:  $(jq '.graph.nodes | length' /tmp/ctx-graph-after.json)"
 
 # Orphans (nodes referenced but not authored)
-jq -r '.edges[] | select(.target.exists == false) | "\(.source.path) → \(.target.path)"' /tmp/ctx-graph-after.json
+jq -r '.graph.broken[] | "\(.source) → \(.target)"' /tmp/ctx-graph-after.json
 ```
 
 Report to the user:

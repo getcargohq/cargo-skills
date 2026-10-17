@@ -21,8 +21,11 @@ relative to wherever the skill loaded from). They run directly with Node ≥
 older Nodes). Zero dependencies for file mode. Every script supports:
 
 - `--input <file.csv|file.json>` — rows from a file: a CSV from
-  `run download-outputs`, a JSON array, or raw `action execute-batch` output
-  (`{"results": [...]}` is unwrapped automatically), **or**
+  `run download-outputs` or `batch download` (a direct `action execute-batch`
+  prints only the batch object, so its rows always come from
+  `cargo-ai orchestration batch download --uuid <batch-uuid>`, with output
+  columns prefixed `cargo_`), a JSON array, or an object whose `results`
+  array is unwrapped automatically, **or**
 - `--workflow-uuid <uuid>` (+ optional `--batch-uuid`, `--output-node-slug`,
   `--workspace-uuid`) — **API mode**: fetches the output rows directly via the
   `@cargo-ai/api` package (`npm install -g @cargo-ai/api` if missing), reusing

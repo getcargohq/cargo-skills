@@ -42,16 +42,22 @@ Choose precision (salesNavigator) or scale (peopleDataLabs). For expansion, **pr
 cargo-ai orchestration action execute-batch \
   --action '{"kind":"connector","integrationSlug":"salesNavigator","actionSlug":"searchLeads"}' \
   --records "$(jq -c '[.records[] | {
-    company_domain: .domain,
-    title_keywords: ["VP Engineering","Director of Data","Head of Analytics","CTO"],
-    function: ["Engineering","Data","Product"]
+    domain,
+    company: {currentCompanyIds: [.linkedin_company_id]},
+    role: {
+      titleKeywords: ["VP Engineering","Director of Data","Head of Analytics","CTO"],
+      functions: ["8","13","19"]
+    },
+    limit: 3
   }]' /tmp/customers.json)" \
   --wait-until-finished > /tmp/expansion-candidates.json
 ```
 
-Customize `title_keywords` and `function` to match the expansion motion — different from the original champion persona. If the original buyer was VP Sales, expansion personas might be VP Marketing, Head of Customer Success, Head of Engineering, etc.
+`searchLeads` keys on LinkedIn company IDs (`company.currentCompanyIds`, strings), not domains: `linkedin_company_id` stands for whichever column holds them. If the model only has domains, resolve them first with `linkedin.enrichCompanyFromDomain` (0.5, returns `company_id`). `role.functions` takes LinkedIn function codes as strings (`"8"` Engineering, `"13"` Information Technology, `"19"` Product Management); names like `"Engineering"` match nothing. `domain` is not a searchLeads input; it rides along so the result rows keep it.
 
-For scale (e.g. when expanding to 1,000+ customer accounts at once), swap to `peopleDataLabs.searchLeads` — cheaper per record, broader coverage, lower signal-to-noise.
+Customize `role.titleKeywords` and `role.functions` to match the expansion motion — different from the original champion persona. If the original buyer was VP Sales, expansion personas might be VP Marketing, Head of Customer Success, Head of Engineering, etc.
+
+For scale (e.g. when expanding to 1,000+ customer accounts at once), swap to `peopleDataLabs.searchPeople` — broader coverage, lower signal-to-noise, and 3 credits per returned record (15× salesNavigator), so cap `limit` per account.
 
 ### Step 3 — Pull existing contacts at the same accounts
 
@@ -65,7 +71,7 @@ cargo-ai segmentation segment fetch \
       conditions: [{
         kind: "string",
         columnSlug: "company_domain",
-        operator: "in",
+        operator: "is",
         values: [.records[].domain]
       }]
     }]
@@ -74,41 +80,49 @@ cargo-ai segmentation segment fetch \
 
 ### Step 4 — Deduplicate: keep only net-new candidates
 
-```bash
-# Build a set of known contact identifiers (LinkedIn URL + email)
-jq -r '.records[] | (.linkedin_url // "") + "|" + (.email // "")' /tmp/existing-contacts.json | sort -u > /tmp/known.txt
+`/tmp/expansion-candidates.json` is the batch object, not the leads. The rows are a CSV behind `batch download`; a search action's lead array lands in one `cargo` column as JSON, with each lead carrying `linkedin_profile_url`, `first_name`, `last_name`, `company_name` (no email).
 
-# Filter expansion candidates against the known set
-jq -c '[.results[] | . as $c
-  | (($c.linkedin_url // "") + "|" + ($c.email // "")) as $id
-  | select($id | IN($ARGS.positional[]) | not)
-  | $c
-]' --args $(cat /tmp/known.txt) /tmp/expansion-candidates.json > /tmp/net-new.json
+```bash
+# Known contacts, keyed on LinkedIn URL
+jq -c '[.records[] | .linkedin_url // empty]' /tmp/existing-contacts.json > /tmp/known.json
+
+# Pull the lead rows, then keep only candidates not already in Contacts
+URL=$(cargo-ai orchestration batch download --uuid "$(jq -r .batch.uuid /tmp/expansion-candidates.json)" | jq -r .url)
+curl -fsSL "$URL" \
+  | python3 -c 'import csv,json,sys; json.dump(list(csv.DictReader(sys.stdin)), sys.stdout)' \
+  | jq -c --slurpfile known /tmp/known.json '[.[] | select(.cargo != "") | .domain as $d
+      | (.cargo | fromjson)[] | . + {company_domain: $d}
+      | select(.linkedin_profile_url as $u | $known[0] | index($u) | not)]' > /tmp/net-new.json
 ```
 
-LinkedIn URL is the most reliable dedup key — emails can vary (work vs. personal), names collide.
+LinkedIn URL is the most reliable dedup key — emails can vary (work vs. personal), names collide. Normalize both sides (trailing slash, `www.`) before comparing if the stored URLs were typed by hand.
 
 ### Step 5 — Enrich the net-new contacts
 
 ```bash
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"waterfall","actionSlug":"enrichProspectDetails"}' \
+  --action '{"kind":"connector","integrationSlug":"waterfall","actionSlug":"enrichContact"}' \
   --records "$(jq -c '[.[] | {
-    first_name, last_name,
-    company_domain,
-    contact_linkedin: .linkedin_url
+    first_name, last_name, company_name,
+    domain: .company_domain,
+    linkedin: .linkedin_profile_url
   }]' /tmp/net-new.json)" \
   --wait-until-finished > /tmp/enriched.json
 ```
 
-For mobile direct dials and top-tier accuracy (worth it on a small high-value expansion list), swap in `FullEnrich.enrichPerson`.
+For mobile direct dials and top-tier accuracy (worth it on a small high-value expansion list), swap in `FullEnrich.findPhoneAndEmail` (7).
 
 ### Step 6 — Tag with expansion signal, hand off to outreach
 
+`/tmp/enriched.json` is again the batch object; tag the rows from its batch download CSV (the input columns, including `company_name`, come through unprefixed):
+
 ```bash
-jq -c '[.results[] | . + {
+URL=$(cargo-ai orchestration batch download --uuid "$(jq -r .batch.uuid /tmp/enriched.json)" | jq -r .url)
+curl -fsSL "$URL" \
+  | python3 -c 'import csv,json,sys; json.dump(list(csv.DictReader(sys.stdin)), sys.stdout)' \
+  | jq -c '[.[] | . + {
   signal_summary: ("Expansion — your colleague <existing champion at " + .company_name + "> is already a customer; reaching out to introduce the same value to your function.")
-}]' /tmp/enriched.json > /tmp/expansion-ready.json
+}]' > /tmp/expansion-ready.json
 ```
 
 The expansion signal in the personalization prompt produces qualitatively different cold copy than a cold-prospect signal — name-drop the existing user, tie value to the recipient's function. Pass to [`outreach-activation.md`](outreach-activation.md) from Step 5 onwards (skip its enrichment step — already done).
@@ -130,11 +144,11 @@ For 50 top-tier customer accounts, expanded monthly:
 
 | Step | Per record | 50 accounts (3 candidates each = 150) |
 |---|---|---|
-| `salesNavigator.searchLeads` | 2 | 100 (per account) |
-| `waterfall.enrichProspectDetails` | 1 | 150 (per net-new) |
-| **Total monthly** | — | **250** |
+| `salesNavigator.searchLeads` (`limit: 3`) | 0.2 per returned lead | 30 (150 leads) |
+| `waterfall.enrichContact` | 2 | 300 (per net-new) |
+| **Total monthly** | — | **330** |
 
-Expansion typically runs on smaller targeted lists, so per-record costs (even high-precision providers like FullEnrich at 5 credits/record) stay affordable. The dedup step is free — it's a workspace storage query.
+Expansion typically runs on smaller targeted lists, so per-record costs (even high-precision providers like `FullEnrich.findPhoneAndEmail` at 7 credits/record) stay affordable. The dedup step is free — it's a workspace storage query.
 
 ## Action shape
 
@@ -142,7 +156,7 @@ Every action follows: `{"kind":"connector","integrationSlug":"<slug>","actionSlu
 
 ## Output retrieval
 
-For batch runs, use `cargo-ai orchestration run download-outputs --workflow-uuid <uuid> --output-node-slug <slug>`. See [`../references/output-retrieval.md`](../references/output-retrieval.md).
+For `execute-batch` runs, use `cargo-ai orchestration batch download --uuid <batch-uuid>` (signed CSV URL, steps 4 and 6). For a saved play, use `cargo-ai orchestration run download-outputs --workflow-uuid <uuid> --output-node-slug <slug>`. See [`../references/output-retrieval.md`](../references/output-retrieval.md).
 
 ## Related
 

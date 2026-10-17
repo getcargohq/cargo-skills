@@ -2,30 +2,41 @@
 
 JSON response structures returned by Cargo CLI commands used in the `cargo-context` skill.
 
-> Unlike the workspace storage / orchestration skills, the context CLI commands return shapes that depend on the underlying file content and on the graph derived from it. Field names below are the ones used throughout this skill's examples (`nodes`, `slug`, `frontmatter`, `links`, etc.); for a given workspace, confirm the exact shape with `--help` and a one-shot invocation before scripting against it.
+> Shapes below are taken from the `/v1/context` HTTP route schemas. Each command prints the success object on stdout; a failure exits non-zero and prints the error on stderr.
 
 ## Error shape (every command)
 
-Failed commands exit non-zero and return:
+Failed commands exit non-zero (3 not authenticated, 4 permission denied, 5 not found, 1 otherwise) and, when stderr is not a TTY, print:
 
 ```json
 {
-  "errorMessage": "..."
+  "error": "Not found: ...",
+  "status": 404,
+  "body": { "reason": "fileNotFound" }
 }
 ```
 
-`cargo-ai context runtime edit` fails with this shape when `--old-string` matches zero or multiple times in the target file. See `references/troubleshooting.md`.
+`body.reason` is the machine-readable cause; some reasons also carry `body.errorMessage`. `cargo-ai context runtime edit` fails with `stringNotFound` or `stringNotUnique` (HTTP 409) when `--old-string` matches zero or multiple times in the target file. See `references/troubleshooting.md`.
 
 ## cargo-ai context runtime browse
 
-Lists entries at the sandbox root (or under `--path`). Returns the directory listing — file and folder names under the requested path. Combine with `cargo-ai context runtime read --path <file>` to inspect any entry.
+Lists one directory level at the sandbox root (or under `--path`). Combine with `cargo-ai context runtime read --path <file>` to inspect any entry.
 
 ```bash
 cargo-ai context runtime browse
 cargo-ai context runtime browse --path persona
 ```
 
-Run once at the top of a session to confirm the exact JSON shape for your workspace.
+```json
+{
+  "path": "persona",
+  "entries": [
+    { "name": "vp-sales-mid-market.md", "path": "persona/vp-sales-mid-market.md", "kind": "file" }
+  ]
+}
+```
+
+`kind` is `file` or `folder`. Failure reasons: `repositoryNotFound`, `branchNotFound`, `pathNotFound`, `unknown` (with `errorMessage`).
 
 ## cargo-ai context runtime read
 
@@ -36,9 +47,15 @@ cargo-ai context runtime read --path persona/vp-sales-mid-market.md
 cargo-ai context runtime read --path play/inbound-trial-to-paid.md --start-line 1 --end-line 40
 ```
 
+```json
+{ "path": "play/inbound-trial-to-paid.md", "content": "---\ntitle: ...", "startLine": 1, "endLine": 40, "totalLines": 112 }
+```
+
+The range is clamped to the file: `endLine` past the end returns up to `totalLines`, and a `startLine` past the end returns empty `content` with `endLine` = `startLine - 1`. Failure reasons: `repositoryNotFound`, `fileNotFound`, `tooLarge` (with `sizeBytes`; reads cap at 10 MB), `unknown`.
+
 ## cargo-ai context runtime write
 
-Creates (or overwrites) the file at `--path` and pushes a commit to the default branch. Returns the commit metadata. The `--commit-message` flag controls the commit subject.
+Creates (or overwrites) the file at `--path` and pushes a commit to the default branch. The `--commit-message` flag controls the commit subject (default `context(runtime): write <path>`).
 
 ```bash
 cargo-ai context runtime write \
@@ -47,11 +64,15 @@ cargo-ai context runtime write \
   --commit-message "Add VP of Sales mid-market persona"
 ```
 
-On failure it returns the generic error shape (see [Error shape](#error-shape-every-command)); the context-specific case to know is a denied write under `.files/` (update those via Content instead). Frontmatter is **not** validated — a file missing `title`/`description` or with malformed frontmatter is written, not rejected. Failure reasons are enumerated in `references/troubleshooting.md`.
+```json
+{ "commit": { "sha": "3f2c...", "message": "Add VP of Sales mid-market persona" } }
+```
+
+Failure reasons: `repositoryNotFound`, `deniedPath` (writing under `.files/`; update those via Content instead), `failedToWrite` (with `errorMessage`, including a push that did not land), `unknown`. Frontmatter is **not** validated — a file missing `title`/`description` or with malformed frontmatter is written, not rejected.
 
 ## cargo-ai context runtime edit
 
-Replaces a single exact substring in the file at `--path` and pushes a commit. `--old-string` must match **exactly once** — read the file with `runtime read` first and copy the substring verbatim, whitespace included. Pass an empty `--new-string` to delete the match. Returns the commit metadata on success.
+Replaces a single exact substring in the file at `--path` and pushes a commit. `--old-string` must match **exactly once** unless `--replace-all` is passed. Read the file with `runtime read` first and copy the substring verbatim, whitespace included. Pass an empty `--new-string` to delete the match. Returns `{"commit": {"sha", "message"}}` on success, like `write`.
 
 ```bash
 cargo-ai context runtime edit \
@@ -61,11 +82,11 @@ cargo-ai context runtime edit \
   --commit-message "Refresh positioning one-liner"
 ```
 
-On failure it returns the generic error shape — most often because `--old-string` matched zero or multiple times. Frontmatter is not validated, so an edit that strips `title`/`description` still applies. Failure reasons are enumerated in `references/troubleshooting.md`.
+Failure reasons: `stringNotFound`, `stringNotUnique`, `fileNotFound`, `noOp` (new string equals old), `deniedPath`, `failedToEdit` (with `errorMessage`), `repositoryNotFound`, `unknown`. Frontmatter is not validated, so an edit that strips `title`/`description` still applies.
 
 ## cargo-ai context runtime execute
 
-Runs a shell command in the sandbox and returns its stdout / stderr / exit code. **Does not push** any file changes — use only for inspection (`grep`, `ls`, `pwd`, `find`). `--args` is a JSON array of string arguments; omit for a no-arg command.
+Runs a shell command in the sandbox (90-second timeout) and returns its exit code and output. **Tracked working-tree changes the command leaves (additions, edits, deletions, renames) are auto-committed and pushed to the default branch**; gitignored paths are skipped. `--args` is a JSON array of string arguments; omit for a no-arg command. `--commit-message` overrides the auto-commit subject (default `context(runtime): execute <command>`).
 
 ```bash
 cargo-ai context runtime execute --command grep --args '["-r","-l","persona/vp-sales-mid-market","."]'
@@ -73,33 +94,45 @@ cargo-ai context runtime execute --command ls --args '["-1","persona"]'
 cargo-ai context runtime execute --command pwd
 ```
 
+```json
+{ "exitCode": 0, "stdout": "...", "stderr": "", "commit": { "sha": "...", "message": "..." } }
+```
+
+`commit` is present only when the command changed tracked files and the push landed. Failure reasons: `repositoryNotFound`, `readOnly`, `failedToExecute` (with `errorMessage`), `unknown`.
+
 ## cargo-ai context graph get
 
-Returns the typed knowledge graph derived from every markdown/MDX file in the context repo. Shape used throughout `references/examples/graph-queries.md`:
+Returns the knowledge graph derived from every `.md`, `.mdx`, `.yaml`, and `.yml` file in the context repo (`.git/` and `_template.*` excluded). Shape used throughout `references/examples/graph-queries.md`:
 
 ```json
 {
-  "nodes": [
-    {
-      "slug": "persona/vp-sales-mid-market",
-      "frontmatter": {
+  "graph": {
+    "nodes": [
+      {
+        "id": "persona/vp-sales-mid-market.md",
         "title": "VP of Sales, mid-market",
-        "description": "Owns pipeline, quota, and rep productivity at a 200–2,000-person company."
-      },
-      "links": [
-        "medium/linkedin-outbound",
-        "medium/exec-warm-intro",
-        "objection/we-already-have-an-ai-sdr"
-      ]
-    }
-  ]
+        "summary": "Owns pipeline, quota, and rep productivity at a 200–2,000-person company.",
+        "cluster": "persona"
+      }
+    ],
+    "edges": [
+      { "source": "persona/vp-sales-mid-market.md", "target": "objection/we-already-have-an-ai-sdr.md", "origin": "wikilink" }
+    ],
+    "broken": [
+      { "source": "persona/vp-sales-mid-market.md", "target": "medium/exec-warm-intro", "origin": "frontmatter" }
+    ],
+    "computedAt": "2026-10-16T09:00:00.000Z"
+  }
 }
 ```
 
 **Key fields:**
 
-- `nodes[].slug` — `domain/slug` (no `.md` extension), the canonical identifier used in cross-references.
-- `nodes[].frontmatter` — parsed YAML frontmatter. `title` and `description` are required on every file.
-- `nodes[].links` — outbound `domain/slug` references found in the body. Missing or empty when the file links nowhere.
+- `graph.nodes[].id`: the repo-relative file path **including** its extension.
+- `graph.nodes[].title`: frontmatter `title`, falling back to the filename. `summary`: frontmatter `summary`, then `description`, then the first body paragraph (280 chars); absent when none exists. `cluster`: the top-level folder (a root file is its own cluster).
+- `graph.edges[]`: resolved links, `origin` one of `frontmatter`, `wikilink`, `mdlink`. Self-links and duplicates are dropped. `target` is a node `id`.
+- `graph.broken[]`: links whose target matched no file; `target` is the raw string as written.
+
+Failure reasons: `repositoryNotFound`, `tooManyFiles` (over 5,000 files; with `fileCount`, `limit`), `fileTooLarge` (a file over 1 MB; with `path`, `sizeBytes`, `limit`), `unknown`.
 
 For ready-to-run queries (count per domain, dangling references, plays missing proof, inbound references to a node), see `references/examples/graph-queries.md`.

@@ -20,16 +20,16 @@ export const hubspot = defineConnector("hubspot", {
 ```
 
 For an OAuth/key connector you authenticated in the UI and can't declare in code,
-use `adopt: true` so the reconciler links the existing instance instead of creating
-one:
+use `default: true` (formerly `adopt: true`) so the reconciler links the integration's
+existing default connector instead of creating one:
 
 ```ts
-export const openai = defineConnector("open_ai", { integration: "openAi", adopt: true });
+export const openai = defineConnector("open_ai", { integration: "openAi", default: true });
 ```
 
 ## 2. Define the model, wired to the connector
 
-Pass the **connector handle** as `dataset` — not `hubspot.datasetUuid`:
+Pass the **connector handle** as `connector` — not `hubspot.datasetUuid`:
 
 ```ts
 // models/contacts.ts
@@ -37,7 +37,7 @@ import { defineModel } from "@cargo-ai/cdk";
 import { hubspot } from "../connectors/hubspot";
 
 export const contacts = defineModel("contacts", {
-  dataset: hubspot,                 // ← handle: model depends on connector
+  connector: hubspot,               // ← handle: model depends on connector
   extractSlug: "fetchRecords",
   config: { objectType: "contacts", columnSelectionMode: "all" },
   schedule: { type: "cron", cron: "0 * * * *" },  // refresh hourly
@@ -45,8 +45,7 @@ export const contacts = defineModel("contacts", {
 ```
 
 If the connector already exists (not defined in code), reference it by uuid:
-`dataset: connectorRef("<connector-uuid>")` — or `datasetRef("<dataset-uuid>")` to
-point at a specific dataset.
+`connector: connectorRef("<connector-uuid>")` (the deploy resolves its dataset live).
 
 ## 3. Type the config (optional but recommended)
 
@@ -64,4 +63,4 @@ git add cargo.state.json && git commit -m "Add HubSpot connector + contacts mode
 ```
 
 The plan orders the connector before the model automatically because the model's
-`dataset` handle depends on it. Re-deploying after a config edit updates in place.
+`connector` handle depends on it. Re-deploying after a config edit updates in place.

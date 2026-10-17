@@ -1,7 +1,7 @@
 # Typed config — `cargo-ai project types`
 
-`defineConnector`/`defineModel` config and the `integrations.*` registry in
-workflow bodies are typed against **your workspace's real integration schemas**.
+`defineConnector`/`defineModel` config, agent language models, and connector actions
+called through `uses.<key>.<action>` in workflow bodies are typed against **your workspace's real integration schemas**.
 Those types aren't bundled (they're workspace-specific) — you generate them:
 
 ```bash
@@ -22,18 +22,18 @@ Everything lands in `.cargo-ai/` (git-ignored):
     union — the editor completes `method` and requires the matching credential,
     and `secret()` is accepted wherever a credential is expected.
   - adds your workspace's integration slugs to the `Integrations` interface, so
-    `integrations.<slug>.<action>({ … })` in a workflow body typechecks against the
-    real action schema.
-- **`.cargo-ai/cargo-register.ts`** — eager `registerIntegration` /
-  `registerNative` calls so those slugs are **callable at runtime** in workflow
-  bodies.
+    `uses.<key>.<action>({ … })` on a connector handle in a workflow body
+    typechecks against the real action schema.
+  - types model columns and agent `languageModel` per connector.
+
+That one file is all it writes: it is types only, with nothing to import at runtime.
 
 Re-run `cargo-ai project types` whenever your workspace's integrations change (added a
 connector, changed an extractor).
 
 ## Wiring it into your project
 
-`project init` sets this up; for a hand-rolled project, two steps:
+`project init` sets this up; for a hand-rolled project, one step:
 
 1. **Add the glob to `tsconfig.json` `include`.** A bare `.cargo-ai` (a dot-dir) is
    ignored by TypeScript — you must use an explicit glob:
@@ -43,24 +43,18 @@ connector, changed an extractor).
    "include": ["**/*.ts", ".cargo-ai/**/*.d.ts"]
    ```
 
-2. **Import the runtime registrations** at the top of workflow modules that use
-   `integrations.*`:
-
-   ```ts
-   import "./.cargo-ai/cargo-register.js";
-   ```
-
-   (`native.*` needs no registration — the platform's native actions are identical
-   in every workspace, so their types ship with the SDK. Tools and agents are not a
-   registry either — reference them by handle through `defineWorkflow`'s `uses`.)
+Native actions need no generation: they are identical in every workspace, so the
+helpers (`model.*`, `sendEmail`, `delay`, …) ship typed with the SDK. Connectors,
+tools and agents are not a registry either: reference them by handle through
+`defineWorkflow`'s `uses`.
 
 ## Symptoms that mean "run `project types`"
 
 - `config` on a `defineConnector` isn't autocompleting / isn't rejecting a wrong
   credential shape → types not generated (or `.cargo-ai/**/*.d.ts` not in
   `include`).
-- `integrations.myConnector` is `any` / not callable at runtime → missing the
-  `cargo-register` import, or types are stale after an integration change.
+- `uses.<key>.<action>` accepts any action slug / untyped input → types not
+  generated, or stale after an integration change.
 - A connector `deploy` fails with `Invalid configuration` → often the credential
   wasn't wrapped in `secret()`; generating types surfaces the required shape at
   author time. See [`../references/troubleshooting.md`](../references/troubleshooting.md).

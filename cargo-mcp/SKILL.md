@@ -1,7 +1,7 @@
 ---
 name: cargo-mcp
 description: "Drive Cargo from its hosted MCP server at https://mcp.getcargo.io/mcp — connect a client, discover and price an action, run it over one record or a batch, poll it, and read workspace models, with no CLI install. Also when to call an MCP tool instead of shelling out to `cargo-ai`. Triggers: \"connect Cargo to Claude Desktop\", \"add Cargo to ChatGPT\", \"Cargo MCP server\", \"mcp.getcargo.io\", \"use Cargo without installing anything\", \"which Cargo tool do I call\", \"search_actions\", \"execute_action_batch\", \"MCP server is showing the wrong workspace\". Tools: whoami, search_actions, get_action_schema, execute_action, execute_action_batch, get_run, query_models. Skip when: you have a shell and the job is a workflow, a CDK deploy, warehouse SQL, or a mailbox — use the CLI skills; when publishing an MCP server out of your own workspace or attaching one to a Cargo agent — use cargo-ai."
-version: "1.0.3"
+version: "1.1.0"
 compatibility: Requires the hosted Cargo MCP server at https://mcp.getcargo.io/mcp — OAuth (discovered from the 401 challenge) or a workspace-scoped API token as a bearer. The CLI is needed only for the jobs this skill routes away
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -39,7 +39,8 @@ which.**
 | Run one action, or one action over many records | either; MCP if it is already connected |
 | Find what Cargo can do, and what it costs | either (`search_actions` is the MCP half) |
 | Read records off a model | either |
-| Warehouse SQL, aggregates, joins | **CLI** ([`cargo-storage`](../cargo-storage/SKILL.md)) |
+| One SELECT over models (aggregates, joins), 50 rows max | either (`query_models` is the MCP half) |
+| Full SQL result sets, exports | **CLI** ([`cargo-storage`](../cargo-storage/SKILL.md)) |
 | Build or edit a multi-step workflow, tool, or play | **CLI** ([`cargo-orchestration`](../cargo-orchestration/SKILL.md)) |
 | Workspace as code, plan and deploy | **CLI** ([`cargo-project`](../cargo-project/SKILL.md)) |
 | Provision mailboxes, warm up, send | **CLI** ([`cargo-mailbox-management`](../cargo-mailbox-management/SKILL.md)) |
@@ -47,8 +48,8 @@ which.**
 | No shell at all (ChatGPT, Claude Desktop, claude.ai, n8n) | **MCP**, and say plainly what is out of reach |
 
 The rule underneath the table: **MCP is the runtime, the CLI is the platform.**
-Thirteen tools cover discovering an action, running it, watching it finish, and
-reading data back. Everything that *builds* something reusable is CLI only. An
+Seventeen tools cover discovering an action, running it, watching it finish,
+reading data back, and reading the workspace context. Everything that *builds* something reusable is CLI only. An
 agent holding both should prefer the CLI for anything the user will want to
 re-run or version, and MCP for one-shot execution inside a conversation.
 
@@ -101,10 +102,11 @@ the value:
 }
 ```
 
-**The tool list is not fixed.** The endpoint serves the platform tools below
-plus whatever that workspace published with `defineMcpServer`, so two tokens can
-see two different lists. Read the list you actually got rather than the one
-documented here.
+**This endpoint serves the platform tools only.** A curated server a workspace
+published with `defineMcpServer` is a different endpoint, at its own
+`/v1/ai/mcpServers/<uuid>/mcp` URL. Every token sees the same platform tools
+here; the token's permissions decide which calls succeed and which actions
+`search_actions` returns.
 
 ## The spine
 
@@ -118,7 +120,9 @@ execute_action_batch   │ many records
 get_run / get_batch    → poll while outcome is "executing"
 ```
 
-For data: `list_models` → `describe_model` → `query_models`. Alongside,
+For data: `list_models` → `describe_model` → `query_models`. For the workspace
+context (read only): `map_context`, `search_context`, `browse_context`,
+`read_context`. Alongside,
 `list_runs` lists recent ad-hoc runs, and `get_usage` breaks the last 7 days of
 credit spend down by integration.
 
@@ -166,21 +170,26 @@ and `agent` (an AI agent in this workspace). Narrow a noisy catalog with the
 **Fanning out `execute_action`.** One call per record is slower, bills more, and
 leaves nothing to inspect afterwards. `execute_action_batch` takes the same
 `action` plus a `records` array, produces one batch object, and a finished batch
-carries a download for its output CSV. The tool description says never to loop
+returns one page of its output CSV in `data.text` (output columns prefixed
+`output_`, 100 rows; while `truncated`
+is true, call `get_batch` with the next `offset`). Read `data.text`, do not
+fetch the URL. The tool description says never to loop
 it: take that literally.
 
-**Spending before quoting.** Run **10–20 records** first, report the observed
+**Spending before quoting.** Run **10–20 records** first (`execute_action_batch`
+takes a `limit` that submits only the first N), report the observed
 cost and hit rate, then quote the full **record count** and **credit estimate**
 and let the user approve. Hit rates on people data run 40 to 70 percent, so cost
 per *usable* row is not the sticker price and is not knowable without the
 sample. Full discipline:
 [`../cargo-gtm/references/cost-discipline.md`](../cargo-gtm/references/cost-discipline.md).
 
-**`query_models` mistaken for SQL.** It lists records off one model with a limit
-and an offset. It does not aggregate, join, or filter by expression. Any
-question shaped like "how many", "grouped by", or "joined to" is a CLI question
-([`cargo-storage`](../cargo-storage/SKILL.md)). Say so, rather than pulling rows
-and counting them yourself, which silently truncates at the limit.
+**Paging rows out of `query_models`.** It runs one read-only SQL SELECT over
+`dataset.model` references (take the exact reference from `describe_model`),
+joins and aggregates allowed, and returns at most 50 rows (default 20). Answer
+"how many", "grouped by", or "joined to" with the aggregate in SQL, never by
+pulling rows and counting them yourself, which silently truncates at the cap. A
+full result set is a CLI job ([`cargo-storage`](../cargo-storage/SKILL.md)).
 
 ## Anything that touches a person
 

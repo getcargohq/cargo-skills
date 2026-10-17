@@ -6,21 +6,21 @@ last-reviewed: 2026-07-09
 
 # apolloio (Apollo.io)
 
-Apollo-anchored person and organization enrichment. Only **two of its eleven actions are credits-based** — `enrichPerson` (1, or 3 with phone reveal) and `enrichOrganization` (1); everything else (searches, contact CRUD, sequences) runs **only on your own Apollo API key** connector. That credits pair is **in the priority stack** ([`../SKILL.md`](../SKILL.md) §5) as the **niche-coverage ENRICH rung** — promoted per-batch when a pilot shows Apollo hits where `aiArk` (0.1) and `waterfall` (2) miss, its investor coverage in [`../recipes/portfolio-prospecting.md`](../recipes/portfolio-prospecting.md) being the standing example. Stack membership is not a licence to route generic enrichment here first: `aiArk` → `waterfall` still leads the default chain, and Apollo runs on the residue.
+Apollo-anchored person and organization enrichment. **Four of its eleven actions are credits-based**: `enrichPerson` (1, or 9 with phone reveal), `enrichOrganization` (1), `searchPeople` (free, or 1 per person with `shouldEnrich: true`) and `searchOrganizations` (0.01 per organization); the rest (contact CRUD, contact search, sequences, email accounts) runs **only on your own Apollo API key** connector. The enrich pair is **in the priority stack** ([`../SKILL.md`](../SKILL.md) §5) as the **niche-coverage ENRICH rung** — promoted per-batch when a pilot shows Apollo hits where `aiArk` (0.1) and `waterfall` (2) miss, its investor coverage in [`../recipes/portfolio-prospecting.md`](../recipes/portfolio-prospecting.md) being the standing example. Stack membership is not a licence to route generic enrichment here first: `aiArk` → `waterfall` still leads the default chain, and Apollo runs on the residue.
 
 ## Credits-based actions
 
 | Action | Cost | Inputs | Use for |
 |---|---|---|---|
-| `enrichPerson` | 1 (**3** if `revealPhoneNumber: true`) | `parameters` object (`first_name, last_name, organization_name, email, domain, linkedin_url, id, email_md5, email_sha256`), `revealPersonalEmails`, `revealPhoneNumber` | Person enrichment when Apollo coverage beats the stack for the niche. |
-| `enrichOrganization` | 1 | `domain` (required) | Company enrichment when the cheaper domain rungs miss and LinkedIn doesn't have it. |
+| `enrichPerson` | 1 (**9** if `revealPhoneNumber: true`) | `parameters` object (`first_name, last_name, name, organization_name, email, domain, linkedin_url, id, email_md5, email_sha256`), `revealPersonalEmails`, `revealPhoneNumber` | Person enrichment when Apollo coverage beats the stack for the niche. |
+| `enrichOrganization` | 1 | at least one of `domain`, `linkedin_url`, `name`, `website` | Company enrichment when the cheaper domain rungs miss and LinkedIn doesn't have it. |
+| `searchPeople` | **0** (search only), **1 / person** with `shouldEnrich: true` | `filters` (required: `person_titles, include_similar_titles, person_seniorities, person_locations, organization_locations, organization_num_employees_ranges, q_organization_domains_list, organization_ids, revenue_range, currently_using_any_of_technology_uids, q_keywords, contact_email_status, prospected_by_current_team`, plus job-posting filters); `shouldEnrich`; `limit` (default 10, max 100) | Search Apollo's people database. Results are partial (obfuscated last name, `has_email` flags) unless `shouldEnrich` turns every match into a full profile. |
+| `searchOrganizations` | **0.01 / returned organization** | `filters` (required: `q_organization_name, q_organization_domains_list, organization_ids, q_organization_keyword_tags, organization_locations, organization_not_locations, organization_num_employees_ranges, revenue_range, latest_funding_amount_range, total_funding_range, latest_funding_date_range, currently_using_any_of_technology_uids`, plus job-posting filters); `limit` (default 10, max 100) | Firmographic, funding and technology company search. |
 
 ## Own-API-key actions (no credits — require your Apollo account connector)
 
 | Action | What it does |
 |---|---|
-| `searchPeople` | Search Apollo's people database (`filters` required: `person_titles, person_seniorities, person_locations, organization_locations, organization_num_employees_ranges, q_organization_domains_list, q_keywords, contact_email_status, prospected_by_current_team`; `shouldEnrich`, `limit` — default 10, max 100). |
-| `searchOrganizations` | Search organizations (`filters` required: `q_organization_name, q_organization_keyword_tags, organization_locations, organization_not_locations, organization_num_employees_ranges, prospected_by_current_team`; `limit`). |
 | `searchContacts` | Search contacts saved in your Apollo account (`filters` required). |
 | `createContact` / `updateContact` / `upsertContact` | Contact CRUD in your Apollo account (`email` required for create/upsert, `id` for update; field `mappings` + `customMappings`). |
 | `addContactToSequence` | Add a contact to a sequence (`sequenceId`, `contactId`, `sendEmailFromEmailAccountId` required). |
@@ -34,7 +34,7 @@ These consume your Apollo plan's quota, not cargo credits — recipes stay on cr
 - ✅ **Niche-coverage person enrichment** — 1 credit when a pilot shows Apollo hits where `aiArk.enrichPerson` (0.1) / `waterfall.enrichContact` (2) miss.
 - ✅ **Domain → company fallback** — `enrichOrganization` (1) after `aiArk.enrichCompany` (0.01) and `linkedin.enrichCompanyFromDomain` (0.5) come back empty.
 - ✅ **Sequencer handoff** — send verified leads into Apollo sequences via the own-key actions when the user's outbound already lives there.
-- ❌ **Sourcing on credits** — `searchPeople` / `searchOrganizations` are own-key only; credits-based sourcing is `salesNavigator` (0.2) or `aiArk` (0.01–0.05).
+- ✅ **Sourcing on credits** — `searchPeople` is free without `shouldEnrich` (partial records) and `searchOrganizations` bills 0.01 per organization; compare against `salesNavigator` (0.2) or `aiArk` (0.01–0.05) on a pilot.
 
 ## Patterns
 
@@ -62,13 +62,13 @@ cargo-ai orchestration action execute-batch \
   --wait-until-finished
 ```
 
-`domain` is the only accepted input — no name- or LinkedIn-based lookup on this action.
+Any one of `domain`, `linkedin_url`, `name` or `website` is accepted (at least one is required); `domain` is the most reliable match.
 
 ## Common pitfalls
 
-- **`revealPhoneNumber: true` triples the price** (1 → 3). Gate it like any phone action — and the phone chain starts cheaper at `prospeo.findPhone` (3, [`../references/stage-action-map.md`](../references/stage-action-map.md)), so reveal only when you're enriching the person anyway. `revealPersonalEmails` does **not** change the cost.
-- **Own-key actions fail without an Apollo connector.** The nine non-credits actions need a connector authenticated with your Apollo `apiKey` — they can't run on cargo's managed connection.
-- **Rate limit: 400 calls/hour** (spread) — the tightest in this group; large batches stretch over hours, so prefer the stack for volume enrichment.
+- **`revealPhoneNumber: true` multiplies the price by nine** (1 → 9). Gate it like any phone action — and the phone chain starts cheaper at `prospeo.findPhone` (3, [`../references/stage-action-map.md`](../references/stage-action-map.md)), so reveal only when you're enriching the person anyway. `revealPersonalEmails` does **not** change the cost.
+- **Own-key actions fail without an Apollo connector.** The seven non-credits actions need a connector authenticated with your Apollo `apiKey` — they can't run on cargo's managed connection.
+- **Rate limit: 400 calls/hour** (spread) on your own Apollo key — the tightest in this group; large batches stretch over hours, so prefer the stack for volume enrichment. On cargo's managed key the enrich actions share 1,000/minute and the two searches share 10,000/hour.
 - **Sequencing needs three IDs** — `sequenceId`, `contactId` (create/upsert the contact first), and `sendEmailFromEmailAccountId` (from `searchEmailAccounts`).
 
 ## Anti-patterns
@@ -84,8 +84,8 @@ cargo-ai orchestration action execute-batch \
 
 ## Recurring use
 
-- **No scheduled fit on credits** — both credits actions are per-record enrichment. The own-key `search*` actions can feed a scheduled sourcing tool on your Apollo plan's quota; dedup re-pulls there with the `prospected_by_current_team` filter.
-- **In-play gate:** `enrichPerson` only where the target contact field (`email`) is still empty; `enrichOrganization` only where firmographics are empty. Never leave `revealPhoneNumber: true` on a play node — every re-evaluated row bills 3 instead of 1.
+- **Scheduled sourcing:** `searchPeople` / `searchOrganizations` can feed a scheduled sourcing tool (on credits, or on your Apollo plan's quota with an own key); dedup re-pulls against the workspace model (with an own key, the `prospected_by_current_team` filter also works), and keep `shouldEnrich` off until rows are deduped.
+- **In-play gate:** `enrichPerson` only where the target contact field (`email`) is still empty; `enrichOrganization` only where firmographics are empty. Never leave `revealPhoneNumber: true` on a play node — every re-evaluated row bills 9 instead of 1.
 - **Stable data, tight ceiling:** enrichment output doesn't decay, and the 400 calls/hour limit means an ungated recurring batch both re-bills and stalls the queue.
 
 ## Action shape

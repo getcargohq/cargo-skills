@@ -8,8 +8,7 @@ Key properties of a tool:
 
 - **`name`** — human-readable name (workflows themselves don't have names)
 - **`workflowUuid`** — the underlying workflow that executes
-- **`description`** — what the tool does
-- **`creditsCost`** — estimated credit cost per run
+- **`creditsCost`** — how the tool's credit cost is priced (e.g. `{"kind":"minMax"}`)
 - **`triggers`** — optional cron triggers for scheduled execution
 - **`isReadOnly`** — whether the tool can be modified
 
@@ -28,7 +27,6 @@ Response:
       "uuid": "tool-uuid",
       "name": "Company Enrichment",
       "workflowUuid": "workflow-uuid",
-      "description": "Enriches a company record with firmographic data",
       "creditsCost": { "kind": "minMax" },
       "triggers": [],
       "isReadOnly": false
@@ -90,7 +88,7 @@ cargo-ai orchestration release deploy-draft \
 
 ## Run a tool on a single record
 
-The most common use case — run an existing tool workflow on one record. Tools support both `run create` (single record) and `batch create` (multiple records). Allowed batch data kinds for tools: `file`, `records`.
+The most common use case — run an existing tool workflow on one record. Tools support both `run create` (single record) and `batch create` (multiple records). Tools accept every batch data kind (`file` is the one plays refuse).
 
 ```bash
 # 1. Find the tool
@@ -127,7 +125,7 @@ Run create response:
 cargo-ai orchestration run get <run-uuid>
 ```
 
-Poll until `status` is `success`, `error`, or `cancelled`:
+Poll until `status` is `success`, `error`, `cancelled`, or `skipped`:
 
 ```json
 {
@@ -184,7 +182,7 @@ cargo-ai orchestration batch create \
 
 # 4. Poll until finished (repeat every 5s)
 cargo-ai orchestration batch get <batch-uuid>
-# → Done when .status is "success", "error", or "cancelled"
+# → Done when .status is "success", "error", "cancelled", or "skipped"
 # → Extract batch.releaseUuid
 
 # Or skip polling — block until finished and get the final batch result in one step
@@ -268,7 +266,7 @@ cargo-ai orchestration run create \
     },
     {
       "uuid":"22222222-2222-4222-a222-222222222222","slug":"enrich_company","kind":"connector",
-      "integrationSlug":"clearbit","actionSlug":"enrichCompanyFromDomain",
+      "integrationSlug":"clearbit","actionSlug":"enrichCompany",
       "connectorUuid":"<connector-uuid>",
       "config":{
         "domain":{"kind":"templateExpression","expression":"{{nodes.start.domain}}","instructTo":"none","fromRecipe":false}
@@ -306,7 +304,7 @@ cargo-ai orchestration run get <run-uuid>
 
 | Error                         | Cause                                                | Fix                              |
 | ----------------------------- | ---------------------------------------------------- | -------------------------------- |
-| `startNodeNotFound`           | No node with `slug:"start"` and `actionSlug:"start"` | Add the required start node      |
+| `rootNodeNotFound`            | No node with `slug:"start"` and `actionSlug:"start"` | Add the required start node      |
 | `invalidReleaseOrCustomNodes` | Both `--release-uuid` and `--nodes` provided         | Use one or the other, not both   |
 | `nodesNotFound`               | `childrenUuids` references a UUID not in the array   | Verify all UUID cross-references |
 
@@ -354,7 +352,7 @@ cargo-ai orchestration node validate --nodes '[
   },
   {
     "uuid": "55555555-5555-4555-a555-555555555555", "slug": "enrich_company", "kind": "connector",
-    "integrationSlug": "clearbit", "actionSlug": "enrichCompanyFromDomain",
+    "integrationSlug": "clearbit", "actionSlug": "enrichCompany",
     "connectorUuid": "abc-123",
     "config": {
       "domain": {
@@ -384,9 +382,9 @@ cargo-ai orchestration node validate --nodes '[
 
 # Step 5 — (Optional) Preview expression resolution without side effects
 cargo-ai orchestration node compute \
-  --node '{"uuid":"55555555-5555-4555-a555-555555555555","slug":"enrich_company","kind":"connector","integrationSlug":"clearbit","actionSlug":"enrichCompanyFromDomain","connectorUuid":"abc-123","config":{"domain":{"kind":"templateExpression","expression":"{{nodes.start.domain}}","instructTo":"none","fromRecipe":false}},"childrenUuids":["66666666-6666-4666-a666-666666666666"],"fallbackOnFailure":false,"position":{"x":0,"y":166}}' \
+  --node '{"uuid":"55555555-5555-4555-a555-555555555555","slug":"enrich_company","kind":"connector","integrationSlug":"clearbit","actionSlug":"enrichCompany","connectorUuid":"abc-123","config":{"domain":{"kind":"templateExpression","expression":"{{nodes.start.domain}}","instructTo":"none","fromRecipe":false}},"childrenUuids":["66666666-6666-4666-a666-666666666666"],"fallbackOnFailure":false,"position":{"x":0,"y":166}}' \
   --context '{"nodes":{"start":{"domain":"acme.com"}}}'
-# → Shows resolved config: { "domain": "acme.com" }
+# → {"computedConfig":{"domain":"acme.com"}}
 
 # Step 6 — Find the tool's workflowUuid
 cargo-ai orchestration tool list
@@ -401,5 +399,5 @@ cargo-ai orchestration run create \
 
 # Step 8 — Poll until done (every 2s)
 cargo-ai orchestration run get <run-uuid>
-# → Done when status is "success", "error", or "cancelled"
+# → Done when status is "success", "error", "cancelled", or "skipped"
 ```

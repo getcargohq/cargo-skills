@@ -4,7 +4,7 @@
 
 An **action** is a single operation you can execute without building a workflow. Use `action execute` for one record, or `action execute-batch` for multiple records.
 
-Actions come in four kinds:
+Actions come in five kinds (`action list --kind` searches the first four):
 
 | Kind        | What it does                         | Required fields                                |
 | ----------- | ------------------------------------ | ---------------------------------------------- |
@@ -12,6 +12,7 @@ Actions come in four kinds:
 | `connector` | Call a third-party service           | `integrationSlug` + `actionSlug`               |
 | `agent`     | Invoke an AI agent                   | `agentUuid` or `templateSlug` or `releaseUuid` |
 | `native`    | Run a built-in platform action       | `actionSlug`                                   |
+| `worker`    | Call a hosted worker                 | `workerUuid` + `method` + `path`               |
 
 `config` is where a **node** keeps its configuration; a top-level action has none — its inputs go in `--data` (single) or `--records` (batch). Omit the key on `execute` / `execute-batch`: that is the shape `action list` returns, and `"config": {}` is merely tolerated there.
 
@@ -37,7 +38,7 @@ cargo-ai orchestration action list verify email --limit 5
 | `[query...]` | Space-separated keywords. **All** terms must match (AND), against action slug, name, description, and integration. Omit to browse. |
 | `--kind` | One of `connector`, `native`, `tool`, `agent`. `tool` and `agent` need a signed-in workspace. |
 | `--integration-slug` | Restrict connector results to one integration. |
-| `--limit` | Default 20, max 50. |
+| `--limit` | No default: omit it and every match is returned. |
 
 Response:
 
@@ -137,7 +138,7 @@ With `--wait-until-finished`, the response contains the terminal run state:
 }
 ```
 
-**Status values:** `pending`, `running`, `success`, `error`, `cancelled`.
+**Status values:** `idle`, `pending`, `running`, `success`, `error`, `cancelling`, `cancelled`, `skipped`.
 
 ---
 
@@ -258,7 +259,7 @@ cargo-ai connection integration get waterfall
 # → .integration.actions.verifyEmail.output.schema   — output (what it emits)
 ```
 
-**Not every action declares an output schema** — e.g. `waterfall.verifyEmail`, `clearbit.enrichCompany`, and most `hubspot` record actions do, while `waterfall.detectJobChange`, `waterfall.searchProspects`, and `salesNavigator.searchAccounts` don't (no `output` key). When it's absent, the only way to see the real shape is `runContext` from an actual run.
+**Not every action declares an output schema** — e.g. `waterfall.verifyEmail`, `waterfall.detectJobChange`, `clearbit.enrichCompany`, and most `hubspot` record actions do, while `waterfall.searchProspects` and `salesNavigator.searchAccounts` don't (no `output` key). When it's absent, the only way to see the real shape is `runContext` from an actual run.
 
 ### 2. Any action kind: `action get-output-schema`
 
@@ -318,10 +319,10 @@ The JSON Schema sits under a top-level **`schema`** key (not returned bare), and
 
 An `agent` action without a structured `output.jsonSchema` resolves to `{"schema":{"type":"object","properties":{"answer":{"type":"string"}}}}` — the free-text answer envelope. This is the authoritative confirmation that downstream references must go through `.answer` (`{{nodes.<slug>.answer}}`, or `{{nodes.<slug>.answer.<field>}}` for structured agents).
 
-Two distinct failure modes, both non-zero exit with `status: 404`:
+Two distinct failure modes, both non-zero exit with `status: 404` and the API `reason` in the message (`Not found: <reason>. ...`):
 
-- `"Action not found."` — the `actionSlug` / `toolUuid` / `agentUuid` doesn't exist. Slugs are exact and case-sensitive (`enrichCompany`, not `company_enrich`); list them via `integration get <slug>` → `.integration.actions` keys.
-- `"Action has no output schema."` — the action exists but declares no output schema (its catalog entry has no `output` key). Fall back to running it once and reading `runContext.<nodeSlug>` from `run get`.
+- `actionNotFound` (or `integrationNotFound` for a wrong `integrationSlug`) — the `actionSlug` / `toolUuid` / `agentUuid` doesn't exist. Slugs are exact and case-sensitive (`enrichCompany`, not `company_enrich`); list them via `integration get <slug>` → `.integration.actions` keys.
+- `actionHasNoOutput` — the action exists but declares no output schema (its catalog entry has no `output` key). Fall back to running it once and reading `runContext.<nodeSlug>` from `run get`.
 
 ### Why it's useful
 

@@ -4,7 +4,7 @@ Canonical reference for picking the cheapest credits-based action per GTM stage 
 
 Prices are credits/record. "Priority?" marks providers in the priority stack (salesNavigator / aiArk / waterfall / FullEnrich / apolloio / theirStack / peopleDataLabs).
 
-This map is **curated** — the cheapest few rungs per stage, with the routing judgement attached. For the complete machine-generated list of all 176 credits-based actions, including per-config pricing, see [`credits-cost-table.md`](credits-cost-table.md).
+This map is **curated** — the cheapest few rungs per stage, with the routing judgement attached. For the complete machine-generated list of all 180 credits-based actions, including per-config pricing, see [`credits-cost-table.md`](credits-cost-table.md).
 
 **Size before you spend.** `aiArk.countPeople` and `aiArk.countCompanies` cost **0** and return how many records a filter matches without retrieving them. Run the count, quote it, then decide whether to pay for the search.
 
@@ -14,11 +14,11 @@ This map is **curated** — the cheapest few rungs per stage, with the routing j
 |---|---|---|---|---|
 | aiArk | countPeople | **0** | ✅ | Not a source — counts matches for a filter. Run this first. |
 | apolloio | searchPeople | 0 / **1** per person | ✅ | **0 with `shouldEnrich: false`** (identity only), 1 when it enriches. Cheapest way to test whether Apollo has the audience at all. |
-| icypeas | findPeople | 0.02 |   | Cheapest non-LinkedIn source. |
+| icypeas | findPeople | 0.02 per 100 records |   | Cheapest non-LinkedIn source. Billed per page of up to 100, rounded up. |
 | FullEnrich | searchPeople | **0** | ✅ | **Free.** Title, seniority, function, location, skills, tenure, past company + current-employer filters. Plain strings, not codes. `fetchPeople` extractor pulls the same list into a model. |
 | aiArk | searchPeople | 0.05 | ✅ | Rich filters (education, skills, tenure, seniority, past company). Per returned record. |
 | salesNavigator | searchLeads | 0.2 | ✅ | LinkedIn-anchored. Default for LinkedIn-native filters. |
-| firecrawl | search | 0.05 |   | Web search; use when no structured provider has the data. |
+| firecrawl | search | 0.05 / item |   | Web search; use when no structured provider has the data. |
 | linkup | search | 0.5 |   | Web search with structured answers. |
 | contactOut | search | 1 / item (**3** with `revealInfo: true`) |   | Mid-tier when other sources miss. |
 | oceanio | searchPeople | 1 |   | Mid-tier. |
@@ -34,12 +34,12 @@ This map is **curated** — the cheapest few rungs per stage, with the routing j
 | FullEnrich | searchCompanies | **0** | ✅ | **Free.** Industry, headcount, HQ, technologies, specialties, keywords. `fetchCompanies` extractor pulls the same list into a model. |
 | aiArk | searchCompanies | 0.01 | ✅ | Cheapest *paid* search. Per returned record; supports `lookalikeDomains` (≤5 seeds). |
 | apolloio | searchOrganizations | 0.01 / organization | ✅ | Ties aiArk on price. Firmographic, funding, technology and hiring filters. |
-| icypeas | findCompanies | 0.02 |   | Cheapest non-lookalike. |
+| icypeas | findCompanies | 0.02 per 100 records |   | Cheapest non-lookalike. Billed per page of up to 100, rounded up. |
 | salesNavigator | searchAccounts | 0.2 | ✅ | LinkedIn-anchored. Default for LinkedIn-native filters. |
-| theirStack | searchCompanies | 0.5 | ✅ | Tech-stack + hiring-intent filter. |
-| oceanio | searchCompanies | 1 |   | Mid-tier. |
+| theirStack | searchCompanies | 0.5 / item | ✅ | Tech-stack + hiring-intent filter. |
+| oceanio | searchCompanies | 1 / item |   | Mid-tier. |
 | societeInfo | search (`objectType: company`) | 4 / item |   | **France only.** Registry filters nothing else has: NAF code, collective agreement, filed sales/profits, legal form. |
-| peopleDataLabs | searchCompanies / queryCompanies | 3 | ✅ | `searchCompanies` uses cargo's `{conjonction, groups, conditions}` filter shape; `queryCompanies` takes a PDL **SQL string**. Investor/funding filters require the SQL variant. |
+| peopleDataLabs | searchCompanies / queryCompanies | 3 | ✅ | `searchCompanies` uses cargo's `{conjonction, groups, conditions}` filter shape; `queryCompanies` takes a PDL **SQL string**. PDL has no investor field: investor sourcing goes to `theirStack.searchCompanies` (`company_investors_partial_match_or`). |
 
 ## Sourcing — Local SMBs
 
@@ -80,7 +80,6 @@ This map is **curated** — the cheapest few rungs per stage, with the routing j
 | linkedin | enrichCompanyFromDomain | 0.5 |   | Domain → LinkedIn-anchored details. |
 | apolloio | enrichOrganization | 1 | ✅ | Apollo-anchored; the niche-coverage rung when the cheaper rungs miss. |
 | oceanio | enrichCompany | 1 |   | Mid-tier. |
-| reverseContact | enrichCompanyFromLinkedin | 1 |   | Niche: LinkedIn URL → company. |
 | waterfall | enrichCompany | 1 | ✅ | Multi-source. |
 | peopleDataLabs | enrichCompany | 3 | ✅ | Heavyweight backfill. |
 | societeInfo | enrich | 4 |   | **France only.** Resolves to the official registry record (SIREN/SIRET). The only source for French statutory data. |
@@ -90,7 +89,7 @@ This map is **curated** — the cheapest few rungs per stage, with the routing j
 
 The most-asked company attribute, and the one with the most sources — they answer
 different questions and are not interchangeable. The `salesNavigator.find*` calls
-key on a LinkedIn **`companyId`**, not a domain; a list without one pays 0.05/account
+key on a LinkedIn **`companyId`**, not a domain; a list without one pays 0.2/account
 through `searchAccounts` first ([`../recipes/custom-datapoints.md`](../recipes/custom-datapoints.md) prices this as an ID prerequisite).
 
 | Provider | Action | Cost | Notes |
@@ -194,7 +193,7 @@ a handful of contacts at a known account; wrong for building a list.
 
 | Provider | Action | Cost | Notes |
 |---|---|---|---|
-| theirStack | searchJobs | 0.5 | Default. |
+| theirStack | searchJobs | 0.5 / item | Default. Per returned job. |
 | linkedin | searchJobs | 0.5 | Same price, different index — filters are LinkedIn enums from the integration's autocompletes, not free text. |
 | linkedin | enrichJob | 0.25 | One posting URL → full job detail. The drill-down after either search. |
 
@@ -209,7 +208,7 @@ a handful of contacts at a known account; wrong for building a list.
 
 | Provider | Action | Cost | Notes |
 |---|---|---|---|
-| snitcher | searchSessions | 0 | Free credits-tier. De-anonymize site visitors. |
+| snitcher | searchSessions | 0 / item | Free credits-tier. De-anonymize site visitors. |
 
 ## LinkedIn audience extraction
 
@@ -232,7 +231,7 @@ These act through a real LinkedIn identity — the engagement actions (`connectP
 
 | Provider | Action | Cost | Notes |
 |---|---|---|---|
-| x | `getUserProfile` / `getUserPosts` / `getFollowers` / `getPostLikers` / `searchPosts` … (14 actions) | 0.02 | Everything X. Cheapest social rung in the catalog. |
+| x | `getUserProfile` / `getUserPosts` / `getFollowers` / `getPostLikers` / `searchPosts` … (14 actions) | 0.02 per 100 results (per 20 for `getFollowers` / `getFollowing`) | Everything X. Cheapest social rung in the catalog. Billed per page, rounded up, so a single profile is 0.02. |
 | brightData | `scrapeInstagramProfile` / `scrapeTikTokProfile` / `scrapeFacebookProfile` / `scrapeFacebookPagePosts` / `scrapeYouTubeChannel` | 0.1 | **Only** coverage for these four platforms. One profile URL in, profile out. |
 | brightData | `scrapeTwitterProfile` | 0.1 | 5x `x.getUserProfile` for less. Fallback only. |
 
@@ -244,10 +243,10 @@ Consumer platforms: read **brand, creator and agency accounts as company records
 |---|---|---|---|---|
 | parallel | extract | 0.025 **per URL** | ✅ | **Cheapest page read in the catalog.** Takes an `objective` to steer extraction. |
 | serper | search | 0.05 (fixed) |   | Google results, **fixed per query for up to 100** — raise `limit`, never the query count. |
-| firecrawl | scrape / search / crawl | 0.05 **per item** |   | Reach for `crawl` when you need a whole site rather than a URL list. |
-| parallel | createTask | 0.125 (`lite`) | ✅ | **Unique.** Agentic research filling a caller-supplied `outputSchema`. Ladder runs to 60 (`ultra8x`); `processor` is required, so the tier is always deliberate. |
-| parallel | search | 0.125 fixed **+ 0.025/item** |   | Objective-steered ranked search. |
-| exa | search | 0.175 fixed **+ 0.025/item** |   | The only rung with a **`category` filter** (`company`, `news`, `financial report`, …) and publication-date bounds. `searchType: "deep"` raises the fixed part to 0.3. |
+| firecrawl | scrape / search / crawl / map | 0.05 **per item** |   | Reach for `crawl` when you need a whole site rather than a URL list, `map` to list a site's URLs without scraping them. |
+| parallel | createTask | 0.125 (`lite`) | ✅ | **Unique.** Agentic research filling a caller-supplied `outputSchema`. Ladder runs to 60 (`ultra8x`); `processor` defaults to `core` (0.625), so set `lite` explicitly. |
+| parallel | search | 0.125 fixed **+ 0.025/item past the first 10** |   | Objective-steered ranked search. |
+| exa | search | 0.175 fixed **+ 0.025/item past the first 10** |   | The only rung with a **`category` filter** (`company`, `news`, `financial report`, …) and publication-date bounds. `searchType: "deep"` raises the fixed part to 0.3. |
 | linkup | search | 0.5 standard / 2 deep |   | Web search with answers. |
 | linkup | instruct | 1 |   | Sourced or schema-structured answers in one call. |
 
@@ -261,15 +260,15 @@ Picking between them: **known URL → `parallel.extract`. Plain keyword query �
 
 | Provider | Action | Cost (cheapest model) | Notes |
 |---|---|---|---|
-| openAi | instruct | 0.006 (gpt-5-nano) | Cheapest at-scale. Ladder to 0.5 (gpt-4o). |
+| openAi | instruct | 0.003 (gpt-6-luna) | Cheapest at-scale. Ladder to 0.5 (gpt-6-astra, gpt-4o). |
 | gemini | instruct | 0.01 (1.5/2.0 Flash) | Cheap large-context. Ladder to 0.25 (3.6 Flash). |
-| anthropic | instruct | 0.05 (Haiku 3.5) | **0.2 for Sonnet**, 2 for Opus, 4 for Fable 5. Default for high-quality reasoning + structured output. |
+| anthropic | instruct | 0.05 (Haiku 3.5) | **0.2 for Sonnet**, 2 for Opus (1.6 for Opus 5.5), 4 for Fable 5. Default for high-quality reasoning + structured output. |
 | perplexity | instruct | 0.3 (Sonar, `searchContextSize: low`) | Web-grounded research with citations. Ladder to 1 (sonar-pro, high). |
 
 Prices are **per 1k tokens**, not per record. On openAi, gemini and anthropic, `advancedSettings.withWebSearch: true` adds a **0.4 flat charge per call** on top — cheap per token, expensive per row in a batch. Per-model pricing is in [`credits-cost-table.md`](credits-cost-table.md).
 
 ## Notes on this map
 
-- This map is curated, not exhaustive: it carries the cheapest rungs per stage plus the routing judgement. The complete list of all **176** credits-based actions is generated from the live catalog into [`credits-cost-table.md`](credits-cost-table.md) — regenerate it from `cargo-ai orchestration action list --kind connector` and `--kind native`, which return a `credits` array on every billed action. The other 337 catalog actions (sequencer / CRM upserts, list/get/delete) carry no provider price and appear in neither — though every node execution still bills 0.01 credits.
+- This map is curated, not exhaustive: it carries the cheapest rungs per stage plus the routing judgement. The complete list of all **180** credits-based actions is generated from the live catalog into [`credits-cost-table.md`](credits-cost-table.md) — regenerate it from `cargo-ai orchestration action list --kind connector` and `--kind native`, which return a `credits` array on every billed action. The other 337 catalog actions (sequencer / CRM upserts, list/get/delete) carry no provider price and appear in neither — though every node execution still bills 0.01 credits.
 - Costs are per-record at the cheapest config. Some actions have variable cost by config (e.g., `contactOut.enrich` returns 0/1/2/3 credits depending on data returned).
-- Priority stack: see `../SKILL.md` for the canonical 8-provider priority list and `../provider-playbooks/` for per-provider deep dives.
+- Priority stack: see `../SKILL.md` for the canonical 7-provider priority list and `../provider-playbooks/` for per-provider deep dives.

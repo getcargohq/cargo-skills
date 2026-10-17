@@ -1,6 +1,6 @@
 # Prompt library — signal analysis
 
-Prompts that convert a detected signal (job posting, funding round, tech-stack change, job change, public filing) into a sales hypothesis, timing window, or triage verdict. These sit between signal recipes (`funding-watch`, `job-change-monitoring`, `tech-intent`) and [`outreach-activation`](../../recipes/outreach-activation.md) — their outputs feed `signal_summary` and routing branches. Run with `temperature: 0`–`0.2` (bulk tier only — some judgment-tier models reject non-default sampling parameters with a 400; see [`../../provider-playbooks/anthropic.md`](../../provider-playbooks/anthropic.md) and omit the override when in doubt).
+Prompts that convert a detected signal (job posting, funding round, tech-stack change, job change, public filing) into a sales hypothesis, timing window, or triage verdict. These sit between signal recipes (`funding-watch`, `job-change-monitoring`, `tech-intent`) and [`outreach-activation`](../../recipes/outreach-activation.md) — their outputs feed `signal_summary` and routing branches. Run with `temperature: 0`–`0.2` (bulk tier only — Cargo silently drops `temperature` on models that removed sampling parameters (`claude-sonnet-5`, the Opus 5 and Fable 5 families, `claude-opus-4-8`, `claude-opus-4-7`); see [`../../provider-playbooks/anthropic.md`](../../provider-playbooks/anthropic.md) and omit the override when in doubt).
 
 ### job-posting-pain-hypothesis
 

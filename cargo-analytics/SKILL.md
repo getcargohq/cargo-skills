@@ -1,7 +1,7 @@
 ---
 name: cargo-analytics
 description: "Get data out of Cargo and measure what ran — download a run output, export a segment or model to CSV or JSON, and pull run and batch success and error counts. Triggers: \"download the results\", \"export this to CSV\", \"give me the file\", \"how many succeeded\", \"what is my error rate\", \"send me the enriched list\", \"get the output of that run\", \"how many records did it write\". Skip when: asking why something failed or where credits went — use cargo-diagnostics; asking about credits, plans, or invoices — use cargo-billing."
-version: "1.6.0"
+version: "1.7.0"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -242,7 +242,7 @@ After the diagnosis and fixing the underlying issue (connector credentials, bad 
 # Extract record IDs from the failed run download, then:
 cargo-ai orchestration batch create \
   --workflow-uuid <uuid> \
-  --data '{"kind":"recordIds","recordIds":["id1","id2","id3"]}'
+  --data '{"kind":"recordIds","modelUuid":"<model-uuid>","ids":["id1","id2","id3"]}'
 ```
 
 **Filtering by node output slug:**

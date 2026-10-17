@@ -2,7 +2,7 @@
 
 ## What is a custom node graph?
 
-A **node graph** is a directed acyclic graph of steps that defines a workflow. Each graph must have exactly one `start` node (entry point) and one `end` node (exit point). Intermediate nodes perform actions — enrichments, transformations, branching, AI calls, etc. — and are linked together via `childrenUuids`.
+A **node graph** is a directed acyclic graph of steps that defines a workflow. Each graph must have one `start` node (entry point) and at least one `end` node (exit point; a `branch` can end each path in its own `end`). Intermediate nodes perform actions — enrichments, transformations, branching, AI calls, etc. — and are linked together via `childrenUuids`.
 
 Pass a custom node graph to override a tool's deployed release:
 
@@ -35,7 +35,7 @@ Every node in the `--nodes` JSON array has these fields:
 | ------------------- | -------- | -------------------------------------------------------------------------- |
 | `uuid`              | yes      | Unique ID within the graph — must be a valid UUIDv4 (e.g. `"550e8400-e29b-41d4-a716-446655440000"`) |
 | `slug`              | yes      | Human-readable identifier (`start` and `end` are reserved)                 |
-| `kind`              | yes      | `native`, `connector`, `tool`, or `agent`                                  |
+| `kind`              | yes      | `native`, `connector`, `tool`, `agent`, or `worker`                        |
 | `config`            | yes      | Action-specific configuration (`{}` for start)                             |
 | `childrenUuids`     | yes      | UUIDs of downstream nodes — array length **must match** the `childrenCount` for the node's action (see native actions tables below) |
 | `fallbackOnFailure` | yes      | Continue to the next node even if this one fails                           |
@@ -83,11 +83,11 @@ Embeds another tool (sub-workflow) as a node. The tool's deployed release config
 
 | Field          | Required | Description                                              |
 | -------------- | -------- | -------------------------------------------------------- |
-| `toolUuid`     | no       | Target tool UUID — get from `cargo-ai orchestration tool list` |
+| `toolUuid`     | yes, to validate | Target tool UUID — get from `cargo-ai orchestration tool list` |
 | `templateSlug` | no       | Template slug — use when instantiating from a template   |
 | `releaseUuid`  | no       | Pin to a specific release of the tool                    |
 
-Provide at least one of `toolUuid` or `templateSlug`. `childrenCount` is **1**.
+`node validate` rejects a `tool` node without `toolUuid` (`toolInvalid`), and also when the tool has no deployed release and no `releaseUuid` pins one. `childrenCount` is **1**.
 
 ```bash
 # Find toolUuid
@@ -101,11 +101,11 @@ Embeds a saved AI agent as a node. The agent runs to completion and its output i
 
 | Field          | Required | Description                                          |
 | -------------- | -------- | ---------------------------------------------------- |
-| `agentUuid`    | no       | Target agent UUID — get from `cargo-ai ai agent list` |
+| `agentUuid`    | yes, to validate | Target agent UUID — get from `cargo-ai ai agent list` |
 | `templateSlug` | no       | Template slug — use when instantiating from a template |
 | `releaseUuid`  | no       | Pin to a specific release of the agent               |
 
-Provide at least one of `agentUuid` or `templateSlug`. `childrenCount` is **1**.
+`node validate` rejects an `agent` node without `agentUuid` (`agentInvalid`), and also when the agent has no deployed release and no `releaseUuid` pins one. `childrenCount` is **1**.
 
 ```bash
 # Find agentUuid
@@ -296,7 +296,7 @@ The `group` node iterates over `items`, running the child subgraph once per item
 | `python`   | Run Python code     | 1        | `{"script": "..."}`                                                                                    |
 | `script`   | Run JavaScript code | 1        | `{"script": "..."}`                                                                                    |
 
-The `agent` action requires `advancedSettings.connectorUuid` (an AI provider connector — get it from `connector list`). Optional fields: `actions`, `resources`, `capabilities`, `output` (structured output with `{"type": "jsonSchema", "jsonSchema": {...}}`), `advancedSettings.temperature`, `advancedSettings.maxSteps`, `advancedSettings.systemPrompt`.
+The `agent` action requires `advancedSettings.connectorUuid` (an AI provider connector — get it from `connector list`). Optional fields: `tools` (not `actions`), `resources`, `capabilities`, `mcpClients`, `output` (structured output with `{"type": "jsonSchema", "jsonSchema": {...}}`), `advancedSettings.temperature`, `advancedSettings.maxSteps`, `advancedSettings.systemPrompt`.
 
 The `python` and `script` nodes receive `nodes` and `parentNodes` as context variables. The return value of the script becomes the node's output under `{{nodes.<slug>.result}}` (assign to a variable named `result` in Python; `return` a value in JS).
 
@@ -326,7 +326,7 @@ cargo-ai orchestration run create \
     },
     {
       "uuid":"22222222-2222-4222-a222-222222222222","slug":"enrich_company","kind":"connector",
-      "integrationSlug":"clearbit","actionSlug":"enrichCompanyFromDomain",
+      "integrationSlug":"clearbit","actionSlug":"enrichCompany",
       "connectorUuid":"<connector-uuid>",
       "config":{
         "domain":{"kind":"templateExpression","expression":"{{nodes.start.domain}}","instructTo":"none","fromRecipe":false}
@@ -339,7 +339,7 @@ cargo-ai orchestration run create \
       "config":{
         "variables":[
           {"name":"company_name","type":"string","value":{"kind":"templateExpression","expression":"{{nodes.enrich_company.name}}","instructTo":"none","fromRecipe":false}},
-          {"name":"employee_count","type":"number","value":{"kind":"templateExpression","expression":"{{nodes.enrich_company.metrics.employeesRange}}","instructTo":"none","fromRecipe":false}}
+          {"name":"employees_range","type":"string","value":{"kind":"templateExpression","expression":"{{nodes.enrich_company.metrics.employeesRange}}","instructTo":"none","fromRecipe":false}}
         ]
       },
       "childrenUuids":[],"fallbackOnFailure":false,
@@ -408,7 +408,7 @@ cargo-ai orchestration run create \
     },
     {
       "uuid":"d3d3d3d3-d3d3-4d3d-ad3d-d3d3d3d3d3d3","slug":"enrich","kind":"connector",
-      "integrationSlug":"clearbit","actionSlug":"enrichCompanyFromDomain",
+      "integrationSlug":"clearbit","actionSlug":"enrichCompany",
       "connectorUuid":"<connector-uuid>",
       "config":{
         "domain":{"kind":"templateExpression","expression":"{{nodes.start.domain}}","instructTo":"none","fromRecipe":false}
@@ -609,7 +609,7 @@ cargo-ai orchestration run create \
           },
           {
             "uuid":"b2a2a2a2-a2a2-4a2a-aa2a-a2a2a2a2a2a2","slug":"enrich","kind":"connector",
-            "integrationSlug":"clearbit","actionSlug":"enrichCompanyFromDomain",
+            "integrationSlug":"clearbit","actionSlug":"enrichCompany",
             "connectorUuid":"<connector-uuid>",
             "config":{
               "domain":{"kind":"templateExpression","expression":"{{nodes.start.value}}","instructTo":"none","fromRecipe":false}
@@ -645,7 +645,7 @@ Each iteration receives the current item as its start data (`{{nodes.start.value
 
 ## Validation
 
-Always validate before running. The command checks for structural errors (missing start/end, broken UUID references, invalid connectors, etc.).
+Always validate before running. The command checks every node reachable from the root (the node no other node points to) for per-node errors: slug format, `childrenUuids` count, unknown native action, invalid connector, tool, or agent. It does not flag a missing `end` or a dangling `childrenUuids` entry (the unreachable part is simply skipped), so read the `warnings` from `node diagram` for those.
 
 ```bash
 cargo-ai orchestration node validate \
@@ -677,7 +677,7 @@ Error:
   "invalidNodes": [
     {
       "node": { "uuid": "22222222-2222-4222-a222-222222222222", "slug": "enrich_company" },
-      "reason": "connectorNotFound"
+      "reason": "connectorInvalid"
     }
   ]
 }
@@ -687,14 +687,17 @@ Error:
 
 | Error                         | Cause                                                | Fix                                 |
 | ----------------------------- | ---------------------------------------------------- | ----------------------------------- |
-| `startNodeNotFound`           | No node with `slug:"start"` and `actionSlug:"start"` | Add the required start node         |
-| `invalidReleaseOrCustomNodes` | Both `--release-uuid` and `--nodes` provided         | Use one or the other, not both      |
-| `nodesNotFound`               | `childrenUuids` references a UUID not in the array   | Verify all UUID cross-references    |
+| `rootNodeNotFound`            | `run create` / `batch create`: every node is some other node's child (a cycle), so there is no entry point | Add a `start` node nothing points to |
+| `invalidReleaseOrCustomNodes` | `run create` / `batch create`: both `--release-uuid` and `--nodes` provided | Use one or the other, not both      |
+| `nodesNotFound`               | `run create` / `batch create`: no node graph could be resolved for the workflow or release | Pass `--nodes`, or deploy a release first |
+| `duplicatedUuid`              | Two nodes share a `uuid` (also across a group's `_nodes`) | Give every node its own UUIDv4     |
 | `childrenUuidsInvalid`        | Wrong number of entries in `childrenUuids`            | Check the `childrenCount` column in the native actions tables — each node type requires an exact count (e.g. `variables` needs 1, `end` needs 0, `branch` needs 2). Inside a group's `_nodes`, the last node must be an `end` node (`childrenUuids: []`), not a `variables` or connector node with an empty array |
 | `subNodesInvalid`             | A group node's `_nodes` sub-graph has invalid nodes  | Check the nested `invalidNodes` array for details — the sub-graph must follow the same rules as a top-level graph (start + end nodes, correct childrenUuids counts) |
-| `connectorNotFound`           | `connectorUuid` doesn't match an active connector    | Check `connector list` for the UUID |
+| `connectorInvalid`            | `connectorUuid` missing, not found, or of another integration, or `actionSlug` unknown for that integration | Check `connector list` for the UUID and `integration get <slug>` for the action |
 | `nativeInvalid`               | `actionSlug` doesn't match a known native action     | Check the native actions table      |
-| `toolInvalid`                 | `toolUuid` doesn't match an existing tool            | Check `tool list` for the UUID      |
+| `toolInvalid`                 | `toolUuid` missing or unknown, or the tool has no deployed release | Check `tool list` for the UUID      |
+| `agentInvalid`                | `agentUuid` missing or unknown, or the agent has no deployed release | Check `ai agent list` for the UUID  |
+| `nestedGroup`                 | A `group` node inside a group's `_nodes`             | Groups cannot nest; flatten the loop |
 | `slugInvalid`                 | Slug contains non-word characters                    | Use only `[a-zA-Z0-9_]`             |
 
 ## Node compute
@@ -708,7 +711,7 @@ cargo-ai orchestration node compute \
     "slug": "enrich_company",
     "kind": "connector",
     "integrationSlug": "clearbit",
-    "actionSlug": "enrichCompanyFromDomain",
+    "actionSlug": "enrichCompany",
     "connectorUuid": "<connector-uuid>",
     "config": {
       "domain": {
@@ -767,7 +770,7 @@ cargo-ai orchestration node execute \
     "slug": "enrich_company",
     "kind": "connector",
     "integrationSlug": "clearbit",
-    "actionSlug": "enrichCompanyFromDomain",
+    "actionSlug": "enrichCompany",
     "connectorUuid": "<connector-uuid>",
     "config": {
       "domain": {

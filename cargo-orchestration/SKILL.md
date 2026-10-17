@@ -1,7 +1,7 @@
 ---
 name: cargo-orchestration
 description: "Make Cargo actually run something, or show what it would run — execute one connector action, run a multi-step workflow, trigger a batch across a whole segment or model, message an AI agent, build or edit a node graph, draw a workflow, tool or play as a diagram, and query the runtime tables (runs, batches, spans, records) with SQL. Triggers: \"run this on all my contacts\", \"execute the action\", \"kick off a batch\", \"build a workflow\", \"schedule a play\", \"make it run every morning\", \"ask the agent\", \"show me the workflow\", \"what does this tool do\", \"visualize this play\", \"draw the graph\", \"explain this workflow\", \"how many runs failed today\", \"what is the output schema for this action\", \"add a step that\". Skip when: explaining why a run misbehaved — use cargo-diagnostics; downloading result files — use cargo-analytics; committing the workflow as code — use cargo-project."
-version: "1.13.0"
+version: "1.14.0"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -56,7 +56,7 @@ Need to run something?
 > carries a ready-to-paste `action` object (with `connectorUuid` already filled
 > in), the action's **credit costs**, and its autocomplete slugs. Narrow with
 > `--kind connector|native|tool|agent`, `--integration-slug <slug>`, `--limit`
-> (default 20, max 50). `unknown command` means the CLI predates it — refresh.
+> (no default: omit it and every match comes back). `unknown command` means the CLI predates it — refresh.
 
 > **`action execute`, not `node execute`, is the default for running something.**
 > `node execute` is a **debug** surface for a node that already lives in a workflow:
@@ -120,7 +120,7 @@ cargo-ai login --email you@company.com  # emailed code, no browser; creates the 
 cargo-ai whoami                         # confirm the active workspace before any write
 ```
 
-Every command prints JSON to stdout; failures exit non-zero with `{"errorMessage": "..."}`. Anything that creates a run or a batch is async — pass `--wait-until-finished` or poll the matching `get`. When the full skill bundle is installed, [`../cargo/references/prerequisites.md`](../cargo/references/prerequisites.md) adds the CLI version pin, token scopes, and the admin-only surface.
+Every command prints JSON to stdout; failures exit non-zero and print `{"error": "...", "status": ..., "body": ...}` to stderr (the API's own `errorMessage` or `reason` is inside `error` and `body`). Anything that creates a run or a batch is async — pass `--wait-until-finished` or poll the matching `get`. When the full skill bundle is installed, [`../cargo/references/prerequisites.md`](../cargo/references/prerequisites.md) adds the CLI version pin, token scopes, and the admin-only surface.
 
 ## Discover resources first
 
@@ -150,8 +150,8 @@ cargo-ai connection connector list         # all connectors
 
 - **`run create`** — only works with **tool** workflows (or no `workflowUuid`). Play workflows return `playNotCompatible`.
 - **`batch create`** — allowed data kinds depend on the workflow type:
-  - **Play** workflows: `filter`, `recordIds`, `segment`, `change`. Trigger a play with `filter`; `segment` takes a standalone segment only, never the `segmentUuid` from `play list`.
-  - **Tool** workflows (or no `workflowUuid`): `file`, `records`
+  - **Play** workflows: `filter`, `recordIds`, `segment`, `change`. Trigger a play with `filter`; `segment` takes a standalone segment only, never the `segmentUuid` from `play list`. `file` is rejected (`invalidDataKind`), and a `filter` or `recordIds` on a model other than the play's is rejected (`modelDoesNotBelongToPlay`).
+  - **Tool** workflows (or no `workflowUuid`): usually `file` or `records`; the model-backed kinds are not refused for a tool
 
 ## Quick reference
 
@@ -187,9 +187,9 @@ All operations are asynchronous. Either poll until terminal state, or pass `--wa
 
 | Result type     | Poll command         | Interval | Done when                                      |
 | --------------- | -------------------- | -------- | ---------------------------------------------- |
-| Run             | `run get <uuid>`     | 2s       | `status` is `success`, `error`, or `cancelled` |
-| Batch           | `batch get <uuid>`   | 5s       | `status` is `success`, `error`, or `cancelled` |
-| Agent message   | `message get <uuid>` | 2s       | `status` is `success` or `error`               |
+| Run             | `run get <uuid>`     | 2s       | `status` is `success`, `error`, `cancelled`, or `skipped` (`run.finishedAt` set) |
+| Batch           | `batch get <uuid>`   | 5s       | `status` is `success`, `error`, `cancelled`, or `skipped` (`batch.finishedAt` set) |
+| Agent message   | `message get <uuid>` | 2s       | `status` is `success`, `error`, or `cancelled`  |
 
 For long-running batches (1000+ records), increase the interval to 10-15s after the first minute.
 
@@ -212,7 +212,7 @@ Returns `{query, totalMatches, results[]}` where each result carries `name`,
 `execute-batch` / `get-output-schema`, the workspace `connectors` for that
 integration, `credits` (the cost table, when the action bills), and
 `autocompletes` (config fields that need a picked id — a HubSpot object type, a
-Slack channel). Defaults to 20 results, max 50.
+Slack channel). Returns every match unless you pass `--limit`.
 
 ```bash
 # One action, one record → returns a run
@@ -228,7 +228,7 @@ cargo-ai orchestration action execute-batch \
   --wait-until-finished
 ```
 
-Action kinds: `tool`, `connector`, `agent`, `native`. See `references/examples/actions.md` for all action kinds, parameters, retry config, response shapes, and end-to-end examples.
+Action kinds: `tool`, `connector`, `agent`, `native` (plus `worker`, which calls a hosted worker with `workerUuid`, `method`, `path`). See `references/examples/actions.md` for all action kinds, parameters, retry config, response shapes, and end-to-end examples.
 
 > **A top-level action has no `config` — omit it.** Inputs belong in `--data` /
 > `--records`; `execute` and `execute-batch` take the action with no `config` key
@@ -270,7 +270,7 @@ cargo-ai orchestration action get-output-schema \
   --data '{"objectType":"contacts"}' 
 ```
 
-Actions that declare no output schema fail with `"Action has no output schema."` (non-zero exit, status 404) — that's the signal to fall back to inspecting `runContext` from a real run. Use these to:
+Actions that declare no output schema fail with `Not found: actionHasNoOutput` (non-zero exit, status 404, body `{"reason":"actionHasNoOutput"}`) — that's the signal to fall back to inspecting `runContext` from a real run. Use these to:
 
 - Know which fields a downstream node can read (`{{nodes.<slug>.<field>}}`) **before** wiring the graph.
 - See an `agent` action's real output envelope — a default free-text agent resolves to `{"schema":{"type":"object","properties":{"answer":{"type":"string"}}}}`, which is why downstream references need `{{nodes.<slug>.answer...}}`.
@@ -364,8 +364,8 @@ Wait for an explicit answer. **Do not enroll the full set on an unanswered quest
 
 Batches process multiple records at once. Allowed data kinds depend on the workflow type:
 
-- **Play** workflows: `filter`, `recordIds`, `segment`, `change`
-- **Tool** workflows (or no `workflowUuid`): `file`, `records`
+- **Play** workflows: `filter`, `recordIds`, `segment`, `change` (`file` is rejected with `invalidDataKind`; a `filter`/`recordIds` on another model with `modelDoesNotBelongToPlay`)
+- **Tool** workflows (or no `workflowUuid`): usually `file`, `records`
 
 Use `filter` to trigger a play — it queries the model directly. `segment` only
 accepts a **standalone** segment from `segmentation segment list`; passing the
@@ -413,7 +413,7 @@ cargo-ai ai message create \                              # 3. Send a message
   --chat-uuid <chat-uuid> \
   --parts '[{"type":"text","text":"Find the VP of Sales at Acme Corp"}]'
 # → Extract assistantMessage.uuid, poll with: cargo-ai ai message get <uuid>
-#   Done when .message.status is "success" (read .parts) or "error" (read .errorMessage)
+#   Done when .message.status is "success" (read .parts), "error" (read .errorMessage) or "cancelled"
 ```
 
 Also supports `--actions`, `--resources`, `--language-model-slug`, `--temperature`, `--max-steps`, and `--wait-until-finished` (blocks until the assistant message reaches a terminal status). See `references/examples/agents.md` for multi-turn conversations, action/resource injection, and model selection.

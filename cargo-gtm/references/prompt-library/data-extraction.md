@@ -1,6 +1,6 @@
 # Prompt library — data extraction
 
-Prompts that turn messy input (scraped pages, raw name/address strings, job postings) into strict, parse-ready JSON. Every prompt carries its schema inline and instructs the model to emit ONLY the JSON object — pipe the response straight into `jq`. Run through `anthropic.instruct` with `temperature: 0` (bulk tier only — some judgment-tier models reject non-default sampling parameters with a 400; see [`../../provider-playbooks/anthropic.md`](../../provider-playbooks/anthropic.md) and omit the override when in doubt); extraction wants zero creativity.
+Prompts that turn messy input (scraped pages, raw name/address strings, job postings) into strict, parse-ready JSON. Every prompt carries its schema inline and instructs the model to emit ONLY the JSON object — pipe the response straight into `jq`. Run through `anthropic.instruct` with `temperature: 0` (bulk tier only — Cargo silently drops `temperature` on models that removed sampling parameters (`claude-sonnet-5`, the Opus 5 and Fable 5 families, `claude-opus-4-8`, `claude-opus-4-7`); see [`../../provider-playbooks/anthropic.md`](../../provider-playbooks/anthropic.md) and omit the override when in doubt); extraction wants zero creativity.
 
 ### scraped-page-to-company-json
 

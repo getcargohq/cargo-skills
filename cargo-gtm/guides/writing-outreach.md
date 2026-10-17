@@ -6,17 +6,17 @@ How to use Cargo's LLM providers and AI agent surface to score, qualify, and per
 
 ## LLM provider routing
 
-Cargo exposes five LLM providers as `kind: "connector"` actions with credits-based pricing. All expose a single `instruct` action that takes a prompt + model and returns text.
+Cargo exposes five LLM providers as `kind: "connector"` actions; the first four carry credits-based pricing. All expose a single `instruct` action that takes a prompt + model and returns text.
 
 | Provider | Strengths | Cost (credits, cheapest model) |
 |---|---|---|
-| **anthropic** | High-quality reasoning, long context, structured output via JSON mode | Haiku: 0.2 / Sonnet: 0.2 / Opus: 2 |
+| **anthropic** | High-quality reasoning, long context | Haiku: 0.05 / Sonnet: 0.2 / Opus: 2 |
 | **openAi** | Broadest model selection (gpt-5 family, gpt-4o), native JSON-schema output | nano: 0.006 / gpt-5: 0.2 / 4o: 0.5 |
-| **perplexity** | Web-grounded research with citations | Sonar: 0.3 / Sonar-pro: 1 |
+| **perplexity** | Web-grounded research with citations | Sonar: 0.3–0.5 / Sonar-pro: 0.6–1 (by `searchContextSize`) |
 | **gemini** | Cheapest large-context option | Flash: 0.01 |
-| **deepSeek** | Lowest-cost reasoning when latency isn't critical | varies |
+| **deepSeek** | Lowest-cost reasoning when latency isn't critical | no provider price (execution charge only) |
 
-For most outreach tasks: **anthropic Haiku** (0.2) is the right default. For deep research with citations: **perplexity sonar-pro**. For batch personalization on a large list: **openAi gpt-5-nano** (0.006 — ~30× cheaper than Haiku). Costs are per 1,000-token package — full tier tables live in the [`anthropic`](../provider-playbooks/anthropic.md) / [`openAi`](../provider-playbooks/openAi.md) / [`gemini`](../provider-playbooks/gemini.md) / [`perplexity`](../provider-playbooks/perplexity.md) playbooks.
+For most outreach tasks: **anthropic Haiku** (0.05) is the right default. For deep research with citations: **perplexity sonar-pro**. For batch personalization on a large list: **openAi gpt-5-nano** (0.006 — ~8× cheaper than Haiku). Costs are per 1,000-token package — full tier tables live in the [`anthropic`](../provider-playbooks/anthropic.md) / [`openAi`](../provider-playbooks/openAi.md) / [`gemini`](../provider-playbooks/gemini.md) / [`perplexity`](../provider-playbooks/perplexity.md) playbooks.
 
 ## Prompt patterns
 
@@ -40,7 +40,7 @@ Company profile:
 ICP criteria: {icp_description}
 ```
 
-Use anthropic Haiku with `output: {"type": "jsonSchema", "jsonSchema": {...}}` to enforce structured output.
+Use openAi with `output: {"responseFormat": "json_schema", "jsonSchema": {...}}` to enforce structured output. anthropic's `instruct` has no output-format field (an `output` key is dropped), so with Haiku the JSON shape rests on the prompt alone.
 
 ### Personalization (one-paragraph opener)
 
@@ -81,7 +81,7 @@ cargo-ai orchestration action execute-batch \
   --records '[{"prompt":"What is <company> known for? 2-sentence summary.","model":"sonar"}, ...]' \
   --wait-until-finished > /tmp/research.json
 
-# Pass 2 — Score (anthropic with structured output)
+# Pass 2 — Score (anthropic, JSON shape requested in the prompt)
 cargo-ai orchestration action execute-batch \
   --action '{"kind":"connector","integrationSlug":"anthropic","actionSlug":"instruct"}' \
   --records '<scoring inputs combining enrichment + research>' \
@@ -155,6 +155,6 @@ Per-record:
 {
   "prompt": "...",
   "model": "claude-3-5-haiku-latest",
-  "maxTokens": 500
+  "advancedSettings": {"maxTokens": 500}
 }
 ```

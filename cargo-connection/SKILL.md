@@ -1,7 +1,7 @@
 ---
 name: cargo-connection
 description: "Connect Cargo to an external system and find out what it can do — authenticate connectors, browse the integration catalog, and resolve the `connectorUuid` and `actionSlug` a workflow node needs. Triggers: \"connect my HubSpot\", \"is Salesforce connected\", \"what integrations do you support\", \"can Cargo talk to <tool>\", \"what actions does <provider> have\", \"I need the connector UUID\", \"set up the API key for\", \"it is asking for credentials again\", \"why is this connector failing auth\", \"list my connectors\". Integrations: amplemarket, amplitude, attio, bigQuery, calendly, closecom, contrast, csv, customerio, dbt, emailBison, expandi, googleAds, googleSheets, heyReach, http, hubspot, hubspotMcp, instantly, instantlyV2, intercom, jira, kitt, lemlist, lgm, linkedinAds, linkedinMatchedAudience, livestorm, manus, marketo, metabase, microsoftTeams, mixpanel, netsuite, netsuiteSoap, notionMcp, octave, onesignal, outreach, pipedrive, postgresql, redshift, resend, rift, salesforce, salesforceMcp, salesloft, Sendgrid, sillage, slack, smartlead, snowflake, sql, stripe, and 82 more. Skip when: choosing between enrichment providers for a GTM job — use cargo-gtm and its provider playbooks."
-version: "1.5.0"
+version: "1.6.0"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -57,8 +57,8 @@ reading a whole `integration get` payload:
 cargo-ai orchestration action list <query>                # START HERE — connector + native + tools + agents.
                                                           # Returns a ready-to-run action object (connectorUuid
                                                           # resolved) and the action's credit costs.
-cargo-ai connection action search <query> --credits-only  # connector catalog only, but filters by category
-                                                          # and by "is it paid" — which `action list` cannot.
+cargo-ai connection action search <query> --credits-only  # connector catalog only, but filters by
+                                                          # "is it paid", which `action list` cannot.
 ```
 
 Reach for the catalog commands when you need the *integration*, not an action —
@@ -73,9 +73,10 @@ cargo-ai connection integration get <slug>                # one integration's ac
 cargo-ai connection native-integration get                # built-in Cargo actions only (NOT third-party)
 ```
 
-> **Deprecated integrations still appear in the catalog.** `integration list` returns them with
-> `isDeprecated: true` and a display name ending in `(deprecated)`. Existing connectors keep
-> working — deprecation breaks nothing — but never wire a *new* workflow to one. Two were
+> **Deprecated integrations are hidden from the catalog by default.** `integration list`, `action list`
+> and `action search` leave them out unless you pass `--is-deprecated true`; `integration get <slug>`
+> always returns one, with `isDeprecated: true` and a display name ending in `(deprecated)`. They
+> cannot be connected any more. Existing connectors keep working, but never wire a *new* workflow to one. Two were
 > deprecated in CLI 1.0.92, the self-referential `cargo` integration among them. Read the flag
 > rather than keeping a list: check `isDeprecated` before proposing any integration you found by
 > browsing instead of by `action list`.
@@ -86,13 +87,12 @@ cargo-ai connection native-integration get                # built-in Cargo actio
 |---|---|---|
 | Covers | connector, native, **tools, agents** | connector catalog only |
 | Returns | a runnable `action` object with `connectorUuid`, workspace connectors, `credits`, autocompletes | `integrationSlug` + `actionSlug`, category, `credits` — you assemble the action yourself |
-| Filters | `--kind`, `--integration-slug`, `--limit` | `--category`, `--integration`, **`--credits-only`**, `--limit` |
+| Filters | `--kind`, `--integration-slug`, `--category`, `--is-deprecated`, `--limit` | `--category`, `--integration`, **`--credits-only`**, `--is-deprecated`, `--limit` |
 | Needs | CLI ≥ 1.0.66 | CLI ≥ 1.0.36 |
 
 Default to `action list` — it is the one that hands you something you can execute.
-Switch to `action search` for the two questions it alone answers: *which paid
-actions match this?* (`--credits-only`) and *what does this category offer?*
-(`--category`). Both rank an action-slug or name hit above an integration hit,
+Switch to `action search` for the question it alone answers: *which paid
+actions match this?* (`--credits-only`). Both rank an action-slug or name hit above an integration hit,
 above a description hit, and require **all** query terms to match.
 
 ### `integration get` vs `native-integration get`
@@ -110,7 +110,8 @@ These two commands return **different sets of actions** and are not interchangea
 
 ```bash
 cargo-ai connection connector list --integration-slug <slug>
-cargo-ai connection connector create --integration-slug <slug> --slug <slug> --name <name>
+cargo-ai connection connector create --integration-slug <slug>   # hosted form in the browser
+cargo-ai connection connector create --integration-slug <slug> --slug <slug> --name <name> --config '<json>'
 cargo-ai connection connector update --uuid <uuid> --name <name>
 cargo-ai connection connector remove <connector-uuid>
 cargo-ai connection connector get <connector-uuid>
@@ -129,11 +130,15 @@ Connectors are authenticated connections to external services.
 # List all connectors
 cargo-ai connection connector list
 
-# Create a connector
+# Create a connector: no flags beyond --integration-slug opens the hosted form and waits
+cargo-ai connection connector create --integration-slug clearbit
+
+# Non-interactive: --config (shape depends on the integration) plus --slug and --name
 cargo-ai connection connector create \
   --integration-slug clearbit \
   --slug clearbit_production \
-  --name "Clearbit - Production"
+  --name "Clearbit - Production" \
+  --config '<integration-specific JSON>'
 
 # Update a connector
 cargo-ai connection connector update --uuid <connector-uuid> --name "Clearbit - Staging"
@@ -145,7 +150,7 @@ cargo-ai connection connector remove <connector-uuid>
 cargo-ai connection connector exists-by-slug --slug clearbit_production
 ```
 
-**Note:** Creating a connector requires `--slug` (unique identifier) in addition to `--name` (display name) and `--integration-slug`. For OAuth-based integrations, the authentication flow is completed separately via `connection integration complete-oauth`.
+**Note:** `--slug` (unique identifier) and `--name` (display name) are required with `--config`, and rejected without it (the hosted form asks for them). For OAuth-based integrations, the authentication flow is completed separately via `connection integration complete-oauth`.
 
 ## Integrations
 

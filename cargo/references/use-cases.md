@@ -8,7 +8,7 @@ Worked recipes showing which skills to load and the command sequence for common 
 
 ```
 1. orchestration action execute            → run a connector action on one record
-   --action '{"kind":"connector","integrationSlug":"clearbit","actionSlug":"company_enrich"}'
+   --action '{"kind":"connector","integrationSlug":"clearbit","actionSlug":"enrichCompany"}'
    --data '{"domain":"acme.com"}' --wait-until-finished
 ```
 
@@ -23,7 +23,7 @@ Worked recipes showing which skills to load and the command sequence for common 
 4. orchestration tool list                 → find the enrichment tool
 5. orchestration batch create      → run on a segment of companies
 6. orchestration batch get         → poll until status is terminal
-7. analytics run download          → export results
+7. orchestration batch download    → export results (signed CSV URL)
 ```
 
 ## 3. Score leads with AI and update the model
@@ -57,9 +57,9 @@ Worked recipes showing which skills to load and the command sequence for common 
 
 ```
 1. orchestration tool list / play list    → discover workflowUuid
-2. analytics run count --statuses error   → count errors in period
-3. analytics run get-metrics              → get success/error rate breakdown
-4. analytics run download --statuses error → download failed runs for inspection
+2. orchestration run count --workflow-uuid <uuid> --statuses error   → count errors in period
+3. orchestration run get-metrics --workflow-uuid <uuid>              → get success/error rate breakdown
+4. orchestration run download --workflow-uuid <uuid> --statuses error → download failed runs for inspection
 ```
 
 ## 6. Bootstrap a fresh workspace
@@ -78,8 +78,8 @@ Worked recipes showing which skills to load and the command sequence for common 
 9. workspaceManagement folder create         → organize plays and tools into folders
 ```
 
-**Credentials in step 1:** the `token create` response is the **only** time the token
-value is shown — hand it to the user for a secrets manager (GitHub Secrets, AWS Secrets
+**Credentials in step 1:** the token value is a secret (`token create` returns it, and so
+does `token list` for your own tokens) — hand it to the user for a secrets manager (GitHub Secrets, AWS Secrets
 Manager) rather than echoing it into a file, a commit, or the transcript. Scope it to
 what the job needs: most of this bootstrap requires **admin**, but the token that later
 runs plays or batches does not. Steps 1 and 3 change who can see and touch workspace
@@ -91,7 +91,7 @@ data, so confirm the token's scope and the invite list with the user before runn
 
 ```
 1. storage model list              → get modelUuid
-2. analytics segment download      → export with filter and sort
+2. segmentation segment download --model-uuid <uuid> → export with filter and sort
    --filter '{"conjonction":"and","groups":[
      {"conjonction":"and","conditions":[
        {"kind":"string","columnSlug":"country","operator":"is","values":["US"]}

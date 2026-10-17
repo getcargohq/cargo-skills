@@ -1,7 +1,7 @@
 ---
 name: cargo-quickstart
 description: "Guided first-run demo for Cargo — one persona question to 25 real leads with a cost receipt in under two minutes, ending by saving the pull as a recurring play. Triggers: \"show me what Cargo can do\", \"give me a demo\", \"take me on a tour\", \"quickstart\", \"getting started with Cargo\", \"I just installed Cargo\", \"my workspace is empty\", \"does this actually work\". Skip when: the user has a real job to run (build a list, enrich a CSV, find emails) — use cargo-gtm; when they want CLI reference or routing — use the cargo router skill."
-version: "1.0.4"
+version: "1.1.0"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -35,7 +35,7 @@ cargo-ai login --email you@company.com  # emailed code, no browser; creates the 
 cargo-ai whoami                         # confirm the active workspace before any write
 ```
 
-Every command prints JSON to stdout; failures exit non-zero with `{"errorMessage": "..."}`. Anything that creates a run or a batch is async — pass `--wait-until-finished` or poll the matching `get`. When the full skill bundle is installed, [`../cargo/references/prerequisites.md`](../cargo/references/prerequisites.md) adds the CLI version pin, token scopes, and the admin-only surface.
+Every command prints JSON to stdout; failures exit non-zero and print `{"error": "...", "status": ..., "body": {...}}` to stderr. Anything that creates a run or a batch is async — pass `--wait-until-finished` or poll the matching `get`. When the full skill bundle is installed, [`../cargo/references/prerequisites.md`](../cargo/references/prerequisites.md) adds the CLI version pin, token scopes, and the admin-only surface.
 
 ## The one question
 
@@ -60,7 +60,7 @@ Translate the persona into a `searchLeads` filter (quote the exact title phrase 
 
 ```bash
 # 1. Execute — returns a run object; note run.uuid and run.workflowUuid.
-#    searchLeads returns a 25-row page minimum (limit below 25 still bills 25 × 0.2 = 5 credits).
+#    searchLeads bills 0.2 per returned lead, so limit 25 costs at most 5 credits.
 cargo-ai orchestration action execute \
   --action '{"kind":"connector","integrationSlug":"salesNavigator","actionSlug":"searchLeads"}' \
   --data '{"keywords": "\"<persona title phrase>\"", "limit": 25}' \
@@ -85,7 +85,7 @@ Show the table (name · title · company · recently-hired), not the raw JSON. `
 ### Fallback ladder (on auth/error, drop a rung — don't stop)
 
 1. `salesNavigator.searchLeads` (0.2/record) — primary.
-2. `theirStack.searchJobs` (0.5) — reframe as "companies hiring your persona right now" (job postings for the persona's title). Same wow, different angle.
+2. `theirStack.searchJobs` (0.5/record) — reframe as "companies hiring your persona right now" (job postings for the persona's title). Same wow, different angle.
 3. `waterfall.searchProspects` (3/record) — **exceeds the ~5-credit demo cap, so this rung asks first**: "The two cheap sources aren't connected; I can pull 5 matches via waterfall for ~15 credits instead — run it, or connect Sales Navigator first (free)?" Run only on an explicit yes, with `limit` capped at 5.
 4. Nothing connected at all → run the free path: `cargo-ai connection integration list | head`, show what *could* be wired, and offer to connect one (browser auth) — the demo resumes after.
 
@@ -93,7 +93,7 @@ Show the table (name · title · company · recently-hired), not the raw JSON. `
 
 The demo is itself the pilot from [`../cargo-gtm/references/cost-discipline.md`](../cargo-gtm/references/cost-discipline.md). Close it with a receipt:
 
-- Credits spent + balance remaining (`cargo-ai billing subscription get` — remaining = `subscriptionAvailableCreditsCount − subscriptionCreditsUsedCount`). For a brand-new account, frame it against the **100 free starting credits** rather than as a bare number — "5 spent, 95 of your 100 free credits left" lands very differently from "95 credits remaining".
+- Credits spent + balance remaining (`cargo-ai billing subscription get` — remaining = `subscriptionAvailableCreditsCount + additionalAvailableCreditsCount − subscriptionCreditsUsedCount` on `.subscription`). For a brand-new account, frame it against the **100 free starting credits** rather than as a bare number — "5 spent, 95 of your 100 free credits left" lands very differently from "95 credits remaining".
 - Hit-rate: "25 of 25 returned" (or what actually came back, and which rows look off).
 
 ## Minute 3 — save it as a play

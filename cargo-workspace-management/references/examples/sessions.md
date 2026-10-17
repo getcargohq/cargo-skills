@@ -14,7 +14,7 @@ cargo-ai workspaceManagement session upsert \
 
 - `--session-id`, `--title`, `--summary` are required on every call (`title` and `summary` are `NOT NULL` in the schema).
 - `--finished` stamps `finished_at = now`. Use `--finished-at <iso>` to set an explicit timestamp.
-- Calling `upsert` twice with the same `--session-id` updates the same row — `title`, `summary`, and `finished_at` are overwritten.
+- Calling `upsert` twice with the same `--session-id` updates the same row — `title` and `summary` are overwritten; `finished_at` only when `--finished` or `--finished-at` is passed.
 
 The command returns the upserted session as JSON.
 

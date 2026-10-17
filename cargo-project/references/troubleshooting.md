@@ -41,13 +41,13 @@ directory (`infra/`). If the files still land somewhere unexpected, you are eith
 an older CLI, outside the repo entirely, or in a tree with no `@cargo-ai/cdk` in any
 parent `package.json`. Pass `--dir <project-root>` explicitly.
 
-## `integrations.<slug>` is `any` / not callable, or `config` isn't type-checked
+## `uses.<connector>.<action>` is untyped, or `config` isn't type-checked
 
-Types aren't generated or aren't wired in. Run `cargo-ai project types`, ensure
+Types aren't generated or aren't wired in. Run `cargo-ai project types` and ensure
 `tsconfig.json` `include` has the explicit glob `".cargo-ai/**/*.d.ts"` (a bare
-`.cargo-ai` dot-dir is ignored by TypeScript), and `import "./.cargo-ai/cargo-register.js";`
-at the top of workflow modules that use `integrations.*`. Re-run `project types` after
-changing workspace integrations.
+`.cargo-ai` dot-dir is ignored by TypeScript). There is nothing to import at runtime:
+the generated file is types only. Re-run `project types` after changing workspace
+integrations.
 
 ## `could not parse the workflow body`
 
@@ -61,8 +61,9 @@ instrument them with coverage tools (they rewrite the function source). Use
 
 Workers and apps **build server-side** — the reconciler uploads the bundle, waits
 for the build, and promotes. This is expected to take longer than other resources.
-Ensure the worker bundle dir has a built `index.js` (+ `manifest.json`,
-`package.json`, `package-lock.json`) before deploying.
+Ensure the worker bundle dir has `manifest.json`, `package.json`, a
+`package-lock.json` and an entrypoint (`src/index.ts`, `src/index.js`, `index.ts` or
+`index.js`); the build runs server-side, so nothing needs pre-building.
 
 ## A play or agent got orphaned (state lost)
 

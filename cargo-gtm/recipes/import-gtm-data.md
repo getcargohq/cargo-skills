@@ -40,7 +40,7 @@ Upload the CSV and drive a batch from it (full flow: `cargo-orchestration` → [
 
 ```bash
 cargo-ai workspaceManagement file upload --file ./contacts-export.csv
-# → returns s3-filename; use it as the batch input for the write-back workflow
+# → returns {s3Filename, contentType, name}; use s3Filename as the batch input for the write-back workflow
 ```
 
 Dedupe before writing: match on `source_tool_id` first, then email, then company domain — all three are free storage reads against the existing models. Rows with none of the three have no natural key; resolve them by enriching an identifier first (`aiArk.enrichCompany` at 0.01 from a domain, `aiArk.enrichPerson` at 0.1 from a LinkedIn URL), and that spend goes through the pilot gate.
@@ -53,7 +53,7 @@ Imported ≠ trustworthy: exports carry stale roles and unverified emails. Audit
 # Export the just-loaded rows from the model (source_tool_id marks this import)
 cargo-ai storage query download \
   --query "SELECT * FROM <datasetSlug>.<modelSlug> WHERE source_tool_id IS NOT NULL"
-# → returns a signed URL; save the file as ./loaded.csv
+# → returns {urls: [...]}, signed URLs to the result files; save them as ./loaded.csv
 
 node <skill-dir>/scripts/validate-emails.ts --input ./loaded.csv --output ./culled.csv
 node <skill-dir>/scripts/contact-accuracy-audit.ts --input ./culled.csv --output ./audited.csv
@@ -76,7 +76,7 @@ Before trusting a rebuilt play, run it on ~10 rows whose source-tool outputs are
 
 ## Credit budget
 
-Import itself is ~free (storage writes). Spend concentrates in: dedupe matching for keyless rows (0.5/record), re-verification of the VERIFY bucket (0.1/record), and the parity pilot (~10 × play cost). Everything paid goes through the [`cost-discipline`](../references/cost-discipline.md) gate — state the three numbers before running.
+Import itself is ~free (storage writes). Spend concentrates in: dedupe matching for keyless rows (0.01/record from a domain, 0.1/record from a LinkedIn URL), re-verification of the VERIFY bucket (0.1/record), and the parity pilot (~10 × play cost). Everything paid goes through the [`cost-discipline`](../references/cost-discipline.md) gate — state the three numbers before running.
 
 ## What this recipe deliberately doesn't do
 

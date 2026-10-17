@@ -28,7 +28,12 @@ cargo-ai ai release update-draft --agent-uuid <agent-uuid> \
 # 3. Deploy
 cargo-ai ai release deploy-draft --agent-uuid <agent-uuid> \
   --language-model-slug gpt-4o \
-  --integration-slug openai
+  --integration-slug openAi \
+  --actions '[]' \
+  --mcp-clients '<same array as the draft>' \
+  --resources '[]' \
+  --capabilities '[]' \
+  --suggested-actions '[]'
 ```
 
 **MCP client kinds:**
@@ -50,7 +55,12 @@ cargo-ai ai release update-draft --agent-uuid <agent-uuid> \
 # 3. Deploy
 cargo-ai ai release deploy-draft --agent-uuid <agent-uuid> \
   --language-model-slug gpt-4o \
-  --integration-slug openai
+  --integration-slug openAi \
+  --actions '[]' \
+  --mcp-clients '<same array as the draft>' \
+  --resources '[]' \
+  --capabilities '[]' \
+  --suggested-actions '[]'
 ```
 
 ## Disable specific actions from an MCP server

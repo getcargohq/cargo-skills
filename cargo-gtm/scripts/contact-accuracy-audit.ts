@@ -73,6 +73,10 @@ const COLUMN_CANDIDATES: Record<ColumnKey, string[]> = {
     // email_status (waterfall.verifyEmail output) normalizes to emailstatus;
     // recipes merge that field onto rows as emailStatus before audit.
     "emailstatus",
+    // The same field as exported: `orchestration batch download` prefixes
+    // output columns with cargo_, `run download-outputs` CSV with output_.
+    "cargoemailstatus",
+    "outputemailstatus",
     "verificationstatus",
     "verification",
     "emailverificationstatus",

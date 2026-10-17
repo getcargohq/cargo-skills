@@ -16,14 +16,14 @@ cargo-ai content file list
 cargo-ai content file upload --file ./knowledge-base.pdf
 ```
 
-Supported content types include PDFs, CSVs, plain text, and other common document formats. The response includes the `uuid` and `s3Filename` needed to reference the file.
+Supported content types include PDFs, CSVs, plain text, and other common document formats. The response prints `uuid`, `s3Filename`, `contentType` and `name` at the top level (no `file` wrapper).
 
 ### Upload and attach to an agent
 
 ```bash
 # 1. Upload the file
 cargo-ai content file upload --file ./product-docs.pdf
-# → file.uuid
+# → .uuid
 
 # 2. Add the file as a resource on the agent's draft release
 cargo-ai ai release update-draft --agent-uuid <agent-uuid> \
@@ -32,7 +32,9 @@ cargo-ai ai release update-draft --agent-uuid <agent-uuid> \
 # 3. Deploy
 cargo-ai ai release deploy-draft --agent-uuid <agent-uuid> \
   --language-model-slug gpt-4o \
-  --integration-slug openai
+  --integration-slug openAi \
+  --actions '[]' --mcp-clients '[]' --capabilities '[]' --suggested-actions '[]' \
+  --resources '<same resources array as step 2>'
 ```
 
 ### Upload to a folder
@@ -72,7 +74,7 @@ cargo-ai content file list
 
 ## Libraries
 
-A library groups files into one resource an agent can reference. `native` libraries are workspace-managed; `connector`-backed libraries sync documents from an external source through an unstructured-data extractor.
+A library groups files. Agent release resources reference its files or folder, not the library UUID. `native` libraries are workspace-managed (the CLI cannot create one: `library create` is connector-only); `connector`-backed libraries sync documents from an external source through an unstructured-data extractor.
 
 ```bash
 # List libraries, optionally filtered

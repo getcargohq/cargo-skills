@@ -14,19 +14,19 @@ Cheapest extraction in the catalog at **0.025 per URL**, half of `firecrawl.scra
 
 | Action | Cost | Inputs | Use for |
 |---|---|---|---|
-| `extract` | 0.025 **per URL** | `urls` (required), `objective`, `searchQueries`, `maxCharsTotal`, `fullContent` | **Cheapest page read in the catalog.** Pull content from URLs you already have, optionally steered by an `objective`. |
-| `search` | 0.125 fixed **+ 0.025 per item** | `searchQueries` (required), `objective`, `mode`, `numResults`, `maxCharsTotal`, `includeDomains`, `excludeDomains`, `afterDate` | Ranked web search with relevance scoring, steered by an objective rather than keywords alone. |
-| `createTask` | 0.125 (`lite`) | `input` (required), `processor` (required), `outputSchema`, `includeDomains`, `excludeDomains`, `afterDate`, `location` | **Unique action.** An agentic research task that returns structured output against your own schema. |
+| `extract` | 0.025 **per URL** | `urls` (required, max 20 per call), `objective`, `searchQueries`, `maxCharsTotal`, `fullContent` | **Cheapest page read in the catalog.** Pull content from URLs you already have, optionally steered by an `objective`. |
+| `search` | 0.125 fixed (first 10 results included) **+ 0.025 per result past 10** | `searchQueries` (required), `objective`, `mode`, `numResults`, `maxCharsTotal`, `includeDomains`, `excludeDomains`, `afterDate` | Ranked web search with relevance scoring, steered by an objective rather than keywords alone. |
+| `createTask` | 0.125 (`lite`) to 60 (`ultra8x`); 0.625 at the default `core` | `input` (required), `processor` (default `core`), `outputSchema` (a string: plain-language description or a JSON schema serialized as a string), `includeDomains`, `excludeDomains`, `afterDate`, `location` | **Unique action.** An agentic research task that returns structured output against your own schema. |
 
 `extract` bills per URL with no fixed component, so a 10-URL call is 0.25 and there is no penalty for splitting or batching.
 
 ### The `createTask` processor ladder
 
-`processor` is **required and has no default**, so the tier is always a deliberate choice. It is the only cost decision in this provider that can run away:
+`processor` **defaults to `core` (0.625, 5× `lite`)** when omitted, so always set it explicitly. It is the only cost decision in this provider that can run away:
 
 | Processor | Cost | When |
 |---|---|---|
-| `lite` | **0.125** | The default choice. A focused question over public web with a small schema. |
+| `lite` | **0.125** | The starting choice (the schema default is `core`). A focused question over public web with a small schema. |
 | `base` | 0.25 | The same, when `lite` returns thin results on a hard target. |
 | `core` | 0.625 | Multi-hop questions ("who do they compete with, and what do those competitors charge"). |
 | `core2x` | 1.25 | Wider fan-out on the same shape. |
@@ -38,7 +38,7 @@ Cheapest extraction in the catalog at **0.025 per URL**, half of `firecrawl.scra
 ## What it's for
 
 - ✅ **Reading pages you already have URLs for** — `extract` at 0.025 is the cheapest rung in the catalog, and it takes an `objective` so the extraction is steered rather than a raw dump.
-- ✅ **Structured research output** — `createTask` with `outputSchema` returns a JSON object rather than prose, which is what makes it usable in a pipeline instead of in a chat window. Nothing else in the catalog fills a caller-supplied schema.
+- ✅ **Structured research output** — `createTask` with `outputSchema` returns a JSON object rather than prose, which is what makes it usable in a pipeline instead of in a chat window. `linkup.instruct` with `outputType: "structured"` is the other web-research action that fills a caller-supplied schema.
 - ✅ **Account research and personalization** — an objective-driven question over public web, cited and structured, at 0.125 a record.
 - ❌ **Structured B2B firmographics** — `companyEnrich.enrichByDomain` (0.25) or `linkedin.enrichCompanyFromDomain` (0.5) return typed fields. Do not pay an agentic task to guess a headcount that an enrichment provider knows.
 - ❌ **Finding people or emails** — that is the contact stack ([`../references/stage-action-map.md`](../references/stage-action-map.md)); a research task is the wrong instrument and the wrong price.
@@ -68,19 +68,12 @@ cargo-ai orchestration action execute \
   --data '{
     "input": "What has Acme publicly said about its priorities in the last 12 months, and who does it name as competitors?",
     "processor": "lite",
-    "outputSchema": {
-      "type": "object",
-      "properties": {
-        "priorities": {"type": "array", "items": {"type": "string"}},
-        "competitors": {"type": "array", "items": {"type": "string"}},
-        "sources": {"type": "array", "items": {"type": "string"}}
-      }
-    }
+    "outputSchema": "{\"type\":\"object\",\"properties\":{\"priorities\":{\"type\":\"array\",\"items\":{\"type\":\"string\"}},\"competitors\":{\"type\":\"array\",\"items\":{\"type\":\"string\"}},\"sources\":{\"type\":\"array\",\"items\":{\"type\":\"string\"}}}}"
   }' \
   --wait-until-finished
 ```
 
-**Put a `sources` field in every `outputSchema`.** The task will fill it, and without it you get confident prose with nothing to check it against, which is the failure mode research output has.
+`outputSchema` is a **string**: a JSON schema must be serialized, as above; a raw object fails validation. The result comes back as `output`, `output_metadata` (per-field `citations`, `confidence`, `reasoning`) and top-level `sources`. **Put a `sources` field in every `outputSchema` anyway**, so each answer carries its evidence inside the output column itself.
 
 ### Pattern C — Objective-steered search
 
@@ -96,12 +89,12 @@ cargo-ai orchestration action execute \
   --wait-until-finished
 ```
 
-0.125 fixed plus 0.025 per result, so `numResults: 10` is 0.375 and `numResults: 50` is 1.375. Unlike `serper`, raising the result count **does** raise the bill.
+0.125 fixed covers the first 10 results, plus 0.025 per result past 10, so `numResults: 10` is 0.125 and `numResults: 50` is 1.125. Unlike `serper`, raising the result count **does** raise the bill.
 
 ## Common pitfalls
 
-- **Omitting `processor` and assuming a cheap default.** It is required, so the call fails rather than defaulting, which is the good outcome. The bad outcome is copying an example that pins `pro` and running it over a list.
-- **Reading `search` pricing as fixed.** It is fixed **plus** per item. That is the opposite of `serper` (0.05 flat for up to 100), so a habit carried from serper of maxing the limit is expensive here.
+- **Omitting `processor` and assuming a cheap default.** It defaults to `core` (0.625), so an omitted processor bills 5× `lite` without any error. The other bad outcome is copying an example that pins `pro` and running it over a list.
+- **Reading `search` pricing as fixed.** It is fixed **plus** per item past the first 10 results. That is the opposite of `serper` (0.05 flat for up to 100), so a habit carried from serper of maxing the limit is expensive here.
 - **Using `createTask` for a field an enrichment provider owns.** An agentic task can return a headcount. It will cost more than `companyEnrich.enrichByDomain` and be less reliable, because it is inferring what the other provider looked up.
 - **`outputSchema` with no sources field.** See Pattern B. This is the single most common way research output becomes unusable.
 
@@ -114,8 +107,8 @@ cargo-ai orchestration action execute \
 ## Position in the waterfall
 
 - `extract` — **first rung for reading a known URL**, ahead of `firecrawl.scrape` (0.05) on price alone. Prefer firecrawl when you need its crawl behavior across a site rather than a URL list.
-- `createTask` — the structured-research rung, ahead of `linkup.instruct` (1) on price at `lite` (0.125) and `base` (0.25), and the only one that fills a caller-supplied schema. Prefer `linkup.instruct` when a `sourcedAnswer` in prose is genuinely all you want.
-- `search` — a web-search rung alongside `firecrawl.search` (0.05) and `serper.search` (0.05). Both of those are cheaper for plain queries; parallel earns its place when the `objective` steering measurably improves what comes back.
+- `createTask` — the structured-research rung, ahead of `linkup.instruct` (1) on price at `lite` (0.125) and `base` (0.25), and, like `linkup.instruct` in `structured` mode, fills a caller-supplied schema. Prefer `linkup.instruct` when a `sourcedAnswer` in prose is genuinely all you want.
+- `search` — a web-search rung alongside `firecrawl.search` (0.05 per result) and `serper.search` (0.05 flat). Both of those are cheaper for plain queries; parallel earns its place when the `objective` steering measurably improves what comes back.
 
 ## Action shape
 

@@ -6,7 +6,7 @@ last-reviewed: 2026-07-09
 
 # snitcher (Snitcher)
 
-Website-visitor identification (catalog subcategory: `websiteVisit`) — a **signal source**, not an enrichment rung. It de-anonymizes companies visiting your site via a tracking script and a Snitcher account, then exposes them to cargo two ways: one free credits-based action (`searchSessions`, 0) and two **extractors** that auto-sync visitor data into workspace models. It's the only visitor-identification surface in the catalog ([`../references/alternatives.md`](../references/alternatives.md): "Always for visitor ID — free credits-tier"). Requires your own Snitcher `apiKey` connector and their tracking setup on your site.
+Website-visitor identification (catalog subcategory: `websiteVisit`) — a **signal source**, not an enrichment rung. It de-anonymizes companies visiting your site via a Snitcher tracking script, then exposes them to cargo two ways: one free credits-based action (`searchSessions`, 0) and two **extractors** that auto-sync visitor data into workspace models. It's the only visitor-identification surface in the catalog ([`../references/alternatives.md`](../references/alternatives.md): "Always for visitor ID — free credits-tier"). Works on Cargo credits or on your own Snitcher `apiKey` connector: on credits, creating the `fetchOrganisations` model with your site `url` provisions a Snitcher workspace for it and returns the tracking-script snippet (`_trackingScript`) to install on your site.
 
 ## Credits-based actions
 
@@ -28,7 +28,7 @@ Both run incrementally with `autoFetch` at a minimum 30-minute interval once con
 - ✅ **Visitor-intent signal** — companies browsing your pricing page are the warmest cold segment there is; feed the identified-visitor segment into [`../recipes/outreach-activation.md`](../recipes/outreach-activation.md) or [`../recipes/re-engagement.md`](../recipes/re-engagement.md).
 - ✅ **Free session context** — `searchSessions` and the `fetchSessions` extractor cost nothing, so page-level context (which URLs, how often, from where) is free personalization fuel.
 - ❌ **Company enrichment** — visitor records carry basic firmographics only; run identified domains through the normal ENRICH chain (`aiArk.enrichCompany` 0.01, then `companyEnrich` 0.25) for real coverage.
-- ❌ **Workspaces without a Snitcher account** — there's no cargo-managed data here; no tracking script, no signal.
+- ❌ **Sites without the tracking script** — with or without a Snitcher account, no installed script means no signal.
 
 ## Patterns
 
