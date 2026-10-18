@@ -1,7 +1,7 @@
 ---
 name: cargo-project
-description: "Manage a whole Cargo workspace as code — declare connectors, models, plays, tools, agents, MCP servers, segments, context, folders, files, workers, and apps in TypeScript, then reconcile them with `cargo-ai project` (init → types → plan → deploy), the way you would run Pulumi or the AWS CDK. Triggers: \"as code\", \"in git\", \"version-controlled\", \"reproducible\", \"Terraform for Cargo\", \"set up a whole workspace\", \"staging and production\", \"deploy the workspace from CI\", \"review this in a PR\", \"cargo.state.json\", \"scaffold from a template\", \"is there a cookbook for this\", \"start from a cookbook\". Skills with a CDK example (TAM building, account scoring, call capture, inbound qualification, CRM enrichment, standup) live in gtm-skills; menu in references/cookbooks.md. Skip when: it is a one-off operation, a read, or an ad-hoc query — use the matching capability skill."
-version: "3.2.0"
+description: "Declare a whole Cargo workspace in a project, GTM as Code — connectors, models, plays, tools, agents, MCP servers, segments, context, folders, files, workers, and apps in TypeScript, reconciled with `cargo-ai project` (init → types → plan → deploy), the way you would run Pulumi or Terraform. Triggers: \"as code\", \"in git\", \"version-controlled\", \"reproducible\", \"Terraform for Cargo\", \"set up a whole workspace\", \"staging and production\", \"deploy the workspace from CI\", \"review this in a PR\", \"cargo.json\", \"cargo.state.json\", \"scaffold from a template\", \"is there a cookbook for this\", \"start from a cookbook\". Skills with a worked project example (TAM building, account scoring, call capture, inbound qualification, CRM enrichment, standup) live in gtm-skills; menu in references/cookbooks.md. Skip when: it is a one-off operation, a read, or an ad-hoc query — use the matching capability skill."
+version: "4.0.0"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -25,17 +25,21 @@ Use this skill to define a Cargo workspace in TypeScript (`define*` builders fro
 It is the **declarative** counterpart to the imperative capability skills: instead
 of running one CLI command per resource, you write the whole graph once and deploy
 it repeatably, with a **deploy state** — held in your workspace, pointed at by a
-committed `cargo.state.json` — linking your code to what Cargo created.
+committed `cargo.state.json` — linking your code to what Cargo created. A **project**
+is the folder holding `cargo.json` (`{ "resources": "infra" }`): every
+`cargo-ai project` command finds the nearest one above where it runs, and stops
+without one.
 
 > **"Project" and "workspace" are two different things — keep them apart.** A
 > **workspace** is the Cargo tenant you sign into: it holds the models, connectors,
 > agents, mailboxes and credits, and it is what `login --workspace-name` selects and
-> what `whoami` reports. A **project** is the *repo* that declares resources and
-> deploys them into a workspace: it is what `project init` scaffolds, what
-> `cargo.state.json` points from, and what `--dir` locates. One project deploys into
+> what `whoami` reports. A **project** is the folder holding `cargo.json` that
+> declares resources and deploys them into a workspace: it is what `project init`
+> scaffolds, where `cargo.state.json` sits, and what every command finds by walking up
+> to the nearest `cargo.json`. A repo can hold several, one `cargo.json` each. One project deploys into
 > one workspace at a time — the workspace guard refuses a deploy when the state's
 > workspace isn't the selected one — and the same project reaches a dev and a prod
-> workspace through a different deploy state each. Say "project" for the repo, and
+> workspace through a different deploy state each. Say "project" for it, and
 > don't name a project directory `my-workspace`.
 
 ## Bootstrap
@@ -50,7 +54,7 @@ cargo-ai whoami                         # confirm the active workspace before an
 cargo-ai project --help                     # `unknown command` = CLI too old; reinstall @cargo-ai/cli@latest
 ```
 
-Two CDK-specific extras: the project needs **`@cargo-ai/cdk` as a dependency** for the `define*` builders you import (`cargo-ai project init` scaffolds a `package.json` with it — then `npm install`), and the `cargo-ai project` domain ships with the CLI itself.
+Two project-specific extras: the project needs **`@cargo-ai/cdk` as a dependency** for the `define*` builders you import (`cargo-ai project init` scaffolds a `package.json` with it — then `npm install`), and the `cargo-ai project` domain ships with the CLI itself.
 
 Every command prints JSON to stdout; failures exit non-zero with `{"errorMessage": "..."}`. Anything that creates a run or a batch is async — pass `--wait-until-finished` or poll the matching `get`. When the full skill bundle is installed, [`../cargo/references/prerequisites.md`](../cargo/references/prerequisites.md) adds the CLI version pin, token scopes, and the admin-only surface.
 
@@ -65,15 +69,15 @@ Every command prints JSON to stdout; failures exit non-zero with `{"errorMessage
 - **Typing** the config against your workspace's real integration schemas
   (`cargo-ai project types`).
 
-The CDK spans **every** resource kind — so it overlaps every imperative capability
+A project spans **every** resource kind — so it overlaps every imperative capability
 skill (`cargo-connection`, `cargo-storage`, `cargo-ai`, `cargo-orchestration`,
 `cargo-content`, `cargo-hosting`, …). Which to reach for is the first decision:
 
-## 2) CDK or the CLI? — the routing decision
+## 2) A project or the CLI? — the routing decision
 
 > **Declarative (this skill) vs imperative (a capability skill).**
 
-Use the **CDK** when the user is **managing resources as an artifact**:
+Use a **project** when the user is **managing resources as an artifact**:
 
 - "Set up / stand up / bootstrap a whole workspace (as code / from a template)."
 - "Make this reproducible / version-controlled / in git / repeatable across
@@ -91,17 +95,17 @@ user is doing a **one-off operation** or **exploring**:
 - Any read, ad-hoc query, or single mutation that doesn't need to live in code.
 
 When unsure, ask whether the result should be committed and re-deployable. If yes
-→ CDK. If it's a quick action or a read → the capability skill (see the
+→ a project. If it's a quick action or a read → the capability skill (see the
 [`cargo` router](../cargo/SKILL.md) to pick the right domain).
 
 ## 3) The lifecycle
 
 ```
-cargo-ai project init <dir>     scaffold from getcargohq/cargo-manifest; resources in infra/
+cargo-ai project init <dir>     scaffold the Cargo template: cargo.json + cargo.state.json, resources in infra/
         │
 cargo-ai project types          generate per-workspace types for typed config (optional)
         │
-   (author define* files)   importing a .ts file IS registration — no manifest
+   (author define* files)   importing a .ts file IS registration — no list to keep
         │
 cargo-ai project plan           compile the graph, diff against the deploy state (creates nothing)
         │
@@ -159,12 +163,12 @@ project` with no subcommand prints its help.
 | A field/spec/output for a specific builder | [`references/resources.md`](references/resources.md) | Every builder → spec fields → which ref each takes → outputs. |
 | Exact command flags | [`references/commands.md`](references/commands.md) | Every `cargo-ai project` subcommand and its flags. |
 | A deploy error / footgun | [`references/troubleshooting.md`](references/troubleshooting.md) | The known failure modes and fixes. |
-| A known GTM outcome, before authoring one; or what to suggest after one is set up | [`references/cookbooks.md`](references/cookbooks.md) | The cookbook menu, in stage order: gtm-skills that carry a worked CDK example, the adaptations each supports, and which to suggest next. |
+| A known GTM outcome, before authoring one; or what to suggest after one is set up | [`references/cookbooks.md`](references/cookbooks.md) | The cookbook menu, in stage order: gtm-skills that carry a worked project example, the adaptations each supports, and which to suggest next. |
 
 ### Cookbooks — check the menu before authoring a known outcome from scratch
 
 [`getcargohq/gtm-skills`](https://github.com/getcargohq/gtm-skills) holds, beside its
-one-off skills, **cookbooks**: skills that carry worked CDK resources, the same job as a deployed
+one-off skills, **cookbooks**: skills that carry worked project resources, the same job as a deployed
 pipeline that keeps producing the result (TAM building, account scoring, call capture,
 inbound qualification, CRM enrichment, stalled-deal nudges, …). Every folder is self-contained: its
 own models, connectors and folders, no shared foundation, no requires graph.
@@ -180,7 +184,7 @@ working, and what has to be answered either way, and it carries its own procedur
 `project add` is the copy step in that procedure:
 
 ```sh
-cargo-ai project add cookbook/tam-building               # inside a CDK project
+cargo-ai project add cookbook/tam-building               # inside a project
 cargo-ai project init my-project --cookbook tam-building # no project yet: both at once
 ```
 
@@ -199,7 +203,7 @@ stop, deploy on a yes, walk its `Done when`.
 getcargohq/gtm-skills/<slug>` fetches the procedure alone and you can read
 `.agents/skills/<slug>/SKILL.md` directly; no reload needed. To read one without
 installing, `npx skills use getcargohq/gtm-skills@<slug>` prints it. Neither brings the
-CDK resources — for those you still want `project add`.
+project resources — for those you still want `project add`.
 
 **Routing rule: one-off versus standing.** A user who wants the list today wants
 `cargo-gtm` (or gtm-skills' one-off `build-tam-list`); a user who wants a pipeline
@@ -246,7 +250,7 @@ acceptance test, and always review `cargo-ai project plan` before deploying.
   cargo.state.cache.json
   cargo.state.audit.jsonl
   ```
-  One state per repo, and at most **10 live states per workspace**:
+  One state per project, and at most **10 live states per workspace**:
   ```bash
   cargo-ai project state list            # every state here, and which one this project is on
   cargo-ai project state create          # create one for this project, write the pointer
@@ -292,14 +296,23 @@ acceptance test, and always review `cargo-ai project plan` before deploying.
   regenerates `.cargo-ai/` so `defineConnector`/`defineModel` config (and
   connector actions called through `uses` in workflow bodies) type-check against the real schemas. Typing
   is a bonus, never a gate: deploy works without it.
-- **Any subdirectory of the repo is fine (CLI ≥ 1.0.83).** Commands walk **up** to
-  the package root where `@cargo-ai/cdk` is declared, then back **down** to the
-  resource directory (`infra/` in a scaffolded repo), so `.cargo-ai/` and
-  `cargo.state.json` land in the right place from anywhere inside the project.
-  `--dir <path>` still overrides it. This is why resources live in `infra/` and not
-  at the root: the loader imports *every* `.ts` under the directory it is given, and
-  a repo root also holds `scripts/` — whose files run on import. Pointing a command
-  at the root would execute them.
+- **A project is the folder holding `cargo.json` (`@cargo-ai/cdk` ≥ 1.0.112).** The
+  file names the folder whose `.ts` files are loaded, `{ "resources": "infra" }`, and
+  optionally where executions live, `"executions": ["outputs"]` (default `outputs/`
+  beside `cargo.json`). Every command walks **up** from where it runs, as far as the
+  repo root, to the nearest `cargo.json`, so any subdirectory works; a repo with
+  several projects has one `cargo.json` each, and the nearest wins. **Without one, the
+  command stops** — it no longer guesses from an `infra/` folder or a `package.json`
+  — and prints the line that adds it, at the project's root:
+  ```bash
+  echo '{ "resources": "infra" }' > cargo.json
+  ```
+  `cargo.state.json` lives **beside `cargo.json`**, never inside `infra/`. A leftover
+  `infra/cargo.state.json` stops every command with the `mv` to run (two state files
+  stop it too; keep the one that points at this project's state). `--dir <path>`
+  still exists: it says where the lookup starts. Resources live in `infra/` and not
+  at the root because the loader imports *every* `.ts` under the folder `resources`
+  names, and a repo root also holds `scripts/` — whose files run on import.
 - **`--yes` in CI.** `deploy` and `destroy` prompt for confirmation; non-interactive
   runs must pass `--yes`.
 - **A `definePlay`/`defineTool` graph with paid nodes gets a sample run before it
@@ -339,12 +352,12 @@ acceptance test, and always review `cargo-ai project plan` before deploying.
   record. Use `adopt: true` for a domain or mailbox bought in the UI. Ramp,
   suppression and sending:
   [`../cargo-mailbox-management/SKILL.md`](../cargo-mailbox-management/SKILL.md).
-- **Route CDK-managed resources into a clearly-labelled folder.** Set `folder:` on
-  each builder so everything CDK owns lands in a dedicated folder whose name signals
+- **Route project-managed resources into a clearly-labelled folder.** Set `folder:` on
+  each builder so everything the project owns lands in a dedicated folder whose name signals
   "owned by code — don't hand-edit" to anyone in the UI (manual UI edits read back as
   drift on the next `plan`). Folders are per-kind, so give each kind its own but share
-  one short, recognizable prefix — recommended: **`🔒 CDK`** (e.g. `🔒 CDK Models`,
-  `🔒 CDK Agents`). Keep names short (long labels truncate in the folder tree); the
+  one short, recognizable prefix — recommended: **`🔒 Project`** (e.g. `🔒 Project Models`,
+  `🔒 Project Agents`). Keep names short (long labels truncate in the folder tree); the
   lock emoji is the "don't touch" cue. See
   [`guides/authoring-resources.md`](guides/authoring-resources.md).
 

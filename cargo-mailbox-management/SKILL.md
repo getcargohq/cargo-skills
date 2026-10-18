@@ -1,7 +1,7 @@
 ---
 name: cargo-mailbox-management
 description: "Send mail from inboxes Cargo owns — provision mailboxes on a sending domain, run provider warm-up and the 5→40/day send ramp, deliver with the `sendEmail` action, and read back threads, replies, delivery events, and the workspace suppression list. Triggers: \"set up a sending mailbox\", \"provision inboxes for outbound\", \"warm up this mailbox\", \"how many sends do I have left today\", \"send this from Cargo\", \"did they reply\", \"who unsubscribed\", \"suppress this recipient\", \"take me off your list\", \"never email them again\", \"what do mailboxes cost\", \"my mailbox is stuck pending\". A mailbox is a recurring monthly credit charge, and every send is gated on basis, suppression, and relevance. Skip when: writing the copy or building the audience — use cargo-gtm; the mailbox belongs in git — use cargo-project."
-version: "1.3.0"
+version: "1.3.1"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -116,7 +116,7 @@ updates, deletes, or suppresses needs `mailboxManagement:write`.
 
 **First, the gap you will hit.** `mailbox create` requires `--domain-uuid`, and there is no
 `cargo-ai` command that lists sending domains — the `domainManagement` API exists but has no
-CLI surface yet. Get the UUID from the Cargo web app, or declare the domain in a CDK repo with
+CLI surface yet. Get the UUID from the Cargo web app, or declare the domain in a project with
 `defineDomain` and read it back from `cargo.state.json`. Say this to the user rather than
 guessing a UUID.
 
@@ -334,16 +334,16 @@ out loud before provisioning anything.
 - The full spend rules — sampling before a full enrollment, the approval message, the receipt —
   are [`../cargo-gtm/references/cost-discipline.md`](../cargo-gtm/references/cost-discipline.md).
 
-## Declarative alternative: `defineMailbox` (CDK)
+## Declarative alternative: `defineMailbox` (project)
 
-For the inbox itself, **prefer CDK** — the `mailbox create` help says so, and the reason is that
+For the inbox itself, **prefer a project** — the `mailbox create` help says so, and the reason is that
 a mailbox is long-lived infrastructure with a monthly cost, which is exactly what belongs in
 git and in a plan you can review. `defineMailbox` (with `defineDomain` for the sending domain)
 covers it; `adopt: true` binds a mailbox bought in the web app instead of provisioning a second
 one. See [`../cargo-project/SKILL.md`](../cargo-project/SKILL.md) and "Declarative vs imperative" in
 [`../cargo/SKILL.md`](../cargo/SKILL.md).
 
-Use this skill's imperative commands for one-off provisioning, and for everything CDK does not
+Use this skill's imperative commands for one-off provisioning, and for everything a project does not
 model at all: warm-up, allowance, messages, threads, events, and suppressions.
 
 ## When the CLI surprises you

@@ -91,5 +91,5 @@ Example agent action that composes a human-readable page:
 
 - `--cron` accepts a 5-field cron expression **or** `@every <interval>` (e.g. `@every 15m`), evaluated in **UTC**.
 - Minimum interval is **once a minute** — tighter `@every` values are rejected (every tick scans ClickHouse and may fire paid runs). Named-weekday cron expressions the interval parser can't measure are allowed through, since a 5-field cron can't fire more than once a minute anyway.
-- The UI presets bottom out at **30 minutes**; the CDK template defaults to **5 minutes**. Pick the loosest cadence that still catches the problem in time — it's cheaper and quieter.
+- The UI presets bottom out at **30 minutes**. Pick the loosest cadence that still catches the problem in time — it's cheaper and quieter.
 - Create with `--disabled` to stage an alert without evaluating it; `alert update --uuid <uuid> --enabled true` starts the schedule. `--enabled false` pauses it (the schedule stops; the alert and its history remain).

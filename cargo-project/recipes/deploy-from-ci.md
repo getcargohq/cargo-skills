@@ -14,6 +14,11 @@ push, on merge, or on a schedule — so the workspace stays in sync with the rep
   pointer CI can't find the state, and the deploy fails rather than silently recreating
   everything.
 - **Any `secret()` env vars** set as CI secrets too (e.g. `HUBSPOT_API_KEY`).
+- **`cargo.json` committed** at the project's root, with `cargo.state.json` beside it.
+  CI runs `cargo-ai project` like anyone else, and it stops without one. Connecting
+  the repo to Cargo so pushes deploy has the same requirement: the connected
+  directory must hold both `cargo.json` and `cargo.state.json`, or the connection is
+  refused.
 
 ## The CI steps
 

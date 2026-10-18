@@ -11,8 +11,10 @@ cargo-ai project init acme-gtm                              # the repo, empty
 cargo-ai project init acme-gtm --cookbook tam-building      # the repo plus a worked example
 ```
 
-The scaffold itself never varies — it is one GTM repo from
-`getcargohq/cargo-manifest`, with the resources it deploys in `infra/`. What varies is
+The scaffold itself never varies — it is one GTM repo from the Cargo template
+(`getcargohq/cargo-manifest`): `cargo.json` (`{ "resources": "infra" }`) and
+`cargo.state.json` at the root, the resources it deploys in `infra/`, executions in
+`outputs/`. Every later command finds the project by that `cargo.json`. What varies is
 whether a cookbook is layered on top, so reach for `--cookbook <slug>` when the
 user wants a working pipeline to adapt rather than an empty project.
 `cargo-ai project cookbook list` names them; see

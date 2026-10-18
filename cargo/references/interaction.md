@@ -60,4 +60,4 @@ Storage queries are free and fast, so this preview costs nothing but a line of o
 - Building or editing plays/workflows (`cargo-orchestration`, and node-graph steps in `cargo-gtm` recipes).
 - Activating GTM recipes end-to-end (`cargo-gtm` — the pilot gate already encodes §1's spirit for spend).
 - Reporting diagnostics (`cargo-diagnostics` — conclusion-first tables).
-- CDK plans (`cargo-project` — `project plan` output is the plan-gate artifact; present the diff, not the raw state).
+- Project plans (`cargo-project` — `project plan` output is the plan-gate artifact; present the diff, not the raw state).

@@ -1,7 +1,7 @@
 ---
 name: cargo-hosting
 description: "Put something on the internet from Cargo — hosted web apps (Vite by default, other static frameworks detected) and serverless edge workers that answer HTTP requests, plus the deployments that build and promote them, the env vars and secrets a worker reads, running a worker locally, and custom domains and search indexing for public sites. Triggers: \"build me a dashboard for this\", \"host this app\", \"give me a URL to share\", \"deploy this\", \"I need a webhook endpoint\", \"make it live\", \"promote to production\", \"ship a UI for my team\", \"give my worker an API token\", \"set a secret on the worker\", \"Missing CARGO_API_TOKEN\", \"my app cannot call my worker\", \"run the worker locally\", \"put it on my own domain\", \"make the site indexable by Google\". Skip when: the app or worker should be declared as committed workspace code — use cargo-project."
-version: "1.2.0"
+version: "1.2.1"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -117,9 +117,9 @@ Next.js, SvelteKit and Nuxt are **not detected**: they fall through to the defau
 
 ### App env vars are public
 
-An app reads only env vars whose key starts with a **public prefix**: `VITE_`, `NEXT_PUBLIC_`, `PUBLIC_`, `NUXT_PUBLIC_`, `GATSBY_` or `REACT_APP_`. Any of these prefixes works whatever the framework. They come from workspace env vars and from app-level entries (`POST /v1/hosting/env-vars` with `"kind":"app"`, or CDK `defineApp({ env })`). Every one of them is compiled into a bundle anyone can download. For that reason:
+An app reads only env vars whose key starts with a **public prefix**: `VITE_`, `NEXT_PUBLIC_`, `PUBLIC_`, `NUXT_PUBLIC_`, `GATSBY_` or `REACT_APP_`. Any of these prefixes works whatever the framework. They come from workspace env vars and from app-level entries (`POST /v1/hosting/env-vars` with `"kind":"app"`, or `defineApp({ env })` in a project). Every one of them is compiled into a bundle anyone can download. For that reason:
 
-- **App env vars cannot be secret.** The API rejects `isSecret: true` with `secretNotSupportedForApp`, CDK `defineApp` throws on a `secret()` value, and secret workspace entries never reach an app build. Credentials belong in a worker that the app calls.
+- **App env vars cannot be secret.** The API rejects `isSecret: true` with `secretNotSupportedForApp`, a project's `defineApp` throws on a `secret()` value, and secret workspace entries never reach an app build. Credentials belong in a worker that the app calls.
 - Keys matching a platform key under any prefix (`*_CARGO_API_URL`, `*_CARGO_WORKSPACE_UUID`, `*_APP_BASE_PATH`, …) are reserved.
 - Values are baked in at build time, so a change needs a new deploy + promote.
 
@@ -173,7 +173,7 @@ A worker reads configuration from `c.env.KEY` (Hono context) or the `env` argume
 |---|---|---|
 | **Platform bindings** | automatic | `CARGO_API_URL`, `CARGO_WORKSPACE_UUID`, `CARGO_WORKER_UUID` |
 | **Workspace env vars** | `cargo-ai workspaceManagement envVar create --key K [--secret]` | every worker in the workspace (apps get only the non-secret, public-prefixed ones) |
-| **Worker env vars** | `cargo-ai hosting worker env set --worker-uuid <uuid> --key K [--secret]`, `defineWorker({ env })` in CDK, or `POST /v1/hosting/env-vars` | that worker only, and a worker entry overrides a workspace entry with the same key |
+| **Worker env vars** | `cargo-ai hosting worker env set --worker-uuid <uuid> --key K [--secret]`, `defineWorker({ env })` in a project, or `POST /v1/hosting/env-vars` | that worker only, and a worker entry overrides a workspace entry with the same key |
 
 **`CARGO_API_TOKEN` is not injected by default.** `createCargoApi(c.env)` throws `Missing CARGO_API_TOKEN…` until you provide one. The one exception: a worker with a service user set (`hosting worker update --uuid <uuid> --run-as-user-uuid <service-user-uuid>`) gets a temporary `CARGO_API_TOKEN` for that user bound at promote, unless its env already sets the key. Otherwise mint a workspace API token and store it as a secret before the first deploy:
 
@@ -186,7 +186,7 @@ cargo-ai workspaceManagement envVar create --key CARGO_API_TOKEN --secret \
 
 A workspace entry gives *every* worker that token. If only one worker should hold it, set it on that worker instead:
 
-- **CDK:** `defineWorker("my-worker", { path, env: { CARGO_API_TOKEN: secret("CARGO_API_TOKEN") } })`.
+- **Project:** `defineWorker("my-worker", { path, env: { CARGO_API_TOKEN: secret("CARGO_API_TOKEN") } })`.
 - **CLI:** `printf %s "$CARGO_API_TOKEN" | cargo-ai hosting worker env set --worker-uuid <uuid> --key CARGO_API_TOKEN --value - --secret` (omit `--value` to read `$CARGO_API_TOKEN` from the shell). `hosting worker env list --worker-uuid <uuid>` shows the keys, with secret values as `null`.
 - **API:** `POST /v1/hosting/env-vars` with `{"kind":"worker","workerUuid":"<uuid>","key":"CARGO_API_TOKEN","value":"…","isSecret":true}`. From TypeScript that is `api.hosting.envVars.create(…)` in `@cargo-ai/api`, and `list` takes `{ workerUuid }`.
 

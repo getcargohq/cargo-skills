@@ -1,8 +1,8 @@
 # Recipe: add a connector and a model sourced from it
 
 **Use when** the user wants a new data source plus a model built from it, managed
-in the project. The key move is wiring the model to the connector **by handle** — the CDK
-deploys the connector first and injects its dataset uuid.
+in the project. The key move is wiring the model to the connector **by handle** — the deploy
+puts the connector first and injects its dataset uuid.
 
 ## 1. Define the connector
 

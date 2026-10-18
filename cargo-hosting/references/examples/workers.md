@@ -72,7 +72,7 @@ cargo-ai hosting worker env set --worker-uuid <worker-uuid> --key CARGO_API_TOKE
 cargo-ai hosting worker env list --worker-uuid <worker-uuid>                                 # secret values come back as null
 ```
 
-In a CDK project, Option B is `defineWorker("my-api", { path, env: { CARGO_API_TOKEN: secret("CARGO_API_TOKEN") } })`.
+In a project, Option B is `defineWorker("my-api", { path, env: { CARGO_API_TOKEN: secret("CARGO_API_TOKEN") } })`.
 
 Then deploy and promote. Env vars are bound when a deployment is promoted, so **a variable added after the live deploy does nothing until the next `deployment create` + `promote`.**
 

@@ -6,7 +6,7 @@
 
 Nineteen agent skills that turn Claude Code, Codex, Cursor, and any [skills.sh](https://skills.sh)-compatible agent into a go-to-market engineering workstation: **build lead lists, find and verify emails and phone numbers, enrich companies and contacts through provider waterfalls, score and qualify leads, write outreach, sync to your CRM, and monitor buying signals** (job changes, funding rounds, tech-stack and hiring intent) — then make any of it a scheduled, always-on workflow.
 
-They run on the [Cargo CLI](https://www.npmjs.com/package/@cargo-ai/cli) against [Cargo](https://getcargo.ai), the AI-native revenue infrastructure: **138 integrations** (HubSpot, Salesforce, Attio, Pipedrive, Outreach, Salesloft, Lemlist, Smartlead, Instantly, Snowflake, BigQuery, Slack, Google Ads, Meta and LinkedIn audiences, and more), **50 credits-based data providers** with per-action costs documented up front, models and SQL over workspace storage, AI agents with RAG, alerting, hosted apps, and a full workspace-as-code CDK.
+They run on the [Cargo CLI](https://www.npmjs.com/package/@cargo-ai/cli) against [Cargo](https://getcargo.ai), the AI-native revenue infrastructure: **138 integrations** (HubSpot, Salesforce, Attio, Pipedrive, Outreach, Salesloft, Lemlist, Smartlead, Instantly, Snowflake, BigQuery, Slack, Google Ads, Meta and LinkedIn audiences, and more), **50 credits-based data providers** with per-action costs documented up front, models and SQL over workspace storage, AI agents with RAG, alerting, hosted apps, and GTM as Code projects that declare a whole workspace.
 
 ```
 ██████    ████    █████    ██████   ██████
@@ -248,7 +248,7 @@ Built-in recipes:
 
 ### Capabilities
 
-The standard library. Load when you need the syntax for a specific CLI domain — plus the three cross-cutting entries: **CDK** (the declarative mode), **Diagnostics** (forensic runbooks over the other surfaces), and **MCP** (the hosted server, the one surface that is not the CLI).
+The standard library. Load when you need the syntax for a specific CLI domain — plus the three cross-cutting entries: **Project** (the declarative mode), **Diagnostics** (forensic runbooks over the other surfaces), and **MCP** (the hosted server, the one surface that is not the CLI).
 
 | Domain            | What the agent learns                                                                                                                                              |
 | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -265,7 +265,7 @@ The standard library. Load when you need the syntax for a specific CLI domain �
 | **Hosting**       | Scaffold, deploy, and promote hosted apps (Vite SPAs) and edge workers (serverless HTTP handlers), manage their deployments, and give workers env vars and secrets                   |
 | **Mailboxes**     | Provision sending inboxes Cargo owns on a sending domain, run provider warm-up and the 5→40/day send ramp, deliver with the `sendEmail` action (0.1 credits/send), and read back threads, replies, opens, clicks, and the workspace suppression list |
 | **Workspace**     | Invite users, create and rotate API tokens, organize resources into folders, manage roles                                                                          |
-| **CDK** *(declarative)* | Define an entire workspace in code (`define*` builders) and deploy it with `cargo-ai project` (init → types → plan → deploy → destroy). Spans every resource type; use for workspace-as-code / reproducible / version-controlled setups |
+| **Project** *(declarative)* | Declare an entire workspace in a project — the folder holding `cargo.json` (`define*` builders) — and deploy it with `cargo-ai project` (init → types → plan → deploy → destroy). Spans every resource type; use for GTM as Code / reproducible / version-controlled setups |
 | **Diagnostics** *(cross-domain)* | Explain workflow behavior after the fact: trace why one run misbehaved, sweep a batch or play for errors grouped by root cause, profile where a play's credits go. Forensic runbooks over the run / orchestration-SQL / billing surfaces |
 | **MCP** *(not a CLI domain)* | Drive Cargo from the hosted MCP server at `https://mcp.getcargo.io/mcp` with no CLI installed: connect a client over OAuth or a bearer token, discover and price an action with `search_actions`, execute it over one record or a batch, poll it, read models — and route between the MCP tools and the CLI |
 

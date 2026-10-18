@@ -33,7 +33,7 @@ audience justifies, the answer is a smaller audience, not a bigger fleet.
 ## 2. Provision one mailbox and wait for `active`
 
 ```bash
-# The domain UUID does not come from the CLI — web app, or CDK defineDomain + cargo.state.json
+# The domain UUID does not come from the CLI — web app, or a project's defineDomain + cargo.state.json
 cargo-ai mailboxManagement mailbox create \
   --domain-uuid <domain-uuid> \
   --type google \
@@ -180,5 +180,5 @@ cargo-ai mailboxManagement mailbox remove <mailbox-uuid>
 billing stops — there is no pause. Threads, messages, and events already recorded stay
 readable; the suppression list is workspace-wide and is unaffected.
 
-If the mailbox was declared with CDK's `defineMailbox`, remove it there instead and
+If the mailbox was declared with a project's `defineMailbox`, remove it there instead and
 `cargo-ai project deploy`, or the next deploy will provision it again.
