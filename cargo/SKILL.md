@@ -1,7 +1,7 @@
 ---
 name: cargo
-description: "Router for the Cargo CLI skill bundle — load first for anything Cargo, and whenever a task spans two Cargo domains. Explains what each skill owns, declarative workspace-as-code (cargo-project) vs the imperative CLI, the UUID and slug flow between skills, async polling of runs and batches, end-to-end use cases, and the gotchas that fail silently (misnamed action inputs dropped without an error, run vs batch, model-uuid vs segment-uuid). Triggers: \"set up Cargo\", \"what can Cargo do\", \"which Cargo skill\", \"bootstrap my workspace\", \"I have a Cargo account\", \"cargo-ai …\", or any `cargo-ai` command whose domain you are unsure of. Skip when: the task obviously belongs to one skill — load that skill directly."
-version: "1.28.0"
+description: "Router for the Cargo CLI skill bundle — load first for anything Cargo, and whenever a task spans two Cargo domains. Explains what each skill owns, declarative GTM as Code projects (cargo-project) vs the imperative CLI, the UUID and slug flow between skills, async polling of runs and batches, end-to-end use cases, and the gotchas that fail silently (misnamed action inputs dropped without an error, run vs batch, model-uuid vs segment-uuid). Triggers: \"set up Cargo\", \"what can Cargo do\", \"which Cargo skill\", \"bootstrap my workspace\", \"I have a Cargo account\", \"cargo-ai …\", or any `cargo-ai` command whose domain you are unsure of. Skip when: the task obviously belongs to one skill — load that skill directly."
+version: "1.29.0"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -32,8 +32,8 @@ This repository contains 19 skills at the repo root: this **router** (`cargo`), 
 
 - **`cargo-quickstart`** — guided first-run demo. Fresh workspace → real deliverable (25 leads for the user's persona, with a cost receipt) in under two minutes, ending by saving the demo as a recurring play. Load for new users, demo/tour requests, or empty workspaces.
 - **`cargo-gtm`** — application library. The front door for any GTM task ("build a TAM list", "find 5 fintech CTOs", "monitor job changes"). Routes via internal recipes (`../cargo-gtm/recipes/*.md`) and provider playbooks (`../cargo-gtm/provider-playbooks/*.md`).
-- **Capability skills** — standard library. One per CLI domain (orchestration, storage, segmentation, connection, AI, content, context, analytics, billing, observability, hosting, cdk, mailbox management, workspace management), plus `cargo-diagnostics` (cross-domain forensics over runs, batches, and credit spend) and `cargo-mcp` (the hosted MCP server, the one surface that is not the CLI). Loaded by `cargo-gtm`, or directly when you need a specific CLI domain.
-- **`cargo-project`** — the declarative one. Where the other capability skills wrap **imperative** one-off `cargo-ai <domain>` calls, `cargo-project` defines the whole workspace as code (`define*` builders + `cargo-ai project deploy`) and reconciles it. It spans every resource type — see "Declarative vs imperative" below to route between it and the imperative skills.
+- **Capability skills** — standard library. One per CLI domain (orchestration, storage, segmentation, connection, AI, content, context, analytics, billing, observability, hosting, project, mailbox management, workspace management), plus `cargo-diagnostics` (cross-domain forensics over runs, batches, and credit spend) and `cargo-mcp` (the hosted MCP server, the one surface that is not the CLI). Loaded by `cargo-gtm`, or directly when you need a specific CLI domain.
+- **`cargo-project`** — the declarative one. Where the other capability skills wrap **imperative** one-off `cargo-ai <domain>` calls, `cargo-project` declares the whole workspace in a project — the folder holding `cargo.json` (`define*` builders + `cargo-ai project deploy`) — and reconciles it. It spans every resource type — see "Declarative vs imperative" below to route between it and the imperative skills.
 
 `cargo-gtm` delegates to capability skills; capability skills never reference `cargo-gtm` (one-way dependency).
 
@@ -199,13 +199,13 @@ If `gh` is missing or unauthenticated, don't fix it and don't offer a workaround
 
 ## Skills at a glance
 
-### Declarative (CDK) vs imperative (CLI) — pick the mode first
+### Declarative (project) vs imperative (CLI) — pick the mode first
 
 Two ways to create/manage the same Cargo resources. Decide which the task wants
 before picking a domain:
 
 - **Declarative → [`cargo-project`](../cargo-project/SKILL.md).** The user is managing
-  resources **as an artifact**: "set up / bootstrap a whole workspace as code",
+  resources **as an artifact**: "set up / bootstrap a whole workspace in a project",
   "make this reproducible / version-controlled / in git", "deploy these
   connectors + models + agents together", or anything that should be re-runnable
   and diffable across environments. Define it in `define*` files and
@@ -215,7 +215,7 @@ before picking a domain:
   "list connectors", "run this workflow", "query storage", "read a memory". A read,
   ad-hoc query, or single mutation that needn't live in code.
 
-When unsure: should the result be committed and re-deployable? Yes → CDK. A quick
+When unsure: should the result be committed and re-deployable? Yes → a project. A quick
 action or a read → the capability skill.
 
 ### Onboarding skill
@@ -252,7 +252,7 @@ Load for a specific CLI domain. The first link in each row jumps to the actual S
 | [`cargo-content`](../cargo-content/SKILL.md) ([recap](#cargo-content))                                      | Upload and organize knowledge files, build native/connector-backed knowledge libraries for RAG (the `content` domain) |
 | [`cargo-context`](../cargo-context/SKILL.md) ([recap](#cargo-context))                                      | Browse/read/write/edit the workspace's git-backed GTM context repo, run commands in its runtime sandbox, inspect the knowledge graph |
 | [`cargo-hosting`](../cargo-hosting/SKILL.md) ([recap](#cargo-hosting))                                      | Scaffold, deploy, and promote hosted apps (Vite SPAs) and edge workers (serverless HTTP handlers), manage their deployments, and give workers env vars and secrets |
-| [`cargo-project`](../cargo-project/SKILL.md) ([recap](#cargo-project))                                                   | **Declarative — spans every resource type.** Define a whole workspace in code (`define*` builders) and deploy it with `cargo-ai project` (init → types → plan → deploy). Use for workspace-as-code / reproducible / version-controlled setups; see "Declarative vs imperative" above. |
+| [`cargo-project`](../cargo-project/SKILL.md) ([recap](#cargo-project))                                                   | **Declarative — spans every resource type.** Declare a whole workspace in a project (`define*` builders) and deploy it with `cargo-ai project` (init → types → plan → deploy). Use for GTM as Code / reproducible / version-controlled setups; see "Declarative vs imperative" above. |
 | [`cargo-mailbox-management`](../cargo-mailbox-management/SKILL.md) ([recap](#cargo-mailbox-management))        | Provision sending mailboxes Cargo owns, run warm-up and the 5→40/day send ramp, send with the `sendEmail` action, and read threads, replies, delivery events, and suppressions |
 | [`cargo-workspace-management`](../cargo-workspace-management/SKILL.md) ([recap](#cargo-workspace-management)) | Invite users, create API tokens, organize folders, manage roles, report CLI issues to management   |
 | [`cargo-mcp`](../cargo-mcp/SKILL.md) ([recap](#cargo-mcp))                                                   | Drive Cargo from the hosted MCP server at `https://mcp.getcargo.io/mcp` with no CLI install — connect a client, discover and price an action, execute one record or a batch, poll it, read models; and route between the MCP tools and the CLI |
@@ -293,9 +293,9 @@ Route between the CLI and either MCP surface by shape of the request:
 | | **These skills (CLI)** | **An MCP server** |
 |---|---|---|
 | What it is | The whole CLI surface, every domain | The platform runtime tools, plus whatever the workspace chose to expose |
-| Best for | Anything that builds something reusable: workflows, plays, schema changes, CDK deploys, diagnostics, exports, warehouse SQL | In-conversation execution: look this record up, enrich this list, run this one approved tool |
+| Best for | Anything that builds something reusable: workflows, plays, schema changes, project deploys, diagnostics, exports, warehouse SQL | In-conversation execution: look this record up, enrich this list, run this one approved tool |
 | Cost control | Full pilot → approval → receipt discipline ([`../cargo-gtm/references/cost-discipline.md`](../cargo-gtm/references/cost-discipline.md)) | Per-call; `search_actions` returns each action's credit cost before you run it |
-| Reproducible | Yes — commands, plays, and CDK files are artifacts | No — a tool call leaves no artifact behind |
+| Reproducible | Yes — commands, plays, and project files are artifacts | No — a tool call leaves no artifact behind |
 
 Rule of thumb: **anything the user will want to re-run or version belongs in the CLI.** Never fan an MCP tool out record-by-record over a list — that is what `execute_action_batch` (and `orchestration action execute-batch` on the CLI) exists for, and it is cheaper and observable. Conversely, when the workspace has already curated a tool for a job, calling it beats hand-assembling the same thing from raw actions.
 
@@ -412,8 +412,8 @@ over what gets spent; prefer the command when the user just wants it done.
 - `cargo-workspace-management` provides auth context for every skill — set it up first.
 - `cargo-storage`, `cargo-connection`, and `cargo-ai` are peer skills that supply UUIDs to `cargo-orchestration`. They don't depend on each other.
 - `cargo-content` owns workspace **files** and **libraries** (the `content` domain). It produces file/library UUIDs that `cargo-ai` consumes as agent release `resources` (RAG). Uploaded content files also surface read-only under `.files/` in the `cargo-context` runtime sandbox.
-- `cargo-mailbox-management` owns **sending inboxes** (the `mailboxManagement` domain) — provisioning, warm-up, the send ramp, threads, events, and the workspace suppression list. It deliberately does **not** send: delivery is the `sendEmail` native action under `cargo-orchestration`, which is why a send inherits orchestration's pacing, retry and credit accounting. The mailbox itself is also declarable as code via CDK's `defineMailbox` (with `defineDomain` for the sending domain).
-- `cargo-project` is **cross-cutting**: it's a declarative *authoring mode* that produces the very connectors/models/plays/agents/etc. the imperative capability skills manage one at a time. Route to it when the task is "manage the workspace as code" (reproducible, in git, multi-resource); route to the imperative domain skills for one-off ops, reads, and ad-hoc queries. See "Declarative vs imperative" under Skills at a glance.
+- `cargo-mailbox-management` owns **sending inboxes** (the `mailboxManagement` domain) — provisioning, warm-up, the send ramp, threads, events, and the workspace suppression list. It deliberately does **not** send: delivery is the `sendEmail` native action under `cargo-orchestration`, which is why a send inherits orchestration's pacing, retry and credit accounting. The mailbox itself is also declarable in a project via `defineMailbox` (with `defineDomain` for the sending domain).
+- `cargo-project` is **cross-cutting**: it's a declarative *authoring mode* that produces the very connectors/models/plays/agents/etc. the imperative capability skills manage one at a time. Route to it when the task is "manage the workspace from a project" (GTM as Code: reproducible, in git, multi-resource); route to the imperative domain skills for one-off ops, reads, and ad-hoc queries. See "Declarative vs imperative" under Skills at a glance.
 - `cargo-context` is **orthogonal** to the workflow-execution flow. It touches the git-backed GTM knowledge base (markdown/MDX), not storage or workflow runs. Use it for capturing/editing the workspace's prose context — personas, plays, proof, objections, signals — and for inspecting the typed knowledge graph.
 - For SQL queries against storage, use `cargo-ai storage query execute "<sql>"` (tables as `<datasetSlug>.<modelSlug>`). Load `cargo-storage` to discover dataset and model slugs, and to fetch the DDL when you need column types or the SQL dialect.
 - For SQL queries against orchestration runtime tables (`runs`, `batches`, `spans`, `records`) — error rates, per-node failures, time-series — use `cargo-ai orchestration query execute "<sql>"`. Workspace scoping is automatic; tables are referenced without a schema prefix.
@@ -422,7 +422,7 @@ over what gets spent; prefer the command when the user just wants it done.
 - After runs complete, load `cargo-analytics` to download results or measure performance. **For action output retrieval, prefer `cargo-ai orchestration run download-outputs` over `run download` — the former returns a signed-URL CSV/JSON of just the output node's data.**
 - Load `cargo-billing` to understand credit consumption for any of the above.
 - When a run failed, a run "succeeded but looks wrong", a batch has errors, or a play costs too much, load `cargo-diagnostics` — it sequences the `run get` / orchestration-SQL / billing surfaces into forensic runbooks (trace one run, sweep a batch, profile credit spend).
-- To be told about a problem *before* you go looking — an error-rate spike, a cost ceiling, a slow node, a stalled sync, a workflow that stopped running — load `cargo-observability`. It creates **alerts**: scheduled threshold checks over the same telemetry (`spans`/`runs`/`records`), a model's health, or a SQL query, that fire actions on breach. Diagnostics is reactive (explain what happened); observability is proactive (watch for it). Alerts can also be declared as code via CDK's `defineAlert`.
+- To be told about a problem *before* you go looking — an error-rate spike, a cost ceiling, a slow node, a stalled sync, a workflow that stopped running — load `cargo-observability`. It creates **alerts**: scheduled threshold checks over the same telemetry (`spans`/`runs`/`records`), a model's health, or a SQL query, that fire actions on breach. Diagnostics is reactive (explain what happened); observability is proactive (watch for it). Alerts can also be declared in a project via `defineAlert`.
 
 ---
 
@@ -516,7 +516,7 @@ The non-obvious rules for each skill — the things that fail silently or cost m
 - **Empty window vs real zero.** Most metrics report an idle window as `empty` (healthy, no fire). Only `count` and `recordsCount` return a real `0` — pair with `lte 0` for a **dead-man's switch** (alert when a workflow *stops*, a model *empties*).
 - **Firing is at-most-once and costs credits.** Actions fire as runs (`runUuids` on the event); a sustained breach re-fires once per tick it's still true, never on the same rows twice. If an action calls a paid provider, apply `../cargo-gtm/references/cost-discipline.md` — a scheduled alert re-bills on every breach.
 - **`--enabled` is strict** (`true`/`false` only); model-scope `filter` uses the segmentation shape spelled **`conjonction`**.
-- Permissions are `observability:read` / `observability:write` (not admin-only). The declarative equivalent is CDK's `defineAlert` — see `cargo-project`.
+- Permissions are `observability:read` / `observability:write` (not admin-only). The declarative equivalent is a project's `defineAlert` — see `cargo-project`.
 
 ### cargo-storage
 
@@ -594,7 +594,7 @@ See `../cargo-ai/SKILL.md` for model and temperature guidance by use case.
 **Critical rules:**
 
 - `--slug` is unique **per workspace**; the live host is `<slug>-<workspace prefix>.<root>`, and apps and workers have different roots. Read `url` from `get` instead of composing it. App → worker calls are therefore **cross-origin**: the worker must answer CORS.
-- **`CARGO_API_TOKEN` is never injected.** `createCargoApi` throws without it. Mint a token and store it as a secret env var: workspace-wide with `workspaceManagement envVar create --secret`, or per worker with `hosting worker env set --worker-uuid <uuid> --key CARGO_API_TOKEN --secret` (value from `--value -` on stdin, or the local variable of the same name), or CDK `defineWorker({ env })`. Env vars bind at promote, so **redeploy + promote after any change**.
+- **`CARGO_API_TOKEN` is never injected.** `createCargoApi` throws without it. Mint a token and store it as a secret env var: workspace-wide with `workspaceManagement envVar create --secret`, or per worker with `hosting worker env set --worker-uuid <uuid> --key CARGO_API_TOKEN --secret` (value from `--value -` on stdin, or the local variable of the same name), or `defineWorker({ env })` in a project. Env vars bind at promote, so **redeploy + promote after any change**.
 - A worker `catch` that returns a sanitized error must `console.error(err)` first. Only uncaught errors reach the logs with a stack.
 - **Deploying ≠ going live.** `deployment create` builds; the URL only moves on `deployment promote`. `deployment get-promoted` shows what's live.
 - `--source` is the **package root**, not `dist/` — the build runs server-side: the app's own `build` script if `package.json` declares one (it owns the whole build), otherwise the detected framework's default (`vite build`, `next build`, …); bundling for workers.
@@ -606,15 +606,15 @@ See `../cargo-ai/SKILL.md` for model and temperature guidance by use case.
 
 ### cargo-project
 
-entire Cargo workspace in TypeScript (`defineConnector`/`defineModel`/`defineAgent`/
+Declare an entire Cargo workspace in a project, the folder holding `cargo.json`, in TypeScript (`defineConnector`/`defineModel`/`defineAgent`/
 `definePlay`/`defineTool`/`defineMcpServer`/`defineContext`/`defineSegment`/
 `defineFolder`/`defineFile`/`defineWorker`/`defineApp`/`defineAlert`/`defineDomain`/
 `defineMailbox`) and reconcile
 it to live infra with `cargo-ai project`. Spans **every** resource type, so it overlaps
 every imperative capability skill — route with "Declarative vs imperative" above.
 
-**Lifecycle:** `project init` (scaffold from `getcargohq/cargo-manifest` — context, cadence
-and evals, with the resources it deploys in `infra/`) → `project types` (type config
+**Lifecycle:** `project init` (scaffold the Cargo template, `getcargohq/cargo-manifest` — context, cadence
+and evals; `cargo.json` and `cargo.state.json` at the root, the resources it deploys in `infra/`) → `project types` (type config
 against the workspace) → author `define*` files → `project plan` (diff against the workspace-held state; creates nothing) →
 `project deploy` (create/update, write state) → `project destroy`. Plus `refresh` (drift),
 `import` (adopt existing), `pull` (generate `define*` from a live workspace and adopt it),
@@ -626,6 +626,11 @@ against the workspace) → author `define*` files → `project plan` (diff again
   not the state. The deploy state lives in the workspace and is the *only* handle on
   deployed plays/agents/alerts (no slug); lose the pointer and `project state bind`
   recovers it, lose the state and they orphan. `project state list|create|bind|remove`.
+- **A project is the folder holding `cargo.json`** (`{ "resources": "infra" }`). Every
+  command walks up to the nearest one (as far as the repo root) and stops without it,
+  printing `echo '{ "resources": "infra" }' > cargo.json`. `cargo.state.json` sits beside
+  `cargo.json`, never in `infra/`; a leftover `infra/cargo.state.json` stops commands with
+  the `mv` to run. A repo with several projects has one `cargo.json` each.
 - **Wire by handle, not `.uuid`** — pass a `define*` handle or `xxRef("uuid")`.
 - **Three value helpers, not one.** `secret("ENV_VAR")` reads *your* environment at
   deploy and stays out of state and the content hash (so a rotated secret needs
@@ -669,7 +674,7 @@ copies into the project and adapts, not a template to fill in:
 - **Nothing here is async** — no run to poll. The exception that looks like one: `mailbox create` returns `status: "pending"`, cleared by `mailbox refresh-status`, not by `run get`.
 - `--type outlook` is accepted by the flag and **always** fails (`transportNotSupported` — Graph delivery hasn't shipped). `--statuses`/`--kinds`/`--reasons` are comma-separated **with no spaces**. `mailbox list` is the only list with **no `count`**, and `mailbox`/`suppression` lists have **no default limit** (max 1000) where message/thread/event default to 50.
 - **`bounced` has no producer yet** — nothing parses delivery-status notifications, so bounces write no events and do not auto-suppress. Never report an empty bounce count as a clean list.
-- **There is no CLI surface for sending domains.** `mailbox create --domain-uuid` is required and `domainManagement` has no `cargo-ai` commands — take the UUID from the web app or CDK's `defineDomain`. Permissions are `mailboxManagement:read` / `:write` (not admin-only).
+- **There is no CLI surface for sending domains.** `mailbox create --domain-uuid` is required and `domainManagement` has no `cargo-ai` commands — take the UUID from the web app or a project's `defineDomain`. Permissions are `mailboxManagement:read` / `:write` (not admin-only).
 
 ### cargo-workspace-management
 

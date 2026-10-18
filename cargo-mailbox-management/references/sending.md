@@ -127,7 +127,7 @@ The practical substitutes, in order:
 
 ## In a workflow or play
 
-In a CDK `defineWorkflow` body the same action is the `sendEmail(...)` helper:
+In a project's `defineWorkflow` body the same action is the `sendEmail(...)` helper:
 
 ```ts
 sendEmail({

@@ -11,15 +11,15 @@ For every flag, see [`../references/commands.md`](../references/commands.md).
 
 ```bash
 # Compile the graph and diff against the deploy state cargo.state.json points at. Creates nothing.
-cargo-ai project plan --dir my-workspace
+cargo-ai project plan --dir acme-gtm
 
 # Create/update resources in dependency order; write cargo.state.json.
-cargo-ai project deploy --dir my-workspace          # prompts for confirmation
-cargo-ai project deploy --dir my-workspace --yes    # non-interactive (CI)
+cargo-ai project deploy --dir acme-gtm          # prompts for confirmation
+cargo-ai project deploy --dir acme-gtm --yes    # non-interactive (CI)
 
 # Tear down.
-cargo-ai project destroy --dir my-workspace --target model:contacts   # one resource
-cargo-ai project destroy --dir my-workspace --all                     # everything in state
+cargo-ai project destroy --dir acme-gtm --target model:contacts   # one resource
+cargo-ai project destroy --dir acme-gtm --all                     # everything in state
 ```
 
 Re-running `deploy` only changes what changed — an unchanged workspace is a no-op.
@@ -37,8 +37,11 @@ created. It lives **in your workspace**; the repo commits only a pointer to it:
 { "stateUuid": "8f2c…" }
 ```
 
-`cargo-ai project init` creates the state and writes that `cargo.state.json`, so the
-pointer is in the scaffold commit. The state records only uuids, hashes and outputs
+`cargo-ai project init` creates the state and writes that `cargo.state.json` beside
+`cargo.json`, so the pointer is in the scaffold commit. The file always sits in the
+project's folder (the one holding `cargo.json`), never inside `infra/`: a leftover
+`infra/cargo.state.json` stops every command with the `mv` to run (see
+[`../references/troubleshooting.md`](../references/troubleshooting.md)). The state records only uuids, hashes and outputs
 per resource — **never secret values**.
 
 **Commit the pointer.** Without the uuid a fresh checkout cannot find its state, and
@@ -47,7 +50,7 @@ old state tracks. The state is still the only handle on a deployed **play**,
 **agent** or **alert**, which have no slug. If the pointer is lost, recover it with `state bind` below, or
 re-establish links one resource at a time with `import`.
 
-### One state per repo, ten per workspace
+### One state per project, ten per workspace
 
 ```bash
 cargo-ai project state list            # every state in this workspace, and which one this project is on
@@ -57,7 +60,7 @@ cargo-ai project state bind <uuid>     # point cargo.state.json at an existing s
 
 `state create` takes `--force` to create a new state even though `cargo.state.json`
 already names one, and `--json` to print the created state. `state list` takes
-`--json`. All of them take `--dir <path>`.
+`--json`. All of them take `--dir <path>` (where the `cargo.json` lookup starts).
 
 Deleting a state: `state remove <uuid>` drops the state without touching the live
 resources it tracked. It refuses the state `cargo.state.json` points at unless you
@@ -76,7 +79,7 @@ deploying from a state that no longer exists.
 
 ### Git-ignore the working files
 
-Git-ignore the generated types and the CDK's working files (but **not**
+Git-ignore the generated types and the deploy's working files (but **not**
 `cargo.state.json`). `cargo-ai project init` scaffolds this:
 
 ```gitignore
@@ -89,7 +92,7 @@ cargo.state.audit.jsonl
 
 The `cargo.state.lock` prevents two deploys racing; `--force` steals a stale lock.
 
-**Workspace guard:** state records the workspace it was deployed to; the CDK
+**Workspace guard:** state records the workspace it was deployed to; the deploy
 refuses to `deploy`/`destroy` when the state's workspace ≠ the currently selected
 workspace, so you can't accidentally reconcile a dev definition into prod. Select
 the right workspace at `login` (or with the workspace flag) before deploying.
@@ -101,7 +104,7 @@ that would make a typo destructive. To also remove resources that are in state b
 no longer in code:
 
 ```bash
-cargo-ai project deploy --dir my-workspace --prune
+cargo-ai project deploy --dir acme-gtm --prune
 ```
 
 Prune deletes in reverse dependency order (dependents before their dependencies).
@@ -110,12 +113,12 @@ state, not deleted.
 
 ## Drift — `refresh` and `deploy --refresh`
 
-A resource can change outside the CDK (someone edits an agent in the Cargo UI).
-The CDK captures a fingerprint of each resource at deploy and compares on refresh:
+A resource can change outside the project (someone edits an agent in the Cargo UI).
+The deploy captures a fingerprint of each resource at deploy and compares on refresh:
 
 ```bash
-cargo-ai project refresh --dir my-workspace          # read-only: report what drifted
-cargo-ai project deploy  --dir my-workspace --refresh # re-read live, re-apply your code over drift
+cargo-ai project refresh --dir acme-gtm          # read-only: report what drifted
+cargo-ai project deploy  --dir acme-gtm --refresh # re-read live, re-apply your code over drift
 ```
 
 `refresh` reports resources changed or deleted out-of-band; `deploy --refresh`
@@ -123,11 +126,11 @@ makes your code the source of truth again.
 
 ## Adopting existing resources — `import`
 
-To bring an already-live resource under CDK management, bind it into state by
+To bring an already-live resource under the project, bind it into state by
 mapping its **code id** to its **live uuid**:
 
 ```bash
-cargo-ai project import model:contacts 6f0c8e2a-… --dir my-workspace
+cargo-ai project import model:contacts 6f0c8e2a-… --dir acme-gtm
 ```
 
 The code id is `kind:slug` (e.g. `connector:hubspot`, `model:contacts`,
@@ -144,7 +147,7 @@ workspace-held state; in `cargo.state.bak.json` for a legacy inline file). If a 
 went wrong, restore the snapshot:
 
 ```bash
-cargo-ai project rollback --dir my-workspace
+cargo-ai project rollback --dir acme-gtm
 ```
 
 This restores the state file — it does not undo live API changes already made;
@@ -157,7 +160,7 @@ deploy the reconciler uploads the bundle, waits for the build, and promotes it �
 so a deploy touching a worker/app takes longer. Author worker runtime code with
 `createWorker` (`@cargo-ai/worker-sdk`); the bundle is uploaded as source and the
 hosting build runs `npm ci` and compiles the entrypoint (`src/index.ts`,
-`src/index.js`, `index.ts` or `index.js`). At define time the CDK checks that
+`src/index.js`, `index.ts` or `index.js`). At define time the builder checks that
 `manifest.json`, `package.json` and one entrypoint exist (an app needs only
 `package.json`); `package-lock.json` is checked at upload. The live URL is exposed on the handle
 (`webhook.url`, `dashboard.url`). For imperative one-off hosting operations, see

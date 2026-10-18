@@ -5,7 +5,7 @@ mailboxes; this page is where those mailboxes live, what it costs, and the two c
 whether the fleet lands in inboxes.
 
 `domainManagement` has no `cargo-ai` command surface. Everything here is either a direct API call or
-a CDK declaration.
+a `defineDomain` declaration in a project.
 
 ## Checking availability and price
 

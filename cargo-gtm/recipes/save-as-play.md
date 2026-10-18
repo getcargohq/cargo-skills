@@ -112,9 +112,9 @@ cargo-ai orchestration batch create \
 
 Play mechanics (batch data kinds, `playNotCompatible`, monitoring): [`../../cargo-orchestration/references/examples/plays.md`](../../cargo-orchestration/references/examples/plays.md).
 
-## Managing the workspace as code?
+## Managing the workspace from a project?
 
-If the workspace is CDK-managed (`cargo-ai project` — resources defined in TypeScript and deployed via plan/deploy), don't create the play imperatively: add it as a `definePlay`/`defineTool` in the CDK project instead, so it's versioned with the rest of the infra. An imperatively-created play in a CDK workspace is drift.
+If the workspace is managed by a project (`cargo-ai project` — resources defined in TypeScript and deployed via plan/deploy), don't create the play imperatively: add it as a `definePlay`/`defineTool` in the project instead, so it's versioned with the rest of the infra. An imperatively-created play in a project-managed workspace is drift.
 
 ## Close the loop
 

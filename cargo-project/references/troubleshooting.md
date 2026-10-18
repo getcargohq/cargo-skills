@@ -19,7 +19,7 @@ terse "Invalid configuration" summary.
 ## `unresolved placeholder "${NAME}"`
 
 A `secret("NAME")` or `env("NAME")` had no matching environment variable at deploy.
-The CDK refuses to send a literal `${NAME}` to the API. Export it first:
+The deploy refuses to send a literal `${NAME}` to the API. Export it first:
 
 ```bash
 export NAME=...
@@ -33,13 +33,40 @@ refuse when that ≠ the currently selected workspace (a guard against reconcili
 dev definition into prod). Select the right workspace at `login`, or use a separate
 state file per environment.
 
-## `.cargo-ai/` or `cargo.state.json` landed in the wrong directory
+## `No cargo.json in <dir> or above it`
 
-On CLI ≥ 1.0.83 this should not happen from inside the repo: commands walk **up** to
-the package root where `@cargo-ai/cdk` is declared, then back **down** to the resource
-directory (`infra/`). If the files still land somewhere unexpected, you are either on
-an older CLI, outside the repo entirely, or in a tree with no `@cargo-ai/cdk` in any
-parent `package.json`. Pass `--dir <project-root>` explicitly.
+Every `cargo-ai project` command (except `init` and `cookbook`) walks up from where it
+runs, as far as the repo root, to the nearest `cargo.json`, and stops when there is
+none. It no longer guesses the project from an `infra/` folder or a `package.json`
+(`@cargo-ai/cdk` ≥ 1.0.112). Add the file at the project's root — the folder that
+holds, or should hold, `cargo.state.json` — naming the folder of `.ts` resources:
+
+```bash
+echo '{ "resources": "infra" }' > cargo.json
+```
+
+`"executions": ["outputs"]` is optional (`outputs/` beside `cargo.json` is the
+default). A repo with several projects has one `cargo.json` per project; commands use
+the nearest. `--dir <path>` changes where the lookup starts, not the rule. A
+`cargo.json` that is not JSON, has unknown keys, or names a folder outside its own
+also stops the command, with the reason.
+
+## `This project's cargo.state.json is at infra/cargo.state.json, but it lives in the project's folder`
+
+`cargo.state.json` lives beside `cargo.json`, never inside the resource folder. An
+older project kept it in `infra/`; reading the root one instead would point the
+deploy at another state (or start an empty one and orphan everything the old file
+tracks), so the command stops and prints the move. Run it from the project's folder
+and commit the result:
+
+```bash
+mv infra/cargo.state.json cargo.state.json
+git add -A cargo.state.json infra/cargo.state.json && git commit -m "Move the state pointer beside cargo.json"
+```
+
+`This project has two cargo.state.json files` means both exist: keep the one that
+points at this project's state (`cargo-ai project state list` shows which uuid that
+is) beside `cargo.json`, and delete the other.
 
 ## `uses.<connector>.<action>` is untyped, or `config` isn't type-checked
 

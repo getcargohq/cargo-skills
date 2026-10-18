@@ -3,9 +3,10 @@
 Every Cargo resource has a `define*` builder imported from `@cargo-ai/cdk`. Each
 returns a **handle**; you wire resources together by passing one handle into
 another builder. **Importing a `.ts` file is registration** — each `define*` call
-registers itself as a side effect, so there is no manifest to maintain. The loader
-imports every `.ts` under the project directory (skipping worker/app bundle
-sub-directories, which have their own `package.json`).
+registers itself as a side effect, so there is no list to maintain. The loader
+imports every `.ts` under the folder the project's `cargo.json` names in `resources`
+(`infra/` in a scaffolded repo), skipping worker/app bundle sub-directories, which
+have their own `package.json`.
 
 For the exact spec fields and outputs of each builder, see
 [`../references/resources.md`](../references/resources.md).
@@ -21,7 +22,7 @@ export const contacts = defineModel("contacts", {
 });
 ```
 
-The CDK reads the dependency (connector → model), deploys the connector first, and
+The deploy reads the dependency (connector → model), deploys the connector first, and
 injects its real dataset uuid at deploy time. Your variable graph *is* the
 dependency graph.
 
@@ -145,15 +146,15 @@ Organization & knowledge:
 // Folder — per-kind (a "model" folder and an "agent" folder are separate).
 export const modelsFolder = defineFolder("crm-models", { kind: "model", name: "CRM" });
 
-// RECOMMENDED: route every CDK-managed resource into a dedicated, clearly
+// RECOMMENDED: route every project-managed resource into a dedicated, clearly
 // labelled folder (via each builder's `folder:`), so a human in the UI sees at a
 // glance that these resources are owned by code and shouldn't be hand-edited —
 // manual UI changes read back as drift on the next `plan`. Because folders are
 // per-kind, give each kind its own but share ONE short, recognizable prefix, e.g.
-// `🔒 CDK` (or `🔒 CDK Models`, `🔒 CDK Agents`). Keep names short — long labels
+// `🔒 Project` (or `🔒 Project Models`, `🔒 Project Agents`). Keep names short — long labels
 // truncate in the folder tree; the lock emoji is the "don't touch" cue.
-export const cdkModels = defineFolder("cdk-models", { kind: "model", name: "🔒 CDK Models" });
-export const cdkAgents = defineFolder("cdk-agents", { kind: "agent", name: "🔒 CDK Agents" });
+export const projectModels = defineFolder("project-models", { kind: "model", name: "🔒 Project Models" });
+export const projectAgents = defineFolder("project-agents", { kind: "agent", name: "🔒 Project Agents" });
 
 // File — content uploaded from a local path (hashed at define time, so edits show as drift).
 export const playbook = defineFile("playbook", {

@@ -10,7 +10,7 @@ Correct — this is a real gap, not a missing flag. `mailbox create` requires a 
 UUID, and `domainManagement` has an API but **no `cargo-ai` commands**. Two ways out:
 
 - **Web app** — open the sending domain in Cargo and take the UUID from the URL.
-- **CDK** — declare it with `defineDomain` (`adopt: true` for a domain already bought in the
+- **Project** — declare it with `defineDomain` (`adopt: true` for a domain already bought in the
   app), `cargo-ai project deploy`, and read the UUID back from `cargo.state.json`. See
   [`../../cargo-project/SKILL.md`](../../cargo-project/SKILL.md).
 
@@ -61,7 +61,7 @@ domain and look at what was sent, not at the mailbox.
 ### `--type outlook` never works
 
 The flag accepts it, the API refuses it, every time, with `transportNotSupported`. Outlook
-mailboxes only expose a Graph transport and Graph delivery has not shipped. CDK's
+mailboxes only expose a Graph transport and Graph delivery has not shipped. A project's
 `defineMailbox` omits `outlook` from its type union for this reason. Use `google`, `shared`,
 or `private`.
 

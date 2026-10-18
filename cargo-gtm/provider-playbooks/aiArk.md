@@ -22,7 +22,7 @@ LinkedIn-anchored people/company data with an unusually cheap enrich-and-email c
 | `countCompanies` | **free** | same account filter **groups** as `searchCompanies` (no `limit`) | Returns `{"count": N}` — the size of the pool a search would draw from. |
 | `countPeople` | **free** | same filter **groups** as `searchPeople` (no `limit`) | Returns `{"count": N}` — pool size before paying per record. |
 
-Two extractors (`fetchPeople`, `fetchCompanies`) also exist for syncing search results straight into a model — same filter shape, bulk export up to 10,000 rows. Use them from a CDK/model-sync context; recipes here use the actions.
+Two extractors (`fetchPeople`, `fetchCompanies`) also exist for syncing search results straight into a model — same filter shape, bulk export up to 10,000 rows. Use them from a project or a model sync; recipes here use the actions.
 
 ## What it's for
 

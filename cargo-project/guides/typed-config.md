@@ -5,7 +5,7 @@ called through `uses.<key>.<action>` in workflow bodies are typed against **your
 Those types aren't bundled (they're workspace-specific) — you generate them:
 
 ```bash
-cargo-ai project types --dir my-workspace
+cargo-ai project types --dir acme-gtm
 ```
 
 Typing is a **bonus, never a gate**: an integration you haven't synced (or a

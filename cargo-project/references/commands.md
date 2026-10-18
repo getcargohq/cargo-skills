@@ -1,13 +1,14 @@
 # Command reference — `cargo-ai project`
 
-Every subcommand except `init` and `cookbook` accepts `--dir <path>` (the project root, default `.`), and most accept `--json`
-(machine-readable output; not `types`, `rollback` or `state bind`). Run from the project root so `.cargo-ai/` and
-`cargo.state.json` land in the right place. Confirm the surface live with
-`cargo-ai project <subcommand> --help`.
+Every subcommand except `init` and `cookbook` accepts `--dir <path>` (where to start looking for `cargo.json`, default `.`), and most accept `--json`
+(machine-readable output; not `types`, `rollback` or `state bind`). Each one walks up from there to the nearest
+`cargo.json` (stopping at the repo root) and runs in that project; with none it stops and prints
+`echo '{ "resources": "infra" }' > cargo.json`. `cargo.state.json` is read and written beside `cargo.json`.
+Confirm the surface live with `cargo-ai project <subcommand> --help`.
 
 | Command | What it does |
 |---|---|
-| `cargo-ai project init <directory>` | Scaffold a GTM repo from `getcargohq/cargo-manifest`, with the CDK project in `infra/`. `--name <name>`, `--cookbook <slug>` (install a cookbook into the new project), `--force` (write into a non-empty directory). There is no template flag: the scaffold never varies, and what varies is the cookbook layered on top. |
+| `cargo-ai project init <directory>` | Scaffold a GTM repo from the Cargo template (`getcargohq/cargo-manifest`): `cargo.json` and `cargo.state.json` at the root, the resources in `infra/`. `--name <name>`, `--cookbook <slug>` (install a cookbook into the new project), `--force` (write into a non-empty directory). There is no template flag: the scaffold never varies, and what varies is the cookbook layered on top. |
 | `cargo-ai project add cookbook/<slug>` | Copy a worked example into this project — resources under `infra/<slug>/`, any helper scripts under `scripts/<slug>/`, and its procedure (`SKILL.md`, `references/`, `evals/`) under **both** `.claude/skills/<slug>/` and `.agents/skills/<slug>/`. Runs `check` afterwards so a duplicate slug surfaces immediately; never deploys, and never touches your `package.json`/`tsconfig.json`. `--overwrite` (replace existing files; default skips them), `--yes`. Omit the address to choose interactively. |
 | `cargo-ai project add connector/<integration>` | Authorize a connector in the browser and write its `defineConnector`. `--connector-uuid <uuid>` adopts one already created there. |
 | `cargo-ai project cookbook list\|search\|view` | Browse the cookbooks `add` installs — `view cookbook/<slug>` shows what one deploys, what it will ask you for, and its declared adaptations. |
@@ -25,7 +26,7 @@ Every subcommand except `init` and `cookbook` accepts `--dir <path>` (the projec
 
 ## Common flags
 
-- `--dir <path>` — project root (default `.`).
+- `--dir <path>` — where the `cargo.json` lookup starts (default `.`).
 - `--yes` — skip the confirmation prompt (**required in CI / non-interactive**).
 - `--json` — machine-readable output.
 - `--force` — steal a stale `cargo.state.lock`.

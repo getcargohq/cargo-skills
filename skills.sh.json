@@ -61,7 +61,7 @@
     },
     {
       "title": "Ship and administer",
-      "description": "Hosted apps and edge workers, sending mailboxes, workspace-as-code, members, tokens, and folders.",
+      "description": "Hosted apps and edge workers, sending mailboxes, GTM as Code projects, members, tokens, and folders.",
       "skills": [
         "cargo-hosting",
         "cargo-project",

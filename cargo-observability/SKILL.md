@@ -1,7 +1,7 @@
 ---
 name: cargo-observability
 description: "Watch a Cargo workspace and get told when something breaks — scheduled threshold alerts over workflow telemetry (spans, runs, records), a storage model freshness or row count, or any SQL query, firing a connector, tool, or agent when a metric breaches. Triggers: \"alert me when\", \"notify me if\", \"let me know when the error rate\", \"monitor this workflow\", \"tell me if the sync stops\", \"warn me before I run out of credits\", \"dead man’s switch\", \"is this still running\", \"set up monitoring\", plus listing, previewing, editing, and reviewing an alert firing history. Skip when: diagnosing something that already went wrong — use cargo-diagnostics."
-version: "1.1.0"
+version: "1.1.1"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -126,9 +126,9 @@ The lifecycle — cron windows and the ClickHouse indexing lag, the **at-most-on
 
 **[`references/examples/recipes.md`](references/examples/recipes.md)** — copy-paste starting points: error-rate pager, credit-budget guard, p95-latency watch, a **dead-man's switch** (`count lte 0` — alert when a workflow *stops* running), model freshness / empty-model alerts, and a custom SQL-query alert.
 
-## Declarative alternative: `defineAlert` (CDK)
+## Declarative alternative: `defineAlert` (project)
 
-This skill is the **imperative** surface — one-off `cargo-ai observability alert …` calls. To manage an alert **as code** (in git, reproducible, deployed alongside the workflow it watches), use CDK's `defineAlert` builder instead — see [`../cargo-project/SKILL.md`](../cargo-project/SKILL.md) and "Declarative vs imperative" in the router. Same scope/threshold/action model; different authoring mode.
+This skill is the **imperative** surface — one-off `cargo-ai observability alert …` calls. To manage an alert **as code** (in git, reproducible, deployed alongside the workflow it watches), use a project's `defineAlert` builder instead — see [`../cargo-project/SKILL.md`](../cargo-project/SKILL.md) and "Declarative vs imperative" in the router. Same scope/threshold/action model; different authoring mode.
 
 ## Cost discipline
 

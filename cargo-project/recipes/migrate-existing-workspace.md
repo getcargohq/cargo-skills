@@ -8,6 +8,19 @@ The tool is `cargo-ai project import <id> <uuid>`, which binds a resource's **co
 (`kind:slug`) to its **live uuid** in this project's deploy state. After import, `deploy`
 updates that resource in place instead of creating a new one.
 
+## 0. Make sure the repo is a project
+
+Every `cargo-ai project` command needs a `cargo.json` at the project's root
+(`@cargo-ai/cdk` ≥ 1.0.112) and stops without one. A repo started with
+`project init` has it. One written by hand, or scaffolded before the file existed,
+adds it, naming the folder that holds the `.ts` resources:
+
+```bash
+echo '{ "resources": "infra" }' > cargo.json
+mv infra/cargo.state.json cargo.state.json   # only if an older layout left the state file in infra/
+git add cargo.json cargo.state.json && git commit -m "Mark the project with cargo.json"
+```
+
 ## 1. Write the `define*` for the resource
 
 Describe the existing resource in code as accurately as you can. Match the slug you
@@ -63,9 +76,9 @@ Imported resources should show as **update** or **no-op**, not **create**. A
 
 ```bash
 cargo-ai project deploy --dir acme-gtm
-git add cargo.state.json && git commit -m "Adopt existing workspace into CDK"
+git add cargo.state.json && git commit -m "Adopt the existing workspace into the project"
 ```
 
 Imported/adopted resources are **released** (dropped from state), not deleted, if
-you later `destroy` or `deploy --prune` them — the CDK won't delete something it
+you later `destroy` or `deploy --prune` them — a deploy won't delete something it
 only adopted.

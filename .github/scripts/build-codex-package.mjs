@@ -159,8 +159,8 @@ const REMOVED_TERMS = [
 const PACKAGE_EDITS = [
   {
     file: "cargo/SKILL.md",
-    find: "cdk, mailbox management, workspace management)",
-    replace: "cdk, workspace management)",
+    find: "project, mailbox management, workspace management)",
+    replace: "project, workspace management)",
   },
   {
     file: "cargo/SKILL.md",
@@ -179,7 +179,7 @@ const PACKAGE_EDITS = [
   },
   {
     file: "cargo/SKILL.md",
-    find: "- `cargo-mailbox-management` owns **sending inboxes** (the `mailboxManagement` domain) \u2014 provisioning, warm-up, the send ramp, threads, events, and the workspace suppression list. It deliberately does **not** send: delivery is the `sendEmail` native action under `cargo-orchestration`, which is why a send inherits orchestration's pacing, retry and credit accounting. The mailbox itself is also declarable as code via CDK's `defineMailbox` (with `defineDomain` for the sending domain).\n",
+    find: "- `cargo-mailbox-management` owns **sending inboxes** (the `mailboxManagement` domain) \u2014 provisioning, warm-up, the send ramp, threads, events, and the workspace suppression list. It deliberately does **not** send: delivery is the `sendEmail` native action under `cargo-orchestration`, which is why a send inherits orchestration's pacing, retry and credit accounting. The mailbox itself is also declarable in a project via `defineMailbox` (with `defineDomain` for the sending domain).\n",
     replace: "",
   },
   {
@@ -189,7 +189,7 @@ const PACKAGE_EDITS = [
   },
   {
     file: "cargo/SKILL.md",
-    find: "### cargo-mailbox-management\n\n**Critical rules:**\n\n- **A mailbox is a *monthly, recurring* credit charge**, not a per-record one \u2014 100\u2013125 credits per mailbox per month (shared and private 100, google 125; `mailboxManagement pricing get` for live figures), for as long as it exists. `mailbox remove` is the only way to stop it; there is no pause. Quote the fleet size and the **credit estimate** per month, and get an explicit yes, before the first `create`.\n- **This domain does not send.** Delivery is the native action `sendEmail` (`{\"kind\":\"native\",\"actionSlug\":\"sendEmail\"}`, inputs in `--data`), **0.1 credits per send**, run through `cargo-orchestration`. A play that calls it **re-bills** \u2014 and re-contacts \u2014 on every run.\n- **Volume is a ramp, not a setting.** Real sends go 5/day \u2192 40/day linearly over 45 days from `warmupStartedAt`. A mailbox that never ran `start-warmup` is pinned at 5/day forever, `stop-warmup` resets the anchor to day 0, and `dailySendLimit` can only *tighten* the ramp, never loosen it.\n- **Every send is gated by `../cargo-gtm/references/acceptable-use.md` \u00a73** (basis, suppression, relevance). Suppression is workspace-wide, checked before every send, has no removal command, and `List-Unsubscribe` writes to it automatically. Raising the ramp \u2014 or spreading one campaign across extra mailboxes to clear the same volume \u2014 is the \u00a72 evasion refusal.\n- **Nothing here is async** \u2014 no run to poll. The exception that looks like one: `mailbox create` returns `status: \"pending\"`, cleared by `mailbox refresh-status`, not by `run get`.\n- `--type outlook` is accepted by the flag and **always** fails (`transportNotSupported` \u2014 Graph delivery hasn't shipped). `--statuses`/`--kinds`/`--reasons` are comma-separated **with no spaces**. `mailbox list` is the only list with **no `count`**, and `mailbox`/`suppression` lists have **no default limit** (max 1000) where message/thread/event default to 50.\n- **`bounced` has no producer yet** \u2014 nothing parses delivery-status notifications, so bounces write no events and do not auto-suppress. Never report an empty bounce count as a clean list.\n- **There is no CLI surface for sending domains.** `mailbox create --domain-uuid` is required and `domainManagement` has no `cargo-ai` commands \u2014 take the UUID from the web app or CDK's `defineDomain`. Permissions are `mailboxManagement:read` / `:write` (not admin-only).\n\n",
+    find: "### cargo-mailbox-management\n\n**Critical rules:**\n\n- **A mailbox is a *monthly, recurring* credit charge**, not a per-record one \u2014 100\u2013125 credits per mailbox per month (shared and private 100, google 125; `mailboxManagement pricing get` for live figures), for as long as it exists. `mailbox remove` is the only way to stop it; there is no pause. Quote the fleet size and the **credit estimate** per month, and get an explicit yes, before the first `create`.\n- **This domain does not send.** Delivery is the native action `sendEmail` (`{\"kind\":\"native\",\"actionSlug\":\"sendEmail\"}`, inputs in `--data`), **0.1 credits per send**, run through `cargo-orchestration`. A play that calls it **re-bills** \u2014 and re-contacts \u2014 on every run.\n- **Volume is a ramp, not a setting.** Real sends go 5/day \u2192 40/day linearly over 45 days from `warmupStartedAt`. A mailbox that never ran `start-warmup` is pinned at 5/day forever, `stop-warmup` resets the anchor to day 0, and `dailySendLimit` can only *tighten* the ramp, never loosen it.\n- **Every send is gated by `../cargo-gtm/references/acceptable-use.md` \u00a73** (basis, suppression, relevance). Suppression is workspace-wide, checked before every send, has no removal command, and `List-Unsubscribe` writes to it automatically. Raising the ramp \u2014 or spreading one campaign across extra mailboxes to clear the same volume \u2014 is the \u00a72 evasion refusal.\n- **Nothing here is async** \u2014 no run to poll. The exception that looks like one: `mailbox create` returns `status: \"pending\"`, cleared by `mailbox refresh-status`, not by `run get`.\n- `--type outlook` is accepted by the flag and **always** fails (`transportNotSupported` \u2014 Graph delivery hasn't shipped). `--statuses`/`--kinds`/`--reasons` are comma-separated **with no spaces**. `mailbox list` is the only list with **no `count`**, and `mailbox`/`suppression` lists have **no default limit** (max 1000) where message/thread/event default to 50.\n- **`bounced` has no producer yet** \u2014 nothing parses delivery-status notifications, so bounces write no events and do not auto-suppress. Never report an empty bounce count as a clean list.\n- **There is no CLI surface for sending domains.** `mailbox create --domain-uuid` is required and `domainManagement` has no `cargo-ai` commands \u2014 take the UUID from the web app or a project's `defineDomain`. Permissions are `mailboxManagement:read` / `:write` (not admin-only).\n\n",
     replace: "",
   },
   {
@@ -239,8 +239,8 @@ const PACKAGE_EDITS = [
   },
   {
     file: "cargo-mcp/SKILL.md",
-    find: "a CDK deploy, warehouse SQL, or a mailbox \u2014 use the CLI skills",
-    replace: "a CDK deploy, or warehouse SQL \u2014 use the CLI skills",
+    find: "a project deploy, warehouse SQL, or a mailbox \u2014 use the CLI skills",
+    replace: "a project deploy, or warehouse SQL \u2014 use the CLI skills",
   },
   {
     file: "README.md",
@@ -809,7 +809,7 @@ const manifest = {
   name: "cargo-skills",
   version,
   description:
-    `GTM engineering for coding agents — ${skillDirs.length} skills over the Cargo CLI: research accounts, enrich and verify B2B contact records from licensed data providers, score and qualify leads, sync to your CRM, monitor buying signals, and manage a whole workspace as code. Consent and suppression gates apply to every step that touches a person; the pack sends no messages itself.`,
+    `GTM engineering for coding agents — ${skillDirs.length} skills over the Cargo CLI: research accounts, enrich and verify B2B contact records from licensed data providers, score and qualify leads, sync to your CRM, monitor buying signals, and manage your GTM as Code in projects. Consent and suppression gates apply to every step that touches a person; the pack sends no messages itself.`,
   author: { name: "getcargo" },
   homepage: "https://getcargo.ai",
   repository: "https://github.com/getcargohq/cargo-skills",

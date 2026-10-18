@@ -22,28 +22,32 @@ playbook (file)   webhook (worker)   dashboard (app)   context (repo)
 
 ```
 acme-gtm/
+  cargo.json              # { "resources": "infra" } — marks the project
+  cargo.state.json        # the committed pointer to the deploy state, beside cargo.json
   package.json            # depends on @cargo-ai/cdk + zod
-  tsconfig.json           # include: ["**/*.ts", ".cargo-ai/**/*.d.ts"]
-  .gitignore              # .cargo-ai/, cargo.state.lock, cargo.state.bak.json, cargo.state.audit.jsonl
-  connectors/hubspot.ts   # defineConnector + secret()
-  connectors/openai.ts    # defineConnector default: true
-  folders/crm.ts          # defineFolder (per-kind)
-  models/contacts.ts      # defineModel connector: hubspot
-  tools/enrich.ts         # defineWorkflow + defineTool
-  agents/enricher.ts      # defineAgent (sub-agent)
-  agents/sdr.ts           # defineAgent (model + tool + sub-agent + trigger + evaluator)
-  plays/onboarding.ts     # definePlay + defineWorkflow
-  mcp/crm.ts              # defineMcpServer
-  context/context.ts      # defineContext path: "context" (+ context/*.md)
-  files/playbook.ts       # defineFile (+ playbook.md)
-  workers/webhook.ts      # defineWorker (+ webhook/ bundle source)
-  apps/dashboard.ts       # defineApp (+ dashboard/ Vite app)
+  .gitignore              # .cargo-ai/, cargo.state.lock, cargo.state.bak.json, cargo.state.cache.json, cargo.state.audit.jsonl
+  outputs/                # executions (the default; "executions" in cargo.json overrides it)
+  infra/                  # the folder cargo.json names: every .ts here is loaded
+    tsconfig.json         # include: ["**/*.ts", ".cargo-ai/**/*.d.ts"]
+    connectors/hubspot.ts   # defineConnector + secret()
+    connectors/openai.ts    # defineConnector default: true
+    folders/crm.ts          # defineFolder (per-kind)
+    models/contacts.ts      # defineModel connector: hubspot
+    tools/enrich.ts         # defineWorkflow + defineTool
+    agents/enricher.ts      # defineAgent (sub-agent)
+    agents/sdr.ts           # defineAgent (model + tool + sub-agent + trigger + evaluator)
+    plays/onboarding.ts     # definePlay + defineWorkflow
+    mcp/crm.ts              # defineMcpServer
+    context/context.ts      # defineContext path: "context" (+ context/*.md)
+    files/playbook.ts       # defineFile (+ playbook.md)
+    workers/webhook.ts      # defineWorker (+ webhook/ bundle source)
+    apps/dashboard.ts       # defineApp (+ dashboard/ Vite app)
 ```
 
-Importing a `.ts` file **is** registration — there is no manifest. The loader
-imports every `.ts` under the project (skipping the worker/app bundle sub-dirs,
-which have their own `package.json`), and each `define*` registers as a side
-effect.
+Importing a `.ts` file **is** registration — there is no list to keep. The loader
+imports every `.ts` under the folder `cargo.json` names (skipping the worker/app
+bundle sub-dirs, which have their own `package.json`), and each `define*` registers
+as a side effect.
 
 ## A wired slice
 

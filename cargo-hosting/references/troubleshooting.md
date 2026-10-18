@@ -77,7 +77,7 @@ Apps and workers are served from different root domains, so every app → worker
 
 If Cargo can't use the declared `build` script (unparseable `package.json`, empty script, non-string entry), it falls back to the framework default without failing. The build log names the reason: `No usable \`build\` script (…); running … instead`.
 
-## `secretNotSupportedForApp` / CDK "must be a plain string"
+## `secretNotSupportedForApp` / `defineApp` "must be a plain string"
 
 App env vars are compiled into a public bundle, so they cannot be secret. Move the credential to a worker, and have the app call that worker.
 
