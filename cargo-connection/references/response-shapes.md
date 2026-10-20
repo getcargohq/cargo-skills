@@ -249,7 +249,7 @@ Returns the full integration object, including all actions and extractors with t
 | `childrenCount` | Number of child branches (0 for most actions) |
 | `credits.costs` | Credit cost per execution. Each cost has `type` (`fixed` or `unit`) and `cost` (number) |
 
-On the integration itself, `connector.managed.isCompatible` says a connector can run on Cargo's keys (a managed connector, billed in credits). `connector.credits.isRequired` says every connector is billed in credits, even one holding its own credentials. Older backends carry the managed fields under `connector.credits`.
+On the integration itself, `connector.managed.isCompatible` says a connector can run on Cargo's keys (a managed connector, billed in credits). `connector.credits.isRequired` says every connector is billed in credits, even one holding its own credentials.
 
 **`extractors`** is keyed by extractor slug. Extractors sync data from an integration into a model.
 

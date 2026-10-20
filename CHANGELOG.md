@@ -14,7 +14,7 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 - [`cargo-connection/references/response-shapes.md`](cargo-connection/references/response-shapes.md) documents `isManaged` (runs on Cargo's keys, `config` is `null`) apart from `useCredits` (billed in credits). They differ on an integration whose provider bills Cargo per call on the user's own sign-in, such as X Account. On the integration, `connector.managed.isCompatible` replaces `connector.credits.isCompatible`, and `connector.credits.isRequired` is new.
 - [`reverseContact.md`](cargo-gtm/provider-playbooks/reverseContact.md) names the new field.
-- `sync-trigger-slugs.ts` reads `connector.managed.isCompatible`, falling back to `connector.credits.isCompatible` on older backends.
+- `sync-trigger-slugs.ts` reads `connector.managed.isCompatible`.
 
 ### `cargo-project` → 4.0.0, `cargo` → 1.29.0, + 7 skills one patch each — "project" is the only noun, and `cargo.json` marks one
 
