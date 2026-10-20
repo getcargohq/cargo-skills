@@ -87,7 +87,8 @@ function refreshCatalog(): void {
         name: String(i.name ?? i.slug),
         category: String(i.category ?? "other"),
         actions: Object.keys(i.actions ?? {}).length,
-        credits: Boolean(i.connector?.credits?.isCompatible),
+        // `managed` since getcargohq/cargo#6278; older backends carry it in `credits`.
+        credits: Boolean(i.connector?.managed?.isCompatible ?? i.connector?.credits?.isCompatible),
       };
     })
     .sort((a, b) => a.slug.localeCompare(b.slug));
