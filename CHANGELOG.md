@@ -10,6 +10,11 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### Plugin — migrating from `cargo@cargo`
+
+- **README: how to move a `cargo@cargo` install to `cargo@cargo-skills`.** Installs made under the old marketplace name are frozen: Claude Code refuses to update *or* uninstall anything from the reserved `cargo` marketplace ("Installing plugins from cargo (`<package>@cargo`) is not available yet"). `/plugin marketplace remove cargo` still works and drops the plugin with it, so the README now gives remove, add, install, plus the two keys to change in a template project's `.claude/settings.json`.
+- **`hooks/session-start.sh` no longer falls back to the `cargo` marketplace.** The fallback added with the rename cannot succeed for the reason above, and an old install never receives new hook code anyway.
+
 ### Plugin — Claude Code marketplace renamed `cargo` → `cargo-skills`
 
 - **The Claude Code marketplace is now `cargo-skills`, so the install id is `cargo@cargo-skills`.** Claude Code reserves the marketplace name `cargo` (held back for Rust crate registries) and rejects `/plugin marketplace add getcargohq/cargo-skills` while `.claude-plugin/marketplace.json` uses it, so new plugin installs failed outright. The plugin name stays `cargo`; only the marketplace half of the id changes, and only in the Claude manifest (Codex and Cursor do not reserve the name). `hooks/session-start.sh` updates `cargo-skills` first and falls back to `cargo`, so installs made before the rename keep self-updating. README, the statusline path and the sessions example now say `cargo@cargo-skills`.

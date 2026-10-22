@@ -112,6 +112,16 @@ Optional extra — a **statusline** with live Cargo context (workspace · credit
 /plugin install cargo@cargo-skills
 ```
 
+**Installed it as `cargo@cargo`?** That copy is frozen: Claude Code reserves the marketplace name `cargo` and refuses to update or uninstall anything from it. Remove the marketplace (this also drops the plugin), then install under the new name:
+
+```
+/plugin marketplace remove cargo
+/plugin marketplace add getcargohq/cargo-skills
+/plugin install cargo@cargo-skills
+```
+
+A project made from the Cargo template before 2026-10-22 also names the old id in `.claude/settings.json`: change `extraKnownMarketplaces.cargo` to `cargo-skills` and `"cargo@cargo"` to `"cargo@cargo-skills"`.
+
 **Codex:**
 
 ```bash
