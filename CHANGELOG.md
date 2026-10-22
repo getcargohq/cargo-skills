@@ -10,6 +10,10 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### Plugin — Claude Code marketplace renamed `cargo` → `cargo-skills`
+
+- **The Claude Code marketplace is now `cargo-skills`, so the install id is `cargo@cargo-skills`.** Claude Code reserves the marketplace name `cargo` (held back for Rust crate registries) and rejects `/plugin marketplace add getcargohq/cargo-skills` while `.claude-plugin/marketplace.json` uses it, so new plugin installs failed outright. The plugin name stays `cargo`; only the marketplace half of the id changes, and only in the Claude manifest (Codex and Cursor do not reserve the name). `hooks/session-start.sh` updates `cargo-skills` first and falls back to `cargo`, so installs made before the rename keep self-updating. README, the statusline path and the sessions example now say `cargo@cargo-skills`.
+
 ### `cargo-connection` 1.6.1, `cargo-gtm` 2.3.2: connectors carry `isManaged` next to `useCredits`
 
 - [`cargo-connection/references/response-shapes.md`](cargo-connection/references/response-shapes.md) documents `isManaged` (runs on Cargo's keys, `config` is `null`) apart from `useCredits` (billed in credits). They differ on an integration whose provider bills Cargo per call on the user's own sign-in, such as X Account. On the integration, `connector.managed.isCompatible` replaces `connector.credits.isCompatible`, and `connector.credits.isRequired` is new.
