@@ -55,7 +55,7 @@ Don't hand-roll the hooks — install the **Cargo plugin** and it ships them:
 
 ```
 /plugin marketplace add getcargohq/cargo-skills
-/plugin install cargo@cargo
+/plugin install cargo@cargo-skills
 ```
 
 The plugin's bundled hooks do the whole job, with nothing written into `~/.claude` on your behalf:

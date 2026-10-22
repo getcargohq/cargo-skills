@@ -100,7 +100,7 @@ The repo also installs as a native **agent plugin**: one source, three targets, 
 Optional extra — a **statusline** with live Cargo context (workspace · credits · CLI pin state). Statuslines are user-level config, so wire it yourself in `~/.claude/settings.json`:
 
 ```json
-{ "statusLine": { "type": "command", "command": "node ~/.claude/plugins/marketplaces/cargo/hooks/cargo-statusline.mjs" } }
+{ "statusLine": { "type": "command", "command": "node ~/.claude/plugins/marketplaces/cargo-skills/hooks/cargo-statusline.mjs" } }
 ```
 
 (Adjust the path to wherever the plugin/marketplace is checked out. Renders from a small cache and never blocks — a detached child refreshes workspace/credits every ~2 minutes.)
@@ -109,7 +109,7 @@ Optional extra — a **statusline** with live Cargo context (workspace · credit
 
 ```
 /plugin marketplace add getcargohq/cargo-skills
-/plugin install cargo@cargo
+/plugin install cargo@cargo-skills
 ```
 
 **Codex:**
@@ -126,7 +126,7 @@ codex plugin marketplace add getcargohq/cargo-skills
 - **Network egress:** in the session's **Settings → Capabilities**, turn on network egress and allow at least `api.getcargo.io` and `registry.npmjs.org` (or all domains) so the CLI can install and reach Cargo.
 - **Sign-in:** the Cowork sandbox has no TTY, so the browser sign-in flow can't complete there. Mint a workspace API token at [app.getcargo.io](https://app.getcargo.io) → **Settings → API** and have the agent run `cargo-ai login --token <token>` instead. Start the session on a project folder — auth persists in that folder, so later Cowork sessions on the same folder reuse it.
 
-**Pick one channel.** Plugin install and `skills add` both register the skills; using both duplicates them (plugin copies are namespaced `cargo:<skill>`). Plugin users should uninstall the `skills add` copies (and skip the installer) and update via `/plugin marketplace update cargo` + `/plugin update cargo@cargo` instead.
+**Pick one channel.** Plugin install and `skills add` both register the skills; using both duplicates them (plugin copies are namespaced `cargo:<skill>`). Plugin users should uninstall the `skills add` copies (and skip the installer) and update via `/plugin marketplace update cargo-skills` + `/plugin update cargo@cargo-skills` instead.
 
 For [OpenClaw](https://openclaw.ai), install the bundle from ClawHub:
 
@@ -144,7 +144,7 @@ The Cargo CLI and these skills ship updates regularly. The bundle pins the CLI v
 ### Claude Code
 
 Install the [**Cargo plugin**](#agent-plugin-alternative-channel--claude-code-codex-cursor) above
-(`/plugin marketplace add getcargohq/cargo-skills`, then `/plugin install cargo@cargo`) and the
+(`/plugin marketplace add getcargohq/cargo-skills`, then `/plugin install cargo@cargo-skills`) and the
 bundled hooks keep everything current automatically: every new Claude Code session (1) converges
 `@cargo-ai/cli` to the pin and refreshes the plugin itself for the next session, (2) checkpoints the
 session row each turn so progress is captured even if the session never ends cleanly, and (3) logs
