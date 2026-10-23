@@ -137,4 +137,5 @@
 {"prompt": "Connect Cargo to Claude Desktop", "expect": "cargo-mcp", "why": "Pointing a client at the hosted server, not publishing one out of a workspace."}
 {"prompt": "What will execute_action_batch cost before I run it?", "expect": "cargo-mcp", "why": "MCP tool names are the highest-precision routing tokens for this surface."}
 {"prompt": "The Cargo MCP server is showing the wrong workspace", "expect": "cargo-mcp", "why": "Token-binds-workspace is the silent failure this skill exists to catch.", "tier": "hard"}
+{"prompt": "Count my companies by owner with query_models over the Cargo MCP server", "expect": "cargo-mcp", "why": "The hosted MCP server runs one read-only SQL SELECT itself through query_models, so an ad-hoc SQL read no longer routes to the CLI."}
 {"prompt": "my cargo-ai action ran but ignored the filter I passed", "expect": "cargo", "why": "The router description names misnamed action inputs dropped without an error as a silent gotcha.", "tier": "hard"}

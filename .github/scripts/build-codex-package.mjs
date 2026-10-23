@@ -239,8 +239,8 @@ const PACKAGE_EDITS = [
   },
   {
     file: "cargo-mcp/SKILL.md",
-    find: "a project deploy, warehouse SQL, or a mailbox \u2014 use the CLI skills",
-    replace: "a project deploy, or warehouse SQL \u2014 use the CLI skills",
+    find: "a project deploy, a full SQL export, or a mailbox \u2014 use the CLI skills",
+    replace: "a project deploy, or a full SQL export \u2014 use the CLI skills",
   },
   {
     file: "README.md",
