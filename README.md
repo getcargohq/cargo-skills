@@ -6,7 +6,7 @@
 
 Nineteen agent skills that turn Claude Code, Codex, Cursor, and any [skills.sh](https://skills.sh)-compatible agent into a go-to-market engineering workstation: **build lead lists, find and verify emails and phone numbers, enrich companies and contacts through provider waterfalls, score and qualify leads, write outreach, sync to your CRM, and monitor buying signals** (job changes, funding rounds, tech-stack and hiring intent) — then make any of it a scheduled, always-on workflow.
 
-They run on the [Cargo CLI](https://www.npmjs.com/package/@cargo-ai/cli) against [Cargo](https://getcargo.ai), the AI-native revenue infrastructure: **138 integrations** (HubSpot, Salesforce, Attio, Pipedrive, Outreach, Salesloft, Lemlist, Smartlead, Instantly, Snowflake, BigQuery, Slack, Google Ads, Meta and LinkedIn audiences, and more), **50 credits-based data providers** with per-action costs documented up front, models and SQL over workspace storage, AI agents with RAG, alerting, hosted apps, and GTM as Code projects that declare a whole workspace.
+They run on the [Cargo CLI](https://www.npmjs.com/package/@cargo-ai/cli) against [Cargo](https://getcargo.ai), the AI-native revenue infrastructure: **148 integrations** (HubSpot, Salesforce, Attio, Pipedrive, Outreach, Salesloft, Lemlist, Smartlead, Instantly, Snowflake, BigQuery, Slack, Google Ads, Meta and LinkedIn audiences, and more), **55 credits-based data providers** with per-action costs documented up front, models and SQL over workspace storage, AI agents with RAG, alerting, hosted apps, and GTM as Code projects that declare a whole workspace.
 
 ```
 ██████    ████    █████    ██████   ██████
@@ -265,7 +265,7 @@ The standard library. Load when you need the syntax for a specific CLI domain �
 | **Orchestration** | Execute single actions, chain actions into workflows, trigger batches across segments, poll async operations, query orchestration runtime tables (`runs`/`batches`/`spans`/`records`) with SQL, fetch segment data |
 | **Storage**       | Inspect models and their DDL, create columns, navigate datasets, set relationships between models, query workspace storage with SQL                              |
 | **Segmentation**  | Build and manage segments — the saved filters that name the audience for a batch, a play trigger, or an export — size an audience before spending on it, and read the change (delta) feed |
-| **Connection**    | Authenticate connectors, discover integration actions and their slugs across 120+ integrations                                                                     |
+| **Connection**    | Authenticate connectors, discover integration actions and their slugs across 140+ integrations                                                                     |
 | **AI**            | Create and configure agents, configure releases, attach knowledge for RAG, connect MCP servers, inspect agent memories                                             |
 | **Content**       | Upload and organize knowledge files; build `native` and `connector`-backed knowledge libraries for RAG (the `content` domain)                                       |
 | **Context**       | Browse, read, write, and edit the workspace's git-backed context repo (markdown/MDX GTM knowledge base); run shell commands in its runtime sandbox; inspect the knowledge graph |

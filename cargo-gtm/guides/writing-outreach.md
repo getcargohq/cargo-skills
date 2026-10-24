@@ -120,7 +120,7 @@ If the user wants the enriched + scored data in their CRM:
 | **hubspot** | `upsertRecords` | Map cargo columns to HubSpot properties. `enrollToSequence` for sequence enrollment. |
 | **salesforce** | (CRUD) | Lead / Contact / Account objects. |
 | **pipedrive** | (CRUD) | Person / Organization / Deal objects. |
-| **attio** | (CRUD) | Custom-object friendly. |
+| **attio** | (CRUD), `addToList` | Custom-object friendly. `addToList` puts a record (by `record_id`, from a prior find / match / upsert node) on a pipeline or campaign list and upserts its entry — re-runs never duplicate, but entry values overwrite and multi-selects replace. |
 
 CRM CRUD is free (no credits). Compose ad hoc — find the action with `cargo-ai orchestration action list <keywords> --integration-slug <slug>`, then read its input schema via `cargo-ai connection integration get <slug>` and run via `orchestration action execute-batch`.
 

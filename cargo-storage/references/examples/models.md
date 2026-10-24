@@ -87,3 +87,26 @@ cargo-ai storage model get-ddl <model-uuid>
 cargo-ai storage query execute \
   "SELECT uuid, name, domain FROM default.companies LIMIT 10"
 ```
+
+## Connector models worth knowing
+
+A few extractors whose behavior isn't obvious from their name. Find the dataset
+with `storage dataset list` (the connector's own dataset), then `model create`
+with the extractor slug.
+
+- **`attio.fetchListRecords`** — the records that are members of one Attio list
+  (`objectId` + `listId`; a list UUID or API slug works). Keyed on `record_id`;
+  a record with several entries in the list is one row. Each sync **replaces** the
+  snapshot, so records removed from the list leave the model. Minimum interval 30
+  minutes. The matching write is the `attio.addToList` action, which upserts the
+  entry (re-running never duplicates it; entry values overwrite).
+- **`hubspot.fetchFormSubmissions`** — one model per HubSpot form (`formId`), one
+  row per submission, with the form's fields as columns. HubSpot's endpoint can't
+  filter, so the model's `filter` is applied on Cargo's side — and a play watching
+  the model in real time pushes its own trigger condition down the same way, so
+  only matching submissions reach the play.
+- **`amplitude.fetchEvents`** — an optional `filter` (segmentation shape,
+  `conjonction`) keeps only matching events. Amplitude still exports the full
+  hour; the rest are dropped before they're written, so the filter saves rows,
+  not export time. Dates compare as UTC instants (`2024-06-01` or
+  `2024-06-01T12:00:00Z`).

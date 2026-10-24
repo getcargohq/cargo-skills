@@ -132,6 +132,10 @@ const PACKAGE_OVERRIDES = {
 const EXCLUDED_FILES = [
   "cargo-gtm/provider-playbooks/snitcher.md",
   "cargo-gtm/provider-playbooks/forager.md",
+  "cargo-gtm/provider-playbooks/pipecorn.md",
+  // Names people for reacting to posts (their own and competitors') — the same
+  // person-level social surface the review rejected with attendees and visitors.
+  "cargo-gtm/provider-playbooks/cargoSignals.md",
   "cargo-gtm/provider-playbooks/x.md",
 ];
 
@@ -142,6 +146,8 @@ const EXCLUDED_FILES = [
 const REMOVED_TERMS = [
   { term: "snitcher", scope: "skills/" },
   { term: "forager", scope: "skills/" },
+  { term: "pipecorn", scope: "skills/" },
+  { term: "provider-playbooks/cargoSignals.md", scope: "skills/" },
   { term: "analyzePersonality", scope: "skills/" },
   // Not just the slug: the playbook pitched the capability in prose that
   // named no action, and a slug-only check waved it through.
@@ -158,6 +164,11 @@ const REMOVED_TERMS = [
 // Every `find` must match exactly once or the build fails — these are anchored
 // to prose that will drift, and a silent no-op would ship a dangling link.
 const PACKAGE_EDITS = [
+  {
+    file: "cargo-gtm/SKILL.md",
+    find: "- [`provider-playbooks/cargoSignals.md`](provider-playbooks/cargoSignals.md) — intent-signal feeds (formerly `rodz`), billed per lead delivered; warm-intro backfills and Company Followers auto-start are the cost traps.\n",
+    replace: "",
+  },
   // xAccount posts, replies, likes and DMs as the user — the same surface the
   // OpenAI review rejected for X (#120), so its price rows ship only in the other packages.
   {
@@ -308,6 +319,11 @@ const PACKAGE_EDITS = [
   {
     file: "cargo-gtm/SKILL.md",
     find: "- [`provider-playbooks/forager.md`](provider-playbooks/forager.md) \u2014 personal-email + phone from a LinkedIn URL.\n",
+    replace: "",
+  },
+  {
+    file: "cargo-gtm/SKILL.md",
+    find: "- [`provider-playbooks/pipecorn.md`](provider-playbooks/pipecorn.md) \u2014 own-key contact waterfall (work email, phone, people-at-company); its personal-email action is gated by acceptable use.\n",
     replace: "",
   },
   {

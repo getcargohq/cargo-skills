@@ -1,7 +1,7 @@
 ---
 name: cargo-billing
 description: "Understand what Cargo is costing — remaining credits, usage broken down by workflow, connector, or agent, subscription state, and invoice history. Triggers: \"how many credits do I have left\", \"what did that cost\", \"why is my bill so high\", \"am I about to run out\", \"will this fit in our budget\", \"show me my invoices\", \"how much have I spent this month\", \"what plan am I on\", \"what do I get for free\", \"how many free credits\", \"can I afford this run\", \"add a card\", \"update my payment method\", \"why was my card declined\". Needs a token with admin access. Skip when: attributing spend to specific nodes or cutting a play cost — use cargo-diagnostics."
-version: "2.1.0"
+version: "2.1.1"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -151,6 +151,8 @@ cargo-ai billing usage get-metrics --from <start-date> --to <end-date> --unit st
 `--group-by` values: `workflow_uuid`, `connector_uuid`, `model_uuid`, `integration_slug`, `agent_uuid`, `user_uuid`.
 
 Available filters: `--workflow-uuid`, `--model-uuid`, `--connector-uuid`, `--integration-slug`, `--slug`, `--agent-uuid`. Combine with `--group-by` and `--unit`.
+
+**Spend per member.** `--group-by user_uuid --unit billing.credits` attributes credits to the member who triggered the run, batch or agent message. Usage recorded before attribution shipped (October 2026) carries no user, so earlier months don't split by member. The API also filters to one member (`GET /v1/billing/usage/metrics?userUuid=<uuid>&…`); the CLI has no `--user-uuid` flag, so group and read that member's row instead. Admins can store a per-member monthly cap (`monthlyCreditsLimit`, see `cargo-workspace-management` → Users), but it is **not enforced yet** — read this breakdown to watch it by hand.
 
 ### The usage units
 

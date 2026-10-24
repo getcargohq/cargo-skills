@@ -10,6 +10,45 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### `cargo` → 1.32.0, `cargo-gtm` → 2.5.0, `cargo-storage` → 1.4.0, `cargo-connection` → 1.7.0, `cargo-orchestration` → 1.17.0, `cargo-workspace-management` → 1.6.0, `cargo-ai` → 2.8.0, `cargo-hosting` → 1.4.0, `cargo-segmentation` → 1.2.0, + 2 patches: the catalog and CLI surface no skill covered
+
+Checked against getcargohq/cargo master (2026-10-23) and the 1.0.125 CLI.
+
+- **Integration catalog refreshed.** `.github/data/integrations.json` and the `cargo-connection` / `cargo-gtm` name lists gain bounceban, cargoSignals, explorium, googleCalendar, metaAds, monaco, nooks, pipecorn, typesafe, xAccount and xAds. `sync-trigger-slugs.ts` gains a denylist for competitor integrations, and `loadCatalog` now applies it on read as its comment already said. README counts updated (148 integrations, 55 credits-based providers).
+- **Six provider playbooks:**
+  - [`explorium`](cargo-gtm/provider-playbooks/explorium.md): own-key firmographics, events and Bombora intent, under the slugs the retired `cargo` actions used.
+  - [`pipecorn`](cargo-gtm/provider-playbooks/pipecorn.md): own-key contact waterfall; its personal-email action is gated by acceptable use.
+  - [`storeleads`](cargo-gtm/provider-playbooks/storeleads.md): ecommerce TAM at 0.01 a domain.
+  - [`cargoSignals`](cargo-gtm/provider-playbooks/cargoSignals.md): formerly `rodz`. Warm-intro and person-connection backfills default to 500 leads, outside the daily limit. Company Followers in ICP mode starts itself, up to `maxFollowers`.
+  - [`bounceban`](cargo-gtm/provider-playbooks/bounceban.md): catch-all and SEG verification.
+  - [`typesafe`](cargo-gtm/provider-playbooks/typesafe.md): typed judgments.
+
+  `firecrawl.md` covers `agent` and its `maxCredits` ceiling. The codex package leaves out `pipecorn.md` (as it does `forager.md`) and `cargoSignals.md`, which names people for reacting to posts.
+- **`xAccount` is refused, not playbooked.** Batch or automated posting, replying, liking or DMing from the user's X account joins the refusal list in `acceptable-use.md` §2, the router and `cargo-gtm`.
+- **`cargo-storage`:**
+  - `record create|update|remove` and their `-bulk` forms (native and ingest models).
+  - `column insert-custom-values`.
+  - `model preview` / `preview-count` as an extractor dry run, including when a preview bills and why `preview-count` can answer `0`.
+  - `run create --is-force` / `--is-reset`.
+  - The Attio list-member and HubSpot form-submission models, and the Amplitude extractor filter.
+- **`cargo-connection`:** per-connector `--rate-limit` and `--cache-ttl-milliseconds` (a cache hit bills no provider credits), `get-dynamic-schema`, and the `custom-integration` commands.
+- **`cargo-orchestration`:**
+  - `play list` filters, `play update --health-threshold` / `--health-alert-actions`, and `play remove` / `tool remove`.
+  - `batch list` filters. Several `--included-data-kinds` match nothing, because they are ANDed.
+  - `release update-draft --test-records`, `--updated-after/--updated-before`, and `node compute|execute --group-context`.
+- **`cargo-workspace-management` / `cargo-billing`:**
+  - Custom roles and the permission-statement shape.
+  - `orchestration:run:*` / `orchestration:batch:*` split from editing (cargo#6035).
+  - Per-resource grants: `--effect deny` is ignored, and `--action` takes a permission action.
+  - `workspaces` commands.
+  - The per-member monthly credit cap (cargo#6126), stored but not enforced yet. Per-member spend is readable with `usage get-metrics --group-by user_uuid`.
+- **Smaller additions:**
+  - `cargo-hosting`: `app env-var` commands (an app secret is still rejected, whatever the help shows), `worker env remove`, `deployment export`.
+  - `cargo-segmentation`: `change get` / `download`; `--not-empty` is rejected by the API.
+  - `cargo-ai`: chat, vote, document and prompt commands.
+  - The router's command lists for `expression`, `system-of-record` and `revenue-organization`.
+  - `cargo-mailbox-management`: warm-up starts by itself when a mailbox becomes active.
+
 ### `cargo` → 1.31.0, `cargo-content` → 1.2.0, `cargo-project` → 4.3.0, `cargo-orchestration` → 1.16.0, `cargo-diagnostics` → 1.6.0, `cargo-ai` → 2.7.0, `cargo-workspace-management` → 1.5.0, `cargo-hosting` → 1.3.0, + 3 patches: what shipped since mid-September and had no skill
 
 Each item was checked against getcargohq/cargo master (2026-10-23) and the 1.0.125 CLI.

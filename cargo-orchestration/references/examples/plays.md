@@ -39,6 +39,13 @@ Response:
 }
 ```
 
+Filter the list instead of scanning it: `--is-enabled` / `--is-disabled` (bare = `true`), `--schedule-type dbt|cron|realtime|dependency|watch`, `--model-uuid`, `--segment-uuid`.
+
+```bash
+cargo-ai orchestration play list --is-enabled --schedule-type cron      # every live scheduled play
+cargo-ai orchestration play list --is-disabled --model-uuid <model-uuid>
+```
+
 ## Find a play's workflow UUID
 
 Plays have names — workflows don't. Use the play to find the right workflow and model.
@@ -104,6 +111,8 @@ cargo-ai orchestration release deploy-draft \
   --description "Your release description"
 ```
 
+`release update-draft` also takes `--test-records`, the sample records saved with the draft for the editor's test panel — `[{"kind":"id","id":"<record-id>","data":{...optional overrides}}]` to reuse an existing record, or `[{"kind":"data","data":{...}}]` for inline data. Saving them runs nothing.
+
 > **Do not skip validation.** Deploying an invalid node graph will cause runs to fail. Always run `node validate` before `release deploy-draft`.
 
 > **Do not pass `--version` to `release deploy-draft`.** The deploy-specific `--version` flag is shadowed by the global `--version` flag — passing it causes the command to print the CLI version (e.g. `1.0.11`) and exit 0 **without deploying**. Omit it and let the server auto-assign (first deploy → `1.0.0`, then `1.0.1`, etc.). Always confirm the deploy worked with `release get-deployed --workflow-uuid <uuid>` — the response should show `status: "deployed"`, not `draft`.
@@ -150,7 +159,39 @@ cargo-ai orchestration run count \
 cargo-ai orchestration batch list \
   --workflow-uuids <play.workflowUuid> \
   --statuses running
+
+# Batches that actually did something — schedule ticks the play skipped end
+# `skipped` with no runs, and drown the list on a frequently scheduled play
+cargo-ai orchestration batch list --workflow-uuids <play.workflowUuid> --has-runs --is-skipped false
+
+# Only the batches someone started over a filter, not the play's own
+# change-, watch- or schedule-driven ones
+cargo-ai orchestration batch list --workflow-uuids <play.workflowUuid> --included-data-kinds filter
+cargo-ai orchestration batch list --workflow-uuids <play.workflowUuid> --excluded-data-kinds change,watchedRecords,schedule
 ```
+
+Data kinds for `--included-data-kinds` / `--excluded-data-kinds`: `segment`, `change`, `filter`, `recordIds`, `watchedRecords`, `records`, `file`, `runs`, `group`, `schedule`, `form`. **Pass one kind to `--included-data-kinds`.** Each kind is applied as its own condition and they are AND-ed, so `filter,recordIds` matches no batch at all and returns an empty list. To keep several kinds, exclude the others instead — exclusions combine the way you'd expect.
+
+## Change a play's settings, set a health alert, or remove it
+
+`play update <play-uuid>` changes the play itself — trigger, audience, schedule, health — not its node graph (that is `release update-draft`, above). Only the flags you pass change.
+
+```bash
+# Pause / resume
+cargo-ai orchestration play update <play-uuid> --is-disabled
+cargo-ai orchestration play update <play-uuid> --is-enabled
+
+# Health: a finished batch is unhealthy when its success rate (non-failed runs / runs, in %)
+# falls below --health-threshold; each unhealthy batch fires every health alert action
+cargo-ai orchestration play update <play-uuid> \
+  --health-threshold 90 \
+  --health-alert-actions '[{"kind":"connector","integrationSlug":"slack","actionSlug":"postMessage","connectorUuid":"<slack-connector-uuid>","config":{ <postMessage inputs> }}]'
+
+# Remove the play (and stop it for good)
+cargo-ai orchestration play remove <play-uuid>
+```
+
+`--health-alert-actions` takes configured actions — the action object **with** `config` holding its inputs, unlike `action execute`. Read the action's input names from `connection integration get <slug>` rather than guessing them: a misnamed key is dropped silently. Group and `runs` batches are never health-checked. For alerting on anything beyond one play's batch success rate (error spikes, cost, a play that stops running), use an alert — the `cargo-observability` skill.
 
 ## Cancel runs and batches
 

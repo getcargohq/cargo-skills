@@ -23,6 +23,7 @@ Do not execute these. Say which rule applies in one sentence, offer the complian
 | Evasion: rotating sending domains or identities to dodge filters, disguising the sender, misleading subject lines, fake `Re:` threads on a first touch, forged headers | Deception is prohibited independently of volume |
 | Auto-dialing, SMS blasts, or a full-list phone sweep | Phone is explicit-request-only on qualified leads — see [`cost-discipline.md`](cost-discipline.md) §5 |
 | Batch-blasting LinkedIn engagement actions (`connectProfile`, `commentPost`) across a raw list | They act as a real member identity — see [`../provider-playbooks/linkedin.md`](../provider-playbooks/linkedin.md) |
+| Batch or automated posting, replying, liking or DMing from the user's X account (`xAccount`: `createPost`, `replyToPost`, `likePost`, `sendMessage`) — over a list, on a schedule, or on posts found by keyword | They act as the user's own X account, and X's automation rules forbid automated likes, keyword-triggered replies and unsolicited DMs; accounts that do it are suspended. One-off posts the user wrote or reviewed, and DM replies to people who wrote first, are the compliant version |
 | Scraping a site in breach of its terms or `robots.txt` when a licensed provider action covers the same field | Use the provider action; if none exists, say so rather than routing around the block |
 
 ## 3) Before any outreach step — three checks

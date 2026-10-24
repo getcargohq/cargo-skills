@@ -1,7 +1,7 @@
 ---
 name: cargo-workspace-management
 description: "Administer a Cargo workspace and talk back to the Cargo team — invite and manage members, mint and rotate API tokens, organize plays, tools, and agents into folders, inspect roles, upload batch input files, and file reports. Triggers: \"invite my teammate\", \"create an API token for CI\", \"who has access\", \"organize these into folders\", \"rotate that token\", \"upload this CSV for a batch\" — and for feedback: \"report this bug to Cargo\", \"send feedback to the Cargo team\", \"this CLI command is broken\", \"share this session with Cargo\", \"request a feature\". Most commands need a token with admin access. Skip when: the question is about credits, plans, or invoices — use cargo-billing."
-version: "1.5.0"
+version: "1.6.0"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -59,6 +59,8 @@ cargo-ai workspaceManagement folder list         # all folders
 cargo-ai whoami
 cargo-ai workspaceManagement user list
 cargo-ai workspaceManagement user create --email <email> --role-slug <slug>
+cargo-ai workspaceManagement role create --name <name> --slug <slug> --permissions '<json>'
+cargo-ai workspaceManagement workspaces list
 cargo-ai workspaceManagement token list
 cargo-ai workspaceManagement token create --name <name>
 cargo-ai workspaceManagement token remove <token-uuid>
@@ -76,7 +78,21 @@ cargo-ai workspaceManagement envVar create --key <KEY> [--value <v>] [--secret]
 # Get your current user and workspace context
 cargo-ai whoami
 # → Returns your user UUID, email, and active workspace UUID
+
+# Workspaces this user can reach, and the one selected now
+cargo-ai workspaceManagement workspaces list
+cargo-ai workspaceManagement workspaces get-current      # honors CARGO_WORKSPACE_UUID
+
+# Create another workspace (it is not selected for you — sign in to it or set CARGO_WORKSPACE_UUID)
+cargo-ai workspaceManagement workspaces create --name "Acme GTM"
+
+# Update the selected workspace — pass the literal "null" to clear a nullable field
+cargo-ai workspaceManagement workspaces update --name "Acme GTM (prod)"
+cargo-ai workspaceManagement workspaces update --allowed-email-domains acme.com,acme.io
+cargo-ai workspaceManagement workspaces update --default-role-uuid <role-uuid>   # role new members get
 ```
+
+`workspaces update` also takes `--openai-api-key`, `--logo-base64`, `--metadata`, `--syncs` and the Chrome-extension agent fields; it is an admin write, and `--openai-api-key` is a secret — pass it from the environment, not inline.
 
 ## Users
 
@@ -94,7 +110,23 @@ cargo-ai workspaceManagement user update --user-uuid <uuid> --role-slug <new-rol
 
 # Remove a user from the workspace
 cargo-ai workspaceManagement user remove --user-uuid <uuid>
+
+# Grant one user access to one resource (a workflow, folder, agent, app, …)
+cargo-ai workspaceManagement user upsert-permission \
+  --user-uuids <uuid> --action orchestration:workflow:read --resource-uuid <workflow-uuid> --effect allow
+
+# Take a grant back
+cargo-ai workspaceManagement user remove-permission --user-uuid <uuid> --resource-uuid <workflow-uuid> --effect allow
 ```
+
+Two things the `upsert-permission` help gets wrong at CLI 1.0.125:
+
+- **`--action` is a permission action, not `read` / `write`.** It must be one of the actions listed under [Roles](#roles) — the resource-scoped ones are `orchestration:workflow:*|read|write`, `ai:agent:…`, `ai:mcpServer:…`, `hosting:app:…`, `hosting:worker:…`, `content:file:…` and `workspaceManagement:folder:…`. The help's `--action read` example is rejected.
+- **`--effect deny` is ignored.** The CLI requires `--effect`, but the API always writes an **allow**; a deny statement has to be part of a role (`role create|update --permissions`). `remove-permission` does honor `--effect`.
+
+`--emails` **invites** any address that isn't a member yet, so check `user list` first.
+
+**Per-member monthly credit cap — stored, not enforced yet.** `PUT /v1/workspaceManagement/users/<user-uuid>` accepts `{"monthlyCreditsLimit": <n> | null}` (credits a member may consume per UTC calendar month across the runs, batches and agent messages they trigger; `null` removes it), and `user list` returns the field. There is no CLI flag for it, and **the backend does not enforce it** — the check is switched off in billing on master — so a member over their cap still runs. Say so if a user sets one. Per-member spend is readable today: see `cargo-billing` (`usage get-metrics --group-by user_uuid`).
 
 ### Service users
 
@@ -140,9 +172,27 @@ Roles define what users can do in the workspace.
 ```bash
 # List available roles
 cargo-ai workspaceManagement role list
+
+# Create a custom role: a slug, a colour, and a list of permission statements
+cargo-ai workspaceManagement role create \
+  --name "Run operator" --slug run-operator --color green \
+  --description "Starts and reads runs and batches; cannot edit workflows" \
+  --permissions '[
+    {"effect":"allow","resources":null,"actions":["orchestration:read","orchestration:run:*","orchestration:batch:*","storage:read","segmentation:read"]}
+  ]'
+
+# Update or remove a custom role (built-in roles can't be changed)
+cargo-ai workspaceManagement role update --uuid <role-uuid> --permissions '[...]'
+cargo-ai workspaceManagement role remove <role-uuid>
 ```
 
 Always check available roles before inviting users — use the `slug` from `role list` when creating or updating users.
+
+**Permission statements** are `{"effect": "allow" | "deny", "resources": [<uuid>, …] | null, "actions": [...]}` — `resources: null` applies the statement workspace-wide. `--permissions` on `role update` replaces the whole list. Actions follow `<domain>:*|read|write` for `ai`, `billing`, `connection`, `content`, `context`, `domainManagement`, `hosting`, `mailboxManagement`, `observability`, `orchestration`, `revenueOrganization`, `segmentation`, `storage`, `systemOfRecordIntegration` and `workspaceManagement`, plus resource-level sub-actions (`orchestration:workflow:…`, `ai:agent:…`, `hosting:app:…`, `workspaceManagement:folder:…`, …).
+
+**Running is separate from editing** in orchestration. `orchestration:run:*|read|write` covers runs and `orchestration:batch:*|read|write` covers batches; neither includes the other, and neither lets the holder edit a workflow, play or tool (that is `orchestration:write` / `orchestration:workflow:write`). `orchestration:read` / `:write` / `:*` still include both. That is how a role can start and watch runs without being able to change what they do.
+
+`role create` fails with `slugAlreadyExists` or `slugReserved` (a built-in slug); `role remove` fails with `roleInUse` while any member holds the role or it is the workspace's default role — reassign them first.
 
 ## API tokens
 
@@ -178,8 +228,9 @@ cargo-ai workspaceManagement folder create --name "Q1 Campaigns" --emoji-slug "r
 # Get a folder
 cargo-ai workspaceManagement folder get <folder-uuid>
 
-# Update a folder
+# Update a folder (rename, move under a parent, or reorder among its siblings)
 cargo-ai workspaceManagement folder update --uuid <folder-uuid> --name "Q1 2025 Campaigns"
+cargo-ai workspaceManagement folder update --uuid <folder-uuid> --parent-uuid <parent-folder-uuid> --order 0
 
 # Remove a folder
 cargo-ai workspaceManagement folder remove <folder-uuid>

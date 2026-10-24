@@ -235,6 +235,12 @@ cargo-ai orchestration batch list \
 cargo-ai orchestration batch get <batch-uuid>
 ```
 
+## Remove a tool
+
+```bash
+cargo-ai orchestration tool remove <tool-uuid>   # the tool's uuid from `tool list`, not its workflowUuid
+```
+
 ## Cancel runs and batches
 
 ```bash

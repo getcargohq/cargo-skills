@@ -1,7 +1,7 @@
 ---
 name: cargo-ai
 description: "Build and configure AI agents inside Cargo — create an agent, choose its model and temperature, write its prompt, attach knowledge for retrieval (RAG), connect MCP tool servers, manage memories, and deploy releases. Triggers: \"create an agent\", \"make an agent that\", \"give the agent our docs\", \"attach this knowledge base\", \"attach this library to the agent\", \"add resources to the agent release\", \"connect an MCP server\", \"expose our tools as an MCP server\", \"use Cargo from Claude Desktop or ChatGPT\", \"change the agent model\", \"what does the agent remember\", \"deploy the agent\", \"the agent is answering wrong\". Skip when: uploading the knowledge files themselves — use cargo-content; sending the agent a message or running it over records — use cargo-orchestration."
-version: "2.7.0"
+version: "2.8.0"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -72,6 +72,7 @@ cargo-ai ai release update-draft --agent-uuid <uuid> --language-model-slug gpt-4
 cargo-ai ai release deploy-draft --agent-uuid <uuid>
 cargo-ai ai template list                  # full detail; there is no `template get`
 cargo-ai ai mcp-server list
+cargo-ai ai mcp-server get <mcp-server-uuid>
 cargo-ai ai mcp-server create --name "Internal Tools"
 cargo-ai ai mcp-server update --uuid <mcp-server-uuid> --name "Updated Name"
 cargo-ai ai mcp-server remove <mcp-server-uuid>
@@ -303,7 +304,7 @@ cargo-ai ai mcp-server remove <mcp-server-uuid>
     --capabilities '[{"slug":"webSearch","config":{}}]'
   ```
   The eleven slugs are `sandbox`, `memory`, `context`, `app`, `document`, `webSearch`, `action`, `model`, `file`, `documentationSearch`, and `suggestedActions` — the same set an **agent** release takes in its own `--capabilities`, which is why the examples above pass `'[]'` rather than omitting it. In a project the same field accepts a bare slug (`capabilities: ["webSearch"]`).
-- `update` replaces `--actions` / `--resources` / `--capabilities` wholesale rather than merging — read the current server with `mcp-server list` and pass the full array back.
+- `update` replaces `--actions` / `--resources` / `--capabilities` wholesale rather than merging — read the current server with `mcp-server get <uuid>` and pass the full array back.
 
 ### Serving it to a coding agent — `cargo-ai mcp`
 
@@ -352,6 +353,42 @@ cargo-ai ai memory remove \
   --mem0-id <id> \
   --scope agent --agent-uuid <uuid>
 ```
+
+## Chats, documents, votes, and prompt helpers
+
+Sending messages and polling them is `cargo-orchestration`'s job; these are the
+housekeeping commands around a chat, plus two prompt-authoring helpers.
+
+```bash
+# Chats — list (filter by agent, release, user, or how the chat started), read, rename, delete
+cargo-ai ai chat list --agent-uuid <uuid> --trigger-type schedule --limit 20
+#   --trigger-type: chat | connector | draft | web_extension | app | schedule | workflow
+cargo-ai ai chat get <chat-uuid>
+cargo-ai ai chat update --uuid <chat-uuid> --name "Q4 pipeline review"
+cargo-ai ai chat remove <chat-uuid>
+
+# Feedback on one assistant message, and the votes on a chat
+cargo-ai ai vote upsert --chat-uuid <chat-uuid> --message-uuid <message-uuid> --is-upvoted false
+cargo-ai ai vote list --chat-uuid <chat-uuid>
+
+# Documents — the versioned text / code / image / sheet artifacts an agent writes in a chat
+cargo-ai ai document get <document-uuid>                        # latest version
+cargo-ai ai document list --uuid <document-uuid> --limit 10     # its versions
+cargo-ai ai document create --uuid <document-uuid> --kind text --title "Brief" --content "…"   # new version
+cargo-ai ai document reset --uuid <document-uuid> --created-at <version-createdAt>             # drop every later version
+
+# Suggested follow-ups for a message (cache with --cache-key to avoid regenerating)
+cargo-ai ai suggested-action generate --message-uuid <message-uuid> --agent-uuid <agent-uuid>
+
+# Prompt helpers
+cargo-ai ai prompt optimize --prompt "find companies in SF and enrich them"
+cargo-ai ai prompt evaluate --prompt "<system prompt with {{…}} expressions>" --actions '[...]' --resources '[...]'
+```
+
+- **`prompt optimize`** rewrites rough instructions into a structured system prompt (role, behavior, avoidances) with a fixed small model at temperature 0. Treat the result as a draft to edit, not a prompt to ship.
+- **`prompt evaluate` does not score anything**, whatever its help text says. It **renders** the prompt: template expressions in it are resolved against the `--actions`, `--resources` and `--capabilities` you pass, and the response is the prompt text the agent would actually receive. Use it to check that a system prompt's `{{…}}` references resolve before deploying a release.
+- **`document reset` is destructive** — every version created after the one you name is deleted. `list --uuid` first to pick the `createdAt`.
+- A downvote is feedback the workspace keeps; it does not change the agent. Fixing the answer is a release change (prompt, model, resources).
 
 ## Help
 

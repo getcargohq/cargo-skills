@@ -1,7 +1,7 @@
 ---
 name: cargo-storage
 description: "Work with the data inside a Cargo workspace — models (Companies, Contacts, Deals…), datasets, columns, relationships, records, and SQL over workspace storage. Triggers: \"what models do I have\", \"show me the schema\", \"add a column for\", \"how many contacts do I have\", \"SELECT … FROM\", \"query my companies table\", \"join contacts to companies\", \"what is the DDL\", \"set up a webhook-fed model\", \"where does this field live\", \"import this into a model\", \"unify these models\", \"merge duplicate accounts\", \"link contacts to companies\", \"set up a relationship between\". Skip when: querying run or batch telemetry rather than business data — use cargo-orchestration; naming a reusable filtered audience — use cargo-segmentation."
-version: "1.3.1"
+version: "1.4.0"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -66,6 +66,8 @@ cargo-ai storage dataset list
 cargo-ai storage column list --model-uuid <uuid>
 cargo-ai storage relationship list
 cargo-ai storage record list --model-uuid <uuid>
+cargo-ai storage record create-bulk --model-uuid <uuid> --records '[{"data":{...}}]'
+cargo-ai storage model preview --dataset-uuid <uuid> --slug <extractor-slug> --config '{...}'
 cargo-ai storage query execute "SELECT * FROM default.companies LIMIT 10"
 cargo-ai storage query download --query "SELECT * FROM default.companies"
 ```
@@ -97,12 +99,43 @@ cargo-ai storage model create \
   --extractor-slug <extractor-slug> \
   --config '{}'
 
-# Update a model
+# Update a model (--position moves its node on the app's data canvas)
 cargo-ai storage model update --uuid <model-uuid> --name "New Name"
+cargo-ai storage model update --uuid <model-uuid> --position '{"x":0,"y":0}'
 
 # Remove a model
 cargo-ai storage model remove <model-uuid>
+
+# Is a slug taken in this dataset? → {"exists": true|false}
+cargo-ai storage model exists-by-slug --dataset-uuid <uuid> --slug contacts
 ```
+
+### Dry-run an extractor config before creating the model
+
+`model preview` and `model preview-count` run an extractor's config **without
+creating anything**. `--slug` is the **extractor** slug (not a model slug), and
+`--dataset-uuid` is the connector's dataset (`kind: "connector"`) — the dataset
+names the connector.
+
+```bash
+# Sample rows + the extractor's total, for extractors that preview records
+cargo-ai storage model preview \
+  --dataset-uuid <connector-dataset-uuid> --slug <extractor-slug> --config '{...}'
+
+# Count only, for extractors that preview a count
+cargo-ai storage model preview-count \
+  --dataset-uuid <connector-dataset-uuid> --slug <extractor-slug> --config '{...}'
+```
+
+Each extractor supports one of the two (`preview: "records"` or `"count"` on the
+integration's extractor), and the other answers `count: 0` rather than an error —
+a `0` is not "nothing matches" until you've tried both. `preview` asks the
+extractor for a short dry page; **on a credits connector it bills whatever that
+page reports**, which is nothing for extractors that zero their dry fetch (Store
+Leads `fetchDomains`, for one) and per item for the rest. Check the extractor's
+playbook before previewing a priced one. An invalid config comes back as
+`invalidConfig` with the validator's message — the cheapest way to debug a config
+before `model create`.
 
 **Querying:** Use `cargo-ai storage query execute "<sql>"` (or `storage query download --query "<sql>"` for full exports) to run SQL against storage. Tables are referenced as `<datasetSlug>.<modelSlug>` (e.g. `default.companies`) and rewritten to the underlying storage table under the hood. See [Query with SQL](#query-with-sql) below.
 
@@ -131,7 +164,7 @@ a payload script, and an API token pasted into the node config. The webhook is f
 systems outside Cargo.
 
 Check the extractor's mode first — when it reports `"autoIngest": true` (calendly,
-smartlead, instantlyV2, heyReach, `cargoSignals` — the slug that replaced `rodz`) Cargo registers the
+smartlead, instantlyV2, heyReach, cargoSignals, explorium's listen extractors) Cargo registers the
 hook with the provider itself and the URL must **not** be handed out. Full flow,
 payload shapes, and limits: `references/examples/ingest-webhook.md`.
 
@@ -170,7 +203,24 @@ cargo-ai storage column remove --model-uuid <uuid> --column-slug <slug>
 
 # Reorder a column (move to a specific index)
 cargo-ai storage column reorder --model-uuid <uuid> --column-slug <slug> --to-index 2
+
+# Is a slug taken on this model? → {"exists": true|false}
+cargo-ai storage column exists-by-slug --model-uuid <uuid> --column-slug <slug>
+
+# Values a column holds ([{label, value}]) — what a filter on it can match
+cargo-ai storage column autocomplete --model-uuid <uuid> \
+  --column '{"slug":"industry","type":"string","label":"Industry","kind":"custom"}'
+
+# Write custom-column values onto existing records (custom column slugs only;
+# a model's own extracted fields are refused)
+cargo-ai storage column insert-custom-values --model-uuid <uuid> --id <record-id> --data '{"ai_fit_score":82}'
+cargo-ai storage column insert-custom-values-bulk --model-uuid <uuid> \
+  --records '[{"id":"rec_1","data":{"ai_fit_score":82}},{"id":"rec_2","data":{"ai_fit_score":40}}]'
 ```
+
+`insert-custom-values` is how a value computed outside Cargo (a score from your
+own pipeline, a manual tag) lands on a connector-synced model: the sync owns the
+extracted fields, custom columns are yours. Create the column first.
 
 Column types: `string`, `number`, `boolean`, `date`, `object`, `array`, `vector`, `any`.
 
@@ -277,6 +327,16 @@ cargo-ai storage run create --model-uuid <model-uuid>
 cargo-ai storage run list --model-uuid <model-uuid>
 ```
 
+`run create` is refused with `upToDate` when the last successful sync is inside
+the extractor's minimum interval, and with `alreadyRunning` while one is in
+flight. Two flags override that:
+
+- `--is-force true` — cancels an in-flight sync (waiting up to 60 s for it to
+  stop) and starts a new one regardless of freshness.
+- `--is-reset true` — clears the extractor's incremental cursor and rebuilds the
+  model from the source, as a first sync would. On a per-item-priced extractor
+  that **re-bills the whole result set**, so quote it before running.
+
 Get the current config from `storage model get <uuid>` → `unification` (`null`
 when the model doesn't unify). Once the run finishes, check the row count with
 `storage query execute` before treating the change as done — a too-narrow
@@ -286,9 +346,28 @@ both look like a successful run.
 ## Records
 
 ```bash
-# List records in a model
+# List records in a model (sortable on _id, _title, or _emitted_at — the last
+# only on models built from ingested records)
 cargo-ai storage record list --model-uuid <uuid>
+cargo-ai storage record list --model-uuid <uuid> --limit 100 --sort-column-slug _emitted_at --sort-kind desc
+cargo-ai storage record get --model-uuid <uuid> --id <record-id>
+
+# Write records — one at a time, or up to 1,000 per bulk call
+cargo-ai storage record create --model-uuid <uuid> --data '{"name":"Ada","email":"ada@acme.com"}'
+cargo-ai storage record update --model-uuid <uuid> --id <record-id> --data '{"status":"done"}'
+cargo-ai storage record remove --model-uuid <uuid> --id <record-id>
+cargo-ai storage record create-bulk --model-uuid <uuid> --records '[{"data":{"name":"Ada"}},{"data":{"name":"Lin"}}]'
+cargo-ai storage record update-bulk --model-uuid <uuid> --records '[{"id":"rec_1","data":{"status":"done"}}]'
+cargo-ai storage record remove-bulk --model-uuid <uuid> --ids '["rec_1","rec_2"]'
 ```
+
+Record writes go to **native models and ingest models** only. On an ingest model a
+write takes the same path as a webhook POST — through the extractor, so its
+per-item credits apply and its payload validation can reject the batch
+(`invalidRecords`). A fetch-mode model (one a connector syncs) refuses them with
+`integrationNotCompatible`: its rows belong to the sync. To annotate synced rows,
+use `column insert-custom-values` instead. Inside a workflow, write with the
+native `modelUpsert` / `modelInsert` action rather than shelling out.
 
 For advanced record queries (filtering, sorting, pagination), use `segmentation segment fetch` from the `cargo-segmentation` skill.
 
