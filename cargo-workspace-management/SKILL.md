@@ -1,7 +1,7 @@
 ---
 name: cargo-workspace-management
 description: "Administer a Cargo workspace and talk back to the Cargo team — invite and manage members, mint and rotate API tokens, organize plays, tools, and agents into folders, inspect roles, upload batch input files, and file reports. Triggers: \"invite my teammate\", \"create an API token for CI\", \"who has access\", \"organize these into folders\", \"rotate that token\", \"upload this CSV for a batch\" — and for feedback: \"report this bug to Cargo\", \"send feedback to the Cargo team\", \"this CLI command is broken\", \"share this session with Cargo\", \"request a feature\". Most commands need a token with admin access. Skip when: the question is about credits, plans, or invoices — use cargo-billing."
-version: "1.6.1"
+version: "1.6.2"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -126,7 +126,7 @@ Two things to know about `upsert-permission`:
 
 `--emails` **invites** any address that isn't a member yet, so check `user list` first.
 
-**Per-member monthly credit cap — stored, not enforced yet.** `PUT /v1/workspaceManagement/users/<user-uuid>` accepts `{"monthlyCreditsLimit": <n> | null}` (credits a member may consume per UTC calendar month across the runs, batches and agent messages they trigger; `null` removes it), and `user list` returns the field. There is no CLI flag for it, and **the backend does not enforce it** — the check is switched off in billing on master — so a member over their cap still runs. Say so if a user sets one. Per-member spend is readable today: see `cargo-billing` (`usage get-metrics --group-by user_uuid`).
+**Per-member monthly credit cap.** `PUT /v1/workspaceManagement/users/<user-uuid>` accepts `{"monthlyCreditsLimit": <n> | null}`: the credits a member may consume per UTC calendar month across the runs, batches and agent messages they trigger. `null` removes it. Admins also set it in the web app (Settings → Users → the member's credits limit), `user list` returns the field, and there is no CLI flag for it. Once the member reaches the cap, their new credit-consuming work is refused until the next month, the same way an empty workspace balance refuses it. The check gates work before it starts and reads spend cached for up to a minute, so a member can land slightly past the cap. It fails open: if the limit or the ledger can't be read, the work runs. Enforcement shipped with cargo#6379, and caps set before then were stored but not enforced. Per-member spend is readable in `cargo-billing` (`usage get-metrics --group-by user_uuid`).
 
 ### Service users
 
