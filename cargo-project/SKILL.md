@@ -1,7 +1,7 @@
 ---
 name: cargo-project
 description: "Declare a whole Cargo workspace in a project, GTM as Code — connectors, models, plays, tools, agents, MCP servers, segments, context, folders, files, workers, and apps in TypeScript, reconciled with `cargo-ai project` (init → types → plan → deploy), the way you would run Pulumi or Terraform. Triggers: \"as code\", \"in git\", \"version-controlled\", \"reproducible\", \"Terraform for Cargo\", \"set up a whole workspace\", \"staging and production\", \"deploy the workspace from CI\", \"review this in a PR\", \"cargo.json\", \"cargo.state.json\", \"scaffold from a template\", \"is there a cookbook for this\", \"start from a cookbook\". Skills with a worked project example (TAM building, account scoring, call capture, inbound qualification, CRM enrichment, standup) live in gtm-skills; menu in references/cookbooks.md. Skip when: it is a one-off operation, a read, or an ad-hoc query — use the matching capability skill."
-version: "4.1.0"
+version: "4.1.1"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -239,9 +239,11 @@ the project's `package.json` and reverts adapted code, while `cargo.state.json`
 survives, so the next `plan` diffs a live workspace against code nobody wrote. Copy the
 skill folder in as a sibling instead.
 
-Caveat: the examples typecheck, but they are not yet deploy-verified against a live
-workspace, and every one is `to-be-approved`. Treat each skill's `Done when` as the
-acceptance test, and always review `cargo-ai project plan` before deploying.
+Each cookbook's state is in the menu's `State` column. `approved` means it was deployed
+and run on a live workspace and its results checked; `to-be-approved` means it
+typechecks and plans but has not been deploy-verified yet, so say so when you suggest
+it. Either way, treat the skill's `Done when` as the acceptance test and review
+`cargo-ai project plan` before deploying.
 
 ### Recipes — follow step-by-step when one matches
 
