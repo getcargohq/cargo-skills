@@ -10,6 +10,10 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### `cargo-workspace-management` 1.6.2, `cargo-billing` 2.1.2: the per-member credit cap is enforced
+
+cargo#6379 switches on the per-member monthly credit cap from cargo#6126. A member who reaches `monthlyCreditsLimit` has new credit-consuming work refused until the next UTC month. The skills drop the "stored, not enforced" warning. They describe enforcement: it gates work before it starts, spend is cached for up to a minute, and it fails open. They also add the web-app path (Settings → Users), and cargo-billing says to check a member's spend when their runs fail for credits while the workspace balance is healthy.
+
 ### `cargo-segmentation` 1.2.1, `cargo-orchestration` 1.17.1, `cargo-workspace-management` 1.6.1, `cargo-ai` 2.8.1, `cargo-connection` 1.7.1, `cargo-project` 4.3.1, `cargo-mailbox-management` 1.5.0: CLI 1.0.128 fixes the bugs the skills worked around
 
 cargo#6369 (CLI 1.0.128) fixes the CLI and API bugs the October docs PRs found, so the workarounds become notes about older versions.
