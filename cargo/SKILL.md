@@ -63,6 +63,8 @@ cargo-ai login --email you@company.com --workspace-name "Acme GTM"
 cargo-ai whoami
 ```
 
+**Look before signing up.** With no account at all, `cargo-ai orchestration action list <keywords>`, `connection integration list|get` and `orchestration action execute … --dry-run` (connector and native actions: validates `--data`, prints sample output in the finished-run shape with the credit price, calls nothing) work against the public catalog; `project plan` and `project types` do too.
+
 **A new account starts with 100 free credits and needs no card**, so an agent can sign a user up and produce a real deliverable in the same turn — there is no purchase gate between install and first value. Useful anchors for what that buys: ~500 leads sourced (`salesNavigator.searchLeads`, 0.2/record), ~1,000 profile+verified-email enriches (`aiArk.enrichPerson`, 0.1), ~1,000 email verifications (`waterfall.verifyEmail`, 0.1), or ~50 fully enriched contacts (`waterfall.enrichContact`, 2). The [quickstart demo](../cargo-quickstart/SKILL.md) spends about **5**. Say the free balance out loud before the first paid call on a new account.
 
 `--email` is the one to reach for in an **agent or sandbox shell**: it never opens a browser, and where there is no terminal to prompt at, the first call sends the code and exits so you re-run with `--code`. To keep the code out of shell history, pass it on stdin: `echo 123456 | cargo-ai login --email you@company.com --code -`. Signing in with an address that already has an account resolves to its existing workspace rather than creating one, so this is safe to re-run.

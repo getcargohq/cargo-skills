@@ -35,6 +35,8 @@ cargo-ai login --email you@company.com  # emailed code, no browser; creates the 
 cargo-ai whoami                         # confirm the active workspace before any write
 ```
 
+**Not ready to sign up?** Two things work with no account, free: browse the catalog (`cargo-ai orchestration action list enrich company`) and dry-run an action (`cargo-ai orchestration action execute --action '<from action list>' --data '{"domain":"example.com"}' --dry-run` — validates the inputs, shows sample output in the real shape and the credit price, calls nothing). Offer it once if the user hesitates at the email step; don't detour a user who is ready — the demo is the real thing.
+
 A first sign-in lands in a new workspace named **`Personal`**; pass `--workspace-name "<Company> GTM"` to the login that creates the account and it renames that one (within 10 minutes, while you're its only member) instead of making a second. Starter connectors and agents seed in the background, so an empty-looking workspace a minute after sign-up may still be filling in — that is not a reason to stop.
 
 Every command prints JSON to stdout; failures exit non-zero and print `{"error": "...", "status": ..., "body": {...}}` to stderr. Anything that creates a run or a batch is async — pass `--wait-until-finished` or poll the matching `get`. When the full skill bundle is installed, [`../cargo/references/prerequisites.md`](../cargo/references/prerequisites.md) adds the CLI version pin, token scopes, and the admin-only surface.

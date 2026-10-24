@@ -164,6 +164,7 @@ cargo-ai orchestration action list send --kind connector --integration-slug slac
 cargo-ai orchestration action execute --action '{"kind":"tool","toolUuid":"<uuid>"}' --data '{"domain":"acme.com"}'
 cargo-ai orchestration action execute-batch --action '{"kind":"connector","integrationSlug":"clearbit","actionSlug":"enrichCompany"}' --records '[{...},{...}]'
 cargo-ai orchestration action get-output-schema --action '{"kind":"connector","integrationSlug":"clearbit","actionSlug":"enrichCompany"}' # → {"schema": <JSON Schema>} without executing
+cargo-ai orchestration action execute --action '{"kind":"connector","integrationSlug":"aiArk","actionSlug":"enrichCompany"}' --data '{"domain":"example.com"}' --dry-run   # free, no account: validates --data, sample output + price
 
 # Workflows (chain multiple actions)
 cargo-ai orchestration run create --workflow-uuid <uuid> --data '{"company":"Acme","domain":"acme.com"}'
@@ -288,6 +289,23 @@ Actions that declare no output schema fail with `Not found: actionHasNoOutput` (
 - Map an action's output onto storage columns without a throwaway run.
 
 See `references/examples/actions.md` ("Resolve an action's output schema") for verified per-kind examples and the response/error shapes.
+
+### Dry run — check inputs and price, free, no account
+
+```bash
+cargo-ai orchestration action execute \
+  --action '{"kind":"connector","integrationSlug":"aiArk","actionSlug":"enrichCompany"}' \
+  --data '{"domain":"example.com"}' --dry-run
+```
+
+Runs nothing and calls no provider: it validates `--data` against the action's input schema client-side and prints **sample** output in the shape of a finished run — `{run: {status: "success", executions: [...]}, runContext: {action: <sample>}, runComputedConfigs: {action: <your --data>}, dryRun: {sample: true, estimatedCredits, creditsFormula, note}}`. It always reads the public catalog, so it works **signed out** too (a notice goes to stderr; stdout stays JSON).
+
+- **Connector and native actions only.** `tool` / `agent` are refused (they run your workspace's own workflow). `connectorUuid` is not needed.
+- **A schema miss exits as invalid usage** — ``--data does not match the inputs of `<action>`.`` with `errors[]` (e.g. `Missing required field: x`). The first check to run when a real call came back empty.
+- **The values are fake; the shape and the price are real.** Sample data is generated from the output schema. `estimatedCredits` prices one call (one unit or one block for unit / package pricing — `creditsFormula` says which) and **excludes the 0.01 node execution charge**.
+- **Config-dependent outputs can't be shown** — ``… has no fixed output schema: what it returns depends on its configuration, so a dry run cannot show it.`` Signed in, `action get-output-schema --data …` resolves it. Open-schema actions show an empty object (`classify` shows `answers: {}`).
+
+Signed out, the catalog is browsable too: `orchestration action list` (connector and native actions only — tools and agents need a workspace), `connection integration list|get|get-documentation`, `connection action search`, plus `project plan` / `project types`. Everything that runs needs a sign-in (`cargo-ai login --email …`, 100 free credits).
 
 ## Create a run
 
