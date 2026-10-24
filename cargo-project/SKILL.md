@@ -1,7 +1,7 @@
 ---
 name: cargo-project
 description: "Declare a whole Cargo workspace in a project, GTM as Code — connectors, models, plays, tools, agents, MCP servers, segments, context, folders, files, workers, and apps in TypeScript, reconciled with `cargo-ai project` (init → types → plan → deploy), the way you would run Pulumi or Terraform. Triggers: \"as code\", \"in git\", \"version-controlled\", \"reproducible\", \"Terraform for Cargo\", \"set up a whole workspace\", \"staging and production\", \"deploy the workspace from CI\", \"review this in a PR\", \"cargo.json\", \"cargo.state.json\", \"scaffold from a template\", \"is there a cookbook for this\", \"start from a cookbook\". Skills with a worked project example (TAM building, account scoring, call capture, inbound qualification, CRM enrichment, standup) live in gtm-skills; menu in references/cookbooks.md. Skip when: it is a one-off operation, a read, or an ad-hoc query — use the matching capability skill."
-version: "4.0.0"
+version: "4.1.0"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -97,6 +97,29 @@ user is doing a **one-off operation** or **exploring**:
 When unsure, ask whether the result should be committed and re-deployable. If yes
 → a project. If it's a quick action or a read → the capability skill (see the
 [`cargo` router](../cargo/SKILL.md) to pick the right domain).
+
+### Before writing anything: restate it, then ask only what you cannot read
+
+A project request is usually one sentence ("score our accounts every week"), and the
+gap between that sentence and a deployed graph is where a wrong build comes from. Close
+it before the first `define*` file, not after the plan.
+
+1. **Read first.** `cargo-ai whoami`, `connection connector list`, `storage model list`,
+   the project's existing `infra/`, and [`references/cookbooks.md`](references/cookbooks.md).
+   Never ask what one of those answers (which CRM is connected, whether a Companies
+   model exists, whether a cookbook already does this).
+2. **Restate the build in four lines**: what keeps arriving and where it lands; what
+   triggers it (schedule, webhook, record change); what it reads and what it writes;
+   what it spends on each run (the paid nodes, how many records, how often).
+3. **Ask at most three questions**, only for what lives in the user's head: which
+   records count (the segment), where the result goes (a channel, a CRM field), the
+   volume or credit ceiling. Give each a proposed default, so "yes" answers all of them.
+4. **Wait for that yes before authoring.** If the user already said to just build it, or
+   the request names every piece, write the restatement as stated assumptions and carry
+   on; the plan review is then where they correct it.
+
+A cookbook's `What you will be asked` table is this step already worked out for that
+outcome: use it instead of improvising one.
 
 ## 3) The lifecycle
 
