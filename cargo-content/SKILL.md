@@ -1,7 +1,7 @@
 ---
 name: cargo-content
 description: "Manage the files a Cargo workspace holds — upload knowledge (PDF, CSV, text) and build native or connector-backed libraries agents retrieve from (RAG), and use files as plain storage: write and read by path, list a folder, hand out a signed or public link. Triggers: \"upload this PDF\", \"add these docs as knowledge\", \"build a knowledge base\", \"sync our help center into Cargo\", \"what files are in the workspace\", \"index this folder\", \"attach our pricing sheet\", \"store this file\", \"save the report somewhere\", \"give me a link to the file\", \"make this file public\". Skip when: wiring the file or library into an agent — use cargo-ai; uploading a CSV that drives a batch run — that is a workspace-management file upload."
-version: "1.1.0"
+version: "1.2.0"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:

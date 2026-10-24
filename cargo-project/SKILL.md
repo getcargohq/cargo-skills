@@ -1,7 +1,7 @@
 ---
 name: cargo-project
 description: "Declare a whole Cargo workspace in a project, GTM as Code — connectors, models, plays, tools, agents, MCP servers, segments, context, folders, files, workers, and apps in TypeScript, reconciled with `cargo-ai project` (init → types → plan → deploy), the way you would run Pulumi or Terraform. Triggers: \"as code\", \"in git\", \"version-controlled\", \"reproducible\", \"Terraform for Cargo\", \"set up a whole workspace\", \"staging and production\", \"deploy the workspace from CI\", \"review this in a PR\", \"cargo.json\", \"cargo.state.json\", \"scaffold from a template\", \"is there a cookbook for this\", \"start from a cookbook\". Skills with a worked project example (TAM building, account scoring, call capture, inbound qualification, CRM enrichment, standup) live in gtm-skills; menu in references/cookbooks.md. Skip when: it is a one-off operation, a read, or an ad-hoc query — use the matching capability skill."
-version: "4.2.0"
+version: "4.3.0"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
