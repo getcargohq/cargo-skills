@@ -64,7 +64,7 @@ silent success. Read the reason; it decides whether retrying is pointless.
 | Reason | Meaning | Retries? |
 | --- | --- | --- |
 | `recipientSuppressed` | The address is on the workspace suppression list | ❌ Needs a human — and the answer is not to remove the suppression |
-| `mailboxNotActive` | Mailbox is `pending`, or the provider disabled it (`errorCode` 401 auth / 402 spam) | ❌ Fix the mailbox |
+| `mailboxNotActive` | Mailbox is `pending`, the provider disabled it (`inactive`, `errorCode` 401 auth / 402 spam), or Cargo cannot log into it (`error`) | ❌ Fix the mailbox |
 | `mailboxSendingPaused` | The mailbox's `dailySendLimit` is `0`, which pauses outreach from it | ❌ Until the override is lifted |
 | `transportNotSupported` | An `outlook` mailbox — Graph delivery has not shipped | ❌ Permanent |
 | `mailboxNotFound` | Bad `mailboxUuid` | ❌ |
