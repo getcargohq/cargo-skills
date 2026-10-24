@@ -310,9 +310,9 @@ The CLI exposes several domains that no capability skill wraps yet. Reach for th
 
 | CLI domain | Covers |
 | --- | --- |
-| `expression` | Recipes and expression evaluation (`eval`, `recipe`) — generate/evaluate the template expressions used in node graphs. |
-| `system-of-record` | System-of-record, client, and log operations. |
-| `revenue-organization` | Allocations, capacities, members, territories (revenue/territory planning). |
+| `expression` | The template / JS expressions node configs are written in. `eval evaluate --expression '<json>' --variables '<json>'` resolves one against sample variables (the quickest check on a `{{…}}` before a run), and `eval generate --prompt "…" --variables '<json>'` drafts one from plain English. **Recipes** are saved, reusable expressions: `recipe list`, `recipe get <uuidOrShortId> [version]`, `recipe create --name … --kind jsExpression\|templateExpression --expression … [--instruct-to ai\|none] [--placeholders '<json>']`, `recipe create-new-version`, `recipe archive <uuid>`; `favorite-recipe create\|delete` pins one for the workspace. |
+| `system-of-record` | The warehouse the workspace's storage lives in (`bigQuery` or `snowflake`). `sor list\|get\|create --kind … --config '<json>'\|update\|remove`; **`sor migrate <uuid>`** applies Cargo's pending schema migrations to that warehouse, in order, stopping at the first that fails; **`sor cutover <uuid>`** moves the workspace onto that system of record, copying its tables across in the background (one cutover per workspace at a time). Both are admin operations on live storage — confirm before running either. `client query "<sql>"`, `client fetch`, `client download` and `client get-documentation <slug>` talk to the warehouse directly; `log list` / `log get-metrics` read its sync logs. For everyday SQL over models, `storage query execute` (cargo-storage) is the right door. |
+| `revenue-organization` | Territory and capacity planning for a sales team: `member list\|get\|update\|archive\|unarchive` and `member sync --connector-uuid <crm-connector>` (pull reps from the CRM), `territory list\|get\|create\|update\|remove`, `capacity list\|get\|create\|update\|remove`, and `allocation list\|get\|remove` — the assignments the native **`allocate`** action (`{"kind":"native","actionSlug":"allocate"}`, "choose members of your team") writes when a workflow routes a record to a rep. |
 | `user-management` | Current-user operations with no workspace context. |
 
 ### Top-level commands outside every domain
