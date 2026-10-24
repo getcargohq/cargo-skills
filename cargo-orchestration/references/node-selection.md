@@ -56,7 +56,8 @@ The next node's field can hold that expression directly.
 
 | Instead of… | Use |
 | --- | --- |
-| code to call an LLM and parse its JSON | the native `agent` node with `output.type:"jsonSchema"`, read as `{{nodes.<slug>.answer.<field>}}` |
+| an `agent` + JSON schema to label, route, answer yes/no, or score | the native `classify` action: typed `noul` / `choice` / `score` questions answered in one call with probabilities, no connector or model to pick, 0.01 credits per 1k input tokens. Read `{{nodes.<slug>.answers.<id>.choice}}`. See [`nodes.md`](nodes.md) → "`classify`" |
+| code to call an LLM and parse its JSON | the native `agent` node with `output.type:"jsonSchema"`, read as `{{nodes.<slug>.answer.<field>}}` — for extraction and free-form generation; for classification use `classify` |
 | a raw HTTP request to a provider | the integration's connector action. Find it with `cargo-ai orchestration action list <keywords>` |
 | an HTTP call to a Cargo model's `/records/ingest` webhook | the native `modelUpsert` / `modelInsert` action. See [`nodes.md`](nodes.md) → "Storage" |
 | an HTTP call to a storage API, or code to build a file and a link | the native `writeFile` / `readFile` / `getFileUrl` actions. See [`nodes.md`](nodes.md) → "Files" |
