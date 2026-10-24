@@ -170,7 +170,7 @@ cargo-ai orchestration batch list --workflow-uuids <play.workflowUuid> --include
 cargo-ai orchestration batch list --workflow-uuids <play.workflowUuid> --excluded-data-kinds change,watchedRecords,schedule
 ```
 
-Data kinds for `--included-data-kinds` / `--excluded-data-kinds`: `segment`, `change`, `filter`, `recordIds`, `watchedRecords`, `records`, `file`, `runs`, `group`, `schedule`, `form`. **Pass one kind to `--included-data-kinds`.** Each kind is applied as its own condition and they are AND-ed, so `filter,recordIds` matches no batch at all and returns an empty list. To keep several kinds, exclude the others instead — exclusions combine the way you'd expect.
+Data kinds for `--included-data-kinds` / `--excluded-data-kinds`: `segment`, `change`, `filter`, `recordIds`, `watchedRecords`, `records`, `file`, `runs`, `group`, `schedule`, `form`. Several kinds in `--included-data-kinds` match a batch of **any** of them (`filter,recordIds`). Until cargo#6369 (CLI 1.0.126) the kinds were AND-ed, so two or more returned an empty list; on a workspace still answering that way, exclude the others instead.
 
 ## Change a play's settings, set a health alert, or remove it
 

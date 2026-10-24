@@ -1,7 +1,7 @@
 ---
 name: cargo-ai
 description: "Build and configure AI agents inside Cargo — create an agent, choose its model and temperature, write its prompt, attach knowledge for retrieval (RAG), connect MCP tool servers, manage memories, and deploy releases. Triggers: \"create an agent\", \"make an agent that\", \"give the agent our docs\", \"attach this knowledge base\", \"attach this library to the agent\", \"add resources to the agent release\", \"connect an MCP server\", \"expose our tools as an MCP server\", \"use Cargo from Claude Desktop or ChatGPT\", \"change the agent model\", \"what does the agent remember\", \"deploy the agent\", \"the agent is answering wrong\". Skip when: uploading the knowledge files themselves — use cargo-content; sending the agent a message or running it over records — use cargo-orchestration."
-version: "2.8.0"
+version: "2.8.1"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -386,7 +386,7 @@ cargo-ai ai prompt evaluate --prompt "<system prompt with {{…}} expressions>" 
 ```
 
 - **`prompt optimize`** rewrites rough instructions into a structured system prompt (role, behavior, avoidances) with a fixed small model at temperature 0. Treat the result as a draft to edit, not a prompt to ship.
-- **`prompt evaluate` does not score anything**, whatever its help text says. It **renders** the prompt: template expressions in it are resolved against the `--actions`, `--resources` and `--capabilities` you pass, and the response is the prompt text the agent would actually receive. Use it to check that a system prompt's `{{…}}` references resolve before deploying a release.
+- **`prompt evaluate` does not score anything** (its help said it did before CLI 1.0.126). It **renders** the prompt: template expressions in it are resolved against the `--actions`, `--resources` and `--capabilities` you pass, and the response is the prompt text the agent would actually receive. Use it to check that a system prompt's `{{…}}` references resolve before deploying a release.
 - **`document reset` is destructive** — every version created after the one you name is deleted. `list --uuid` first to pick the `createdAt`.
 - A downvote is feedback the workspace keeps; it does not change the agent. Fixing the answer is a release change (prompt, model, resources).
 

@@ -1,7 +1,7 @@
 ---
 name: cargo-connection
 description: "Connect Cargo to an external system and find out what it can do — authenticate connectors, browse the integration catalog, and resolve the `connectorUuid` and `actionSlug` a workflow node needs. Triggers: \"connect my HubSpot\", \"is Salesforce connected\", \"what integrations do you support\", \"can Cargo talk to <tool>\", \"what actions does <provider> have\", \"I need the connector UUID\", \"set up the API key for\", \"it is asking for credentials again\", \"why is this connector failing auth\", \"list my connectors\". Integrations: amplemarket, amplitude, attio, bigQuery, calendly, cargoSignals, closecom, contrast, csv, customerio, dbt, emailBison, expandi, googleAds, googleCalendar, googleSheets, heyReach, http, hubspot, hubspotMcp, instantly, instantlyV2, intercom, jira, kitt, lemlist, lgm, linkedinAds, linkedinMatchedAudience, livestorm, manus, marketo, metaAds, metabase, microsoftTeams, mixpanel, monaco, netsuite, netsuiteSoap, nooks, notionMcp, octave, onesignal, outreach, pipedrive, postgresql, redshift, resend, rift, salesforce, salesforceMcp, salesloft, Sendgrid, sillage, slack, smartlead, snowflake, sql, stripe, xAds, and 87 more. Skip when: choosing between enrichment providers for a GTM job — use cargo-gtm and its provider playbooks."
-version: "1.7.0"
+version: "1.7.1"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -312,7 +312,7 @@ cargo-ai connection connector get-dynamic-schema \
   --connector-uuid <uuid> --slug getConsentOptions --params '{"formId":"<form-id>"}'
 ```
 
-`--slug` is the **dynamic-schema** slug from `ui:options`, not the action slug (the CLI help says "action slug"). The response carries `schema` (JSON Schema for the field) and `uiSchema`; fill the field to match. Params that don't validate return an **empty** result (no `schema`) rather than an error, so an empty answer usually means a missing or misnamed param.
+`--slug` is the **dynamic-schema** slug from `ui:options`, not the action slug (the help said "action slug" before CLI 1.0.126). The response carries `schema` (JSON Schema for the field) and `uiSchema`; fill the field to match. Params that don't validate return an **empty** result (no `schema`) rather than an error, so an empty answer usually means a missing or misnamed param.
 
 ### End-to-end example: configuring a HubSpot action
 

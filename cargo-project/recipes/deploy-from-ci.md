@@ -44,8 +44,7 @@ cargo-ai project state disconnect                 # stop planning and deploying;
 ```
 
 The repository comes from `origin`, the directory from where `cargo.json` sits, the
-state from `cargo.state.json`. (`project state connect --help` prints the parent help;
-`cargo-ai project state help connect` shows the real flags.) `project init` offers to
+state from `cargo.state.json`. `project init` offers to
 connect once the scaffold is pushed. The web-app equivalent is **Settings → States**.
 
 > **Connecting deploys immediately.** With auto-deploy on (the default), connect deploys

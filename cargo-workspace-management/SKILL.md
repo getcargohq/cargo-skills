@@ -1,7 +1,7 @@
 ---
 name: cargo-workspace-management
 description: "Administer a Cargo workspace and talk back to the Cargo team — invite and manage members, mint and rotate API tokens, organize plays, tools, and agents into folders, inspect roles, upload batch input files, and file reports. Triggers: \"invite my teammate\", \"create an API token for CI\", \"who has access\", \"organize these into folders\", \"rotate that token\", \"upload this CSV for a batch\" — and for feedback: \"report this bug to Cargo\", \"send feedback to the Cargo team\", \"this CLI command is broken\", \"share this session with Cargo\", \"request a feature\". Most commands need a token with admin access. Skip when: the question is about credits, plans, or invoices — use cargo-billing."
-version: "1.6.0"
+version: "1.6.1"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -119,10 +119,10 @@ cargo-ai workspaceManagement user upsert-permission \
 cargo-ai workspaceManagement user remove-permission --user-uuid <uuid> --resource-uuid <workflow-uuid> --effect allow
 ```
 
-Two things the `upsert-permission` help gets wrong at CLI 1.0.125:
+Two things to know about `upsert-permission`:
 
-- **`--action` is a permission action, not `read` / `write`.** It must be one of the actions listed under [Roles](#roles) — the resource-scoped ones are `orchestration:workflow:*|read|write`, `ai:agent:…`, `ai:mcpServer:…`, `hosting:app:…`, `hosting:worker:…`, `content:file:…` and `workspaceManagement:folder:…`. The help's `--action read` example is rejected.
-- **`--effect deny` is ignored.** The CLI requires `--effect`, but the API always writes an **allow**; a deny statement has to be part of a role (`role create|update --permissions`). `remove-permission` does honor `--effect`.
+- **`--action` is a permission action, not `read` / `write`.** It must be one of the actions listed under [Roles](#roles) — the resource-scoped ones are `orchestration:workflow:*|read|write`, `ai:agent:…`, `ai:mcpServer:…`, `hosting:app:…`, `hosting:worker:…`, `content:file:…` and `workspaceManagement:folder:…`. (The help's own `--action read` example was invalid before CLI 1.0.126.)
+- **`--effect deny` applies to existing members only**, so it takes `--user-uuids`; with `--emails` it is refused, because that path invites. Before cargo#6369 (CLI 1.0.126) the API ignored the effect and always wrote an **allow** — on a workspace still doing so, put the deny in a role (`role create|update --permissions`). `remove-permission` honors `--effect` either way.
 
 `--emails` **invites** any address that isn't a member yet, so check `user list` first.
 

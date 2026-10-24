@@ -32,16 +32,6 @@ Other causes of a 400:
 cargo-ai segmentation change fetch --uuid <change-uuid> --kinds added --limit 50
 ```
 
-## `--help` prints the parent command's help
-
-On CLI ≥ 1.0.48, `cargo-ai segmentation change <sub> --help` and `cargo-ai segmentation record fetch --help` render the `segmentation` help instead of the subcommand's flags. Use the Quick reference in [`../SKILL.md`](../SKILL.md); discover required flags by running the command bare and reading the `required option` error. If this persists, file a report:
-
-```bash
-cargo-ai workspaceManagement report create \
-  --title "segmentation change/record --help shows parent help" \
-  --description "cargo-ai segmentation change fetch --help renders the segmentation help, not the subcommand flags. CLI <version>."
-```
-
 ## `segment download` returns a 400
 
 It takes `--model-uuid` plus the `--filter`, not `--segment-uuid`. To download a *saved* segment, read its `modelUuid` and `filter` off `segment get` and pass those:
