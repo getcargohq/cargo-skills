@@ -168,6 +168,7 @@ cargo-ai orchestration action get-output-schema --action '{"kind":"connector","i
 # Workflows (chain multiple actions)
 cargo-ai orchestration run create --workflow-uuid <uuid> --data '{"company":"Acme","domain":"acme.com"}'
 cargo-ai orchestration run create --data '{"domain":"acme.com"}' --nodes '[...]'
+cargo-ai orchestration batch preview --workflow-uuid <uuid> --data '<same as batch create>'   # free: count + up to 200 sample records, creates nothing
 cargo-ai orchestration batch create --workflow-uuid <uuid> --data '{"kind":"filter","modelUuid":"...","filter":{"conjonction":"and","groups":[]}}'
 
 # AI agents
@@ -175,6 +176,8 @@ cargo-ai ai message create --chat-uuid <uuid> --parts '[{"type":"text","text":".
 
 # Data
 cargo-ai orchestration query execute "SELECT count() FROM runs WHERE status='error'" # ClickHouse: spans, runs, batches, records
+cargo-ai orchestration trace list --started-after <iso> --statuses error,degraded   # one row per trigger, across child runs; also trace count / trace get <uuid>
+cargo-ai orchestration span list --execution-started-after <iso> --batch-uuid <uuid> --execution-statuses error   # node executions without SQL; also span count
 cargo-ai segmentation segment fetch --model-uuid <uuid> --filter '{"conjonction":"and","groups":[]}' --fetching-limit 100
 # For SQL against workspace storage (Companies, Contacts, …), see the cargo-storage skill: `storage query execute`
 ```
@@ -324,10 +327,14 @@ See `references/examples/tools.md` for file uploads, monitoring, and cancellatio
 **1. Count the pool first (free).** Never quote an estimate from a guess:
 
 ```bash
+cargo-ai orchestration batch preview --workflow-uuid <uuid> --data '<the exact batch create --data>'
+#   → {outcome:"previewed", count, records (≤ 200), isRefreshing} — creates no batch, bills nothing
 cargo-ai segmentation segment get <segment-uuid>          # → recordsCount (also on `segment list`)
 cargo-ai storage query execute "SELECT count() FROM <dataset>.<model>"   # for a filter/model source
 # For a file source: wc -l on the CSV, minus the header row.
 ```
+
+`batch preview` is the one count that reads the **same `--data`** the batch will — so a filter typo shows up as a wrong count before anything runs. It sizes the audience; it does not price it. It previews `change`, `filter`, `segment`, `recordIds`, `file` and `records` sources; `runs`, `group` and `schedule` come back `count: 0, records: []`, which is **not** an empty audience. `isRefreshing: true` means a model refresh was in flight, so the newest writes may be missing. Errors: `workflowNotFound` / `segmentNotFound` (404), `failedToFetchFromClient` (400).
 
 **2. Run 10–20 records through the exact workflow and config.** Sample by data kind:
 

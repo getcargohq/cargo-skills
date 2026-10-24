@@ -46,6 +46,20 @@ cargo-ai orchestration query execute \
 
 Play anatomy and the rest of the play surface: [`../../cargo-orchestration/references/examples/plays.md`](../../cargo-orchestration/references/examples/plays.md).
 
+**"Something failed today" / "what broke"** — no record, no workflow. List failed traces; each carries its `rootRunUuid` and `rootRecordTitle`:
+
+```bash
+cargo-ai orchestration trace list --started-after 2026-10-23T00:00:00Z --statuses error,degraded --limit 20
+cargo-ai orchestration trace count --started-after 2026-10-23T00:00:00Z --statuses error   # how many, before listing
+```
+
+**An error message the user quotes** ("it said 401") — search spans directly:
+
+```bash
+cargo-ai orchestration span list --execution-started-after 2026-10-20T00:00:00Z \
+  --execution-statuses error --execution-title-or-error-message "%401%" --limit 10   # → runUuid, traceUuid
+```
+
 **Coming from a batch sweep** — you already have exemplar UUIDs; skip ahead.
 
 ### When the discovery query itself errors
@@ -71,6 +85,8 @@ Read three fields, in this order:
 
 Don't paste the raw response into the conversation — extract the two or three nodes that matter (see "Presenting" below).
 
+**When the run called other runs** (a tool node, an agent node, a hosted worker, an agent chat), `run get` shows only this run. `run.traceUuid` names the trace that groups the whole lineage; `cargo-ai orchestration trace get <traceUuid>` gives its totals (`spansCount`, `failedSpansCount`, `creditsUsedCount`, `status`), and the child runs' node executions come from `span list --parent-run-uuid <run-uuid> --execution-started-after <iso>` (or SQL `FROM spans WHERE trace_uuid = '<uuid>'`). A chat's trace holds one root run per assistant turn plus one per action the agent took.
+
 ## 2. Diagnose by symptom
 
 | Symptom | Where to look | Typical conclusion |
@@ -79,6 +95,7 @@ Don't paste the raw response into the conversation — extract the two or three 
 | Run `success`, output empty | `runContext.<upstreamSlug>` of the node that produced the empty value | Expression path doesn't exist — commonly agent output nested under `.answer` (`{{nodes.qualify.answer.qualified}}`, not `{{nodes.qualify.qualified}}`) |
 | Wrong branch taken | The branch node's `nodeChildIndex` + the `runContext` of the node its condition references | Condition resolved falsy because the referenced path is missing/undefined — verify the real shape in `runContext` |
 | Connector node "worked" but downstream empty | `runContext.<connectorSlug>` | Partial provider response; the real field names differ from the ones referenced (e.g. `contact.email` vs `email`) |
+| Run `success`, trace `degraded` | The node whose `fallbackChildUuid` edge fired — its span is `error` | The provider failed and the fallback path absorbed it; the "skipped" step was reached on failure. Diagnose the errored node, not the fallback |
 | One node absurdly slow | Spans timing query below | Rate-limited or retrying connector; see the batch-sizing section of `troubleshooting.md` |
 
 Per-node timing for the slow-node case:

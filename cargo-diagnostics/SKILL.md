@@ -72,7 +72,9 @@ Rule of thumb: start with the **sweep** when you don't yet know which run to loo
 | Surface | Command | Gives you |
 | --- | --- | --- |
 | Run detail | `cargo-ai orchestration run get <run-uuid>` | `run.executions[]` (node-by-node trace), `runContext` (per-node output keyed by `nodeSlug`), `runComputedConfigs` (what each node was actually called with) |
-| Orchestration SQL | `cargo-ai orchestration query execute "<sql>"` | Aggregates over `runs`, `batches`, `spans`, `records` (ClickHouse; no schema prefix; workspace-scoped) |
+| Traces | `cargo-ai orchestration trace list --started-after <iso> [--statuses error,degraded] [--workflow-uuid <uuid>]` · `trace count` (same filters) · `trace get <trace-uuid>` | One row per **trace** — everything one trigger set off across the run lineage (tool and agent child runs, hosted-worker invocations, a chat's assistant turns): `status` (`pending`/`error`/`degraded`/`success`), `rootRunUuid`, `rootRecordTitle`, `spansCount`, `failedSpansCount`, `creditsUsedCount`, `workerUuid`, `chatUuid`. `--started-after` is **required**. `trace get` returns the aggregate only — no spans |
+| Spans | `cargo-ai orchestration span list --execution-started-after <iso> [filters]` · `span count` (same filters, minus `--search`/`--limit`) | Node executions without SQL. Filters: `--batch-uuid`, `--run-uuid`, `--parent-run-uuid`, `--workflow-uuid`, `--execution-statuses pending,success,error`, `--node-action-slug`, `--node-integration-slug`, `--node-slug`, `--node-kind native\|connector\|tool\|agent\|worker`, `--execution-title-or-error-message <ilike>`, `--record-title-or-id`, `--search` (list only: record title/id, execution title or error). `--execution-started-after` is **required** |
+| Orchestration SQL | `cargo-ai orchestration query execute "<sql>"` | Aggregates over `runs`, `batches`, `spans`, `records` (ClickHouse; no schema prefix; workspace-scoped). The one way to list a trace's spans by id: `WHERE trace_uuid = '<uuid>'` |
 | Billing metrics | `cargo-ai billing usage get-metrics --from <date> --to <date>` | Credit totals, filterable and groupable by `workflow_uuid`, `connector_uuid`, `agent_uuid`, `integration_slug`, `model_uuid` |
 | Graph picture | `cargo-ai orchestration node diagram --run-uuid <uuid> --highlight <slug> --format ascii --raw` | The graph the run executed, with the failing node marked. Free, runs nothing |
 
@@ -82,6 +84,8 @@ or "this step never ran", the picture is the evidence, and it shows one thing
 is often one the run *reached* via a `fallbackChildUuid` edge, which means the
 provider errored rather than returning nothing — a different diagnosis with a
 different fix. Flags and the ASCII legend: [`../cargo-orchestration/references/node-diagram.md`](../cargo-orchestration/references/node-diagram.md).
+
+**`degraded` is not `success`.** A trace is `degraded` when a root-run node errored and a `fallbackOnFailure` / fallback edge carried the run to completion — the run reports success, the failed span stays `error`. `error` means an errored root-run node with no next node stopped it. Child-run failures don't settle a trace's status; `pending` means any span at any depth is still running. Sweep `--statuses error,degraded` together: a degraded trace is a provider failure the graph absorbed, usually the same root cause as the errors.
 
 Full query syntax, table columns, and caps: [`../cargo-orchestration/references/examples/queries.md`](../cargo-orchestration/references/examples/queries.md). Debugging field semantics: [`../cargo-orchestration/references/troubleshooting.md`](../cargo-orchestration/references/troubleshooting.md).
 

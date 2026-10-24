@@ -503,7 +503,8 @@ The non-obvious rules for each skill — the things that fail silently or cost m
 
 **Critical rules:**
 
-- Start with the **sweep** when you don't know which run to look at; it ends with exemplar UUIDs for the **trace**.
+- Start with the **sweep** when you don't know which run to look at; it ends with exemplar UUIDs for the **trace**. With no UUID at all, `orchestration trace list --started-after <iso> --statuses error,degraded` lists what failed, one row per trigger across child runs; `span list` / `span count` filter node executions by batch, provider, action or error text without SQL. Both need a start date (`--started-after` / `--execution-started-after`).
+- **`degraded` means a fallback absorbed a failure** — the run succeeded, a node errored. Sweep it together with `error`.
 - `runContext` is the source of truth for what a node produced; an execution's `title` is a truncated summary — never evidence.
 - Credit attribution (`billing …`) needs an **admin** token; the SQL and `run get` steps don't.
 - Any fix that re-runs paid nodes goes through the pilot gate in `../cargo-gtm/references/cost-discipline.md`.

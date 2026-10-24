@@ -232,6 +232,8 @@ try {
 }
 ```
 
+Every worker invocation (cron or inbound HTTP) is also a span with `nodeKind: "worker"`, and opens a **trace** when nothing upstream did. Find failing invocations across workers with `cargo-ai orchestration span list --node-kind worker --execution-statuses error --execution-started-after <iso>` (each carries the `runUuid` that `logs list --run-uuid` takes), and see what one invocation set off with `orchestration trace get <traceUuid>`. The CLI's `trace list` has no worker filter; the API's `POST /v1/orchestration/traces/list` takes `workerUuid`. Runbooks: [`../cargo-diagnostics/SKILL.md`](../cargo-diagnostics/SKILL.md).
+
 Read the logs with `cargo-ai hosting worker logs list --worker-uuid <uuid> --levels error --limit 50` (newest first; also `--run-uuid`, `--search`, `--occurred-after`/`--occurred-before`, and `logs count` / `logs get <logUuid> --worker-uuid <uuid>`), in the web app, or through the API: `POST /v1/hosting/logs/list` with `{"workerUuid":"<uuid>","levels":["error"],"limit":50}`, or `api.hosting.log.list(…)` from TypeScript.
 
 ## Deployments
