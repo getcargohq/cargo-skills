@@ -27,7 +27,12 @@ dailyLimit = floor( 5 + (40 - 5) * elapsedDays / 45 )     for 0 < elapsedDays < 
 Three consequences worth stating to a user before they plan a campaign:
 
 1. **A mailbox that never starts warm-up is stuck at 5/day forever.** There is no "it warms up
-   by being used". `start-warmup` sets `warmupStartedAt`, and `warmupStartedAt` is the ramp.
+   by being used": `warmupStartedAt` is the ramp. Warm-up **starts on its own** (default target)
+   the first time the mailbox becomes `active` — at `create` when the provider answers `active`
+   straight away, otherwise on the `pending` → `active` transition `refresh-status` records. Run
+   `start-warmup` by hand only when that automatic start failed (`warmupStatus` still `disabled`
+   on an `active` mailbox) or after `stop-warmup`; it is never re-triggered automatically after a
+   stop, or for a mailbox recovering from `inactive`.
 2. **`stop-warmup` resets the anchor.** The mailbox drops to 5/day and the 45 days start over.
    To pause the provider's dummy traffic without losing the ramp, use
    `update-warmup --status paused`.
