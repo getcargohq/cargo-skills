@@ -27,8 +27,13 @@ per-call options).
 | `defineSegment(slug, spec)` | Saved view over a model | `model` (immutable), `filter` (required) | `model` | `uuid` |
 | `defineCapacity(slug, spec)` | Revenue-org capacity | `model?`, `idColumnSlug?`, `timeColumnSlug?`, `memberCapacity?`, `allocationExpirationPolicy?`, `filter?`, `color?`, `description?` | `model` | `uuid` |
 | `defineTerritory(slug, spec)` | Revenue-org territory | `label?`, `members?` (`{ ref, weight? }[]`), `fallback?`, `color?`, `description?` | `members[].ref`, `fallback` | `uuid` |
-| `defineWorker(slug, spec)` | Hosted worker (built server-side) | `path`, `description?`, `triggers?`, `env?`, `folder?` | `folder` | `uuid`, `url` |
-| `defineApp(slug, spec)` | Hosted Vite SPA | `path`, `description?`, `env?`, `domains?`, `folder?` | `folder` | `uuid`, `url` |
+| `defineWorker(slug, spec)` | Hosted worker (built server-side) | `path`, `description?`, `triggers?`, `env?`, `runAs?` (a service user), `folder?` | `runAs`, `folder` | `uuid`, `url` |
+| `defineApp(slug, spec)` | Hosted static app (Vite by default; the app's own `build` script wins) | `path`, `name?`, `description?`, `env?` (no `secret()`), `domains?`, `folder?` | `folder` | `uuid`, `url`, `domainRecords` |
+| `defineUser(slug, spec)` | **Service** user (non-human identity) | `kind: "service"` (only kind), `role`, `firstName?` (default: title-cased slug), `lastName?` | `role` | `uuid` |
+| `defineRole(slug, spec)` | Workspace role | `adopt?` (bind an existing role — required for `admin`/`editor`/`viewer`/`extension`), `name?`, `color?`, `description?`, `permissions?` (required unless `adopt`) | — | `uuid` |
+| `defineMember(email, spec?)` | Revenue-org member (**adopt-only**) | `meta?` (omit = leave live, `null` = clear, else replace), `mailboxes?` (omit = leave, `[]` = detach all) | `mailboxes` | `uuid` |
+| `defineRelationship(slug, spec)` | Relationship between two models | `from: { model, column, property? }`, `to: { model, column, property? }`, `relation` (`oneToOne`/`oneToMany`/`manyToOne`) | `from.model`, `to.model` | `uuid` |
+| `defineCustomIntegration(slug, spec)` | Custom integration served by a worker | `worker` (serves the `createCustomIntegration` contract from `@cargo-ai/worker-sdk`) | `worker` | `uuid` |
 | `defineDomain(name, spec)` | Sending domain + its DNS zone | `adopt?`, `dnsRecords?` (records the deploy **manages**, merged into the live zone; dropping one deletes it next deploy; an app's `domainRecords` allowed), `redirectUrl?`, `dmarcEmail?` (`rua=`), `dmarcPolicy?` (`p=`: `none`/`quarantine`/`reject`) | — | `uuid` |
 | `defineMailbox(slug, spec)` | Sending inbox on a domain (**monthly credit charge**) | `domain`, `type` (`google`/`shared`/`private` — no `outlook`), `username?` (defaults to slug), `firstName`, `lastName`, `signature?`, `dailySendLimit?` (0–40), `folder?`, `adopt?` | `domain`, `folder` | `uuid` |
 | `defineAlert(slug, spec)` | Scheduled threshold alert (observability) | `schedule`, `scope`, `threshold`, `actions`, `name?`, `description?`, `enabled?`, `folder?` | scope: `workflow`/`connector`/`tool`/`agent`/`model`; each action's `ref`; `folder` | `uuid` |
@@ -66,9 +71,12 @@ spec field, so renaming it is not a diff.)
 origin of the checkout they run in and fill `repository`, `defaultBranch` and
 `rootDirectory`, taking `connector` from the project's GitHub `defineConnector`.
 Declared fields always win, so a partial object is completed the same way — and the
-resolved values are what the plan prints and what the content hash covers. With no
-`repository` at all and no harness binding, a harness turn provisions an empty
-sandbox scoped to the chat.
+resolved values are what the plan prints and what the content hash covers. Pass
+`repository: null` for an unbound, empty sandbox scoped to the chat. `repository.runAs`
+(a `defineUser` service user or `userRef`) gives the sandbox a temporary
+`CARGO_API_TOKEN` for that user. The agent clones, pushes and comments as the **Cargo
+GitHub app**, which must be installed on the repo — see
+[`../../cargo-ai/SKILL.md`](../../cargo-ai/SKILL.md).
 
 ## Ref helpers
 
@@ -138,6 +146,55 @@ export const leads = defineModel("leads", {
     ],
   });
   ```
+- **`defineUser` / `runAs`.** Only `kind: "service"` can be declared (anything else
+  throws `only \`kind: "service"\` can be declared. Invite people from the Cargo UI.`).
+  Names are set at creation only; `role` (a `defineRole` handle or `roleRef`) is
+  reconciled every deploy. `defineWorker({ runAs })` and `defineAgent({ repository: {
+  runAs } })` take a user handle or `userRef(uuid)`: Cargo then binds a temporary
+  `CARGO_API_TOKEN` for that user. The **deploying** user's permissions must cover
+  every permission the service user holds, or the deploy is refused
+  (`runAsUserNotPermitted`; `runAsUserNotFound` for a non-service user). People are
+  never declared — invite them; see
+  [`../../cargo-workspace-management/SKILL.md`](../../cargo-workspace-management/SKILL.md).
+- **`defineRole` `adopt: true`** binds an existing role and never falls back to
+  creating one; `destroy` releases an adopted role rather than deleting it. The system
+  roles can only be adopted, not edited.
+- **`defineMember` never creates.** Members come from the system-of-record seat sync;
+  `defineMember(email)` adopts the existing one so a `defineTerritory`'s `members` /
+  `fallback` can name it by handle (portable across workspaces). `destroy` releases.
+  Each mailbox belongs to at most one member.
+- **`defineRelationship` merges.** It read-merges the dataset's live relationships, so
+  unlike `cargo-ai storage relationship set` it does not wipe the others. Both models
+  must be in the same dataset; identity is the state uuid (the slug is local).
+- **`defineCustomIntegration`** — Cargo reads the worker's `GET /manifest` once the
+  worker is promoted.
+- **`defineApp` build and routing.** Only `package.json` is required at define time
+  (`package-lock.json` is checked at upload). The app's own `build` script runs when
+  `package.json` has one; otherwise the detected framework's default. An extension-less
+  `/<page>` serves `<page>/index.html`, then `<page>.html`, then `404.html` (status
+  404), then the root `index.html` as the SPA shell — so a multi-page static site works
+  with no rewrites. **`domainRecords`** is the list of `{ type: "CNAME" | "TXT", name,
+  value }` records the app's `domains` need (`_cargo-verify` ownership TXT, certificate
+  and routing CNAMEs); pass it straight to `defineDomain({ dnsRecords })`. A domain
+  serves only once its TXT resolves. Referencing `domainRecords` on an app with no
+  `domains` fails `plan`; under `--draft` it is `null` and `defineDomain` leaves the zone
+  alone. A hostname dropped from `domains` stays attached — detach it in the UI.
+- **`model.config.<key>`** is a token for the model's **live** config, including the
+  `_`-prefixed keys its extractor writes on create (a `_webhookId`, a `_searchId`, a
+  tracking script). It resolves in the same deploy, decodes to the
+  stored type, and works in another resource's spec and in worker, app and harness
+  `env` (where a number or list arrives as JSON text). Keys are typed when the
+  extractor declares a schema; any other key is still accepted.
+- **`defineScript` vs `bundleScript`.** `defineScript((args, runtime) => …)`
+  (re-exported from the workflow SDK) declares a workflow `script` node's body as the
+  single top-level export of its own file: it can import, be unit-tested, and is called
+  in a workflow body like a node (`deriveEvidence({ records, accountId })` → typed
+  `Ref`). esbuild bundles it; the sandbox modules (axios, cheerio, crypto-js, date-fns,
+  jsonschema, lodash, url, uuid, zod) stay external. `bundleScript(entry, { target? })`
+  is different: it compiles a file whose `export default` is a script module into the
+  `script` string of a **script-backed model** (`defineModel({ kind: "native",
+  extractSlug: "defineScript", config: { columns, script, env } })`), which runs once per
+  sync, returns rows with an `id`, and recomputes the whole table.
 - **`defineAlert` `scope` + `threshold`** are a **matched pair** — TS narrows the
   threshold menu by `scope.kind`: `spans`/`runs`/`records` take the telemetry metrics
   (`errorRate`, `duration`+`aggregation`, `credits`+`aggregation`, `count`), `model`

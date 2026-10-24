@@ -217,8 +217,8 @@ const PACKAGE_EDITS = [
   },
   {
     file: "cargo/SKILL.md",
-    find: "`defineAlert`/`defineDomain`/\n`defineMailbox`) and reconcile",
-    replace: "`defineAlert`) and reconcile",
+    find: "`defineAlert`/`defineDomain`/\n`defineMailbox`, plus run-once",
+    replace: "`defineAlert`, plus run-once",
   },
   {
     file: "cargo/SKILL.md",

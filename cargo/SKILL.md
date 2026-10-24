@@ -609,17 +609,21 @@ See `../cargo-ai/SKILL.md` for model and temperature guidance by use case.
 
 Declare an entire Cargo workspace in a project, the folder holding `cargo.json`, in TypeScript (`defineConnector`/`defineModel`/`defineAgent`/
 `definePlay`/`defineTool`/`defineMcpServer`/`defineContext`/`defineSegment`/
-`defineFolder`/`defineFile`/`defineWorker`/`defineApp`/`defineAlert`/`defineDomain`/
-`defineMailbox`) and reconcile
+`defineFolder`/`defineFile`/`defineWorker`/`defineApp`/`defineCapacity`/`defineTerritory`/
+`defineMember`/`defineRole`/`defineUser`/`defineRelationship`/`defineCustomIntegration`/
+`defineScript`/`defineAlert`/`defineDomain`/
+`defineMailbox`, plus run-once `defineBatch`/`defineRun` executions) and reconcile
 it to live infra with `cargo-ai project`. Spans **every** resource type, so it overlaps
 every imperative capability skill — route with "Declarative vs imperative" above.
 
 **Lifecycle:** `project init` (scaffold the Cargo template, `getcargohq/cargo-manifest` — context, cadence
 and evals; `cargo.json` and `cargo.state.json` at the root, the resources it deploys in `infra/`) → `project types` (type config
 against the workspace) → author `define*` files → `project plan` (diff against the workspace-held state; creates nothing) →
-`project deploy` (create/update, write state) → `project destroy`. Plus `refresh` (drift),
+`project deploy` (create/update, write state) → `project destroy`. Plus `refresh` (drift, naming the fields),
 `import` (adopt existing), `pull` (generate `define*` from a live workspace and adopt it),
-`rollback`, `check` (validate offline, no state), `info` (what is here), `state` (inspect/repoint/remove).
+`rollback`, `check` (validate offline, no state), `info` (what is here), `graph` (Mermaid of the
+live workspace, or `--project [--plan]` offline), `state` (inspect/repoint/remove; `connect` to
+deploy from GitHub). `project plan` works signed out, against the last cached state.
 
 **Critical rules:**
 

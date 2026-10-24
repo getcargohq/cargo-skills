@@ -152,7 +152,10 @@ resource, the file that declared it, whether it is deployed) · `cargo-ai projec
 `deploy --prune` (delete resources removed from code) · `cargo-ai project import <id> <uuid>`
 (bind an existing live resource into state) · `cargo-ai project pull` (generate `define*`
 source from a live workspace and adopt it) · `cargo-ai project rollback` (restore the
-pre-deploy state snapshot) · `cargo-ai project state` (inspect and repoint the deploy state).
+pre-deploy state snapshot) · `cargo-ai project state` (inspect and repoint the deploy state;
+`state connect` to deploy from GitHub) · `cargo-ai project graph` (Mermaid of the live
+workspace's resources, or `--project [--plan]` for the local code) · `deploy --dry-run` /
+`--draft` (preview / stage without going live).
 
 **`plan` and `info` answer different questions.** `plan` answers *what will deploy do* —
 its unit is the change, and it exits non-zero so CI can gate on it. `info` answers *what
