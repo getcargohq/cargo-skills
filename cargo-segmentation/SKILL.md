@@ -150,11 +150,22 @@ cargo-ai segmentation change list --segment-uuid <segment-uuid>
 #                    "updatedRecordsCount", "removedRecordsCount",
 #                    "unchangedRecordsCount", "createdAt" } ] }
 
+# Only the deltas where something entered (or moved, or left)
+cargo-ai segmentation change list --segment-uuid <segment-uuid> --has-records added --limit 20
+
+# One delta's counts, by its uuid → { "change": {...} }
+cargo-ai segmentation change get <change-uuid>
+
 # Which records actually entered the audience in that delta?
 cargo-ai segmentation change fetch --uuid <change-uuid> --kinds added --limit 50
+
+# The whole delta as files, when it is too big to page → { "urls": [...] }
+cargo-ai segmentation change download --uuid <change-uuid> --kinds added,removed
 ```
 
-`--kinds` is **required** on `change fetch` and takes `added`, `updated`, `removed`, or `unchanged` (comma-separated). Returned rows carry the `_kind`, `_id`, `_title`, and `_time` meta-columns alongside the model's own columns.
+`--kinds` is **required** on `change fetch` and takes `added`, `updated`, `removed`, or `unchanged` (comma-separated). Returned rows carry the `_kind`, `_id`, `_title`, and `_time` meta-columns alongside the model's own columns. `change download` returns signed URLs rather than rows, and accepts only `added`, `updated` and `removed` — `unchanged` is rejected there even though the help lists it.
+
+Two `change list` flags in the help don't work against the API on CLI 1.0.125: **`--not-empty` is rejected with a 400** (`Unrecognized key: "notEmpty"`), and **`--has-records unchanged`** fails validation (only `added` / `updated` / `removed`). Use `--has-records <kind>` to skip empty deltas.
 
 `updatedRecordsCount` is always `0` unless the segment was created with `--tracking-column-slugs` — the tracked columns define what "updated" means. Set them at creation time when the segment is meant to feed a monitoring motion.
 
