@@ -10,6 +10,10 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### `cargo-mcp` 1.1.2, `cargo` 1.29.7: SQL reads route to `query_models`, not the CLI
+
+- The `cargo-mcp` description no longer sends "warehouse SQL" to the CLI skills. The hosted server runs one read-only SELECT itself through `query_models` (joins, aggregates and CTEs; a model referenced as `dataset.model` from `describe_model`; `limit` default 20, max 50; `truncated` when the cap bites), so the skip clause now names only a full SQL export. The surface table and the paging trap say the same, and the router's CLI-versus-MCP table moves "warehouse SQL" to "full SQL result sets" and gives MCP the SQL read. Verified against `apps/backend/src/http/routes/mcp/server/{tools,queryModels,limits}.ts` and `apps/backend/src/domains/storage/services/query/transformQuery.ts` on getcargohq/cargo master. The Codex package edit that anchors on the skip clause is re-anchored.
+
 ### Plugin — migrating from `cargo@cargo`
 
 - **README: how to move a `cargo@cargo` install to `cargo@cargo-skills`.** Installs made under the old marketplace name are frozen: Claude Code refuses to update *or* uninstall anything from the reserved `cargo` marketplace ("Installing plugins from cargo (`<package>@cargo`) is not available yet"). `/plugin marketplace remove cargo` still works and drops the plugin with it, so the README now gives remove, add, install, plus the two keys to change in a template project's `.claude/settings.json`.

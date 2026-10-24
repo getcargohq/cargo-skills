@@ -1,7 +1,7 @@
 ---
 name: cargo-mcp
-description: "Drive Cargo from its hosted MCP server at https://mcp.getcargo.io/mcp — connect a client, discover and price an action, run it over one record or a batch, poll it, and read workspace models, with no CLI install. Also when to call an MCP tool instead of shelling out to `cargo-ai`. Triggers: \"connect Cargo to Claude Desktop\", \"add Cargo to ChatGPT\", \"Cargo MCP server\", \"mcp.getcargo.io\", \"use Cargo without installing anything\", \"which Cargo tool do I call\", \"search_actions\", \"execute_action_batch\", \"MCP server is showing the wrong workspace\". Tools: whoami, search_actions, get_action_schema, execute_action, execute_action_batch, get_run, query_models. Skip when: you have a shell and the job is a workflow, a project deploy, warehouse SQL, or a mailbox — use the CLI skills; when publishing an MCP server out of your own workspace or attaching one to a Cargo agent — use cargo-ai."
-version: "1.1.1"
+description: "Drive Cargo from its hosted MCP server at https://mcp.getcargo.io/mcp — connect a client, discover and price an action, run it over one record or a batch, poll it, and query workspace models in SQL, with no CLI install. Also when to call an MCP tool instead of shelling out to `cargo-ai`. Triggers: \"connect Cargo to Claude Desktop\", \"add Cargo to ChatGPT\", \"Cargo MCP server\", \"mcp.getcargo.io\", \"use Cargo without installing anything\", \"which Cargo tool do I call\", \"search_actions\", \"execute_action_batch\", \"MCP server is showing the wrong workspace\". Tools: whoami, search_actions, get_action_schema, execute_action, execute_action_batch, get_run, query_models. Skip when: you have a shell and the job is a workflow, a project deploy, a full SQL export, or a mailbox — use the CLI skills; when publishing an MCP server out of your own workspace or attaching one to a Cargo agent — use cargo-ai."
+version: "1.1.2"
 compatibility: Requires the hosted Cargo MCP server at https://mcp.getcargo.io/mcp — OAuth (discovered from the 401 challenge) or a workspace-scoped API token as a bearer. The CLI is needed only for the jobs this skill routes away
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -39,7 +39,7 @@ which.**
 | Run one action, or one action over many records | either; MCP if it is already connected |
 | Find what Cargo can do, and what it costs | either (`search_actions` is the MCP half) |
 | Read records off a model | either |
-| One SELECT over models (aggregates, joins), 50 rows max | either (`query_models` is the MCP half) |
+| SQL reads over models: one SELECT, joins, aggregates, CTEs, up to 50 rows | **MCP** (`query_models`), no CLI needed |
 | Full SQL result sets, exports | **CLI** ([`cargo-storage`](../cargo-storage/SKILL.md)) |
 | Build or edit a multi-step workflow, tool, or play | **CLI** ([`cargo-orchestration`](../cargo-orchestration/SKILL.md)) |
 | GTM as Code: project plan and deploy | **CLI** ([`cargo-project`](../cargo-project/SKILL.md)) |
@@ -49,7 +49,7 @@ which.**
 
 The rule underneath the table: **MCP is the runtime, the CLI is the platform.**
 Seventeen tools cover discovering an action, running it, watching it finish,
-reading data back, and reading the workspace context. Everything that *builds* something reusable is CLI only. An
+reading data back (SQL included), and reading the workspace context. Everything that *builds* something reusable is CLI only. An
 agent holding both should prefer the CLI for anything the user will want to
 re-run or version, and MCP for one-shot execution inside a conversation.
 
@@ -186,10 +186,12 @@ sample. Full discipline:
 
 **Paging rows out of `query_models`.** It runs one read-only SQL SELECT over
 `dataset.model` references (take the exact reference from `describe_model`),
-joins and aggregates allowed, and returns at most 50 rows (default 20). Answer
-"how many", "grouped by", or "joined to" with the aggregate in SQL, never by
-pulling rows and counting them yourself, which silently truncates at the cap. A
-full result set is a CLI job ([`cargo-storage`](../cargo-storage/SKILL.md)).
+joins, aggregates and CTEs allowed, and returns at most 50 rows (`limit`,
+default 20). One statement only: a semicolon, or anything other than a SELECT,
+is refused. Answer "how many", "grouped by", or "joined to" with the aggregate
+in SQL, never by pulling rows and counting them yourself: `truncated: true`
+means the cap cut the answer. A full result set is the one SQL job left for the
+CLI ([`cargo-storage`](../cargo-storage/SKILL.md)).
 
 ## Anything that touches a person
 
