@@ -89,7 +89,7 @@ cargo-ai orchestration action execute-batch \
 
 ## Position in the waterfall
 
-- `verifyEmail` — **always the last step** of any email chain; never skipped.
+- `verifyEmail`: **always the last step** of any hand-built email chain; never skipped. (The workspace's Find email preset tool checks each hit with `zeroBounce` inside, so its output needs no second pass.)
 - `enrichContact` / `enrichCompany` — **second rung**, after aiArk, before peopleDataLabs.
 - `findPhone` — **last rung** of the phone chain (after prospeo, FullEnrich). Demote any rung that misses on the pilot's first ~10 rows for the rest of the batch.
 

@@ -240,6 +240,9 @@ The pattern of repeatedly calling `run get`, `batch get`, or `message get` until
 **persona**
 A role / title shape that's part of the ICP. Example personas: "Head of RevOps at a B2B SaaS", "Founder at a seed-stage fintech". Used as filters for `salesNavigator.searchLeads`, `peopleDataLabs.searchPeople`, etc. Captured as `persona/<slug>.md` in the context repo with role, KPIs, pains, motivations, preferred channels, and common objections.
 
+**preset tool**
+A read-only **tool** Cargo seeds into every workspace's **Cargo Tools** folder and keeps in sync (`isReadOnly: true` in `orchestration tool list`). The ones that matter most: **Find email** (`email_waterfall`: apolloio, FullEnrich, findyMail, peopleDataLabs and waterfall, each hit checked by zeroBounce; `{email}` out), **Find phone** (`phone_waterfall`, `linkedinUrl` in, `{phone}` out) and **Verify email** (neverBounce; `{status, is_safe}` out). Its `toolUuid` differs per workspace: find it with `orchestration action list "find email" --kind tool`. The first move for email, phone and verify jobs; see `cargo-gtm/references/waterfall-strategy.md`.
+
 **priority stack**
 The 8 default credits-based providers used as the spine of every recipe in `cargo-gtm/`: **salesNavigator** (sourcing), **cargo** native (firmographic + signal intelligence), **aiArk** (LinkedIn-anchored enrich + cheapest per-record search), **waterfall** (multi-source enrichment + verification + job-change signal), **FullEnrich** (premium contact lookup), **apolloio** (1-credit niche-coverage enrich), **theirStack** (tech-stack + hiring intent), **peopleDataLabs** (heavyweight backfill). See `cargo-gtm/SKILL.md` for the full stack reference and per-provider playbooks.
 
@@ -330,7 +333,7 @@ A companion object to `jsonSchema` in action and extractor configs. While `jsonS
 ## W
 
 **waterfall enrichment**
-A pattern where multiple providers are run sequentially, each filling gaps the prior step missed. Cheap providers do the heavy lifting; premium providers fill the long tail. Implemented as N sequential `action execute-batch` calls with the records pruned between calls. See `cargo-gtm/references/waterfall-strategy.md` for canonical chains by enrichment goal.
+A pattern where multiple providers are run sequentially, each filling gaps the prior step missed. Cheap providers do the heavy lifting; premium providers fill the long tail. For email, phone and verification it is already built: every workspace has read-only **Find email**, **Find phone** and **Verify email** tools (see **preset tool**), run as one `{"kind":"tool","toolUuid":"<uuid>"}` batch. For other goals, or a custom provider order, it is N sequential `action execute-batch` calls with the records pruned between calls. See `cargo-gtm/references/waterfall-strategy.md` for both.
 
 **worker (Cargo Hosting)**
 A hosted serverless HTTP handler that runs on the edge — a standard `fetch(request, env)` entrypoint built on `@cargo-ai/worker-sdk` (automatic OpenAPI 3.1 spec at `/openapi.json`, Swagger UI at `/docs`). Scaffolded with `hosting worker init`, registered with `hosting worker create`, shipped via a **deployment**. Has no `env` subcommand (unlike an **app**) — runtime config arrives via the `env` argument to `fetch`. Managed in the **`cargo-hosting`** skill.

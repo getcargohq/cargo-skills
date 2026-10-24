@@ -101,22 +101,30 @@ batch_rows "$B" \
 
 ### Step 5 — Find emails
 
+Use the workspace's preset **Find email** tool, the multi-provider waterfall with a `zeroBounce` check on every hit ([`../references/waterfall-strategy.md`](../references/waterfall-strategy.md#start-here-the-workspaces-preset-tools)). Sample with `--limit 20` before the full batch.
+
 ```bash
+TOOL=$(cargo-ai orchestration tool list | jq -r '.tools[] | select(.isReadOnly and .name == "Find email") | .uuid')
 B=$(cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"FullEnrich","actionSlug":"findEmail"}' \
-  --records "$(jq -c '[.[] | {firstName: .first_name, lastName: .last_name, domainName: .domain, linkedinUrl: .linkedin_profile_url}]' /tmp/contacts.json)" \
+  --action "{\"kind\":\"tool\",\"toolUuid\":\"$TOOL\"}" \
+  --records "$(jq -c '[.[] | {firstName: .first_name, lastName: .last_name, companyDomain: .domain, linkedinUrl: .linkedin_profile_url}]' /tmp/contacts.json)" \
   --wait-until-finished | jq -r '.batch.uuid')
-batch_rows "$B" > /tmp/emails.json
+batch_rows "$B" > /tmp/emails.json   # address in cargo_email
 ```
+
+No tool in the workspace, or a custom provider order? Hand-roll the chain in [`../references/waterfall-strategy.md`](../references/waterfall-strategy.md).
 
 ### Step 6 — Verify emails
 
+Skip this for step 5's addresses: with `returns_catchalls` unset, the tool only returns addresses `zeroBounce` graded `valid`. Run the preset **Verify email** tool (0.2; `waterfall.verifyEmail` is 0.1 by hand) only on addresses from another source, or on step 5's output if you set `returns_catchalls: true`:
+
 ```bash
+VTOOL=$(cargo-ai orchestration tool list | jq -r '.tools[] | select(.isReadOnly and .name == "Verify email") | .uuid')
 B=$(cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"waterfall","actionSlug":"verifyEmail"}' \
-  --records "$(jq -c '[.[] | select((.cargo_most_probable_email // "") != "") | {email: .cargo_most_probable_email}]' /tmp/emails.json)" \
+  --action "{\"kind\":\"tool\",\"toolUuid\":\"$VTOOL\"}" \
+  --records "$(jq -c '[.[] | select((.cargo_email // "") != "") | {email: .cargo_email}]' /tmp/emails.json)" \
   --wait-until-finished | jq -r '.batch.uuid')
-batch_rows "$B" > /tmp/verified.json   # status in cargo_email_status
+batch_rows "$B" > /tmp/verified.json   # cargo_status, cargo_is_safe
 ```
 
 ### Step 7 — Personalize outbound (optional)
@@ -133,9 +141,9 @@ For 200 portfolio companies × 3 contacts each = 600 prospects:
 | 2. Dedupe against the Companies model | 0 | 200 | 0 |
 | 3. aiArk.enrichCompany | 0.01 | 200 | 2 |
 | 4. searchLeads (3 contacts each) | 0.2 | 600 | 120 |
-| 5. FullEnrich.findEmail | 1 | 600 | 600 |
-| 6. waterfall.verifyEmail | 0.1 | 600 | 60 |
-| **Total** | | | **~882 credits for 600 verified contacts at 200 portfolio companies** |
+| 5. Find email preset tool | ~1.1 per hit (up to 4), roughly 0 per miss | 600 | ~660 if every row hits on the first rung |
+| 6. Verify email | 0 (step 5 already verified) | 0 | 0 |
+| **Total** | | | **~882 credits for 600 verified contacts at 200 portfolio companies** (quote the sample's observed cost per row, not this estimate) |
 
 ## Discovery sequence
 
