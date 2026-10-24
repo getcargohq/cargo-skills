@@ -59,8 +59,8 @@ echo "$BASE/v1/models/$MODEL_UUID/records/ingest?token=$TOKEN"
 
 Some ingest extractors set `autoIngest: true` — Cargo registers the webhook with
 the provider itself during setup (calendly, smartlead, instantlyV2, heyReach,
-and every `listen*` extractor on `cargoSignals`, the Cargo Signals integration that
-replaced the `rodz` slug). The app **hides** the URL for
+cargoSignals — formerly rodz — and explorium's `listenBusinessEvents` /
+`listenProspectEvents`). The app **hides** the URL for
 those, and handing it out is wrong: the provider is already pointed at it.
 
 Check before showing anything:
