@@ -158,6 +158,28 @@ cargo-ai ai release deploy-draft --agent-uuid <uuid> \
   --description "Added research actions"
 ```
 
+`--with-reasoning [true|false]` on `update-draft` / `deploy-draft` turns reasoning mode on (bare flag = `true`) for models that support it.
+
+### Coding agents (`--harness-slug`, `--repository`)
+
+A release with a **harness** runs as a coding agent: each turn works in a sandbox with a git checkout instead of a plain chat loop. Harness slugs: `claudeCode`, `codex`, `openCode`, `deepAgents`.
+
+```bash
+cargo-ai ai release deploy-draft --agent-uuid <uuid> \
+  --harness-slug claudeCode --integration-slug anthropic --language-model-slug <model-slug> \
+  --repository '{"connectorUuid":"<github-connector-uuid>","repository":"acme/app","defaultBranch":"main","rootDirectory":null}' \
+  --actions '[]' --mcp-clients '[]' --resources '[]' --capabilities '[]' --suggested-actions '[]'
+```
+
+- **`--repository`** (JSON): `connectorUuid` (a GitHub connector — it identifies the user, it is not the identity the agent acts as), `repository` as `owner/name`, `defaultBranch`, `rootDirectory`, `env` (`[{key, type:"public", value}]` or `{key, type:"secret", secretValue}`), and `runAsUserUuid` — a **service user** whose temporary `CARGO_API_TOKEN` the sandbox gets (the help omits it; see [`../cargo-workspace-management/SKILL.md`](../cargo-workspace-management/SKILL.md) → "Service users"; your permissions must cover it or the call fails 403 `runAsUserNotFound` / `runAsUserNotPermitted`).
+- **The agent acts as the Cargo GitHub app**, never as the connected user: it clones, pushes, comments and opens PRs as the app's installation. **Install the app on the repo first** — without it the turn fails. The sandbox's GitHub token is scoped to that one repository — any other repository is refused — lasts 1 hour, and is refreshed each turn; it is redacted from chat output but readable by the agent.
+- It works on a branch `cargo/<short-name>`, never pushes to the default branch, never force-pushes, and opens or updates the PR through its own PR tool, which links the PR to the chat.
+- **A mention of the app on a PR the agent's chat opened continues that same chat** — no trigger needed (skipped if the chat moved to another repository, or another agent opened the PR). Close the chat to stop it. The GitHub trigger adds `allPullRequests` (answer mentions on any PR in the repo), `fixFailedChecks` (+ `maxCheckFixAttempts` 1–10, reset when someone mentions or reviews) and `addressReviews`, all default `false`.
+
+**Per chat instead of per release.** `ai chat create --harness-slug … --repository …` and `ai message create` (for the chat it auto-creates) take the same two flags; omitted, the agent's pinned release decides. They are **set when the chat is created**: passing either with `--chat-uuid` is a 400 — `harnessSlug and repository are not allowed with chatUuid: they are set when the chat is created. Create a new chat to use another harness or repository.`
+
+A message sent to a chat that is still answering is **queued**: `202` with `userMessage` and no assistant message yet; the reply follows once the turn ahead finishes (`chatClosed` → 409, `chatNotFound` → 404). Sending and polling: [`../cargo-orchestration/SKILL.md`](../cargo-orchestration/SKILL.md). In a project: `defineAgent({ harness, repository })` — [`../cargo-project/references/resources.md`](../cargo-project/references/resources.md).
+
 ### Structured output & heartbeat — not yet exposed as CLI flags
 
 The release API payload (both `draft/update` and `draft/deploy`) accepts two fields that **`release update-draft` / `release deploy-draft` do not surface as flags** (verified against the CLI source — there is no `--output` / `--output-schema` or `--heartbeat`):

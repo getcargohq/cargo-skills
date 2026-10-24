@@ -554,6 +554,7 @@ The non-obvious rules for each skill — the things that fail silently or cost m
 
 - Knowledge for RAG attaches to an agent via the release's `resources`: **files** + **libraries** come from [`cargo-content`](#cargo-content). Wire them in with `release update-draft --resources …` then `release deploy-draft`.
 - **`cargo-ai mcp` with no `--server` now bridges the first-party platform MCP** (`mcp.getcargo.io/mcp`), not "the workspace's only MCP server". `ai mcp-server` still builds a curated server; pass its uuid with `--server`. See "These skills vs Cargo's MCP surfaces" above.
+- **A coding agent (`--harness-slug` + `--repository` on a release or a new chat) pushes as the Cargo GitHub app**, which must be installed on the repo; its token is scoped to that repo, it works on `cargo/<name>` branches and never pushes the default branch, and a mention on its PR continues the chat. Harness and repository are fixed when a chat is created — passing them with `--chat-uuid` is refused.
 - **CLI ≥ 1.0.19:** files and libraries moved out of the `ai` domain into the top-level **`content`** domain (now the `cargo-content` skill). The old `cargo-ai ai file …` commands no longer exist.
 
 > For _using_ agents (sending messages, multi-turn chat, polling), use `cargo-orchestration`.
