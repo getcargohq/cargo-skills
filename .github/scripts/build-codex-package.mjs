@@ -132,6 +132,7 @@ const PACKAGE_OVERRIDES = {
 const EXCLUDED_FILES = [
   "cargo-gtm/provider-playbooks/snitcher.md",
   "cargo-gtm/provider-playbooks/forager.md",
+  "cargo-gtm/provider-playbooks/pipecorn.md",
   "cargo-gtm/provider-playbooks/x.md",
 ];
 
@@ -142,6 +143,7 @@ const EXCLUDED_FILES = [
 const REMOVED_TERMS = [
   { term: "snitcher", scope: "skills/" },
   { term: "forager", scope: "skills/" },
+  { term: "pipecorn", scope: "skills/" },
   { term: "analyzePersonality", scope: "skills/" },
   // Not just the slug: the playbook pitched the capability in prose that
   // named no action, and a slug-only check waved it through.
@@ -308,6 +310,11 @@ const PACKAGE_EDITS = [
   {
     file: "cargo-gtm/SKILL.md",
     find: "- [`provider-playbooks/forager.md`](provider-playbooks/forager.md) \u2014 personal-email + phone from a LinkedIn URL.\n",
+    replace: "",
+  },
+  {
+    file: "cargo-gtm/SKILL.md",
+    find: "- [`provider-playbooks/pipecorn.md`](provider-playbooks/pipecorn.md) \u2014 own-key contact waterfall (work email, phone, people-at-company); its personal-email action is gated by acceptable use.\n",
     replace: "",
   },
   {

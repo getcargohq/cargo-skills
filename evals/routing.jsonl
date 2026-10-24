@@ -17,7 +17,7 @@
 
 {"prompt": "Run this workflow on all my contacts", "expect": "cargo-orchestration"}
 {"prompt": "Kick off a batch over the enterprise accounts", "expect": "cargo-orchestration"}
-{"prompt": "Execute the enrichBusinessFirmographics action for this one company", "expect": "cargo-orchestration"}
+{"prompt": "Execute the enrichByDomain action for this one company", "expect": "cargo-orchestration"}
 {"prompt": "Schedule a play that runs every morning at 8am", "expect": "cargo-orchestration"}
 {"prompt": "Add a branch step to the node graph after the enrichment node", "expect": "cargo-orchestration"}
 {"prompt": "What is the output schema for this action?", "expect": "cargo-orchestration"}

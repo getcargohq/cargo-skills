@@ -15,6 +15,7 @@ X data is public, which is not the same as usable. [`../references/acceptable-us
 - **A public post is not a lawful basis for outreach.** It can inform *relevance* (why this message, for this person, now), never *basis*. The basis test is unchanged: customers, opted-in contacts, event attendees, or a documented legitimate-interest case.
 - **Follower and liker lists are not audiences.** `getFollowers`, `getPostLikers` and `getRetweeters` return people who engaged with content, not people who asked to hear from you. Building a send list from them is the undifferentiated fan-out this skill refuses.
 - **Company handles are the safe default.** Reading `@acme`'s posts to understand a company is research. Reading an individual's likes to profile them is not something this skill does.
+- **Reading is this integration; acting is another.** The separate `xAccount` integration posts, replies, likes and sends DMs *as the user's own account*. Batch or automated use of it is refused ([`../references/acceptable-use.md`](../references/acceptable-use.md) §2) — a reply to a post found here is a person's one-off decision, never a pipeline step.
 
 ## Credits-based actions
 
