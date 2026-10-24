@@ -87,6 +87,11 @@ cargo-ai hosting app create --name "My App" --slug my-app --folder-uuid <folder-
 cargo-ai hosting app env <app-uuid>
 cargo-ai hosting app env <app-uuid> --api-url https://api.getcargo.io
 
+# App env vars (public build-time values; take effect on the next deploy + promote)
+cargo-ai hosting app env-var list --app-uuid <app-uuid>
+cargo-ai hosting app env-var set --app-uuid <app-uuid> --key VITE_LOG_LEVEL --value debug
+cargo-ai hosting app env-var remove <env-var-uuid>                 # uuid from env-var list
+
 # Update / remove
 cargo-ai hosting app update --uuid <app-uuid> --name "Renamed"
 cargo-ai hosting app update --uuid <app-uuid> --folder-uuid null   # move to workspace root
@@ -117,9 +122,9 @@ Next.js, SvelteKit and Nuxt are **not detected**: they fall through to the defau
 
 ### App env vars are public
 
-An app reads only env vars whose key starts with a **public prefix**: `VITE_`, `NEXT_PUBLIC_`, `PUBLIC_`, `NUXT_PUBLIC_`, `GATSBY_` or `REACT_APP_`. Any of these prefixes works whatever the framework. They come from workspace env vars and from app-level entries (`POST /v1/hosting/env-vars` with `"kind":"app"`, or `defineApp({ env })` in a project). Every one of them is compiled into a bundle anyone can download. For that reason:
+An app reads only env vars whose key starts with a **public prefix**: `VITE_`, `NEXT_PUBLIC_`, `PUBLIC_`, `NUXT_PUBLIC_`, `GATSBY_` or `REACT_APP_`. Any of these prefixes works whatever the framework. They come from workspace env vars and from app-level entries (`hosting app env-var set`, `POST /v1/hosting/env-vars` with `"kind":"app"`, or `defineApp({ env })` in a project). An app entry overrides a workspace entry with the same key. Every one of them is compiled into a bundle anyone can download. For that reason:
 
-- **App env vars cannot be secret.** The API rejects `isSecret: true` with `secretNotSupportedForApp`, a project's `defineApp` throws on a `secret()` value, and secret workspace entries never reach an app build. Credentials belong in a worker that the app calls.
+- **App env vars cannot be secret.** The API rejects `isSecret: true` with `secretNotSupportedForApp`, a project's `defineApp` throws on a `secret()` value, and secret workspace entries never reach an app build. Credentials belong in a worker that the app calls. **`hosting app env-var set --help` shows a `--secret` example anyway (`CARGO_API_TOKEN` on an app) — it fails.** The flag is shared with the worker command; on an app the backend refuses it, create and update alike.
 - Keys matching a platform key under any prefix (`*_CARGO_API_URL`, `*_CARGO_WORKSPACE_UUID`, `*_APP_BASE_PATH`, …) are reserved.
 - Values are baked in at build time, so a change needs a new deploy + promote.
 
@@ -187,7 +192,7 @@ cargo-ai workspaceManagement envVar create --key CARGO_API_TOKEN --secret \
 A workspace entry gives *every* worker that token. If only one worker should hold it, set it on that worker instead:
 
 - **Project:** `defineWorker("my-worker", { path, env: { CARGO_API_TOKEN: secret("CARGO_API_TOKEN") } })`.
-- **CLI:** `printf %s "$CARGO_API_TOKEN" | cargo-ai hosting worker env set --worker-uuid <uuid> --key CARGO_API_TOKEN --value - --secret` (omit `--value` to read `$CARGO_API_TOKEN` from the shell). `hosting worker env list --worker-uuid <uuid>` shows the keys, with secret values as `null`.
+- **CLI:** `printf %s "$CARGO_API_TOKEN" | cargo-ai hosting worker env set --worker-uuid <uuid> --key CARGO_API_TOKEN --value - --secret` (omit `--value` to read `$CARGO_API_TOKEN` from the shell). `hosting worker env list --worker-uuid <uuid>` shows the keys, with secret values as `null`; `hosting worker env remove <env-var-uuid>` deletes one (uuid from `env list`), effective on the next deploy + promote.
 - **API:** `POST /v1/hosting/env-vars` with `{"kind":"worker","workerUuid":"<uuid>","key":"CARGO_API_TOKEN","value":"…","isSecret":true}`. From TypeScript that is `api.hosting.envVars.create(…)` in `@cargo-ai/api`, and `list` takes `{ workerUuid }`.
 
 **Values are captured at deploy time, not read live.** Bindings are attached when a deployment is promoted, and non-secret values are also compiled into the bundle as `process.env.KEY`. After adding or changing a variable, **run `deployment create` and `promote` again**. The running worker keeps the old values until then.
@@ -253,7 +258,13 @@ cargo-ai hosting deployment create --worker-uuid <uuid> --source ./my-worker
 
 # Go live
 cargo-ai hosting deployment promote --uuid <deployment-uuid>
+
+# Download what a deployment was built from — the uploaded pre-build source
+# tree as a tar.gz, not the compiled bundle (default ./deployment-<uuid>-source.tar.gz)
+cargo-ai hosting deployment export <deployment-uuid> --output ./live-source.tar.gz
 ```
+
+`deployment export` is the recovery path when the local copy is lost or has drifted: export the promoted deployment (`get-promoted` gives its uuid), unpack it, and redeploy from there.
 
 ## Critical rules
 
