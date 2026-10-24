@@ -1,7 +1,7 @@
 ---
 name: cargo-project
 description: "Declare a whole Cargo workspace in a project, GTM as Code — connectors, models, plays, tools, agents, MCP servers, segments, context, folders, files, workers, and apps in TypeScript, reconciled with `cargo-ai project` (init → types → plan → deploy), the way you would run Pulumi or Terraform. Triggers: \"as code\", \"in git\", \"version-controlled\", \"reproducible\", \"Terraform for Cargo\", \"set up a whole workspace\", \"staging and production\", \"deploy the workspace from CI\", \"review this in a PR\", \"cargo.json\", \"cargo.state.json\", \"scaffold from a template\", \"is there a cookbook for this\", \"start from a cookbook\". Skills with a worked project example (TAM building, account scoring, call capture, inbound qualification, CRM enrichment, standup) live in gtm-skills; menu in references/cookbooks.md. Skip when: it is a one-off operation, a read, or an ad-hoc query — use the matching capability skill."
-version: "4.1.1"
+version: "4.2.0"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -360,7 +360,7 @@ it. Either way, treat the skill's `Done when` as the acceptance test and review
   out, and apply the same cost gate above when an action calls a credits-based
   provider. Scope/threshold and firing semantics:
   [`../cargo-observability/SKILL.md`](../cargo-observability/SKILL.md).
-- **`defineMailbox` bills monthly, and `defineDomain` rewrites a DNS zone.** A
+- **`defineMailbox` bills monthly, and `defineDomain` owns the records it publishes.** A
   mailbox is 100–125 credits *per month* (shared/private 100, google 125) for as long as it exists (`cargo-ai
   mailboxManagement pricing get` for live figures), so a `+ create mailbox:…` line
   in the plan is a recurring charge the user approves, not a one-off. Its `domain`,
@@ -369,12 +369,17 @@ it. Either way, treat the skill's `Done when` as the acceptance test and review
   creating a mailbox the deploy polls the domain's `refreshStatus` for up to 5 minutes
   waiting for the domain to be `active`; it does not wait for the new mailbox, which
   stays `pending` until the provider issues credentials. On
-  `defineDomain`, `dnsRecords` is the **whole zone, not a patch**: declaring it
-  replaces every live record (including the ones the registrar wrote at purchase),
-  and omitting it leaves the zone untouched. `redirectUrl`, `dmarcEmail` and
-  `dmarcPolicy` are **additive** and are the supported way to configure a zone
-  without replacing it, so reach for `dnsRecords` only when you mean to own every
-  record. Use `adopt: true` for a domain or mailbox bought in the UI. Ramp,
+  `defineDomain`, `dnsRecords` is the set of records the deploy **manages**, merged
+  into the live zone: the records the registrar wrote at purchase and anything added
+  outside the deploy stay put (bar one that can't share a name with a declared CNAME).
+  The deploy owns what it published, so dropping a record from the list deletes it on
+  the next deploy, and `[]` deletes every record earlier deploys published. Omit
+  `dnsRecords` to leave the zone untouched; an entry may be an app's `domainRecords`.
+  Edit a managed record in code, not the registrar UI: an outside edit stops the
+  deploy (`dns record … was edited outside the deploy`). `redirectUrl`, `dmarcEmail`
+  and `dmarcPolicy` left undeclared keep the live value. Use `adopt: true` for a
+  domain or mailbox bought in the UI (an adopted domain owns no records until a
+  deploy publishes some). Ramp,
   suppression and sending:
   [`../cargo-mailbox-management/SKILL.md`](../cargo-mailbox-management/SKILL.md).
 - **Route project-managed resources into a clearly-labelled folder.** Set `folder:` on

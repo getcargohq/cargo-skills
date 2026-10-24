@@ -1,7 +1,7 @@
 ---
 name: cargo-mailbox-management
 description: "Send mail from inboxes Cargo owns — provision mailboxes on a sending domain, run provider warm-up and the 5→40/day send ramp, deliver with the `sendEmail` action, and read back threads, replies, delivery events, and the workspace suppression list. Triggers: \"set up a sending mailbox\", \"provision inboxes for outbound\", \"warm up this mailbox\", \"how many sends do I have left today\", \"send this from Cargo\", \"did they reply\", \"who unsubscribed\", \"suppress this recipient\", \"take me off your list\", \"never email them again\", \"what do mailboxes cost\", \"my mailbox is stuck pending\". A mailbox is a recurring monthly credit charge, and every send is gated on basis, suppression, and relevance. Skip when: writing the copy or building the audience — use cargo-gtm; the mailbox belongs in git — use cargo-project."
-version: "1.3.1"
+version: "1.4.0"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -123,8 +123,8 @@ guessing a UUID.
 Pricing a domain before buying it has the same gap, and one direct API call closes it:
 `GET /v1/domainManagement/domains/search?name=<domain>` returns `available` and `priceCredits`
 (where **`null` means not purchasable, not free**). The domain side of a fleet — that call,
-sizing domains by blast radius rather than capacity, the apex redirect, DMARC, naming, and why
-`dnsRecords` must stay undeclared — is
+sizing domains by blast radius rather than capacity, the apex redirect, DMARC, naming, and what
+`dnsRecords` owns once declared — is
 **[`references/sending-domains.md`](references/sending-domains.md)**.
 
 ```bash

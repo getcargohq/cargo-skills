@@ -145,7 +145,7 @@ B=$(cargo-ai orchestration action execute-batch \
 batch_rows "$B" > /tmp/personalized.json   # the line is in cargo_answer
 ```
 
-`model` is a **required input**, so it belongs in every record alongside `prompt` — the action carries no `config` at all. Put it in `config` and newer backends drop it silently, billing the call at the default model.
+`model` is a **required input**, so it belongs in every record alongside `prompt` — the action carries no `config` at all. Put it in `config` and it is stripped without an error that names `config`: the call is refused before it runs on the missing `model`.
 
 More proven prompts (subject lines, follow-ups, job-change angles): [`../references/prompt-library/index.md`](../references/prompt-library/index.md).
 

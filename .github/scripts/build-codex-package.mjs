@@ -149,6 +149,7 @@ const REMOVED_TERMS = [
   { term: "attendee", scope: "skills/cargo-gtm/provider-playbooks/linkedin.md" },
   { term: "provider-playbooks/x.md", scope: "skills/" },
   { term: "extractEventAttendees", scope: "skills/cargo-gtm/" },
+  { term: "xAccount", scope: "skills/cargo-gtm/references/credits-cost-table.md" },
 ];
 
 // Excluding a skill leaves cross-references to it in the ones that remain: a
@@ -157,6 +158,38 @@ const REMOVED_TERMS = [
 // Every `find` must match exactly once or the build fails — these are anchored
 // to prose that will drift, and a silent no-op would ship a dangling link.
 const PACKAGE_EDITS = [
+  // xAccount posts, replies, likes and DMs as the user — the same surface the
+  // OpenAI review rejected for X (#120), so its price rows ship only in the other packages.
+  {
+    file: "cargo-gtm/references/credits-cost-table.md",
+    find: "| 1 | `xAccount` | engagement | `likePost` | Like one X post as the connected account, when a person asked for it. X's automation rules forbid automated or bulk liking |\n",
+    replace: "",
+  },
+  {
+    file: "cargo-gtm/references/credits-cost-table.md",
+    find: "| 1 / 2 item | `xAccount` | engagement | `listMessages` | List recent direct messages of the connected X account, optionally only the conversation with one account |\n",
+    replace: "",
+  },
+  {
+    file: "cargo-gtm/references/credits-cost-table.md",
+    find: "| 1 | `xAccount` | engagement | `sendMessage` | Send a direct message on X as the connected account. X's automation rules forbid automated unsolicited DMs |\n",
+    replace: "",
+  },
+  {
+    file: "cargo-gtm/references/credits-cost-table.md",
+    find: "| 1–10 | `xAccount` | engagement | `createPost` | Publish a post on X as the connected account |\n",
+    replace: "",
+  },
+  {
+    file: "cargo-gtm/references/credits-cost-table.md",
+    find: "| 1–10 | `xAccount` | engagement | `replyToPost` | Reply to an X post as the connected account (only posts that mention it or that it wrote) |\n",
+    replace: "",
+  },
+  {
+    file: "cargo-gtm/references/credits-cost-table.md",
+    find: "\n### `xAccount.createPost` / `xAccount.replyToPost` — varies by `text`\n\n| Config | Cost |\n|---|---|\n| `text` contains a link (`http://`, `https://` or `www.`) | 10 |\n| otherwise | 1 |\n",
+    replace: "",
+  },
   {
     file: "cargo/SKILL.md",
     find: "project, mailbox management, workspace management)",
@@ -219,7 +252,7 @@ const PACKAGE_EDITS = [
   },
   {
     file: "cargo-project/SKILL.md",
-    find: "- **`defineMailbox` bills monthly, and `defineDomain` rewrites a DNS zone.** A\n  mailbox is 100\u2013125 credits *per month* (shared/private 100, google 125) for as long as it exists (`cargo-ai\n  mailboxManagement pricing get` for live figures), so a `+ create mailbox:\u2026` line\n  in the plan is a recurring charge the user approves, not a one-off. Its `domain`,\n  `username` and `type` are **create-only** \u2014 changing any of them is destroy +\n  recreate, i.e. a brand-new inbox back at the bottom of a 45-day warm-up ramp. Before\n  creating a mailbox the deploy polls the domain's `refreshStatus` for up to 5 minutes\n  waiting for the domain to be `active`; it does not wait for the new mailbox, which\n  stays `pending` until the provider issues credentials. On\n  `defineDomain`, `dnsRecords` is the **whole zone, not a patch**: declaring it\n  replaces every live record (including the ones the registrar wrote at purchase),\n  and omitting it leaves the zone untouched. `redirectUrl`, `dmarcEmail` and\n  `dmarcPolicy` are **additive** and are the supported way to configure a zone\n  without replacing it, so reach for `dnsRecords` only when you mean to own every\n  record. Use `adopt: true` for a domain or mailbox bought in the UI. Ramp,\n  suppression and sending:\n  [`../cargo-mailbox-management/SKILL.md`](../cargo-mailbox-management/SKILL.md).\n",
+    find: "- **`defineMailbox` bills monthly, and `defineDomain` owns the records it publishes.** A\n  mailbox is 100\u2013125 credits *per month* (shared/private 100, google 125) for as long as it exists (`cargo-ai\n  mailboxManagement pricing get` for live figures), so a `+ create mailbox:\u2026` line\n  in the plan is a recurring charge the user approves, not a one-off. Its `domain`,\n  `username` and `type` are **create-only** \u2014 changing any of them is destroy +\n  recreate, i.e. a brand-new inbox back at the bottom of a 45-day warm-up ramp. Before\n  creating a mailbox the deploy polls the domain's `refreshStatus` for up to 5 minutes\n  waiting for the domain to be `active`; it does not wait for the new mailbox, which\n  stays `pending` until the provider issues credentials. On\n  `defineDomain`, `dnsRecords` is the set of records the deploy **manages**, merged\n  into the live zone: the records the registrar wrote at purchase and anything added\n  outside the deploy stay put (bar one that can't share a name with a declared CNAME).\n  The deploy owns what it published, so dropping a record from the list deletes it on\n  the next deploy, and `[]` deletes every record earlier deploys published. Omit\n  `dnsRecords` to leave the zone untouched; an entry may be an app's `domainRecords`.\n  Edit a managed record in code, not the registrar UI: an outside edit stops the\n  deploy (`dns record \u2026 was edited outside the deploy`). `redirectUrl`, `dmarcEmail`\n  and `dmarcPolicy` left undeclared keep the live value. Use `adopt: true` for a\n  domain or mailbox bought in the UI (an adopted domain owns no records until a\n  deploy publishes some). Ramp,\n  suppression and sending:\n  [`../cargo-mailbox-management/SKILL.md`](../cargo-mailbox-management/SKILL.md).\n",
     replace: "",
   },
   {
@@ -229,7 +262,7 @@ const PACKAGE_EDITS = [
   },
   {
     file: "cargo-project/references/resources.md",
-    find: "| `defineDomain(name, spec)` | Sending domain + its DNS zone | `adopt?`, `dnsRecords?` (**replaces the whole zone**), `redirectUrl?`, `dmarcEmail?` (`rua=`), `dmarcPolicy?` (`p=`: `none`/`quarantine`/`reject`) | \u2014 | `uuid` |\n",
+    find: "| `defineDomain(name, spec)` | Sending domain + its DNS zone | `adopt?`, `dnsRecords?` (records the deploy **manages**, merged into the live zone; dropping one deletes it next deploy; an app's `domainRecords` allowed), `redirectUrl?`, `dmarcEmail?` (`rua=`), `dmarcPolicy?` (`p=`: `none`/`quarantine`/`reject`) | \u2014 | `uuid` |\n",
     replace: "",
   },
   {
@@ -411,7 +444,7 @@ const PACKAGE_EDITS = [
   },
   {
     file: "cargo-gtm/recipes/ads-audience-activation.md",
-    find: "- **Personal email is a different lookup from work email.** The standard find-email chain returns *work* addresses \u2014 including `aiArk.enrichPerson` (0.1 from a LinkedIn URL, and the right pick when a work address is enough, as it is for LinkedIn Matched Audiences). The personal mailbox needs [`forager.findPersonalEmail`](../provider-playbooks/forager.md) (2, LinkedIn URL in), which is the only action in the catalog that offers it. Reach for it only when the destination is Google Customer Match and the probe in step 5 shows work addresses matching poorly \u2014 2 credits/row is a real budget line at audience scale.\n",
+    find: "- **Personal email is a different lookup from work email.** The standard find-email chain returns *work* addresses \u2014 including `aiArk.enrichPerson` (0.1 from a LinkedIn URL, and the right pick when a work address is enough, as it is for LinkedIn Matched Audiences). The personal mailbox needs [`forager.findPersonalEmail`](../provider-playbooks/forager.md) (2, LinkedIn URL in), the only credits-based action that offers it, or `pipecorn.findPersonalEmail` (LinkedIn URL in, 0 Cargo credits \u2014 it bills the user's own Pipecorn account and needs consent enabled there). Reach for it only when the destination is Google Customer Match and the probe in step 5 shows work addresses matching poorly \u2014 2 credits/row is a real budget line at audience scale.\n",
     replace: "",
   },
   {

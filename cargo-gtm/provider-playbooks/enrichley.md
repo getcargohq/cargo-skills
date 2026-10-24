@@ -47,7 +47,7 @@ Keep an email when either verifier passes it cleanly; drop it only when both agr
 ## Common pitfalls
 
 - **The action slug is `verify`, not `verifyEmail`.** Every other verify provider in the catalog uses `verifyEmail`; copy-pasting that slug here fails.
-- **`email` is the only input.** The schema has no other field (no `objectType`); extra keys are stripped.
+- **`email` is the only input.** The schema has no other field (no `objectType`); an extra key is refused by `action execute` (`Unknown field: <key>`) and stripped inside a workflow node.
 - **Rate limits differ by billing mode:** 15 calls/second on credits, 5/second on an own-key connector (both spread). Large batches drain at that pace; poll, don't re-trigger.
 
 ## Anti-patterns

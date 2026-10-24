@@ -23,6 +23,7 @@ No `config` on the action — inputs go in `--data`, as with every action
 | `subject` | ✅ | Subject line. Honest and descriptive — a misleading subject is a §2 refusal. |
 | `bodyHtml` | — | HTML body. |
 | `bodyText` | — | Plain-text fallback. Generated from `bodyHtml` when omitted. |
+| `includeUnsubscribeLink` | — | Append the Unsubscribe link to the body. Defaults to `true`; `false` hides only the body link — the `List-Unsubscribe` header is sent either way. |
 | `inReplyTo` | — | `Message-ID` this message replies to. |
 | `references` | — | Every `Message-ID` in the thread so far, **oldest first**. |
 
@@ -97,8 +98,16 @@ batch, and size the batch to days of allowance, not to one day.
 
 Injected automatically; you do not write these and must not strip them.
 
-- **`List-Unsubscribe`** — a signed link. A recipient using it writes a workspace-wide
+- **`List-Unsubscribe`** — a signed link in the header, on every send whatever
+  `includeUnsubscribeLink` says. A recipient using it writes a workspace-wide
   `suppression` row with reason `unsubscribed`, and every later send to that address is refused.
+- **Unsubscribe link in the body** — appended to the HTML and text bodies, writing the same
+  suppression. `includeUnsubscribeLink: false` hides it (for a one-to-one reply where a footer
+  reads wrong); it is not a way around the opt-out. The header still carries one and still
+  writes suppressions, but not every client surfaces it, so a first touch keeps the body link:
+  every message must carry a working opt-out
+  ([`../../cargo-gtm/references/acceptable-use.md`](../../cargo-gtm/references/acceptable-use.md) §4),
+  and hiding it to make cold mail look personal is disguising the sender (§2).
 - **Open pixel** — produces an `opened` event.
 - **Click redirect** — outbound hrefs are rewritten; produces a `clicked` event carrying the
   original `url`.

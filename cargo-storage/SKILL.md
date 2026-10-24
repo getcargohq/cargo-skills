@@ -1,7 +1,7 @@
 ---
 name: cargo-storage
 description: "Work with the data inside a Cargo workspace — models (Companies, Contacts, Deals…), datasets, columns, relationships, records, and SQL over workspace storage. Triggers: \"what models do I have\", \"show me the schema\", \"add a column for\", \"how many contacts do I have\", \"SELECT … FROM\", \"query my companies table\", \"join contacts to companies\", \"what is the DDL\", \"set up a webhook-fed model\", \"where does this field live\", \"import this into a model\", \"unify these models\", \"merge duplicate accounts\", \"link contacts to companies\", \"set up a relationship between\". Skip when: querying run or batch telemetry rather than business data — use cargo-orchestration; naming a reusable filtered audience — use cargo-segmentation."
-version: "1.3.0"
+version: "1.3.1"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -131,7 +131,7 @@ a payload script, and an API token pasted into the node config. The webhook is f
 systems outside Cargo.
 
 Check the extractor's mode first — when it reports `"autoIngest": true` (calendly,
-smartlead, instantlyV2, heyReach, rodz, cargo signals) Cargo registers the
+smartlead, instantlyV2, heyReach, `cargoSignals` — the slug that replaced `rodz`) Cargo registers the
 hook with the provider itself and the URL must **not** be handed out. Full flow,
 payload shapes, and limits: `references/examples/ingest-webhook.md`.
 

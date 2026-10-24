@@ -10,6 +10,20 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### `cargo` → 1.30.0, `cargo-gtm` → 2.4.0, `cargo-orchestration` → 1.15.0, `cargo-project` → 4.2.0, `cargo-ai` → 2.6.0, `cargo-mailbox-management` → 1.4.0, `cargo-mcp` → 1.2.0, + 3 patches: claims the October product changes made false
+
+Each claim below was checked against getcargohq/cargo master (2026-10-23) and the 1.0.125 CLI.
+
+- **Unknown action inputs are refused, not dropped (cargo#6252).** `action execute` / `execute-batch`, the MCP `execute_action*` tools and an agent's action calls validate inputs against the action's schema before creating a run: an undeclared key, top-level or nested, fails with `invalidData` (`Unknown field: <key>`), and one bad batch record refuses the whole batch. Extra top-level batch columns still pass, tool actions are not checked, and inside a workflow node an unknown key is still dropped silently. `config` on a top-level action is still stripped with no error that names it, so a required input inside it now fails on the missing field rather than running empty. Rewritten in the router (description, critical rules, `references/gotchas.md`), `cargo-orchestration`, `cargo-mcp`, `cargo-connection`, `cargo-gtm` and fifteen provider playbooks; the LLM playbooks no longer say a misplaced `model` "bills at the default model", because `model` is required and the call is refused.
+- **`defineDomain` merges DNS records into the live zone (cargo#6050).** Registrar records and ones added outside the deploy are kept; the deploy owns what it published, so dropping a record deletes it on the next deploy, and an outside edit to a managed record stops the deploy. `cargo-project` and `cargo-mailbox-management/references/sending-domains.md` said the opposite.
+- **`CARGO_API_TOKEN` is injected for a worker with a run-as service user (cargo#6037).** The router said "never injected"; `cargo-hosting` was already right.
+- **Project context is checked by `plan` (cargo#6266).** `defineContext` fails `check`/`plan`/`deploy` on unparseable frontmatter and on links that match no declared file. Imperative `context runtime write`/`edit` is still unenforced, and missing `title`/`description` still passes.
+- **Model guidance (cargo#5989, cargo#6169).** `cargo-ai` recommends current models, documents `languageModelNotFound` (a slug the connector does not list fails the release) and `connection connector get-language-models <uuid>`.
+- **The catalog claims in four `cargo-gtm` recipes.** Meta and X Custom Audiences exist (`metaAds`, `xAds`); `pipecorn.findPersonalEmail` is a second personal-email route (own key); Explorium (own key) is a since-timestamp event feed and an employee-ratings source. `rodz` is now `cargoSignals` in `cargo-storage`.
+- **Cost table recounted: 190 of 594 actions.** Adds `storeleads.enrichDomain` (0.01), `firecrawl.agent` (0.05 per Firecrawl credit, up to 12.5 a call by default) and the `xAccount` actions. The codex package strips the `xAccount` rows, like the X playbook before them (#120).
+- **`sendEmail` `includeUnsubscribeLink: false` (cargo#6316)** hides only the body link; the `List-Unsubscribe` header is still sent and still writes suppressions. `sending.md` said the link could not be removed.
+- Patches: `cargo-connection` 1.6.2, `cargo-context` 1.4.1, `cargo-storage` 1.3.1.
+
 ### Plugin — migrating from `cargo@cargo`
 
 - **README: how to move a `cargo@cargo` install to `cargo@cargo-skills`.** Installs made under the old marketplace name are frozen: Claude Code refuses to update *or* uninstall anything from the reserved `cargo` marketplace ("Installing plugins from cargo (`<package>@cargo`) is not available yet"). `/plugin marketplace remove cargo` still works and drops the plugin with it, so the README now gives remove, add, install, plus the two keys to change in a template project's `.claude/settings.json`.

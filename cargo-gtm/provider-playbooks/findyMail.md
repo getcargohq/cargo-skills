@@ -59,7 +59,7 @@ LinkedIn URL is the only accepted identifier. Output is `phone` + `line_type`.
 
 ## Anti-patterns
 
-- **`firstName`/`lastName` or `first_name`/`last_name` fields.** findyMail's finder takes `name` (one string), `domain`, `linkedinUrl` — nothing else. Wrong field names are silently ignored and the row misses.
+- **`firstName`/`lastName` or `first_name`/`last_name` fields.** findyMail's finder takes `name` (one string), `domain`, `linkedinUrl` — nothing else. Wrong field names are refused by `action execute` (`Unknown field: firstName`); inside a workflow node they are silently ignored and the row misses.
 - **Running findyMail AND hunter on the same rows by default.** They're alternates at the same tier — waterfall on misses, don't double-spend on hits ([`../references/waterfall-strategy.md`](../references/waterfall-strategy.md)).
 - **Trusting the finder's hit as verified.** Verification is an independent step, always.
 

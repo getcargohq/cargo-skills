@@ -183,7 +183,7 @@ The typed graph of nodes and cross-references derived from every markdown/MDX fi
 ## L
 
 **languageModelSlug**
-The identifier for an LLM used by an agent or inline agent node. Examples: `gpt-4o`, `gpt-4o-mini`, `claude-3-5-sonnet-20241022`, `claude-3-5-haiku-20241022`. Set on `agent create` or `agent update`.
+The identifier for an LLM used by an agent or inline agent node. Examples: `gpt-6-sol`, `gpt-4o-mini`, `claude-sonnet-5`, `claude-opus-5-5`. Set on `agent create` or `agent update`; must be on the connector's live list (`connection connector get-language-models <uuid>`) or the release fails with `languageModelNotFound`.
 
 **library**
 A collection in the **content domain** (`cargo-ai content library …`) that groups files into one resource an agent can reference for RAG. `native` libraries are workspace-managed; `connector`-backed libraries sync documents from an external source through an unstructured-data extractor (`--extractor-slug`).

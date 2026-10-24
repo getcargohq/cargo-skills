@@ -109,7 +109,7 @@ cargo-ai orchestration action execute \
 
 - **Flat records on the enrich actions.** `enrichPerson`/`enrichCompany` batch records need the `parameters` wrapper — `{"parameters":{"email":"…"}}`, NOT `{"email":"…"}`. Flat records fail validation or silently enrich nothing.
 - **Elasticsearch queries in `queryX`.** The `query` field is a **PDL SQL string** (`SELECT * FROM company WHERE …`), never an Elasticsearch DSL object. This is the single most common PDL misuse.
-- **`conjunction` spelling in `searchX` filters.** It's `conjonction` (two o's, no u) — the cargo-wide convention; the typo is stripped and the call fails validation on the missing `conjonction`.
+- **`conjunction` spelling in `searchX` filters.** It's `conjonction` (two o's, no u) — the cargo-wide convention; the typo is refused by `action execute` (`Unknown field: …conjunction`) or stripped inside a workflow node, and either way the call fails validation on the missing `conjonction`.
 - **Search without a strict `limit`.** All PDL searches are billed per returned row at 3 credits each — an uncapped exploratory query is the most expensive mistake in the priority stack. Probe with `limit: 1`, then pull the approved scope ([`../references/cost-discipline.md`](../references/cost-discipline.md)).
 
 ## Action shape

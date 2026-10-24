@@ -41,7 +41,7 @@ cargo-ai orchestration action execute-batch \
   --wait-until-finished
 ```
 
-**`model`, `prompt`, and `advancedSettings` are all *inputs*** — they go in each record, never in the action's `config`, which a top-level action does not carry at all. Settings placed there are rejected on older backends and **silently dropped** on newer ones — and a dropped `searchContextSize` is a real cost difference here. Pipe the answers into a cheap `anthropic`/`openAi` step for structured extraction if you need parse-ready JSON downstream.
+**`model`, `prompt`, and `advancedSettings` are all *inputs*** — they go in each record, never in the action's `config`, which a top-level action does not carry at all. `config` is stripped without an error that names it, so settings placed there are **silently dropped** (a missing required `model` or `prompt` gets the call refused instead) — and a dropped `searchContextSize` is a real cost difference here. Pipe the answers into a cheap `anthropic`/`openAi` step for structured extraction if you need parse-ready JSON downstream.
 
 ## Input quirks
 

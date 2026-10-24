@@ -1,7 +1,7 @@
 ---
 name: cargo-ai
 description: "Build and configure AI agents inside Cargo — create an agent, choose its model and temperature, write its prompt, attach knowledge for retrieval (RAG), connect MCP tool servers, manage memories, and deploy releases. Triggers: \"create an agent\", \"make an agent that\", \"give the agent our docs\", \"attach this knowledge base\", \"attach this library to the agent\", \"add resources to the agent release\", \"connect an MCP server\", \"expose our tools as an MCP server\", \"use Cargo from Claude Desktop or ChatGPT\", \"change the agent model\", \"what does the agent remember\", \"deploy the agent\", \"the agent is answering wrong\". Skip when: uploading the knowledge files themselves — use cargo-content; sending the agent a message or running it over records — use cargo-orchestration."
-version: "2.5.1"
+version: "2.6.0"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -206,10 +206,18 @@ Templates include a system prompt, actions, resources, and recommended model set
 
 | Use case | Recommended model | Temperature |
 |---|---|---|
-| Classification, extraction, scoring | `gpt-4o-mini` or `claude-3-5-haiku-latest` | `0.0` – `0.2` |
-| Research, summarization, analysis | `gpt-4o` or `claude-3-5-sonnet-latest` | `0.2` – `0.5` |
-| Copywriting, personalization | `gpt-4o` or `claude-3-5-sonnet-latest` | `0.5` – `0.8` |
-| Brainstorming, creative ideation | `gpt-4o` or `claude-opus-4-8` | `0.7` – `1.0` |
+| Classification, extraction, scoring | `gpt-6-luna` or `gpt-4o-mini` | `0.0` – `0.2` |
+| Research, summarization, analysis | `gpt-6-sol` or `claude-sonnet-5` | `0.2` – `0.5` |
+| Copywriting, personalization | `claude-sonnet-5` or `gpt-6-sol` | `0.5` – `0.8` |
+| Brainstorming, hardest reasoning | `claude-opus-5-5` or `gpt-6-astra` (`claude-fable-5-1` at the top end) | `0.7` – `1.0` |
+
+The slug must be on the connector's **live** list: `release update-draft` and `deploy-draft` fail with `languageModelNotFound` otherwise (checked whenever the release has a connector — the draft's default is the OpenAI one, so an Anthropic slug needs `--integration-slug anthropic --connector-uuid <uuid>` alongside it). List what a connector offers, with each model's credits per 1,000 tokens and `isReasoning`, for free:
+
+```bash
+cargo-ai connection connector get-language-models <connector-uuid>
+```
+
+Price spans three orders of magnitude (`gpt-6-luna` 0.003 / 1k tokens, `claude-sonnet-5` 0.2, `claude-opus-5-5` 1.6, `claude-fable-5-1` 4), so read it before picking a model for a high-volume agent. `claude-3-5-sonnet-latest` is marked deprecated in Cargo's Anthropic model list — move agents off it.
 
 Low temperature (`0.0`–`0.2`) = deterministic, consistent outputs. High temperature (`0.7`+) = creative, varied outputs. For production workflows processing thousands of records, prefer low temperature.
 

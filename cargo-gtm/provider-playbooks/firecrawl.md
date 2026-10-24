@@ -70,7 +70,7 @@ cargo-ai orchestration action execute \
 ## Common pitfalls
 
 - **Unbounded crawls.** `crawl` bills 0.05 per page crawled — an uncapped crawl of a large site burns hundreds of credits. **Always set `limit`** and start with `maxDepth: 1`; widen only if the pilot shows you need more.
-- **Path-filter key spelling.** The action's input schema names the filters `includePaths` / `excludePaths`, while the UI labels them Includes/Excludes. A misspelled key (e.g. `includesPaths`) is stripped and the crawl runs unfiltered.
+- **Path-filter key spelling.** The action's input schema names the filters `includePaths` / `excludePaths`, while the UI labels them Includes/Excludes. A misspelled key (e.g. `includesPaths`) is refused by `action execute` (`Unknown field: includesPaths`), but inside a workflow node it is stripped and the crawl runs unfiltered.
 - **`allowExternalLinks` on a crawl.** It lets the crawler leave the target domain — combined with a loose `limit` this is the fastest way to pay for pages you didn't want.
 
 ## Anti-patterns

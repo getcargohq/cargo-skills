@@ -73,7 +73,7 @@ Any one of `domain`, `linkedin_url`, `name` or `website` is accepted (at least o
 
 ## Anti-patterns
 
-- **Top-level identifier fields on `enrichPerson`.** `first_name` etc. must sit inside `parameters` — top-level keys (except the two reveal flags) are ignored.
+- **Top-level identifier fields on `enrichPerson`.** `first_name` etc. must sit inside `parameters` — other top-level keys (except the two reveal flags) are refused by `action execute` (`Unknown field: first_name`) and ignored inside a workflow node.
 - **Reveal flags at scale "to be safe".** Found personal emails and phones still flow through VERIFY (`waterfall.verifyEmail`, 0.1) — revealing on unqualified rows is pure spend.
 
 ## Position in the waterfall

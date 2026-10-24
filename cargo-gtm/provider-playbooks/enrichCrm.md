@@ -49,7 +49,7 @@ Every hit still flows to VERIFY: free pre-cull, then `waterfall.verifyEmail` (0.
 
 ## Common pitfalls
 
-- **`domainName` vs `domain`** — `enrichPerson` / `enrichCompany` key on `domainName`; `getFunding` keys on `domain`. Mixing them up silently drops the identifier.
+- **`domainName` vs `domain`** — `enrichPerson` / `enrichCompany` key on `domainName`; `getFunding` keys on `domain`. Mixing them up is refused by `action execute` (`Unknown field: domain`), and inside a workflow node silently drops the identifier.
 - **`linkedInSlug` is a slug, not a URL** — `findEmail` wants the profile slug (`alicesmith`), not `https://linkedin.com/in/alicesmith`. Note the capital `In`.
 - **`filmographic` is the literal schema key** on `enrichCompany` — yes, spelled with an `l`; `firmographic` is not a recognized field.
 - **`enrichPerson` marks nothing required** — the schema accepts any subset, but the action needs one full identifier combo (email, or full name + domain, or first + last + domain); partial combos waste the credit.
