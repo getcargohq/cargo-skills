@@ -152,6 +152,8 @@ cargo-ai billing usage get-metrics --from <start-date> --to <end-date> --unit st
 
 Available filters: `--workflow-uuid`, `--model-uuid`, `--connector-uuid`, `--integration-slug`, `--slug`, `--agent-uuid`. Combine with `--group-by` and `--unit`.
 
+**Spend per member.** `--group-by user_uuid --unit billing.credits` attributes credits to the member who triggered the run, batch or agent message. Usage recorded before attribution shipped (October 2026) carries no user, so earlier months don't split by member. The API also filters to one member (`GET /v1/billing/usage/metrics?userUuid=<uuid>&…`); the CLI has no `--user-uuid` flag, so group and read that member's row instead. Admins can store a per-member monthly cap (`monthlyCreditsLimit`, see `cargo-workspace-management` → Users), but it is **not enforced yet** — read this breakdown to watch it by hand.
+
 ### The usage units
 
 `--unit` takes exactly `billing.credits`, `orchestration.executions`, `storage.records`, or `hosting.events` — anything else is a `400` that lists them. **With no `--unit`, the units come back interleaved in the same `items[]` array**, and their `count` fields are not the same quantity. Read the unit off the slug:
