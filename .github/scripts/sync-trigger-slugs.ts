@@ -41,8 +41,11 @@ const catalogPath = join(repoRoot, ".github/data/integrations.json");
  *
  * `datachimp` — excluded on Aurelien's instruction, 2026-08-15. It is also an
  * integration with **zero callable actions**, so nothing was lost.
+ *
+ * `clay` — excluded: competitor; we don't name competitors in skill
+ * descriptions, 2026-10-23.
  */
-const DENIED_INTEGRATIONS = new Set(["datachimp"]);
+const DENIED_INTEGRATIONS = new Set(["datachimp", "clay"]);
 
 /**
  * Categories whose integrations are systems a user *names* when they want to
@@ -119,7 +122,7 @@ function loadCatalog(): Integration[] {
   // Filtered on read as well as on refresh: a hand-edited catalog is still a
   // catalog, and this list must hold however the file got there.
   return (JSON.parse(readFileSync(catalogPath, "utf8")) as { integrations: Integration[] })
-    .integrations;
+    .integrations.filter((i) => !DENIED_INTEGRATIONS.has(i.slug));
 }
 
 function gtmProviderSlugs(): string[] {
