@@ -19,10 +19,10 @@ per-call options).
 | `defineModel(slug, spec)` | Table sourced from a connector's dataset | `connector`, `extractSlug`, `config`, `schedule?`, `folder?`, `unification?`, `additionalColumns?` (or `kind: "native"` with no connector) | `connector`, `folder` | `uuid` |
 | `defineTool(slug, spec)` | Tool backed by a workflow | `workflow`, `description?`, `emojiSlug?`, `triggers?`, `folder?` | `folder` | `uuid` |
 | `definePlay(slug, spec)` | Per-row automation over a model | `model`, `workflow?`, `changeKinds?`, `runCreationRule?`, `schedule?`, `isEnabled?`, `filter?`, `folder?` | `model`, `folder` | `uuid` |
-| `defineAgent(slug, spec)` | AI agent | `connector`, `languageModel`, `systemPrompt`, `uses?` (tools, sub-agents, models, connector + native actions in one array), `capabilities?`, `maxSteps?`, `triggers?`, `evaluator?`, `color?`, `folder?`, `harness?`, `repository?` | `connector`, everything in `uses`, `folder` | `uuid` |
+| `defineAgent(slug, spec)` | AI agent | `connector`, `languageModel`, `systemPrompt`, `uses?` (tools, sub-agents, models, connector + native actions in one array), `capabilities?`, `files?` (`{ items, name?, description?, prompt?, readOnly? }[]`), `maxSteps?`, `triggers?`, `evaluator?`, `color?`, `folder?`, `harness?`, `repository?` | `connector`, everything in `uses`, `files[].items`, `folder` | `uuid` |
 | `defineMcpServer(slug, spec)` | MCP endpoint bundling resources | `name?`, `description?`, `uses?` (tools, agents, models, connector + native actions in one array), `capabilities?`, `folder?` | everything in `uses`; `folder` | `uuid` |
 | `defineFolder(slug, spec)` | Per-kind folder | `kind`, `name?`, `emojiSlug?`, `parent?` | `parent` | `uuid` |
-| `defineFile(slug, spec)` | Content file from a local path | `path`, `name?`, `folder?` | `folder` | `uuid` |
+| `defineFile(slug, spec)` | Content file from a local path | `path`, `name?`, `folder?`, `index?` (`vectorStore` default · `none`), `visibility?` (`private` default · `public`), `mirrorToContext?` (default `true`) | `folder` | `uuid` |
 | `defineContext(spec)` | Workspace context repo (singleton) | `path?` (deprecated alias `dir?`), `files?` (`plan` fails on frontmatter that doesn't parse, or a `references:` / `[[wikilink]]` / relative `.md` link matching no declared file) | — | `uuid` |
 | `defineSegment(slug, spec)` | Saved view over a model | `model` (immutable), `filter` (required) | `model` | `uuid` |
 | `defineCapacity(slug, spec)` | Revenue-org capacity | `model?`, `idColumnSlug?`, `timeColumnSlug?`, `memberCapacity?`, `allocationExpirationPolicy?`, `filter?`, `color?`, `description?` | `model` | `uuid` |
@@ -106,6 +106,33 @@ export const leads = defineModel("leads", {
   is hashed at define time, so edits show as drift. Worker `path` is the bundle
   source dir (`manifest.json` + `package.json` + an entrypoint `src/index.ts`,
   `src/index.js`, `index.ts` or `index.js`), built server-side.
+- **`defineFile` storage settings.** `index: "none"` stores the bytes without sending
+  them to OpenAI — agents can read the file but not search or analyze it; use it for
+  files a worker or play serves rather than an agent retrieves. `visibility: "public"`
+  gives the file a stable **unauthenticated** link
+  (`https://api.getcargo.io/files/public/<uuid>/<name>`). `mirrorToContext: false`
+  keeps it out of the context repo (the default commits it under `.files/`). Changing
+  `index` or `mirrorToContext` re-uploads the bytes in place, keeping the uuid;
+  changing `visibility` is an in-place update. Each is sent only when declared, so a
+  project that never sets them plans no change. Path model and links:
+  [`../../cargo-content/references/objects.md`](../../cargo-content/references/objects.md).
+- **`defineAgent` `files`** lists `defineFile` handles, `defineFolder` handles or
+  `folderRef`s (or `{ uuid }` for a file the project doesn't define — what `pull`
+  writes) the agent can list and read. `readOnly` defaults to `true`; `readOnly: false`
+  on an entry also grants `capability_file_write` on the **folders** it lists — the
+  agent saves text it produced (≤ 1,000,000 characters) under them, never elsewhere,
+  always private, unindexed and unmirrored, and gets a 1-hour link back. On the wire it
+  is a file resource with `isReadOnly: false`.
+
+  ```ts
+  defineAgent("researcher", {
+    // …
+    files: [
+      { items: [playbook] },
+      { items: [outputsFolder], readOnly: false, name: "Outputs", prompt: "Save each report here." },
+    ],
+  });
+  ```
 - **`defineAlert` `scope` + `threshold`** are a **matched pair** — TS narrows the
   threshold menu by `scope.kind`: `spans`/`runs`/`records` take the telemetry metrics
   (`errorRate`, `duration`+`aggregation`, `credits`+`aggregation`, `count`), `model`

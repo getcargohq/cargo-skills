@@ -203,6 +203,20 @@ Both templates ship a `dev.ts` harness: `npm run dev` serves `src/index.ts` unde
 
 A project scaffolded before `dev.ts` existed can copy it from a fresh `hosting worker init`, along with the `dev` script and the `@hono/node-server` + `tsx` dev dependencies.
 
+### Storing files from a worker
+
+`createCargoObjects(env)` from `@cargo-ai/worker-sdk` reads and writes workspace content files by **path**, with the same `CARGO_API_TOKEN` as `createCargoApi`:
+
+```ts
+import { createCargoObjects } from "@cargo-ai/worker-sdk";
+
+const objects = createCargoObjects(c.env);
+await objects.put("decks/acme.pdf", pdfBytes, { contentType: "application/pdf" }); // ≤ 100 MB; overwrites in place
+const { url } = await objects.url("decks/acme.pdf", { expiresInSeconds: 3600 });    // signed, no auth needed to open
+```
+
+Also `get(path)` → `Blob`, `stat(path)`, `list({ prefix, cursor, limit })`, `remove(path)`, `setVisibility(path, "public" | "private")`. A new file is private, not indexed for agent search, and not mirrored into the context repo unless `put` passes `indexMode` / `visibility` / `mirrorToContext`. A signed `url` (max 3 h) or a public file's stable link opens **without auth** — return one to a caller only when that caller should have the file. Path model and defaults: [`../cargo-content/references/objects.md`](../cargo-content/references/objects.md).
+
 ### Worker logs and errors
 
 `createWorker()` captures `console.log/info/warn/error/debug` during each request Cargo dispatches and ships them to the worker's logs (at most 50 lines per request). An **uncaught** error is logged with its stack and answered with a bare `500`.

@@ -234,6 +234,22 @@ Knowledge that grounds agent responses (retrieval-augmented generation, RAG) com
 
 A file or library is inert until attached to an agent via the draft release's `resources` array and deployed. Upload files / build libraries in [`cargo-content`](../cargo-content/SKILL.md), then wire them in here with `release update-draft --resources …` followed by `release deploy-draft`. See [`../cargo-content/references/examples/files.md`](../cargo-content/references/examples/files.md) for the full upload → attach → deploy sequence.
 
+**Only indexed files are searchable.** A file stored with `indexMode: "none"` — the default for `content file put`, workers, the `writeFile` node and agent writes — can be listed and read but not searched: `capability_file_list` marks it `isSearchable: false`, `capability_file_search` skips it, and `capability_file_analyze` refuses it. Attach `upload`-ed files (indexed by default) for RAG, or re-write the file with `--index vectorStore`.
+
+### Letting an agent write files
+
+A file resource with `"isReadOnly": false` also grants **`capability_file_write`** on the **folders** it lists (`{"kind":"folder","folderUuid":"…"}` items; listed files stay read-only). Unset means read-only.
+
+```bash
+cargo-ai ai release update-draft --agent-uuid <agent-uuid> \
+  --resources '[{"kind":"file","slug":"outputs","name":"Outputs","description":null,"prompt":"Save each report here.","isReadOnly":false,"items":[{"kind":"folder","folderUuid":"<folder-uuid>"}]}]'
+```
+
+- The agent writes text it produced, **≤ 1,000,000 characters**, to a relative path inside one of those folders (subfolders are created) — nowhere else in the workspace. With several writable folders it must name one.
+- Every agent write is stored `private`, `indexMode: none` and `mirrorToContext: false`, even when it overwrites a file someone made public. It returns `{ fileUuid, path, size, url }`, where `url` is a 1-hour signed link anyone holding it can open.
+- A write **overwrites** the newest file of that name in that folder in place. Give the agent a dedicated output folder rather than one holding knowledge it reads.
+- In a project: `defineAgent({ files: [{ items: [folder], readOnly: false }] })` — see [`../cargo-project/references/resources.md`](../cargo-project/references/resources.md).
+
 ## MCP — two directions, don't mix them up
 
 MCP (Model Context Protocol) runs both ways in Cargo, and the two surfaces are unrelated:

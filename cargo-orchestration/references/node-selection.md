@@ -59,6 +59,7 @@ The next node's field can hold that expression directly.
 | code to call an LLM and parse its JSON | the native `agent` node with `output.type:"jsonSchema"`, read as `{{nodes.<slug>.answer.<field>}}` |
 | a raw HTTP request to a provider | the integration's connector action. Find it with `cargo-ai orchestration action list <keywords>` |
 | an HTTP call to a Cargo model's `/records/ingest` webhook | the native `modelUpsert` / `modelInsert` action. See [`nodes.md`](nodes.md) → "Storage" |
+| an HTTP call to a storage API, or code to build a file and a link | the native `writeFile` / `readFile` / `getFileUrl` actions. See [`nodes.md`](nodes.md) → "Files" |
 | code to decide a path | `branch` / `filter` / `switch` with a boolean expression |
 | code to loop over a list | a `group` node |
 | code to wait | a `delay` node |

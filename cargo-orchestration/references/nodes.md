@@ -265,6 +265,36 @@ columns; `customMappings` (same shape) targets its custom columns. A null
 `matchingValue` fails the node without writing. All of them output an array of
 records.
 
+#### Files
+
+Read and write workspace **content files** by path (`reports/2026-q3/summary.md`: folder
+chain plus name). Use these, not an HTTP node to a storage API or a script that
+base64-juggles bytes.
+
+| actionSlug   | Purpose                                  | childrenCount | Config | Output |
+| ------------ | ---------------------------------------- | -------- | ------ | ------ |
+| `writeFile`  | Store text or base64 bytes at a path     | 1        | `{"path", "content", "encoding"?: "text"\|"base64", "contentType"?, "visibility"?: "private"\|"public", "indexMode"?: "none"\|"vectorStore"}` | `{fileUuid, path, size, url, publicUrl?}` |
+| `readFile`   | Read a file by path                      | 1        | `{"path", "encoding"?: "text"\|"base64"}` | `{fileUuid, path, contentType, size, content}` |
+| `getFileUrl` | Signed link to a file by path            | 1        | `{"path", "expiresInSeconds"?, "download"?}` | `{fileUuid, path, url, expiresAt, publicUrl?}` |
+
+- `writeFile` creates missing folders and **overwrites** the newest file of that name
+  in place (same `fileUuid`). A new file is `private`, `indexMode: "none"` (not
+  searchable by agents) and not mirrored to the context repo; an overwritten one keeps
+  its own settings unless the node sets them. `contentType` defaults to
+  `text/plain; charset=utf-8` (text) or `application/octet-stream` (base64).
+- `writeFile` / `readFile` cap at **10 MB**; a larger read fails and points at
+  `getFileUrl`. A **preview (dry) run of `writeFile` writes nothing** — it returns a
+  zero `fileUuid` and no `url`.
+- `url` is a signed link **anyone holding it can open** — 1 hour from `writeFile`,
+  `expiresInSeconds` (default 3600, max 10800) from `getFileUrl`. `publicUrl` is the
+  stable no-auth link, present only when the file is `public`. Do not route either to a
+  third party unless the play's purpose is to share that file.
+- All three fail without retry: `File not found at <path>`, `File not written: <reason>`
+  (`invalidPath`, `folderReadOnly`, …).
+
+Path model, defaults per surface, and the public link:
+[`../../cargo-content/references/objects.md`](../../cargo-content/references/objects.md).
+
 ### Flow control
 
 | actionSlug | Purpose               | childrenCount | Config                                                      |

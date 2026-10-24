@@ -14,6 +14,11 @@
       "title": "File & library examples"
     },
     {
+      "path": "references/objects.md",
+      "kind": "reference",
+      "title": "Files as storage — paths, links, and every surface that writes them"
+    },
+    {
       "path": "references/response-shapes.md",
       "kind": "reference",
       "title": "Content response shapes"
@@ -24,5 +29,5 @@
       "title": "Content troubleshooting"
     }
   ],
-  "contentHash": "733f9fc3ef6a4456d6c092f8ce9216b001000f08f5269d4443f730e07a7ec09c"
+  "contentHash": "f969572599bc19cf154aaa17962c9ceb5020d661c16649128228790ba85c0eb8"
 }
