@@ -138,3 +138,6 @@
 {"prompt": "What will execute_action_batch cost before I run it?", "expect": "cargo-mcp", "why": "MCP tool names are the highest-precision routing tokens for this surface."}
 {"prompt": "The Cargo MCP server is showing the wrong workspace", "expect": "cargo-mcp", "why": "Token-binds-workspace is the silent failure this skill exists to catch.", "tier": "hard"}
 {"prompt": "my cargo-ai action ran but ignored the filter I passed", "expect": "cargo", "why": "The router description names inputs in a top-level action's config stripped without an error as a silent gotcha.", "tier": "hard"}
+{"prompt": "Find work emails for every row of this CSV", "expect": "cargo-gtm", "why": "Email finding is GTM work whose first move is the workspace's preset Find email tool; running a tool must not pull it to cargo-orchestration."}
+{"prompt": "Run the Find email waterfall over these 300 contacts", "expect": "cargo-gtm", "why": "Naming the preset tool is still an email job: cargo-gtm carries the sample gate and the fallback chain, orchestration does not."}
+{"prompt": "Get mobile numbers for these 40 LinkedIn profiles", "expect": "cargo-gtm", "why": "Phone lookup routes to cargo-gtm, which leads with the preset Find phone tool and keeps phone behind the guarded-lever rule."}

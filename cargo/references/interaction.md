@@ -32,8 +32,8 @@ How should this play be triggered?
 2. Segment change — every record entering the segment becomes a run.
 3. Schedule — recurring batch over the segment.
 
-And for email lookup: waterfall verify-first (~0.4 cr/row, recommended) or
-FullEnrich premium (~1 cr/row, better coverage on small companies)?
+And for email lookup: the workspace's Find email tool (recommended: five
+providers, each hit verified, ~1.1 cr per hit) or one provider you pick?
 ```
 
 ## 3. Presenting defaults

@@ -10,6 +10,21 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### `cargo-gtm` 2.6.0, `cargo` 1.33.0, `cargo-mcp` 1.3.0, `cargo-diagnostics` 1.6.1: email, phone and verify jobs start with the workspace's preset tools
+
+Every workspace is seeded with read-only tools in a **Cargo Tools** folder, and three of them are the waterfalls these skills told agents to build by hand. Checked against getcargohq/cargo master (2026-10-24: `orchestration/services/template/templates/tools/index.ts`, seeded by `tool/syncAll.ts`) and CLI 1.0.129.
+
+- **The first move changed.** For finding an email, finding a phone or verifying an email, an agent now looks up the preset's `toolUuid` (`cargo-ai orchestration action list "find email" --kind tool`, or MCP `search_actions` with `kind: "tool"`), samples 10 to 20 rows with `action execute-batch --action '{"kind":"tool","toolUuid":"<uuid>"}'`, reads `batch download`, then runs the approved batch.
+  - **Find email**: apolloio, FullEnrich, findyMail, peopleDataLabs and waterfall in turn, each hit checked by `zeroBounce` before the chain stops. Inputs `firstName` + `lastName` + `companyDomain` or `linkedinUrl`, optional `returns_catchalls`. Returns `{email}` only: no status, catch-all flag or provider. Declared 1.1 to 4 credits a row; a miss costs roughly nothing.
+  - **Find phone**: FullEnrich, findyMail, waterfall, peopleDataLabs. `linkedinUrl` in, `{phone}` out, unverified. Declared 3 to 7.
+  - **Verify email**: neverBounce. `{status, is_safe}` out, 0.2.
+- **`waterfall-strategy.md`** no longer says Cargo has no waterfall primitive. It opens with the preset tools (inputs, outputs, honest costs, the silent drop of an unknown input key, the input guard that exits a bad row for free) and keeps the hand-rolled chains as the fallback for a missing tool, a custom provider order, or per-row provenance.
+- **Recipes:** `prospecting.md` (P1, P2 and the P3 backfill, which was a hand-rolled email waterfall), `build-tam.md` and `portfolio-prospecting.md` run the Find email tool and drop the paid verify on its output; `clay-to-cargo.md` maps a Clay email or phone waterfall column to the preset; `outreach-activation.md` names the Verify email tool as the swap-in.
+- **Guide, references and playbooks:** `enriching-and-researching.md` decision tree, `alternatives.md`, `stage-action-map.md`, the `cargo-gtm` spine and routing table, the `FullEnrich` and `waterfall` playbooks, and the router's glossary (new **preset tool** entry), interaction example and `cargo-gtm` critical rules.
+- **`cargo-mcp`:** search tools first for email, phone and verify jobs; a signed-out session lists no tools.
+- **`cargo-diagnostics`:** the waterfall lever in `play-optimize-credits.md` includes replacing a hand-built chain with the preset tool.
+- **Routing:** `cargo-gtm` gains the trigger "find phone numbers for these contacts"; three routing cases pin email and phone jobs to `cargo-gtm`.
+
 ### `cargo-segmentation` 1.2.1, `cargo-orchestration` 1.17.1, `cargo-workspace-management` 1.6.1, `cargo-ai` 2.8.1, `cargo-connection` 1.7.1, `cargo-project` 4.3.1, `cargo-mailbox-management` 1.5.0: CLI 1.0.128 fixes the bugs the skills worked around
 
 cargo#6369 (CLI 1.0.128) fixes the CLI and API bugs the October docs PRs found, so the workarounds become notes about older versions.

@@ -116,6 +116,8 @@ a handful of contacts at a known account; wrong for building a list.
 
 ## Find email
 
+> **First move: the workspace's Find email preset tool** (`{"kind":"tool","toolUuid":"<uuid>"}`, 1.1 to 4 on a hit, roughly 0 on a miss), which runs apolloio → FullEnrich → findyMail → peopleDataLabs → waterfall with a zeroBounce check on each hit. The rows below are the hand-rolled chain: [`waterfall-strategy.md`](waterfall-strategy.md#start-here-the-workspaces-preset-tools).
+
 | Provider | Action | Cost | Priority? | Notes |
 |---|---|---|---|---|
 | icypeas | findEmail | 0.1 |   | Cheapest. Use as cheap-fallback. |
@@ -133,6 +135,8 @@ a handful of contacts at a known account; wrong for building a list.
 
 ## Verify email
 
+> **First move: the workspace's Verify email preset tool** (neverBounce inside, 0.2, returns `status` and `is_safe`). Addresses returned by the Find email tool were already checked. The rows below are for a hand-built step.
+
 | Provider | Action | Cost | Priority? | Notes |
 |---|---|---|---|---|
 | icypeas | verifyEmail | 0.01 |   | **Cheapest in catalog.** Use for very large verifies. |
@@ -147,6 +151,8 @@ a handful of contacts at a known account; wrong for building a list.
 | hunter | verifyEmail | 1 |   | Most expensive — avoid unless other tier is failing. |
 
 ## Find phone
+
+> **First move: the workspace's Find phone preset tool** (`linkedinUrl` in, 3 to 7), which runs FullEnrich → findyMail → waterfall → peopleDataLabs. The rows below are the hand-rolled chain.
 
 | Provider | Action | Cost | Priority? | Notes |
 |---|---|---|---|---|
