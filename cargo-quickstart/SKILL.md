@@ -31,9 +31,11 @@ Already signed in (`cargo-ai whoami` returns a workspace)? Skip to the next sect
 ```bash
 npm install -g @cargo-ai/cli            # no global install? prefix every command with `npx @cargo-ai/cli`
 cargo-ai login --email you@company.com  # emailed code, no browser; creates the account on first use
-                                        # alternatives: --oauth (browser) · --token <api-token> (CI)
+                                        # alternatives: --oauth (browser) · --agentid (an agent as itself) · --token <api-token> (CI)
 cargo-ai whoami                         # confirm the active workspace before any write
 ```
+
+A first sign-in lands in a new workspace named **`Personal`**; pass `--workspace-name "<Company> GTM"` to the login that creates the account and it renames that one (within 10 minutes, while you're its only member) instead of making a second. Starter connectors and agents seed in the background, so an empty-looking workspace a minute after sign-up may still be filling in — that is not a reason to stop.
 
 Every command prints JSON to stdout; failures exit non-zero and print `{"error": "...", "status": ..., "body": {...}}` to stderr. Anything that creates a run or a batch is async — pass `--wait-until-finished` or poll the matching `get`. When the full skill bundle is installed, [`../cargo/references/prerequisites.md`](../cargo/references/prerequisites.md) adds the CLI version pin, token scopes, and the admin-only surface.
 

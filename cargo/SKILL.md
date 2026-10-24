@@ -53,6 +53,7 @@ cargo-ai login --email you@company.com --code 123456
 
 # Alternatives
 cargo-ai login --oauth                            # browser sign-in (OAuth device flow)
+cargo-ai login --agentid                          # an agent signing in as itself, through AgentID
 cargo-ai login --token <your-api-token>           # existing workspace-scoped API token (CI)
 
 # Optional: pick the workspace at login instead of being prompted
@@ -66,7 +67,9 @@ cargo-ai whoami
 
 `--email` is the one to reach for in an **agent or sandbox shell**: it never opens a browser, and where there is no terminal to prompt at, the first call sends the code and exits so you re-run with `--code`. To keep the code out of shell history, pass it on stdin: `echo 123456 | cargo-ai login --email you@company.com --code -`. Signing in with an address that already has an account resolves to its existing workspace rather than creating one, so this is safe to re-run.
 
-`--oauth` runs the same OAuth 2.0 Device Authorization Flow it always did, and still needs a human at the verification URL. Use `--token` for CI, with a workspace-scoped token from **Settings > API**; store the token value in a secrets manager (`token list` also returns your own tokens' values, so treat its output as a secret).
+**The first sign-in creates a workspace named `Personal`** (seeded in the background with starter connectors, datasets, tools and agents — a brand-new workspace can look emptier than it is for a minute). `--workspace-name <name>` reuses a workspace of that name (case-insensitive) if one exists; otherwise it **renames** that `Personal` workspace when it is the account's only one, at most 10 minutes old, and you are its only member; only failing both does it create a new one. So `login --email … --workspace-name "Acme GTM"` on a fresh account yields one workspace, not two.
+
+`--oauth` runs the same OAuth 2.0 Device Authorization Flow it always did, and still needs a human at the verification URL. `--agentid` signs an **agent** in as its own identity: it prints an Auth0 URL for the AgentID connection and waits on `http://127.0.0.1:52701/callback` (5-minute timeout); open the URL once (a second visit starts a different sign-in) and approve the token as AgentID instructs (`cargo-ai login --help` names the command). `--email`, `--oauth` and `--agentid` all save a self-renewing session to `~/.config/cargo-ai/credentials.json` (the system temp dir where home isn't writable — it lasts as long as the sandbox). Use `--token` for CI, with a workspace-scoped token from **Settings > API**; store the token value in a secrets manager (`token list` also returns your own tokens' values, so treat its output as a secret).
 
 Without a global install, prefix every command with `npx @cargo-ai/cli` instead of `cargo-ai`.
 
