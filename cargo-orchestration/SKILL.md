@@ -129,6 +129,7 @@ Most commands require UUIDs. Always discover them before acting.
 ```bash
 cargo-ai orchestration action list <query>  # actions across connectors, native, tools, agents (+ credits)
 cargo-ai orchestration play list            # all plays (name, workflowUuid, modelUuid, segmentUuid)
+cargo-ai orchestration play list --is-enabled --schedule-type cron   # filter: --is-enabled / --is-disabled, --schedule-type dbt|cron|realtime|dependency|watch, --model-uuid, --segment-uuid
 cargo-ai orchestration tool list            # all tools (name, workflowUuid, description)
 cargo-ai orchestration workflow list        # all workflows (uuid only — no name)
 cargo-ai orchestration template list       # all workflow templates (slug, name, kind)
@@ -171,6 +172,12 @@ cargo-ai orchestration run create --workflow-uuid <uuid> --data '{"company":"Acm
 cargo-ai orchestration run create --data '{"domain":"acme.com"}' --nodes '[...]'
 cargo-ai orchestration batch preview --workflow-uuid <uuid> --data '<same as batch create>'   # free: count + up to 200 sample records, creates nothing
 cargo-ai orchestration batch create --workflow-uuid <uuid> --data '{"kind":"filter","modelUuid":"...","filter":{"conjonction":"and","groups":[]}}'
+
+# Plays and tools themselves (settings, health alert, removal) — references/examples/plays.md
+cargo-ai orchestration play update <play-uuid> --is-disabled
+cargo-ai orchestration play update <play-uuid> --health-threshold 90 --health-alert-actions '[...]'
+cargo-ai orchestration play remove <play-uuid>
+cargo-ai orchestration tool remove <tool-uuid>
 
 # AI agents
 cargo-ai ai message create --chat-uuid <uuid> --parts '[{"type":"text","text":"..."}]'
@@ -463,6 +470,11 @@ cargo-ai orchestration record list --workflow-uuid <uuid> --limit 50
 
 # Filter by batch or status
 cargo-ai orchestration record list --workflow-uuid <uuid> --batch-uuid <uuid> --statuses error
+
+# Records (or runs, with `run list`) touched in a window — --updated-after / --updated-before
+# catch a retried or resumed record that --created-after misses
+cargo-ai orchestration record list --workflow-uuid <uuid> --updated-after 2026-10-22T00:00:00Z
+cargo-ai orchestration run list --workflow-uuid <uuid> --updated-after 2026-10-22T00:00:00Z --statuses error
 
 # Count records
 cargo-ai orchestration record count --workflow-uuid <uuid>

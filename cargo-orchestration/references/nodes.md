@@ -812,7 +812,7 @@ cargo-ai orchestration node compute \
   --context '{"nodes": {"start": {"domain": "acme.com"}}}'
 ```
 
-The `--context` object mirrors what nodes receive at runtime — `nodes.<slug>.<field>` for data from previous nodes. Inside a `group` loop, also pass `groupContext`.
+The `--context` object mirrors what nodes receive at runtime — `nodes.<slug>.<field>` for data from previous nodes. For a node inside a `group` loop, pass the loop's per-item context with `--group-context '<json>'` — on `node compute` and on `node execute` alike; without it, expressions that read the group item resolve empty.
 
 Response shows the resolved config values that would be sent to the connector or action.
 
