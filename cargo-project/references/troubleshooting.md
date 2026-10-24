@@ -45,8 +45,8 @@ holds, or should hold, `cargo.state.json` — naming the folder of `.ts` resourc
 echo '{ "resources": "infra" }' > cargo.json
 ```
 
-`"executions": ["outputs"]` is optional (`outputs/` beside `cargo.json` is the
-default). A repo with several projects has one `cargo.json` per project; commands use
+`"executions": ["outputs"]` is optional (`outputs/` beside `cargo.json`, at any depth,
+is the default; entries take a `*` segment, e.g. `"outputs/*/executions"`). A repo with several projects has one `cargo.json` per project; commands use
 the nearest. `--dir <path>` changes where the lookup starts, not the rule. A
 `cargo.json` that is not JSON, has unknown keys, or names a folder outside its own
 also stops the command, with the reason.
@@ -126,3 +126,57 @@ you migrated a workspace without importing — bind it: `cargo-ai project import
 File a report so the Cargo team sees it:
 `cargo-ai workspaceManagement report create --title "<summary>" --description "<commands tried, errorMessage, expected vs actual>"`
 — see [`../../cargo-workspace-management/SKILL.md`](../../cargo-workspace-management/SKILL.md).
+
+## `Executions run only on a state in your workspace, where every deploy shares one ledger`
+
+A `defineBatch` / `defineRun` is pending and the project's `cargo.state.json` still
+holds the resource map inline. The exactly-once ledger only exists on workspace-held
+state, so the deploy stops before running anything. Run `cargo-ai project state create`,
+commit the new pointer, and deploy again. See [`../guides/executions.md`](../guides/executions.md).
+
+## An execution says `refused`, `unconfirmed` or `not started`
+
+- `refused` — Cargo would not take it and nothing ran, but it **is** in the ledger
+  (`plan` shows `= batch <id> refused on <date>: <reason>`). Fix it and give it a new id;
+  editing it in place does nothing.
+- `unconfirmed` — the deploy never heard back, so it may have started. It is in the
+  ledger. Check `cargo-ai orchestration batch list` (or `run list`) before adding a new
+  id, or you may run it twice.
+- `not started` — failed before reaching Cargo (a CSV upload, say). Not in the ledger;
+  the next deploy retries it.
+
+## `Duplicate execution "…" — execution ids must be unique in a project`
+
+Two files declare the same id with different specs. Ids are the ledger key: rename the
+newer one (a date prefix keeps the order readable).
+
+## `409 stateAutoDeployed` — "Cargo deploys this state from <repo> when <branch> changes"
+
+The state is connected to GitHub with Deploy on push on, so only Cargo's service user
+may deploy it. A GitHub Actions deploy or a hand-run `deploy` is refused. Delete the
+Actions deploy workflow, or turn auto-deploy off (**Settings → States**, or
+`cargo-ai project state disconnect`) to deploy by hand.
+
+## PR check: `Needs approval: large impact`
+
+The merge would exceed an impact threshold (100 emails / LinkedIn actions / chat
+messages, 5,000 audience adds, 2,500 credits) or its impact can't be counted (model or
+segment created in the same change, unreadable steps, a send inside a loop, a
+`workflowRef` batch). Read the "What a merge will set in motion" table in the PR
+comment, get the user's approval on those numbers, then add the `cargo:approve-impact`
+label; Cargo re-plans and the check passes. See
+[`../recipes/deploy-from-ci.md`](../recipes/deploy-from-ci.md).
+
+## An execution shows `held` after a merge
+
+On a connected repo a merge starts an execution only when an approved PR plan counted
+that exact version of it and its record count hasn't grown past the preview's
+allowance (10%, at least one record). Otherwise it stays pending; open a PR that touches
+the project so it is previewed again.
+
+## A connected-repo deploy fails on an unresolved `secret()`
+
+Cargo's run has no `.env`. Move the value into a workspace env var
+(`cargo-ai workspaceManagement envVar create --key NAME --secret`) and reference it with
+`workspaceEnv("NAME")` at the secret-typed position; workers and apps inherit workspace
+env vars without a reference.

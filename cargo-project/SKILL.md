@@ -1,7 +1,7 @@
 ---
 name: cargo-project
 description: "Declare a whole Cargo workspace in a project, GTM as Code — connectors, models, plays, tools, agents, MCP servers, segments, context, folders, files, workers, and apps in TypeScript, reconciled with `cargo-ai project` (init → types → plan → deploy), the way you would run Pulumi or Terraform. Triggers: \"as code\", \"in git\", \"version-controlled\", \"reproducible\", \"Terraform for Cargo\", \"set up a whole workspace\", \"staging and production\", \"deploy the workspace from CI\", \"review this in a PR\", \"cargo.json\", \"cargo.state.json\", \"scaffold from a template\", \"is there a cookbook for this\", \"start from a cookbook\". Skills with a worked project example (TAM building, account scoring, call capture, inbound qualification, CRM enrichment, standup) live in gtm-skills; menu in references/cookbooks.md. Skip when: it is a one-off operation, a read, or an ad-hoc query — use the matching capability skill."
-version: "4.2.0"
+version: "4.3.0"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -152,7 +152,10 @@ resource, the file that declared it, whether it is deployed) · `cargo-ai projec
 `deploy --prune` (delete resources removed from code) · `cargo-ai project import <id> <uuid>`
 (bind an existing live resource into state) · `cargo-ai project pull` (generate `define*`
 source from a live workspace and adopt it) · `cargo-ai project rollback` (restore the
-pre-deploy state snapshot) · `cargo-ai project state` (inspect and repoint the deploy state).
+pre-deploy state snapshot) · `cargo-ai project state` (inspect and repoint the deploy state;
+`state connect` to deploy from GitHub) · `cargo-ai project graph` (Mermaid of the live
+workspace's resources, or `--project [--plan]` for the local code) · `deploy --dry-run` /
+`--draft` (preview / stage without going live).
 
 **`plan` and `info` answer different questions.** `plan` answers *what will deploy do* —
 its unit is the change, and it exits non-zero so CI can gate on it. `info` answers *what
@@ -167,6 +170,7 @@ project` with no subcommand prints its help.
 - **Level 2** — Guides:
   [`guides/authoring-resources.md`](guides/authoring-resources.md),
   [`guides/deploy-and-state.md`](guides/deploy-and-state.md),
+  [`guides/executions.md`](guides/executions.md),
   [`guides/typed-config.md`](guides/typed-config.md).
 - **Level 2.5** — Recipes: [`recipes/*.md`](recipes/) — step-by-step playbooks to
   follow as your execution plan.
@@ -182,6 +186,7 @@ project` with no subcommand prints its help.
 |---|---|---|
 | Writing `define*` files, wiring resources, `secret()`/`env()`, `defineWorkflow` bodies (tool/play logic) | [`guides/authoring-resources.md`](guides/authoring-resources.md) | The builder catalog, the handle/ref model, secrets, and how workflow bodies compile. |
 | `plan` / `deploy` / `destroy`, the state file, drift, adopting existing resources, CI | [`guides/deploy-and-state.md`](guides/deploy-and-state.md) | The deploy lifecycle, `cargo.state.json` semantics, drift/import/rollback, async builds. |
+| Running a play, tool or workflow **once** from code (`defineBatch` / `defineRun`, `outputs/`, the ledger) | [`guides/executions.md`](guides/executions.md) | Builders, `data` kinds, where executions live, what `plan` prints, the exactly-once ledger and its statuses. |
 | Typed config, `cargo-ai project types`, tsconfig wiring, `uses.<key>.<action>` connector calls in workflow bodies | [`guides/typed-config.md`](guides/typed-config.md) | What `project types` generates and how to wire it into your project. |
 | A field/spec/output for a specific builder | [`references/resources.md`](references/resources.md) | Every builder → spec fields → which ref each takes → outputs. |
 | Exact command flags | [`references/commands.md`](references/commands.md) | Every `cargo-ai project` subcommand and its flags. |
@@ -253,7 +258,7 @@ it. Either way, treat the skill's `Done when` as the acceptance test and review
 | [`recipes/add-connector-and-model.md`](recipes/add-connector-and-model.md) | Adding a data source + a model sourced from it, wired by handle. |
 | [`recipes/build-an-agent.md`](recipes/build-an-agent.md) | Composing a model + tool + agent (wired through `uses`) and deploying. |
 | [`recipes/migrate-existing-workspace.md`](recipes/migrate-existing-workspace.md) | Bringing an already-live workspace under a project via `project import`. |
-| [`recipes/deploy-from-ci.md`](recipes/deploy-from-ci.md) | Deploying non-interactively from CI (token auth + committed state). |
+| [`recipes/deploy-from-ci.md`](recipes/deploy-from-ci.md) | Plan every PR and deploy every merge: connect the GitHub repo (`project state connect`), or your own CI with a token as the fallback. |
 
 ## 6) Critical rules
 
@@ -324,7 +329,8 @@ it. Either way, treat the skill's `Done when` as the acceptance test and review
 - **A project is the folder holding `cargo.json` (`@cargo-ai/cdk` ≥ 1.0.112).** The
   file names the folder whose `.ts` files are loaded, `{ "resources": "infra" }`, and
   optionally where executions live, `"executions": ["outputs"]` (default `outputs/`
-  beside `cargo.json`). Every command walks **up** from where it runs, as far as the
+  beside `cargo.json`, read at any depth; a `*` segment globs folders, e.g.
+  `["outputs/*/executions"]` — see [`guides/executions.md`](guides/executions.md)). Every command walks **up** from where it runs, as far as the
   repo root, to the nearest `cargo.json`, so any subdirectory works; a repo with
   several projects has one `cargo.json` each, and the nearest wins. **Without one, the
   command stops** — it no longer guesses from an `infra/` folder or a `package.json`
@@ -340,6 +346,17 @@ it. Either way, treat the skill's `Done when` as the acceptance test and review
   names, and a repo root also holds `scripts/` — whose files run on import.
 - **`--yes` in CI.** `deploy` and `destroy` prompt for confirmation; non-interactive
   runs must pass `--yes`.
+- **A connected GitHub repo deploys on merge — and on connect.** `cargo-ai project
+  state connect` plans every PR in a comment and runs `deploy --yes` on every push to
+  the production branch, starting with the branch head **the moment you connect**
+  (`--no-auto-deploy` to plan only). A merge whose plays and executions would exceed 100
+  emails, 100 LinkedIn actions, 100 chat messages, 5,000 audience adds or 2,500 credits —
+  or can't be counted — fails `Needs approval: large impact` until someone labels the PR
+  `cargo:approve-impact`. That label is the user's cost approval: add it only on their
+  explicit yes. `secret()` does not resolve there (use `workspaceEnv()`), and while
+  auto-deploy is on every other deploy of the state is refused (409
+  `stateAutoDeployed`) — remove a GitHub Actions deploy rather than running both. See
+  [`recipes/deploy-from-ci.md`](recipes/deploy-from-ci.md).
 - **A `definePlay`/`defineTool` graph with paid nodes gets a sample run before it
   goes wide.** Deploying is not running, but the first thing that runs a deployed
   play is usually a batch over the whole segment — and a scheduled play re-bills
@@ -352,6 +369,18 @@ it. Either way, treat the skill's `Done when` as the acceptance test and review
   (`../cargo-gtm/provider-playbooks/<slug>.md`, esp. its *Recurring use* section)
   and the gate in
   [`../cargo-gtm/references/cost-discipline.md`](../cargo-gtm/references/cost-discipline.md).
+- **An execution runs exactly once, on the next deploy, with no undo and no retry.**
+  `defineBatch` / `defineRun` files under `outputs/` (or the `cargo.json`
+  `executions` folders) start a real batch or run after the resources apply; a play
+  batch can send email and LinkedIn actions and spends credits, and reverting the code
+  takes nothing back. A `filter` / `segment` execution over the whole audience **is a
+  full batch**: pilot it first and get approval on the record count and credit
+  estimate per
+  [`../cargo-gtm/references/cost-discipline.md`](../cargo-gtm/references/cost-discipline.md)
+  before it reaches a `deploy` (or a merge on a connected repo). The ledger lives in
+  the workspace-held state, so a refused or finished execution never re-runs — give it
+  a new id; executions need workspace-held state and never run under `--draft`. See
+  [`guides/executions.md`](guides/executions.md).
 - **A `defineAlert` whose actions call paid nodes re-bills on every breach.** An
   alert's `actions` fire as real runs, so a badly-sized `threshold` on a tight
   `schedule` can breach — and bill — every tick. Size the threshold with

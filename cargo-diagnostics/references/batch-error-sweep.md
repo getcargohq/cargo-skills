@@ -32,7 +32,17 @@ cargo-ai orchestration query execute \
    ORDER BY failures DESC"
 ```
 
-Scope with `batch_uuid`/`workflow_uuid` predicates when you have them. Two shapes to distinguish:
+Scope with `batch_uuid`/`workflow_uuid` predicates when you have them. Without SQL, `span count` gives the same counts one filter at a time, and `span list` hands back exemplars with their error text:
+
+```bash
+cargo-ai orchestration span count --batch-uuid <batch-uuid> --execution-started-after <iso> \
+  --execution-statuses error --node-integration-slug hunter          # failures at one provider
+cargo-ai orchestration span list --batch-uuid <batch-uuid> --execution-started-after <iso> \
+  --execution-statuses error --execution-title-or-error-message "%rate limit%" --limit 5
+cargo-ai orchestration trace count --workflow-uuid <uuid> --started-after <iso> --statuses degraded   # failures a fallback absorbed
+```
+
+Two shapes to distinguish:
 
 - **Concentrated** (one node owns most failures) → a config, credential, or expression defect at that node. Proceed to step 3 with that node.
 - **Spread across connector nodes, clustered in time** → third-party rate limiting. Confirm with the "signs you are being rate-limited" checklist in [`troubleshooting.md`](../../cargo-orchestration/references/troubleshooting.md); the fix is retry config + smaller sub-batches, not per-run debugging.

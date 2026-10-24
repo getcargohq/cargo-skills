@@ -157,9 +157,19 @@ export const projectModels = defineFolder("project-models", { kind: "model", nam
 export const projectAgents = defineFolder("project-agents", { kind: "agent", name: "🔒 Project Agents" });
 
 // File — content uploaded from a local path (hashed at define time, so edits show as drift).
+// Defaults: indexed for agent search, mirrored into the context repo, private.
 export const playbook = defineFile("playbook", {
   path: new URL("./playbook.md", import.meta.url).pathname,
   name: "SDR Playbook",
+});
+
+// A file served rather than retrieved: stored only, out of the context repo, and on a
+// stable no-auth link. Changing index/mirrorToContext re-uploads in place (same uuid).
+export const pricing = defineFile("pricing", {
+  path: new URL("./pricing.pdf", import.meta.url).pathname,
+  index: "none",
+  mirrorToContext: false,
+  visibility: "public", // anyone with the link can open it
 });
 
 // Context — the workspace's git-backed GTM knowledge base, declared here. Singleton;

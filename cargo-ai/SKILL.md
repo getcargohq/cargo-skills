@@ -1,7 +1,7 @@
 ---
 name: cargo-ai
 description: "Build and configure AI agents inside Cargo — create an agent, choose its model and temperature, write its prompt, attach knowledge for retrieval (RAG), connect MCP tool servers, manage memories, and deploy releases. Triggers: \"create an agent\", \"make an agent that\", \"give the agent our docs\", \"attach this knowledge base\", \"attach this library to the agent\", \"add resources to the agent release\", \"connect an MCP server\", \"expose our tools as an MCP server\", \"use Cargo from Claude Desktop or ChatGPT\", \"change the agent model\", \"what does the agent remember\", \"deploy the agent\", \"the agent is answering wrong\". Skip when: uploading the knowledge files themselves — use cargo-content; sending the agent a message or running it over records — use cargo-orchestration."
-version: "2.6.0"
+version: "2.7.0"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -158,6 +158,28 @@ cargo-ai ai release deploy-draft --agent-uuid <uuid> \
   --description "Added research actions"
 ```
 
+`--with-reasoning [true|false]` on `update-draft` / `deploy-draft` turns reasoning mode on (bare flag = `true`) for models that support it.
+
+### Coding agents (`--harness-slug`, `--repository`)
+
+A release with a **harness** runs as a coding agent: each turn works in a sandbox with a git checkout instead of a plain chat loop. Harness slugs: `claudeCode`, `codex`, `openCode`, `deepAgents`.
+
+```bash
+cargo-ai ai release deploy-draft --agent-uuid <uuid> \
+  --harness-slug claudeCode --integration-slug anthropic --language-model-slug <model-slug> \
+  --repository '{"connectorUuid":"<github-connector-uuid>","repository":"acme/app","defaultBranch":"main","rootDirectory":null}' \
+  --actions '[]' --mcp-clients '[]' --resources '[]' --capabilities '[]' --suggested-actions '[]'
+```
+
+- **`--repository`** (JSON): `connectorUuid` (a GitHub connector — it identifies the user, it is not the identity the agent acts as), `repository` as `owner/name`, `defaultBranch`, `rootDirectory`, `env` (`[{key, type:"public", value}]` or `{key, type:"secret", secretValue}`), and `runAsUserUuid` — a **service user** whose temporary `CARGO_API_TOKEN` the sandbox gets (the help omits it; see [`../cargo-workspace-management/SKILL.md`](../cargo-workspace-management/SKILL.md) → "Service users"; your permissions must cover it or the call fails 403 `runAsUserNotFound` / `runAsUserNotPermitted`).
+- **The agent acts as the Cargo GitHub app**, never as the connected user: it clones, pushes, comments and opens PRs as the app's installation. **Install the app on the repo first** — without it the turn fails. The sandbox's GitHub token is scoped to that one repository — any other repository is refused — lasts 1 hour, and is refreshed each turn; it is redacted from chat output but readable by the agent.
+- It works on a branch `cargo/<short-name>`, never pushes to the default branch, never force-pushes, and opens or updates the PR through its own PR tool, which links the PR to the chat.
+- **A mention of the app on a PR the agent's chat opened continues that same chat** — no trigger needed (skipped if the chat moved to another repository, or another agent opened the PR). Close the chat to stop it. The GitHub trigger adds `allPullRequests` (answer mentions on any PR in the repo), `fixFailedChecks` (+ `maxCheckFixAttempts` 1–10, reset when someone mentions or reviews) and `addressReviews`, all default `false`.
+
+**Per chat instead of per release.** `ai chat create --harness-slug … --repository …` and `ai message create` (for the chat it auto-creates) take the same two flags; omitted, the agent's pinned release decides. They are **set when the chat is created**: passing either with `--chat-uuid` is a 400 — `harnessSlug and repository are not allowed with chatUuid: they are set when the chat is created. Create a new chat to use another harness or repository.`
+
+A message sent to a chat that is still answering is **queued**: `202` with `userMessage` and no assistant message yet; the reply follows once the turn ahead finishes (`chatClosed` → 409, `chatNotFound` → 404). Sending and polling: [`../cargo-orchestration/SKILL.md`](../cargo-orchestration/SKILL.md). In a project: `defineAgent({ harness, repository })` — [`../cargo-project/references/resources.md`](../cargo-project/references/resources.md).
+
 ### Structured output & heartbeat — not yet exposed as CLI flags
 
 The release API payload (both `draft/update` and `draft/deploy`) accepts two fields that **`release update-draft` / `release deploy-draft` do not surface as flags** (verified against the CLI source — there is no `--output` / `--output-schema` or `--heartbeat`):
@@ -233,6 +255,22 @@ Knowledge that grounds agent responses (retrieval-augmented generation, RAG) com
 ### Attaching knowledge to an agent
 
 A file or library is inert until attached to an agent via the draft release's `resources` array and deployed. Upload files / build libraries in [`cargo-content`](../cargo-content/SKILL.md), then wire them in here with `release update-draft --resources …` followed by `release deploy-draft`. See [`../cargo-content/references/examples/files.md`](../cargo-content/references/examples/files.md) for the full upload → attach → deploy sequence.
+
+**Only indexed files are searchable.** A file stored with `indexMode: "none"` — the default for `content file put`, workers, the `writeFile` node and agent writes — can be listed and read but not searched: `capability_file_list` marks it `isSearchable: false`, `capability_file_search` skips it, and `capability_file_analyze` refuses it. Attach `upload`-ed files (indexed by default) for RAG, or re-write the file with `--index vectorStore`.
+
+### Letting an agent write files
+
+A file resource with `"isReadOnly": false` also grants **`capability_file_write`** on the **folders** it lists (`{"kind":"folder","folderUuid":"…"}` items; listed files stay read-only). Unset means read-only.
+
+```bash
+cargo-ai ai release update-draft --agent-uuid <agent-uuid> \
+  --resources '[{"kind":"file","slug":"outputs","name":"Outputs","description":null,"prompt":"Save each report here.","isReadOnly":false,"items":[{"kind":"folder","folderUuid":"<folder-uuid>"}]}]'
+```
+
+- The agent writes text it produced, **≤ 1,000,000 characters**, to a relative path inside one of those folders (subfolders are created) — nowhere else in the workspace. With several writable folders it must name one.
+- Every agent write is stored `private`, `indexMode: none` and `mirrorToContext: false`, even when it overwrites a file someone made public. It returns `{ fileUuid, path, size, url }`, where `url` is a 1-hour signed link anyone holding it can open.
+- A write **overwrites** the newest file of that name in that folder in place. Give the agent a dedicated output folder rather than one holding knowledge it reads.
+- In a project: `defineAgent({ files: [{ items: [folder], readOnly: false }] })` — see [`../cargo-project/references/resources.md`](../cargo-project/references/resources.md).
 
 ## MCP — two directions, don't mix them up
 

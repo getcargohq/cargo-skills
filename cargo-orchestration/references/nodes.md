@@ -265,6 +265,55 @@ columns; `customMappings` (same shape) targets its custom columns. A null
 `matchingValue` fails the node without writing. All of them output an array of
 records.
 
+#### Files
+
+Read and write workspace **content files** by path (`reports/2026-q3/summary.md`: folder
+chain plus name). Use these, not an HTTP node to a storage API or a script that
+base64-juggles bytes.
+
+| actionSlug   | Purpose                                  | childrenCount | Config | Output |
+| ------------ | ---------------------------------------- | -------- | ------ | ------ |
+| `writeFile`  | Store text or base64 bytes at a path     | 1        | `{"path", "content", "encoding"?: "text"\|"base64", "contentType"?, "visibility"?: "private"\|"public", "indexMode"?: "none"\|"vectorStore"}` | `{fileUuid, path, size, url, publicUrl?}` |
+| `readFile`   | Read a file by path                      | 1        | `{"path", "encoding"?: "text"\|"base64"}` | `{fileUuid, path, contentType, size, content}` |
+| `getFileUrl` | Signed link to a file by path            | 1        | `{"path", "expiresInSeconds"?, "download"?}` | `{fileUuid, path, url, expiresAt, publicUrl?}` |
+
+- `writeFile` creates missing folders and **overwrites** the newest file of that name
+  in place (same `fileUuid`). A new file is `private`, `indexMode: "none"` (not
+  searchable by agents) and not mirrored to the context repo; an overwritten one keeps
+  its own settings unless the node sets them. `contentType` defaults to
+  `text/plain; charset=utf-8` (text) or `application/octet-stream` (base64).
+- `writeFile` / `readFile` cap at **10 MB**; a larger read fails and points at
+  `getFileUrl`. A **preview (dry) run of `writeFile` writes nothing** — it returns a
+  zero `fileUuid` and no `url`.
+- `url` is a signed link **anyone holding it can open** — 1 hour from `writeFile`,
+  `expiresInSeconds` (default 3600, max 10800) from `getFileUrl`. `publicUrl` is the
+  stable no-auth link, present only when the file is `public`. Do not route either to a
+  third party unless the play's purpose is to share that file.
+- All three fail without retry: `File not found at <path>`, `File not written: <reason>`
+  (`invalidPath`, `folderReadOnly`, …).
+
+Path model, defaults per surface, and the public link:
+[`../../cargo-content/references/objects.md`](../../cargo-content/references/objects.md).
+
+### Human review
+
+`humanReview` posts content to Slack with buttons and waits for a person. **2 children**:
+child 0 = approved (or edited), child 1 = declined.
+
+| Config | Notes |
+| --- | --- |
+| `connectorUuid`, `channelId` | Slack connector and channel (required; `channelId` autocompletes via `listChannels`) |
+| `title`, `content` | `title` is the posting username; `content` is Slack mrkdwn |
+| `threadTs`? | Post the review as a **reply in that thread** instead of a new message |
+| `enabledButtons`? | Subset of `["approve","decline","edit"]` (default all). An empty set fails: `At least one button (Approve, Decline, or Edit) must be enabled` |
+| `approveButtonLabel`?, `declineButtonLabel`?, `editButtonLabel`? | ≤ 75 characters each; `""` falls back to the default. The edit modal's submit button reuses the approve label only if it is ≤ 24 characters |
+| `timeoutMilliseconds`? | Default 24 h |
+
+Output: `{approved?, user?: {id, username, name}, content, channelId?, messageTs?}` —
+after an edit, `content` is the edited text and the run takes child 0. **A timeout
+errors the node** (`Human review timed out`, no retry) rather than taking a branch; give
+it a `fallbackOnFailure` path when a non-answer should route somewhere.
+
 ### Flow control
 
 | actionSlug | Purpose               | childrenCount | Config                                                      |
@@ -293,10 +342,45 @@ The `group` node iterates over `items`, running the child subgraph once per item
 | actionSlug | Purpose             | childrenCount | Config                                                                                                 |
 | ---------- | ------------------- | -------- | ------------------------------------------------------------------------------------------------------ |
 | `agent`    | Inline AI agent     | 1        | `{"prompt": "...", "advancedSettings": {"connectorUuid": "...", "languageModelSlug": "gpt-4.1-mini"}}` |
+| `classify` | Typed yes/no, choice and score answers about one input | 1 | `{"state": <expression>, "questions": [...]}` — see below |
 | `python`   | Run Python code     | 1        | `{"script": "..."}`                                                                                    |
 | `script`   | Run JavaScript code | 1        | `{"script": "..."}`                                                                                    |
 
 The `agent` action requires `advancedSettings.connectorUuid` (an AI provider connector — get it from `connector list`). Optional fields: `tools` (not `actions`), `resources`, `capabilities`, `mcpClients`, `output` (structured output with `{"type": "jsonSchema", "jsonSchema": {...}}`), `advancedSettings.temperature`, `advancedSettings.maxSteps`, `advancedSettings.systemPrompt`.
+
+#### `classify` — typed questions, no connector, no model to pick
+
+Every question is answered in one call, with probabilities. It runs on Cargo's own key,
+so there is no `connectorUuid` and no model choice (`model` is optional and defaults to
+`jev-latest`). Priced **0.01 credits per started 1,000 input tokens** (output tokens
+free), plus the 0.01 node execution charge.
+
+```json
+{
+  "state": "{{nodes.start}}",
+  "questions": [
+    {"type": "noul",   "id": "isB2b",   "instructions": "Does this company sell to businesses?",
+     "trueCriteria": "Sells primarily to companies", "falseCriteria": "Sells primarily to consumers"},
+    {"type": "choice", "id": "segment", "instructions": "Which market segment fits best?",
+     "options": [{"option": "SMB"}, {"option": "Mid-market"}, {"option": "Enterprise", "description": "1,000+ employees"}]},
+    {"type": "score",  "id": "fit",     "instructions": "How well does it match our ICP?",
+     "levels": ["poor", "weak", "good", "strong"]}
+  ]
+}
+```
+
+- **Yes/no is `"type": "noul"`** — not `yesNo` or `boolean`. `trueCriteria` /
+  `falseCriteria` are optional. Choice takes 2–255 `options`; score takes 2–10
+  `levels`, lowest first. `id` names the output key and is not sent to the model.
+- Output: `{model, answers: {<id>: …}, usage: {input_tokens, output_tokens}}` — read
+  `{{nodes.<slug>.answers.<id>.…}}` (**no `.answer` wrapper**, unlike `agent`):
+  - yes/no → `{type: "noul", noul}` — the **probability of yes**, 0–1; branch on
+    `{{nodes.<slug>.answers.isB2b.noul > 0.5}}`, not on a boolean.
+  - choice → `{type: "choice", choice, confidence, probabilities: {<option>: p}}`.
+  - score → `{type: "score", score, confidence, legend: {<index>: <level>}, probabilities}`
+    — `score` is a probability-weighted level **index**, so it can fall between levels.
+- One thing per question, and a fixed rubric rather than one templated per record, so
+  answers stay comparable across records. Rate limit: 600 requests/min.
 
 The `python` and `script` nodes receive `nodes` and `parentNodes` as context variables. The return value of the script becomes the node's output under `{{nodes.<slug>.result}}` (assign to a variable named `result` in Python; `return` a value in JS).
 

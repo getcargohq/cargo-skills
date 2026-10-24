@@ -28,7 +28,7 @@ Responses are wrapped in a key: `app get` / `app create` return `{ "app": {…} 
 
 ## Worker (`hosting worker get` / items in `hosting worker list`)
 
-Same fields as an app, plus `runAsUserUuid` (the service user whose temporary `CARGO_API_TOKEN` is bound at promote, or `null`) and `triggers` (cron triggers: `type`, `name`, `cron`, `path`, `method`, …). `promotedDeployment` is a **Worker Deployment** (carries `workerUuid` + `meta`, see below). The `uuid` is passed as `--worker-uuid` to deployment commands.
+Same fields as an app, plus `runAsUserUuid` (the service user whose temporary `CARGO_API_TOKEN` is minted on every publish, previews included, or `null`) and `triggers` (cron triggers: `type`, `name`, `cron`, `path`, `method`, …). `promotedDeployment` is a **Worker Deployment** (carries `workerUuid` + `meta`, see below). The `uuid` is passed as `--worker-uuid` to deployment commands.
 
 ## Deployment (`hosting deployment get` / items in `hosting deployment list`)
 

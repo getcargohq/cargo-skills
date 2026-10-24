@@ -1,7 +1,7 @@
 ---
 name: cargo-hosting
 description: "Put something on the internet from Cargo — hosted web apps (Vite by default, other static frameworks detected) and serverless edge workers that answer HTTP requests, plus the deployments that build and promote them, the env vars and secrets a worker reads, running a worker locally, and custom domains and search indexing for public sites. Triggers: \"build me a dashboard for this\", \"host this app\", \"give me a URL to share\", \"deploy this\", \"I need a webhook endpoint\", \"make it live\", \"promote to production\", \"ship a UI for my team\", \"give my worker an API token\", \"set a secret on the worker\", \"Missing CARGO_API_TOKEN\", \"my app cannot call my worker\", \"run the worker locally\", \"put it on my own domain\", \"make the site indexable by Google\". Skip when: the app or worker should be declared as committed workspace code — use cargo-project."
-version: "1.2.1"
+version: "1.3.0"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -175,7 +175,7 @@ A worker reads configuration from `c.env.KEY` (Hono context) or the `env` argume
 | **Workspace env vars** | `cargo-ai workspaceManagement envVar create --key K [--secret]` | every worker in the workspace (apps get only the non-secret, public-prefixed ones) |
 | **Worker env vars** | `cargo-ai hosting worker env set --worker-uuid <uuid> --key K [--secret]`, `defineWorker({ env })` in a project, or `POST /v1/hosting/env-vars` | that worker only, and a worker entry overrides a workspace entry with the same key |
 
-**`CARGO_API_TOKEN` is not injected by default.** `createCargoApi(c.env)` throws `Missing CARGO_API_TOKEN…` until you provide one. The one exception: a worker with a service user set (`hosting worker update --uuid <uuid> --run-as-user-uuid <service-user-uuid>`) gets a temporary `CARGO_API_TOKEN` for that user bound at promote, unless its env already sets the key. Otherwise mint a workspace API token and store it as a secret before the first deploy:
+**`CARGO_API_TOKEN` is not injected by default.** `createCargoApi(c.env)` throws `Missing CARGO_API_TOKEN…` until you provide one. The one exception: a worker with a service user set (`hosting worker update --uuid <uuid> --run-as-user-uuid <service-user-uuid>`, or `defineWorker({ runAs })`) gets a temporary `CARGO_API_TOKEN` for that user, minted fresh on every publish (preview deployments included; the previous one is revoked) unless its env already sets the key. `worker create` has no `--run-as-user-uuid`; set it with `update`. The user must be a **service** user whose permissions yours cover (`runAsUserNotFound` / `runAsUserNotPermitted`) — creating one is in [`../cargo-workspace-management/SKILL.md`](../cargo-workspace-management/SKILL.md) → "Service users". Otherwise mint a workspace API token and store it as a secret before the first deploy:
 
 ```bash
 cargo-ai workspaceManagement token create --name "worker: my-worker"   # value shown ONCE
@@ -203,6 +203,20 @@ Both templates ship a `dev.ts` harness: `npm run dev` serves `src/index.ts` unde
 
 A project scaffolded before `dev.ts` existed can copy it from a fresh `hosting worker init`, along with the `dev` script and the `@hono/node-server` + `tsx` dev dependencies.
 
+### Storing files from a worker
+
+`createCargoObjects(env)` from `@cargo-ai/worker-sdk` reads and writes workspace content files by **path**, with the same `CARGO_API_TOKEN` as `createCargoApi`:
+
+```ts
+import { createCargoObjects } from "@cargo-ai/worker-sdk";
+
+const objects = createCargoObjects(c.env);
+await objects.put("decks/acme.pdf", pdfBytes, { contentType: "application/pdf" }); // ≤ 100 MB; overwrites in place
+const { url } = await objects.url("decks/acme.pdf", { expiresInSeconds: 3600 });    // signed, no auth needed to open
+```
+
+Also `get(path)` → `Blob`, `stat(path)`, `list({ prefix, cursor, limit })`, `remove(path)`, `setVisibility(path, "public" | "private")`. A new file is private, not indexed for agent search, and not mirrored into the context repo unless `put` passes `indexMode` / `visibility` / `mirrorToContext`. A signed `url` (max 3 h) or a public file's stable link opens **without auth** — return one to a caller only when that caller should have the file. Path model and defaults: [`../cargo-content/references/objects.md`](../cargo-content/references/objects.md).
+
 ### Worker logs and errors
 
 `createWorker()` captures `console.log/info/warn/error/debug` during each request Cargo dispatches and ships them to the worker's logs (at most 50 lines per request). An **uncaught** error is logged with its stack and answered with a bare `500`.
@@ -217,6 +231,8 @@ try {
   return c.json({ error: "The data provider is unavailable." }, 502);
 }
 ```
+
+Every worker invocation (cron or inbound HTTP) is also a span with `nodeKind: "worker"`, and opens a **trace** when nothing upstream did. Find failing invocations across workers with `cargo-ai orchestration span list --node-kind worker --execution-statuses error --execution-started-after <iso>` (each carries the `runUuid` that `logs list --run-uuid` takes), and see what one invocation set off with `orchestration trace get <traceUuid>`. The CLI's `trace list` has no worker filter; the API's `POST /v1/orchestration/traces/list` takes `workerUuid`. Runbooks: [`../cargo-diagnostics/SKILL.md`](../cargo-diagnostics/SKILL.md).
 
 Read the logs with `cargo-ai hosting worker logs list --worker-uuid <uuid> --levels error --limit 50` (newest first; also `--run-uuid`, `--search`, `--occurred-after`/`--occurred-before`, and `logs count` / `logs get <logUuid> --worker-uuid <uuid>`), in the web app, or through the API: `POST /v1/hosting/logs/list` with `{"workerUuid":"<uuid>","levels":["error"],"limit":50}`, or `api.hosting.log.list(…)` from TypeScript.
 

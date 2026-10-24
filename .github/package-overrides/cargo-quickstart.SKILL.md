@@ -1,7 +1,7 @@
 ---
 name: cargo-quickstart
 description: "Guided first-run demo for Cargo — one persona question to the accounts that match it, with a free pool count and a cost receipt, in under two minutes, ending by saving the pull as a recurring play. Triggers: \"show me what Cargo can do\", \"give me a demo\", \"take me on a tour\", \"quickstart\", \"getting started with Cargo\", \"I just installed Cargo\", \"my workspace is empty\", \"does this actually work\". Skip when: the user has a real job to run (build an account list, enrich a CSV) — use cargo-gtm; when they want CLI reference or routing — use the cargo router skill."
-version: "1.1.0"
+version: "1.1.1"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 ---
@@ -19,9 +19,13 @@ Already signed in (`cargo-ai whoami` returns a workspace)? Skip to the next sect
 ```bash
 npm install -g @cargo-ai/cli            # no global install? prefix every command with `npx @cargo-ai/cli`
 cargo-ai login --email you@company.com  # emailed code, no browser; creates the account on first use
-                                        # alternatives: --oauth (browser) · --token <api-token> (CI)
+                                        # alternatives: --oauth (browser) · --agentid (an agent as itself) · --token <api-token> (CI)
 cargo-ai whoami                         # confirm the active workspace before any write
 ```
+
+**Not ready to sign up?** Two things work with no account, free: browse the catalog (`cargo-ai orchestration action list enrich company`) and dry-run an action (`cargo-ai orchestration action execute --action '<from action list>' --data '{"domain":"example.com"}' --dry-run` — validates the inputs, shows sample output in the real shape and the credit price, calls nothing). Offer it once if the user hesitates at the email step; don't detour a user who is ready — the demo is the real thing.
+
+A first sign-in lands in a new workspace named **`Personal`**; pass `--workspace-name "<Company> GTM"` to the login that creates the account and it renames that one (within 10 minutes, while you're its only member) instead of making a second. Starter connectors and agents seed in the background, so an empty-looking workspace a minute after sign-up may still be filling in — that is not a reason to stop.
 
 Every command prints JSON to stdout; failures exit non-zero and print `{"error": "...", "status": ..., "body": {...}}` to stderr. Anything that creates a run or a batch is async — pass `--wait-until-finished` or poll the matching `get`. When the full skill bundle is installed, [`../cargo/references/prerequisites.md`](../cargo/references/prerequisites.md) adds the CLI version pin, token scopes, and the admin-only surface.
 

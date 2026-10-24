@@ -121,8 +121,16 @@ cargo-ai project refresh --dir acme-gtm          # read-only: report what drifte
 cargo-ai project deploy  --dir acme-gtm --refresh # re-read live, re-apply your code over drift
 ```
 
-`refresh` reports resources changed or deleted out-of-band; `deploy --refresh`
-makes your code the source of truth again.
+`refresh` reports resources changed or deleted out-of-band and **names the fields**
+that drifted (`modified externally: agent:sdr (release.systemPrompt)`) — names only,
+since state stores a hash per field, never the value. `deploy --refresh` makes your code
+the source of truth again for modified resources, but **stops** on one deleted outside
+the project unless you pass `--recreate-deleted` (or remove it from code, if the
+deletion was intended). A recreated play, agent or alert is a new row with a new uuid.
+
+To see the whole graph rather than a diff, `cargo-ai project graph` prints a Mermaid
+flowchart of the live workspace (`--project` for the local code offline, `--project
+--plan` to mark what the next deploy changes).
 
 ## Adopting existing resources — `import`
 

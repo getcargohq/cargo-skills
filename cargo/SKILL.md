@@ -1,7 +1,7 @@
 ---
 name: cargo
 description: "Router for the Cargo CLI skill bundle — load first for anything Cargo, and whenever a task spans two Cargo domains. Explains what each skill owns, declarative GTM as Code projects (cargo-project) vs the imperative CLI, the UUID and slug flow between skills, async polling of runs and batches, end-to-end use cases, and the gotchas that fail silently (inputs in a top-level action's `config` stripped without an error, run vs batch, model-uuid vs segment-uuid). Triggers: \"set up Cargo\", \"what can Cargo do\", \"which Cargo skill\", \"bootstrap my workspace\", \"I have a Cargo account\", \"cargo-ai …\", or any `cargo-ai` command whose domain you are unsure of. Skip when: the task obviously belongs to one skill — load that skill directly."
-version: "1.30.0"
+version: "1.31.0"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -53,6 +53,7 @@ cargo-ai login --email you@company.com --code 123456
 
 # Alternatives
 cargo-ai login --oauth                            # browser sign-in (OAuth device flow)
+cargo-ai login --agentid                          # an agent signing in as itself, through AgentID
 cargo-ai login --token <your-api-token>           # existing workspace-scoped API token (CI)
 
 # Optional: pick the workspace at login instead of being prompted
@@ -62,11 +63,15 @@ cargo-ai login --email you@company.com --workspace-name "Acme GTM"
 cargo-ai whoami
 ```
 
+**Look before signing up.** With no account at all, `cargo-ai orchestration action list <keywords>`, `connection integration list|get` and `orchestration action execute … --dry-run` (connector and native actions: validates `--data`, prints sample output in the finished-run shape with the credit price, calls nothing) work against the public catalog; `project plan` and `project types` do too.
+
 **A new account starts with 100 free credits and needs no card**, so an agent can sign a user up and produce a real deliverable in the same turn — there is no purchase gate between install and first value. Useful anchors for what that buys: ~500 leads sourced (`salesNavigator.searchLeads`, 0.2/record), ~1,000 profile+verified-email enriches (`aiArk.enrichPerson`, 0.1), ~1,000 email verifications (`waterfall.verifyEmail`, 0.1), or ~50 fully enriched contacts (`waterfall.enrichContact`, 2). The [quickstart demo](../cargo-quickstart/SKILL.md) spends about **5**. Say the free balance out loud before the first paid call on a new account.
 
 `--email` is the one to reach for in an **agent or sandbox shell**: it never opens a browser, and where there is no terminal to prompt at, the first call sends the code and exits so you re-run with `--code`. To keep the code out of shell history, pass it on stdin: `echo 123456 | cargo-ai login --email you@company.com --code -`. Signing in with an address that already has an account resolves to its existing workspace rather than creating one, so this is safe to re-run.
 
-`--oauth` runs the same OAuth 2.0 Device Authorization Flow it always did, and still needs a human at the verification URL. Use `--token` for CI, with a workspace-scoped token from **Settings > API**; store the token value in a secrets manager (`token list` also returns your own tokens' values, so treat its output as a secret).
+**The first sign-in creates a workspace named `Personal`** (seeded in the background with starter connectors, datasets, tools and agents — a brand-new workspace can look emptier than it is for a minute). `--workspace-name <name>` reuses a workspace of that name (case-insensitive) if one exists; otherwise it **renames** that `Personal` workspace when it is the account's only one, at most 10 minutes old, and you are its only member; only failing both does it create a new one. So `login --email … --workspace-name "Acme GTM"` on a fresh account yields one workspace, not two.
+
+`--oauth` runs the same OAuth 2.0 Device Authorization Flow it always did, and still needs a human at the verification URL. `--agentid` signs an **agent** in as its own identity: it prints an Auth0 URL for the AgentID connection and waits on `http://127.0.0.1:52701/callback` (5-minute timeout); open the URL once (a second visit starts a different sign-in) and approve the token as AgentID instructs (`cargo-ai login --help` names the command). `--email`, `--oauth` and `--agentid` all save a self-renewing session to `~/.config/cargo-ai/credentials.json` (the system temp dir where home isn't writable — it lasts as long as the sandbox). Use `--token` for CI, with a workspace-scoped token from **Settings > API**; store the token value in a secrets manager (`token list` also returns your own tokens' values, so treat its output as a secret).
 
 Without a global install, prefix every command with `npx @cargo-ai/cli` instead of `cargo-ai`.
 
@@ -249,7 +254,7 @@ Load for a specific CLI domain. The first link in each row jumps to the actual S
 | [`cargo-segmentation`](../cargo-segmentation/SKILL.md) ([recap](#cargo-segmentation))                       | Build and manage segments — the saved filters that name the audience for a batch, a play trigger, or an export — and read their change (delta) feed |
 | [`cargo-connection`](../cargo-connection/SKILL.md) ([recap](#cargo-connection))                             | Manage connector authentication, discover available integrations and their actions                 |
 | [`cargo-ai`](../cargo-ai/SKILL.md) ([recap](#cargo-ai))                                                     | Create and configure agents, configure releases, attach knowledge for RAG, manage MCP servers and memories |
-| [`cargo-content`](../cargo-content/SKILL.md) ([recap](#cargo-content))                                      | Upload and organize knowledge files, build native/connector-backed knowledge libraries for RAG (the `content` domain) |
+| [`cargo-content`](../cargo-content/SKILL.md) ([recap](#cargo-content))                                      | Upload and organize knowledge files, build native/connector-backed knowledge libraries for RAG, and store/serve any file by path with a signed or public link (the `content` domain) |
 | [`cargo-context`](../cargo-context/SKILL.md) ([recap](#cargo-context))                                      | Browse/read/write/edit the workspace's git-backed GTM context repo, run commands in its runtime sandbox, inspect the knowledge graph |
 | [`cargo-hosting`](../cargo-hosting/SKILL.md) ([recap](#cargo-hosting))                                      | Scaffold, deploy, and promote hosted apps (Vite SPAs) and edge workers (serverless HTTP handlers), manage their deployments, and give workers env vars and secrets |
 | [`cargo-project`](../cargo-project/SKILL.md) ([recap](#cargo-project))                                                   | **Declarative — spans every resource type.** Declare a whole workspace in a project (`define*` builders) and deploy it with `cargo-ai project` (init → types → plan → deploy). Use for GTM as Code / reproducible / version-controlled setups; see "Declarative vs imperative" above. |
@@ -411,7 +416,7 @@ over what gets spent; prefer the command when the user just wants it done.
 - `cargo-gtm` delegates to capability skills via relative paths (`../cargo-orchestration/...`). Capability skills never reference `cargo-gtm`.
 - `cargo-workspace-management` provides auth context for every skill — set it up first.
 - `cargo-storage`, `cargo-connection`, and `cargo-ai` are peer skills that supply UUIDs to `cargo-orchestration`. They don't depend on each other.
-- `cargo-content` owns workspace **files** and **libraries** (the `content` domain). It produces file/library UUIDs that `cargo-ai` consumes as agent release `resources` (RAG). Uploaded content files also surface read-only under `.files/` in the `cargo-context` runtime sandbox.
+- `cargo-content` owns workspace **files** and **libraries** (the `content` domain). It produces file/library UUIDs that `cargo-ai` consumes as agent release `resources` (RAG), and it is also the **file store**: write and read by path, list a folder, hand out a signed or public link — from the CLI, a worker (`createCargoObjects`), a play (`writeFile`/`readFile`/`getFileUrl` nodes) or an agent (a writable folder). Files with `mirrorToContext: true` (the default for uploads and `defineFile`, not for path writes) are also committed to the context repo under `.files/`, read-only from the `cargo-context` runtime.
 - `cargo-mailbox-management` owns **sending inboxes** (the `mailboxManagement` domain) — provisioning, warm-up, the send ramp, threads, events, and the workspace suppression list. It deliberately does **not** send: delivery is the `sendEmail` native action under `cargo-orchestration`, which is why a send inherits orchestration's pacing, retry and credit accounting. The mailbox itself is also declarable in a project via `defineMailbox` (with `defineDomain` for the sending domain).
 - `cargo-project` is **cross-cutting**: it's a declarative *authoring mode* that produces the very connectors/models/plays/agents/etc. the imperative capability skills manage one at a time. Route to it when the task is "manage the workspace from a project" (GTM as Code: reproducible, in git, multi-resource); route to the imperative domain skills for one-off ops, reads, and ad-hoc queries. See "Declarative vs imperative" under Skills at a glance.
 - `cargo-context` is **orthogonal** to the workflow-execution flow. It touches the git-backed GTM knowledge base (markdown/MDX), not storage or workflow runs. Use it for capturing/editing the workspace's prose context — personas, plays, proof, objections, signals — and for inspecting the typed knowledge graph.
@@ -500,7 +505,8 @@ The non-obvious rules for each skill — the things that fail silently or cost m
 
 **Critical rules:**
 
-- Start with the **sweep** when you don't know which run to look at; it ends with exemplar UUIDs for the **trace**.
+- Start with the **sweep** when you don't know which run to look at; it ends with exemplar UUIDs for the **trace**. With no UUID at all, `orchestration trace list --started-after <iso> --statuses error,degraded` lists what failed, one row per trigger across child runs; `span list` / `span count` filter node executions by batch, provider, action or error text without SQL. Both need a start date (`--started-after` / `--execution-started-after`).
+- **`degraded` means a fallback absorbed a failure** — the run succeeded, a node errored. Sweep it together with `error`.
 - `runContext` is the source of truth for what a node produced; an execution's `title` is a truncated summary — never evidence.
 - Credit attribution (`billing …`) needs an **admin** token; the SQL and `run get` steps don't.
 - Any fix that re-runs paid nodes goes through the pilot gate in `../cargo-gtm/references/cost-discipline.md`.
@@ -551,6 +557,7 @@ The non-obvious rules for each skill — the things that fail silently or cost m
 
 - Knowledge for RAG attaches to an agent via the release's `resources`: **files** + **libraries** come from [`cargo-content`](#cargo-content). Wire them in with `release update-draft --resources …` then `release deploy-draft`.
 - **`cargo-ai mcp` with no `--server` now bridges the first-party platform MCP** (`mcp.getcargo.io/mcp`), not "the workspace's only MCP server". `ai mcp-server` still builds a curated server; pass its uuid with `--server`. See "These skills vs Cargo's MCP surfaces" above.
+- **A coding agent (`--harness-slug` + `--repository` on a release or a new chat) pushes as the Cargo GitHub app**, which must be installed on the repo; its token is scoped to that repo, it works on `cargo/<name>` branches and never pushes the default branch, and a mention on its PR continues the chat. Harness and repository are fixed when a chat is created — passing them with `--chat-uuid` is refused.
 - **CLI ≥ 1.0.19:** files and libraries moved out of the `ai` domain into the top-level **`content`** domain (now the `cargo-content` skill). The old `cargo-ai ai file …` commands no longer exist.
 
 > For _using_ agents (sending messages, multi-turn chat, polling), use `cargo-orchestration`.
@@ -563,7 +570,8 @@ See `../cargo-ai/SKILL.md` for model and temperature guidance by use case.
 
 - New top-level **`content`** domain in CLI ≥ 1.0.19 — `cargo-ai content file …` / `cargo-ai content library …`. The old `cargo-ai ai file …` path is gone (`unknown command` → you're on the old path; bump the CLI).
 - A file or library is inert until attached to an agent's deployed release `resources` — that wiring lives in [`cargo-ai`](#cargo-ai).
-- Uploaded content files are also readable (read-only) under `.files/` in the `cargo-context` runtime sandbox.
+- **`upload` and `put` default differently.** `upload` (and `defineFile`) indexes the file for agent search and mirrors it into the context repo under `.files/` (committed and pushed); `content file put` and every other path write store it only — not searchable by an agent until written with `--index vectorStore`, and not in git.
+- **Links are unauthenticated.** `content file url` returns a signed link anyone can open until it expires (default 1 h, max 3 h); a `public` file has a stable no-auth link until made private. Share either only when the user asked to share that file.
 - For batch-run **input** files (CSVs that drive a batch), use `cargo-ai workspaceManagement file upload` (a different surface) — see `cargo-workspace-management`.
 
 ### cargo-context
@@ -608,17 +616,21 @@ See `../cargo-ai/SKILL.md` for model and temperature guidance by use case.
 
 Declare an entire Cargo workspace in a project, the folder holding `cargo.json`, in TypeScript (`defineConnector`/`defineModel`/`defineAgent`/
 `definePlay`/`defineTool`/`defineMcpServer`/`defineContext`/`defineSegment`/
-`defineFolder`/`defineFile`/`defineWorker`/`defineApp`/`defineAlert`/`defineDomain`/
-`defineMailbox`) and reconcile
+`defineFolder`/`defineFile`/`defineWorker`/`defineApp`/`defineCapacity`/`defineTerritory`/
+`defineMember`/`defineRole`/`defineUser`/`defineRelationship`/`defineCustomIntegration`/
+`defineScript`/`defineAlert`/`defineDomain`/
+`defineMailbox`, plus run-once `defineBatch`/`defineRun` executions) and reconcile
 it to live infra with `cargo-ai project`. Spans **every** resource type, so it overlaps
 every imperative capability skill — route with "Declarative vs imperative" above.
 
 **Lifecycle:** `project init` (scaffold the Cargo template, `getcargohq/cargo-manifest` — context, cadence
 and evals; `cargo.json` and `cargo.state.json` at the root, the resources it deploys in `infra/`) → `project types` (type config
 against the workspace) → author `define*` files → `project plan` (diff against the workspace-held state; creates nothing) →
-`project deploy` (create/update, write state) → `project destroy`. Plus `refresh` (drift),
+`project deploy` (create/update, write state) → `project destroy`. Plus `refresh` (drift, naming the fields),
 `import` (adopt existing), `pull` (generate `define*` from a live workspace and adopt it),
-`rollback`, `check` (validate offline, no state), `info` (what is here), `state` (inspect/repoint/remove).
+`rollback`, `check` (validate offline, no state), `info` (what is here), `graph` (Mermaid of the
+live workspace, or `--project [--plan]` offline), `state` (inspect/repoint/remove; `connect` to
+deploy from GitHub). `project plan` works signed out, against the last cached state.
 
 **Critical rules:**
 
@@ -644,6 +656,19 @@ against the workspace) → author `define*` files → `project plan` (diff again
   the provider's playbook in `../cargo-gtm/provider-playbooks/` (esp. its
   **Recurring use** section) before `project deploy` — a deployed play re-bills its
   nodes on every scheduled run.
+- **`defineBatch` / `defineRun` run once, on the next deploy, with no undo.** Files
+  under `outputs/` declare executions that start a real batch or run after the
+  resources apply; a ledger in the workspace-held state makes each id run exactly once
+  (no retry — a new id runs it again). One over a segment or filter is a **full
+  batch**: pilot and approve it per `../cargo-gtm/references/cost-discipline.md`
+  before it is deployed. Guide: `../cargo-project/guides/executions.md`.
+- **Deploy from GitHub by connecting the repo, not with a token in Actions.**
+  `cargo-ai project state connect` plans every PR in a comment and deploys every push
+  to the production branch — and the branch head the moment it connects. A merge over
+  100 sends of a kind, 5,000 audience adds or 2,500 credits fails `Needs approval: large
+  impact` until the PR is labelled `cargo:approve-impact`, which only the user's yes
+  should add. Running an Actions deploy as well fails (`stateAutoDeployed`). Recipe:
+  `../cargo-project/recipes/deploy-from-ci.md`.
 
 **Recipes shipped:** `recipes/scaffold-a-project.md`, `add-connector-and-model.md`,
 `build-an-agent.md`, `migrate-existing-workspace.md`, `deploy-from-ci.md`.
@@ -681,6 +706,7 @@ copies into the project and adapts, not a template to fill in:
 **Critical rules:**
 
 - Most commands require a token with **admin access**.
+- **Automation runs as a service user, never a person.** A service user (`kind: "service"`) is created through the API, the web app or `defineUser` — `user create` in the CLI only invites people. Assigning one as a worker's or coding agent's run-as user needs your permissions to cover all of its own (`runAsUserNotPermitted`).
 - `workspaceManagement token create` requires `--name` (the legacy `--from-user` flag was removed). Pick a name that makes the token's purpose obvious in `token list` later.
 - Token values are secrets, and `token list` returns them for your own tokens (and service-user tokens, for admins), not only `token create`. Store them in a secrets manager (GitHub Secrets, AWS Secrets Manager, etc.) and never paste `token list` output.
 - **Always send a `workspaceManagement report create`** when the CLI errors, is being used incorrectly, or you (user or agent) are struggling to make progress on a CLI task — see the section at the top of this file and `../cargo-workspace-management/references/examples/reports.md`.

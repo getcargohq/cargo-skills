@@ -1,7 +1,7 @@
 ---
 name: cargo-workspace-management
 description: "Administer a Cargo workspace and talk back to the Cargo team — invite and manage members, mint and rotate API tokens, organize plays, tools, and agents into folders, inspect roles, upload batch input files, and file reports. Triggers: \"invite my teammate\", \"create an API token for CI\", \"who has access\", \"organize these into folders\", \"rotate that token\", \"upload this CSV for a batch\" — and for feedback: \"report this bug to Cargo\", \"send feedback to the Cargo team\", \"this CLI command is broken\", \"share this session with Cargo\", \"request a feature\". Most commands need a token with admin access. Skip when: the question is about credits, plans, or invoices — use cargo-billing."
-version: "1.4.1"
+version: "1.5.0"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -95,6 +95,43 @@ cargo-ai workspaceManagement user update --user-uuid <uuid> --role-slug <new-rol
 # Remove a user from the workspace
 cargo-ai workspaceManagement user remove --user-uuid <uuid>
 ```
+
+### Service users
+
+A **service user** is a non-human identity with its own role — what a hosted worker, a
+coding agent's sandbox or a connected GitHub repo acts as, so automation never borrows a
+person's access. It has no inbox and no login; it authenticates only through its own API
+tokens (its address is `su-<uuid>@service-users.getcargo.io`, a domain refused for
+person invites).
+
+**The CLI cannot create one** — `user create` takes only `--email` and `--role-slug`.
+Use the web app, a project's `defineUser` (see
+[`../cargo-project/references/resources.md`](../cargo-project/references/resources.md)),
+or the API (workspace-management write access):
+
+```bash
+# POST /v1/workspaceManagement/users
+{"kind":"service","firstName":"Enrichment","lastName":"Worker","roleSlug":"<role-slug>"}
+# → 201 {user}; 404 roleNotFound / workspaceNotFound
+# A token for it: POST /v1/workspaceManagement/tokens {"name":"…","userUuid":"<service-user-uuid>"}
+#   (403 unless the caller has workspace-management write and the target is kind "service")
+```
+
+`firstName` / `lastName` are optional (1–255 chars). The CLI's `token create` mints only
+for the caller, so a service user's own token also goes through the API or the web app.
+
+**Run-as.** A worker (`hosting worker update --run-as-user-uuid`, `defineWorker({ runAs })`),
+an agent's coding repository (`repository.runAsUserUuid`, `defineAgent({ repository: {
+runAs } })`) or a connected repo can run as a service user; Cargo then binds a temporary
+`CARGO_API_TOKEN` for it. Two checks guard the assignment:
+
+| Reason | When | Status |
+|---|---|---|
+| `runAsUserNotFound` | The user is missing or not `kind: "service"` — a person can never be run as | 404 on hosting / state routes, 403 on `ai` chat, message and release routes |
+| `runAsUserNotPermitted` | One of the service user's permissions (its own and its role's, deny entries included) is not covered by **your** allow entries | 403 |
+
+So you can only hand automation access you already hold, and a service user with a
+broader role than yours can't be assigned by you.
 
 ## Roles
 

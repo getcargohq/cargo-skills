@@ -13,15 +13,19 @@ The skills bundle pins the CLI version it was written against in `cli-version`, 
 ## Authenticate
 
 ```bash
-cargo-ai login --oauth                                  # browser sign-in (recommended)
-# or: cargo-ai login --token <your-api-token>           # workspace-scoped API token (non-interactive)
-# Pin a default workspace at login (with --oauth)
+cargo-ai login --email you@company.com                  # emailed code, no browser (recommended for agents)
+cargo-ai login --email you@company.com --code 123456    # second call, where there is no prompt
+# or: cargo-ai login --oauth                            # browser sign-in (OAuth device flow)
+# or: cargo-ai login --agentid                          # an agent signing in as itself, through AgentID
+# or: cargo-ai login --token <your-api-token>           # workspace-scoped API token (non-interactive / CI)
+# Pick the workspace at login
+cargo-ai login --email you@company.com --workspace-name "Acme GTM"
 cargo-ai login --oauth --workspace-uuid <uuid>
 ```
 
 **A new account starts with 100 free credits, no card required** — `--email` and `--oauth` both create the account on first use, so signing up and running real paid work can happen in a single agent turn. Quote the free balance to a first-time user before the first paid call.
 
-`--oauth` runs the OAuth 2.0 Device Authorization Flow — no client setup. For CI / scripts, use `--token` with a workspace-scoped API token from **Settings > API**. Store the token in a secrets manager; `token list` also returns your own tokens' values, so treat its output as a secret.
+`--email` never opens a browser: where there is no terminal to prompt at, the first call sends the code and exits, so re-run with `--code` (or `--code -` to read it from stdin and keep it out of shell history). The first sign-in creates a `Personal` workspace; `--workspace-name` reuses a workspace of that name, else renames that `Personal` one (if it is your only workspace, under 10 minutes old, and you are its only member), else creates one. `--oauth` runs the OAuth 2.0 Device Authorization Flow — no client setup. `--agentid` prints an Auth0 URL for the AgentID connection and waits on `http://127.0.0.1:52701/callback` for up to 5 minutes; open it once. The three interactive methods save a self-renewing session to `~/.config/cargo-ai/credentials.json` (`CARGO_CONFIG_DIR` / `XDG_CONFIG_HOME` move it; an unwritable home falls back to the system temp dir). For CI / scripts, use `--token` with a workspace-scoped API token from **Settings > API**. Store the token in a secrets manager; `token list` also returns your own tokens' values, so treat its output as a secret.
 
 ## Verify
 
@@ -30,7 +34,7 @@ cargo-ai whoami
 # → { "user": { "uuid": ..., "email": ... }, "workspace": { "uuid": ..., "name": ... } }
 ```
 
-Always confirm `workspace.name` before any write — there is no dry-run mode for destructive commands. If the active workspace is wrong, re-run `cargo-ai login --oauth --workspace-uuid <uuid>` (or `--token <workspace-scoped-token>` for non-interactive use).
+Always confirm `workspace.name` before any write — there is no dry-run mode for destructive commands. If the active workspace is wrong, re-run `cargo-ai login --email <you> --workspace-uuid <uuid>` (or `--oauth --workspace-uuid <uuid>`, or `--token <workspace-scoped-token>` for non-interactive use), or set `CARGO_WORKSPACE_UUID`.
 
 ## Output conventions
 

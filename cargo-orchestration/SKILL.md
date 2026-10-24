@@ -1,7 +1,7 @@
 ---
 name: cargo-orchestration
 description: "Make Cargo actually run something, or show what it would run — execute one connector action, run a multi-step workflow, trigger a batch across a whole segment or model, message an AI agent, build or edit a node graph, draw a workflow, tool or play as a diagram, and query the runtime tables (runs, batches, spans, records) with SQL. Triggers: \"run this on all my contacts\", \"execute the action\", \"kick off a batch\", \"build a workflow\", \"schedule a play\", \"make it run every morning\", \"ask the agent\", \"show me the workflow\", \"what does this tool do\", \"visualize this play\", \"draw the graph\", \"explain this workflow\", \"how many runs failed today\", \"what is the output schema for this action\", \"add a step that\". Skip when: explaining why a run misbehaved — use cargo-diagnostics; downloading result files — use cargo-analytics; committing the workflow as code — use cargo-project."
-version: "1.15.0"
+version: "1.16.0"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -164,10 +164,12 @@ cargo-ai orchestration action list send --kind connector --integration-slug slac
 cargo-ai orchestration action execute --action '{"kind":"tool","toolUuid":"<uuid>"}' --data '{"domain":"acme.com"}'
 cargo-ai orchestration action execute-batch --action '{"kind":"connector","integrationSlug":"clearbit","actionSlug":"enrichCompany"}' --records '[{...},{...}]'
 cargo-ai orchestration action get-output-schema --action '{"kind":"connector","integrationSlug":"clearbit","actionSlug":"enrichCompany"}' # → {"schema": <JSON Schema>} without executing
+cargo-ai orchestration action execute --action '{"kind":"connector","integrationSlug":"aiArk","actionSlug":"enrichCompany"}' --data '{"domain":"example.com"}' --dry-run   # free, no account: validates --data, sample output + price
 
 # Workflows (chain multiple actions)
 cargo-ai orchestration run create --workflow-uuid <uuid> --data '{"company":"Acme","domain":"acme.com"}'
 cargo-ai orchestration run create --data '{"domain":"acme.com"}' --nodes '[...]'
+cargo-ai orchestration batch preview --workflow-uuid <uuid> --data '<same as batch create>'   # free: count + up to 200 sample records, creates nothing
 cargo-ai orchestration batch create --workflow-uuid <uuid> --data '{"kind":"filter","modelUuid":"...","filter":{"conjonction":"and","groups":[]}}'
 
 # AI agents
@@ -175,6 +177,8 @@ cargo-ai ai message create --chat-uuid <uuid> --parts '[{"type":"text","text":".
 
 # Data
 cargo-ai orchestration query execute "SELECT count() FROM runs WHERE status='error'" # ClickHouse: spans, runs, batches, records
+cargo-ai orchestration trace list --started-after <iso> --statuses error,degraded   # one row per trigger, across child runs; also trace count / trace get <uuid>
+cargo-ai orchestration span list --execution-started-after <iso> --batch-uuid <uuid> --execution-statuses error   # node executions without SQL; also span count
 cargo-ai segmentation segment fetch --model-uuid <uuid> --filter '{"conjonction":"and","groups":[]}' --fetching-limit 100
 # For SQL against workspace storage (Companies, Contacts, …), see the cargo-storage skill: `storage query execute`
 ```
@@ -263,7 +267,7 @@ Action kinds: `tool`, `connector`, `agent`, `native` (plus `worker`, which calls
 
 **Never guess what an action outputs.** Two free sources — no run, no credits:
 
-1. **Connector actions:** the integration catalog carries the output schema inline — `integration get <slug>` (and `integration list`) return `actions.<actionSlug>.output.schema` next to the input `config.jsonSchema`. Not every action declares one.
+1. **Connector actions:** the integration catalog carries the output schema inline — `integration get <slug>` (and `integration list`) return `actions.<actionSlug>.output.schema` next to the input `config.schema` (`config.jsonSchema`, the form-UI copy, is missing on many actions). Not every action declares one.
 2. **Any action kind** (`tool` / `connector` / `agent` / `native`) — resolve it with the same `--action` object as `action execute`:
 
 ```bash
@@ -285,6 +289,23 @@ Actions that declare no output schema fail with `Not found: actionHasNoOutput` (
 - Map an action's output onto storage columns without a throwaway run.
 
 See `references/examples/actions.md` ("Resolve an action's output schema") for verified per-kind examples and the response/error shapes.
+
+### Dry run — check inputs and price, free, no account
+
+```bash
+cargo-ai orchestration action execute \
+  --action '{"kind":"connector","integrationSlug":"aiArk","actionSlug":"enrichCompany"}' \
+  --data '{"domain":"example.com"}' --dry-run
+```
+
+Runs nothing and calls no provider: it validates `--data` against the action's input schema client-side and prints **sample** output in the shape of a finished run — `{run: {status: "success", executions: [...]}, runContext: {action: <sample>}, runComputedConfigs: {action: <your --data>}, dryRun: {sample: true, estimatedCredits, creditsFormula, note}}`. It always reads the public catalog, so it works **signed out** too (a notice goes to stderr; stdout stays JSON).
+
+- **Connector and native actions only.** `tool` / `agent` are refused (they run your workspace's own workflow). `connectorUuid` is not needed.
+- **A schema miss exits as invalid usage** — ``--data does not match the inputs of `<action>`.`` with `errors[]` (e.g. `Missing required field: x`). The first check to run when a real call came back empty.
+- **The values are fake; the shape and the price are real.** Sample data is generated from the output schema. `estimatedCredits` prices one call (one unit or one block for unit / package pricing — `creditsFormula` says which) and **excludes the 0.01 node execution charge**.
+- **Config-dependent outputs can't be shown** — ``… has no fixed output schema: what it returns depends on its configuration, so a dry run cannot show it.`` Signed in, `action get-output-schema --data …` resolves it. Open-schema actions show an empty object (`classify` shows `answers: {}`).
+
+Signed out, the catalog is browsable too: `orchestration action list` (connector and native actions only — tools and agents need a workspace), `connection integration list|get|get-documentation`, `connection action search`, plus `project plan` / `project types`. Everything that runs needs a sign-in (`cargo-ai login --email …`, 100 free credits).
 
 ## Create a run
 
@@ -324,10 +345,14 @@ See `references/examples/tools.md` for file uploads, monitoring, and cancellatio
 **1. Count the pool first (free).** Never quote an estimate from a guess:
 
 ```bash
+cargo-ai orchestration batch preview --workflow-uuid <uuid> --data '<the exact batch create --data>'
+#   → {outcome:"previewed", count, records (≤ 200), isRefreshing} — creates no batch, bills nothing
 cargo-ai segmentation segment get <segment-uuid>          # → recordsCount (also on `segment list`)
 cargo-ai storage query execute "SELECT count() FROM <dataset>.<model>"   # for a filter/model source
 # For a file source: wc -l on the CSV, minus the header row.
 ```
+
+`batch preview` is the one count that reads the **same `--data`** the batch will — so a filter typo shows up as a wrong count before anything runs. It sizes the audience; it does not price it. It previews `change`, `filter`, `segment`, `recordIds`, `file` and `records` sources; `runs`, `group` and `schedule` come back `count: 0, records: []`, which is **not** an empty audience. `isRefreshing: true` means a model refresh was in flight, so the newest writes may be missing. Errors: `workflowNotFound` / `segmentNotFound` (404), `failedToFetchFromClient` (400).
 
 **2. Run 10–20 records through the exact workflow and config.** Sample by data kind:
 
