@@ -2,7 +2,7 @@
   {
     "slug": "call-capture",
     "kind": "cookbook",
-    "outcome": "Every call the team records is collected into the cadence layer each morning, scribed into a log entry, and — once a claim repeats — promoted into the context knowledge layer, as one reviewable pull request against your GTM repo. Nine recorders ship; a tenth is one adapter file.",
+    "outcome": "Turn your recorded calls into a go-to-market knowledge base: each recorded call is collected every morning, scribed into a log entry, and, once a claim repeats, promoted into context, as one pull request against your go-to-market repo. Nine recorders ship; a tenth is one adapter file.",
     "state": "to-be-approved",
     "chain": 4,
     "requires": [],
@@ -39,7 +39,7 @@
   {
     "slug": "web-capture",
     "kind": "cookbook",
-    "outcome": "Each Monday the company's own website, its competitors' pages and recent news about both land in context/ as one pull request: the first run seeds positioning, offerings, an inferred ICP with a disqualifier, competitors, clients and proof; every run after adds a dated note of what changed (pricing, a launch, funding, a customer) and never edits an existing file.",
+    "outcome": "Keep your company context current from your website and competitors' pages: each Monday your site, competitors' pages and news about both land in context/ as one pull request; the first run seeds positioning, offerings, an inferred ICP with a disqualifier, competitors, clients and proof, and every later run adds a dated note of what changed, never editing an existing file.",
     "state": "to-be-approved",
     "chain": 12,
     "requires": [],
@@ -71,7 +71,7 @@
   {
     "slug": "win-loss-review",
     "kind": "cookbook",
-    "outcome": "Every month the CRM's closed deals are audited and what they say lands in context/ as one pull request: the ICP verified against won versus lost with a disqualifier, dated insights with counts and denominators, objections from recorded lost reasons, and a client file per closed-won account; a five-line Slack digest says what changed. Never edits a persona, nor the ICP after the first pass.",
+    "outcome": "Run a monthly win-loss review of your CRM's closed deals, landed in context/ as one pull request: the ICP verified against won versus lost with a disqualifier, dated insights with counts and denominators, objections from recorded lost reasons, and a client file per closed-won account; a five-line Slack digest says what changed. Never edits a persona, nor the ICP after the first pass.",
     "state": "to-be-approved",
     "chain": 13,
     "requires": [],
@@ -113,7 +113,7 @@
   {
     "slug": "tam-building",
     "kind": "cookbook",
-    "outcome": "Stand up your account universe as a deployed model: an ICP read from your workspace context (or drafted from your website and customer stories when none is written), turned into an AI Ark company search that always sets industries, company size and countries, sized for free before it bills, and landed as one model in Cargo.",
+    "outcome": "Build your total addressable market (TAM) list and stand it up as a deployed model in Cargo: your ICP, read from your context (or drafted from your website and customer stories), becomes an AI Ark company search setting industries, company size and countries, sized for free before it bills, and lands as one model other pipelines read.",
     "state": "approved",
     "chain": 2,
     "requires": [],
@@ -140,16 +140,26 @@
   {
     "slug": "account-scoring",
     "kind": "cookbook",
-    "outcome": "Tier every company in your TAM A / B / C / disqualified with a deployed agent that reads your ICP and tiering rubric from the workspace context, web-searches only to settle a doubt, and writes the tier, a two-sentence reason and its evidence back onto the row, then keeps new companies tiered as they land.",
-    "state": "to-be-approved",
+    "outcome": "Score every account against your ICP on a schedule: a deployed agent tiers each company in a Cargo model (tam-building's, or your CRM companies) A / B / C / disqualified against the ICP and rubric in workspace context, and the tier, a two-sentence reason and evidence are written onto the row and, optionally, the matching HubSpot or Salesforce company. New companies are tiered hourly; the book is re-scored weekly or on any window set.",
+    "state": "approved",
     "chain": 1,
     "requires": [],
     "hasSkill": true,
     "variations": [
       {
+        "id": "crm-writeback",
+        "when": "Reps work in HubSpot or Salesforce and the tier should be visible there",
+        "trade": "A CRM connection and three CRM properties to maintain. A miss ends the run green, so the pilot reads one CRM record back. A domain shared by duplicate CRM companies tiers none of them"
+      },
+      {
         "id": "crm-accounts",
-        "when": "The accounts already live in a CRM and the tier should be visible where reps work",
-        "trade": "A CRM connector and four CRM properties to maintain. A property that does not exist makes the update succeed and write nothing"
+        "when": "The accounts already live in a CRM rather than in tam_companies",
+        "trade": "The CRM's own fields decide what the agent sees. A thin CRM record is a thin judgment"
+      },
+      {
+        "id": "weekly-rescore",
+        "when": "The market moves fast enough that a month-old tier is wrong",
+        "trade": "Every account is judged, and billed, once a week instead of twice a year"
       },
       {
         "id": "numeric-score",
@@ -172,7 +182,7 @@
   {
     "slug": "website-building",
     "kind": "cookbook",
-    "outcome": "Build the company website on Cargo and serve it on your own domain: a statically exported Next.js app, one defineApp with its www hostname, and a defineDomain that publishes the records and forwards the apex, changed only through reviewed pull requests.",
+    "outcome": "Build and host your company website on your own domain with Cargo: a statically exported Next.js app, one defineApp with its www hostname, and a defineDomain that publishes the records and forwards the apex, changed only through reviewed pull requests.",
     "state": "approved",
     "chain": 10,
     "requires": [],
@@ -214,7 +224,7 @@
   {
     "slug": "new-hire-detection",
     "kind": "cookbook",
-    "outcome": "Watch your whole market for people who just took a role you sell to, qualify the company each one joined against your ICP, and post the ones that fit to Slack with verdict and links. A deployed pipeline on a Sales Navigator job-change search; CRM checks and writes are optional.",
+    "outcome": "Get a Slack alert when a decision-maker joins a company in your ICP: a Sales Navigator job-change search watches your market for people who just took a role you sell to, an agent qualifies each one's new company against your ICP, and fits are posted with verdict and links.",
     "state": "to-be-approved",
     "chain": 11,
     "requires": [],
@@ -261,7 +271,7 @@
   {
     "slug": "social-listening",
     "kind": "cookbook",
-    "outcome": "Every Monday the week's public LinkedIn posts about the problem you solve are searched, judged against your ICP, and posted to Slack as one digest: the conversations worth joining, and the commenters in them who look like buyers, each quoted with a link.",
+    "outcome": "Find the LinkedIn conversations worth joining every week: each Monday the week's public LinkedIn posts about the problem you solve are judged against your ICP, and one Slack digest lists the posts worth joining and the commenters who look like buyers, each with a link.",
     "state": "to-be-approved",
     "chain": 18,
     "requires": [],
@@ -298,7 +308,7 @@
   {
     "slug": "visitor-identification",
     "kind": "cookbook",
-    "outcome": "Learn which companies visit your website and what they read: Snitcher identifies the organisation behind each visit, two Cargo models keep the visiting companies and their sessions current, and the site loads the tracker only after a visitor accepts it.",
+    "outcome": "Identify which companies visit your website and what they read: Snitcher identifies the organisation behind each visit, two Cargo models keep the visiting companies and their sessions current, and the site loads the tracker only after a visitor accepts it.",
     "state": "approved",
     "chain": 14,
     "requires": [],
@@ -330,7 +340,7 @@
   {
     "slug": "inbound-qualification",
     "kind": "cookbook",
-    "outcome": "Turn the website's demo form into qualified inbound: each submission runs a Cargo tool that identifies the company by work email, qualifies it against the ICP, lands account and contact in the shared GTM models, posts it to Slack, and answers on the page with a booking link or a thank-you; an optional play then tiers and summarises each qualified contact.",
+    "outcome": "Qualify and route inbound demo requests from your website form: each submission runs a Cargo tool that identifies the company by work email, qualifies it against your ICP, lands the account and contact in the shared models, posts it to Slack, and answers with a booking link or a thank-you; an optional play then tiers and summarises each qualified contact.",
     "state": "approved",
     "chain": 15,
     "requires": [],
@@ -377,7 +387,7 @@
   {
     "slug": "agentic-engagement",
     "kind": "cookbook",
-    "outcome": "Deploy an agent that holds email conversations with leads: a sending domain, a mailbox, native sendEmail and listEmailEvents on the agent, a native email trigger on reply and unsubscribe, and a heartbeat that checks thread status when nothing inbound happened.",
+    "outcome": "Deploy an AI agent that holds email conversations with leads from a mailbox your workspace owns: a sending domain, a mailbox, native sendEmail and listEmailEvents on the agent, a native email trigger on reply and unsubscribe, and a heartbeat that checks thread status when nothing inbound happened.",
     "state": "to-be-approved",
     "chain": 5,
     "requires": [],
@@ -409,7 +419,7 @@
   {
     "slug": "standup",
     "kind": "cookbook",
-    "outcome": "Every evening the GTM day is recapped into the cadence log and a digest is posted to Slack, as one reviewable pull request against your GTM repo.",
+    "outcome": "Post a daily go-to-market standup to Slack: every evening the day's go-to-market work is recapped into the cadence log and a digest is posted to Slack, as one reviewable pull request against your go-to-market repo.",
     "state": "to-be-approved",
     "chain": 7,
     "requires": [],
@@ -444,10 +454,52 @@
     "stage": "Operations"
   },
   {
+    "slug": "meeting-prep",
+    "kind": "cookbook",
+    "outcome": "Post a Slack card for every external meeting the moment it is booked on anyone's Google Calendar: who is joining, the open deal, the line that mattered last time, one recent public event, and an opener grounded in your positioning, with reschedules and cancellations threaded under it.",
+    "state": "approved",
+    "chain": 23,
+    "requires": [],
+    "hasSkill": true,
+    "variations": [
+      {
+        "id": "one-calendar",
+        "when": "A founder or a single rep, no Workspace admin involved",
+        "trade": "Only that person's meetings are briefed."
+      },
+      {
+        "id": "sales-team-only",
+        "when": "The Workspace has people whose external meetings are not sales",
+        "trade": "A new rep is not briefed until someone adds them."
+      },
+      {
+        "id": "internal-too",
+        "when": "Internal prep meetings for a deal should be briefed as well",
+        "trade": "Every 1:1 and standup wakes the agent. Without a rule in the prompt it posts noise."
+      },
+      {
+        "id": "per-rep-dm",
+        "when": "Reps want their own cards, not a shared channel",
+        "trade": "The agent picks the destination. Keep the rule, or a card can land somewhere it should not."
+      },
+      {
+        "id": "crm-backed",
+        "when": "Accounts, contacts, deals and activity live in HubSpot, Salesforce or Attio",
+        "trade": "One more OAuth connector and a sync interval: activity logged after the last sync misses the card."
+      },
+      {
+        "id": "morning-digest",
+        "when": "The team prefers one list each morning to a card per booking",
+        "trade": "A meeting booked after the morning run is never briefed, and a ledger the agent writes is state you now have to keep."
+      }
+    ],
+    "stage": "Operations"
+  },
+  {
     "slug": "next-step-tracker",
     "kind": "cookbook",
-    "outcome": "Every weekday morning each promise made on a recorded call, by your team or the customer, is read from the call log, recorded once, closed when the activity log shows it was kept, and flagged in Slack once it falls due or goes overdue.",
-    "state": "to-be-approved",
+    "outcome": "Track the next steps promised on sales calls and flag the overdue ones in Slack: every weekday morning each commitment made on a recorded call, by your team or the customer, is read from the call log, recorded once, closed when the activity log shows it was kept, and flagged once it falls due or goes overdue.",
+    "state": "approved",
     "chain": 22,
     "requires": [],
     "hasSkill": true,
@@ -488,8 +540,8 @@
   {
     "slug": "stalled-deal-nudge",
     "kind": "cookbook",
-    "outcome": "Every Monday each rep gets one Slack digest of their open deals that went quiet: how long since the last logged activity, the line that activity left off on, why the deal is worth a touch now, and a follow-up drafted for them to send.",
-    "state": "to-be-approved",
+    "outcome": "Flag stalled deals and nudge each rep with a drafted follow-up: every Monday each rep gets one Slack digest of their open deals that went quiet, with how long since the last logged activity, the line that activity left off on, why the deal is worth a touch now, and a follow-up drafted for them to send.",
+    "state": "approved",
     "chain": 16,
     "requires": [],
     "hasSkill": true,
@@ -530,7 +582,7 @@
   {
     "slug": "weekly-planning",
     "kind": "cookbook",
-    "outcome": "Every Monday last week's GTM work is ranked against active initiatives, declared infra, and live runs, as one reviewable pull request per initiative — or one workspace pull request when there are none.",
+    "outcome": "Decide what the go-to-market team works on this week: every Monday last week's work is ranked against active initiatives, declared infra, and live runs, as one reviewable pull request per initiative, or one workspace pull request when there are none.",
     "state": "to-be-approved",
     "chain": 8,
     "requires": [],
@@ -560,10 +612,74 @@
     "stage": "Operations"
   },
   {
+    "slug": "goal-coverage",
+    "kind": "cookbook",
+    "outcome": "Find what your goal needs that the workspace has not built: once a week a deployed agent reads the company goal, takes stock of every play, agent, model and connector in the workspace, and suggests at most five missing pipelines from the published catalog, each opened with what it noticed (\"thousands of accounts, none scored\"), as a pull request you can decline lines in and a Slack post.",
+    "state": "approved",
+    "chain": 24,
+    "requires": [],
+    "hasSkill": true,
+    "variations": [
+      {
+        "id": "fewer",
+        "when": "The team acts on one or two things at a time",
+        "trade": "The third most important gap waits a week longer to be said."
+      },
+      {
+        "id": "slack-only",
+        "when": "Nobody on the team reviews pull requests",
+        "trade": "No memory: a declined suggestion comes back every week, which is what makes people mute the channel. Keep the pull request if anyone can merge it."
+      },
+      {
+        "id": "monthly",
+        "when": "The workspace changes slowly",
+        "trade": "A new catalog pipeline or a goal change waits up to a month to be noticed."
+      },
+      {
+        "id": "with-ideas",
+        "when": "You want ideas beyond the catalog",
+        "trade": "Ideas have no install line and no deploy-verified example behind them; they are the suggestions most likely to be wrong."
+      }
+    ],
+    "stage": "Operations"
+  },
+  {
+    "slug": "workspace-health",
+    "kind": "cookbook",
+    "outcome": "Know the morning something breaks: a deployed agent reads the last 24 hours of the workspace against the week before and posts to Slack only what is wrong and new: failing runs grouped by cause, a lost connector, a play that stopped, runs that succeed and write nothing, a spend spike, a stuck batch. Mondays it posts the week: still open, cleared, all clear.",
+    "state": "approved",
+    "chain": 25,
+    "requires": [],
+    "hasSkill": true,
+    "variations": [
+      {
+        "id": "daily-all-clear",
+        "when": "The team does not trust silence yet",
+        "trade": "A post every day that says nothing, which is how a channel gets muted. Move back to Mondays once trusted."
+      },
+      {
+        "id": "twice-a-day",
+        "when": "Plays run on short schedules and a morning is too late",
+        "trade": "Twice the runs; a 12-hour baseline is noisier for plays that run daily."
+      },
+      {
+        "id": "skip-empty-outputs",
+        "when": "Models are wide and the empty-column check is slow or noisy",
+        "trade": "The silent-success failure, the one nobody else catches, goes unwatched."
+      },
+      {
+        "id": "page-on-auth",
+        "when": "A lost connector is urgent for you",
+        "trade": "Two channels to keep locked; the contract eval needs updating to allow the third action."
+      }
+    ],
+    "stage": "Operations"
+  },
+  {
     "slug": "linkedin-content",
     "kind": "cookbook",
-    "outcome": "Every Monday three LinkedIn post drafts for one author land in the GTM repo as one pull request, built only from what context/ and the cadence log already say, each with its hook and the files it draws on; nothing is ever published.",
-    "state": "to-be-approved",
+    "outcome": "Draft LinkedIn posts every week from your own proof points: each Monday three post drafts for one author land in your go-to-market repo as one pull request, built only from what context/ and the cadence log already say, each with its hook and the files it draws on; nothing is ever published.",
+    "state": "approved",
     "chain": 20,
     "requires": [],
     "hasSkill": true,
@@ -599,8 +715,8 @@
   {
     "slug": "ask-cargo",
     "kind": "cookbook",
-    "outcome": "One agent the whole team @mentions in Slack, sitting on top of your GTM repo and workspace: it answers from context, cadence and live runs, turns change requests into pull requests, captures a thread worth keeping into the cadence log and context, and hands work to the other deployed agents only after a go in the thread.",
-    "state": "to-be-approved",
+    "outcome": "Ask your go-to-market repo and workspace anything from Slack: one agent the whole team @mentions answers from context, cadence and live runs, turns change requests into pull requests, captures a thread worth keeping into the cadence log and context, and hands work to the other deployed agents only after a go in the thread.",
+    "state": "approved",
     "chain": 9,
     "requires": [],
     "hasSkill": true,
@@ -646,7 +762,7 @@
   {
     "slug": "crm-enrichment",
     "kind": "cookbook",
-    "outcome": "Keep CRM accounts and contacts filled and refresh them when they go stale. The contact pipeline uses one enrichment play with three gated tools: Cargo-native Find Email, Cargo-native Find LinkedIn Profile from Email, and custom Contact LinkedIn Enrichment.",
+    "outcome": "Clean up and enrich a messy CRM: fill the missing identifiers on accounts and contacts first (LinkedIn, domain, email), write them back into blank fields only, then deduplicate on those identifiers with crm-deduplication. Keeps records filled and refreshes them when they go stale.",
     "state": "to-be-approved",
     "chain": 3,
     "requires": [],
@@ -703,7 +819,7 @@
   {
     "slug": "crm-deduplication",
     "kind": "cookbook",
-    "outcome": "Keep CRM accounts and contacts duplicate-free: audit company and person identity, run recurring deduplication plays directly on CRM models, merge safe exact matches, and route uncertain clusters to manual review.",
+    "outcome": "Deduplicate CRM accounts and contacts and keep them duplicate-free: audit company and person identity, run recurring deduplication plays directly on CRM models, merge safe exact matches, and route uncertain clusters to manual review.",
     "state": "to-be-approved",
     "chain": 6,
     "requires": [],
@@ -750,8 +866,8 @@
   {
     "slug": "expansion-signals",
     "kind": "cookbook",
-    "outcome": "Every week the customers coming up on renewal are judged for an expansion moment (purchase cadence and last price from won deals, and dated outside events such as funding, hiring or a new leader); the signal and reason are written onto the account and posted as one digest for the customer team.",
-    "state": "to-be-approved",
+    "outcome": "Find which customers are ready to expand before renewal: weekly, customers nearing renewal are judged for an expansion moment (won-deal cadence and last price, events such as funding, hiring, a new leader), with the signal and reason written onto the account and posted as one Slack digest.",
+    "state": "approved",
     "chain": 21,
     "requires": [],
     "hasSkill": true,
