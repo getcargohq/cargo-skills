@@ -10,14 +10,15 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
-### `cargo-segmentation` 1.2.1, `cargo-orchestration` 1.17.1, `cargo-workspace-management` 1.6.1, `cargo-ai` 2.8.1, `cargo-connection` 1.7.1, `cargo-project` 4.3.1: CLI 1.0.126 fixes the bugs the skills worked around
+### `cargo-segmentation` 1.2.1, `cargo-orchestration` 1.17.1, `cargo-workspace-management` 1.6.1, `cargo-ai` 2.8.1, `cargo-connection` 1.7.1, `cargo-project` 4.3.1, `cargo-mailbox-management` 1.5.0: CLI 1.0.127 fixes the bugs the skills worked around
 
-cargo#6369 (CLI 1.0.126) fixes the CLI and API bugs the October docs PRs found, so the workarounds become notes about older versions.
+cargo#6369 (CLI 1.0.127) fixes the CLI and API bugs the October docs PRs found, so the workarounds become notes about older versions.
 
-- **`segmentation change list --not-empty`** works (deltas where a record was added, updated or removed), and `--has-records` and `change download` take `unchanged`. Before 1.0.126 the API answered 400 to all three.
+- **`segmentation change list --not-empty`** works (deltas where a record was added, updated or removed), and `--has-records` and `change download` take `unchanged`. Before 1.0.127 the API answered 400 to all three.
 - **`batch list --included-data-kinds a,b`** matches a batch of any listed kind. It used to AND them and return nothing.
 - **`user upsert-permission --effect deny`** writes a deny for existing members (`--user-uuids`), and is refused with `--emails`. It used to write an allow whatever was passed.
 - **The help-text caveats** for `prompt evaluate` and `get-dynamic-schema --slug` now name the version that fixed them.
+- **Mailbox status `error` (cargo#6003).** Cargo marks a mailbox `error` when its login is rejected while the provider still calls it active (`errorCode: "authenticationFailed"`). Sends fail with `mailboxNotActive` meanwhile, the login is retried hourly (`inboundRetryAfter`), and the first success sets it back to `active`. Added to the status list, the response shape, the send-error table and troubleshooting.
 - **Two troubleshooting entries removed.** `project state connect --help` and `segmentation change|record <sub> --help` were said to print the parent help. Neither does on 1.0.125.
 
 ### `cargo` → 1.32.0, `cargo-gtm` → 2.5.0, `cargo-storage` → 1.4.0, `cargo-connection` → 1.7.0, `cargo-orchestration` → 1.17.0, `cargo-workspace-management` → 1.6.0, `cargo-ai` → 2.8.0, `cargo-hosting` → 1.4.0, `cargo-segmentation` → 1.2.0, + 2 patches: the catalog and CLI surface no skill covered

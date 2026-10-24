@@ -58,6 +58,14 @@ rotated or revoked), **402** is a spam/abuse block. Neither is fixable by re-run
 A 402 in particular means the domain's reputation is at risk — stop sending from the whole
 domain and look at what was sent, not at the mailbox.
 
+### The mailbox is `error`
+
+Cargo's login to it was rejected (`errorCode: "authenticationFailed"`, the server's own words
+in `errorMessage`) while the provider still reports it active — typically a Google account the
+provider locked. Sends fail with `mailboxNotActive` meanwhile. Nothing to run: the login is
+retried hourly (`inboundRetryAfter`) and the first success puts the mailbox back to `active`.
+If it stays `error`, the account needs fixing at the provider.
+
 ### `--type outlook` never works
 
 The flag accepts it, the API refuses it, every time, with `transportNotSupported`. Outlook
@@ -72,7 +80,7 @@ or `private`.
 | `warmupAlreadyStarted` | `start-warmup` on a running warm-up, including the one that starts on its own when a mailbox first goes `active` | Use `update-warmup` to change the target |
 | `warmupNotStarted` | `update-warmup` or `get-warmup-stats` on a mailbox that never started (or that is `disabled` / `failed`) | `start-warmup` first |
 | `warmupNotSupported` | The provider cannot warm this flavour | Nothing to do |
-| `mailboxNotActive` | Still `pending`, or provider-disabled | Resolve the status first |
+| `mailboxNotActive` | Still `pending`, provider-disabled (`inactive`), or login rejected (`error`) | Resolve the status first |
 | `get-warmup-stats` → `{"stats": null}` | Warm-up is running; the inbox is still joining the pool | Wait — this is **not** the same as `warmupNotStarted` |
 | `get-warmup-stats` prints the `mailbox` group help instead of running | The CLI predates the release that added the command — an unknown subcommand falls back to group help rather than erroring | `mailbox --help` to see what your CLI has, then re-run the session refresh in [`../../cargo/SKILL.md`](../../cargo/SKILL.md) |
 | Allowance stuck at 5/day | Warm-up never started, or `stop-warmup` reset the anchor | `start-warmup`, then wait — the ramp takes 45 days |

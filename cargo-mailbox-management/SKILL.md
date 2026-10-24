@@ -1,7 +1,7 @@
 ---
 name: cargo-mailbox-management
 description: "Send mail from inboxes Cargo owns — provision mailboxes on a sending domain, run provider warm-up and the 5→40/day send ramp, deliver with the `sendEmail` action, and read back threads, replies, delivery events, and the workspace suppression list. Triggers: \"set up a sending mailbox\", \"provision inboxes for outbound\", \"warm up this mailbox\", \"how many sends do I have left today\", \"send this from Cargo\", \"did they reply\", \"who unsubscribed\", \"suppress this recipient\", \"take me off your list\", \"never email them again\", \"what do mailboxes cost\", \"my mailbox is stuck pending\". A mailbox is a recurring monthly credit charge, and every send is gated on basis, suppression, and relevance. Skip when: writing the copy or building the audience — use cargo-gtm; the mailbox belongs in git — use cargo-project."
-version: "1.4.1"
+version: "1.5.0"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -166,9 +166,11 @@ cargo-ai mailboxManagement mailbox update --uuid <uuid> --folder-uuid none   # "
 cargo-ai mailboxManagement mailbox remove <uuid>               # deletes at the provider too
 ```
 
-- `--statuses` — `pending`, `active`, `inactive`, comma-separated **with no spaces**. An
+- `--statuses` — `pending`, `active`, `inactive`, `error`, comma-separated **with no spaces**. An
   `inactive` mailbox was disabled by the provider; `errorCode` says why (`401` auth, `402`
-  spam) and it will not send until it is fixed.
+  spam) and it will not send until it is fixed. An `error` mailbox is one Cargo cannot log
+  into although the provider still calls it active (`errorCode: "authenticationFailed"`); it
+  is retried hourly and goes back to `active` on the first login that works.
 - `none` is the sentinel for "clear it" on `--folder-uuid` and `--signature`. On `list`,
   `--folder-uuid none` means "mailboxes in no folder".
 - `remove` is how monthly billing stops. There is no pause.

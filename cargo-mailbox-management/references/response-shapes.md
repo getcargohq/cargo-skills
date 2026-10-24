@@ -30,7 +30,7 @@ There is no `event get`. Fetch events through `event list --message-uuid` or `--
 
 ```
 MailboxType          google | outlook | shared | private     # outlook cannot deliver
-MailboxStatus        pending | active | inactive
+MailboxStatus        pending | active | inactive | error
 MailboxWarmupStatus  disabled | pending | active | paused | failed
 MailboxProviderSlug  mailpool                                 # the only provider
 MailboxTransportSlug smtp | graph                             # outlook → graph, rest → smtp
@@ -64,7 +64,8 @@ SuppressionReason    unsubscribed | bounced | complained | manual
   "type": "google", "transport": "smtp",
   "credentials": { "smtp": {…}, "imap": {…} },   // encrypted at rest; only transports decrypt
   "status": "active",
-  "errorCode": "…|null",         // set when status is inactive: 401 auth, 402 spam
+  "errorCode": "…|null",         // inactive: 401 auth, 402 spam; error: authenticationFailed
+  "inboundRetryAfter": "<iso>|null", // when an `error` mailbox's login is next retried (hourly)
   "errorMessage": "…|null",
   "warmupStatus": "active",
   "warmupDailyTarget": 40,
