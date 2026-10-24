@@ -149,6 +149,7 @@ const REMOVED_TERMS = [
   { term: "attendee", scope: "skills/cargo-gtm/provider-playbooks/linkedin.md" },
   { term: "provider-playbooks/x.md", scope: "skills/" },
   { term: "extractEventAttendees", scope: "skills/cargo-gtm/" },
+  { term: "xAccount", scope: "skills/cargo-gtm/references/credits-cost-table.md" },
 ];
 
 // Excluding a skill leaves cross-references to it in the ones that remain: a
@@ -157,6 +158,38 @@ const REMOVED_TERMS = [
 // Every `find` must match exactly once or the build fails — these are anchored
 // to prose that will drift, and a silent no-op would ship a dangling link.
 const PACKAGE_EDITS = [
+  // xAccount posts, replies, likes and DMs as the user — the same surface the
+  // OpenAI review rejected for X (#120), so its price rows ship only in the other packages.
+  {
+    file: "cargo-gtm/references/credits-cost-table.md",
+    find: "| 1 | `xAccount` | engagement | `likePost` | Like one X post as the connected account, when a person asked for it. X's automation rules forbid automated or bulk liking |\n",
+    replace: "",
+  },
+  {
+    file: "cargo-gtm/references/credits-cost-table.md",
+    find: "| 1 / 2 item | `xAccount` | engagement | `listMessages` | List recent direct messages of the connected X account, optionally only the conversation with one account |\n",
+    replace: "",
+  },
+  {
+    file: "cargo-gtm/references/credits-cost-table.md",
+    find: "| 1 | `xAccount` | engagement | `sendMessage` | Send a direct message on X as the connected account. X's automation rules forbid automated unsolicited DMs |\n",
+    replace: "",
+  },
+  {
+    file: "cargo-gtm/references/credits-cost-table.md",
+    find: "| 1–10 | `xAccount` | engagement | `createPost` | Publish a post on X as the connected account |\n",
+    replace: "",
+  },
+  {
+    file: "cargo-gtm/references/credits-cost-table.md",
+    find: "| 1–10 | `xAccount` | engagement | `replyToPost` | Reply to an X post as the connected account (only posts that mention it or that it wrote) |\n",
+    replace: "",
+  },
+  {
+    file: "cargo-gtm/references/credits-cost-table.md",
+    find: "\n### `xAccount.createPost` / `xAccount.replyToPost` — varies by `text`\n\n| Config | Cost |\n|---|---|\n| `text` contains a link (`http://`, `https://` or `www.`) | 10 |\n| otherwise | 1 |\n",
+    replace: "",
+  },
   {
     file: "cargo/SKILL.md",
     find: "project, mailbox management, workspace management)",
