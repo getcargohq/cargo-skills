@@ -14,11 +14,68 @@ This doc defines the canonical waterfall chains by enrichment goal. Every recipe
 5. Coalesce: merge results column-by-column, preferring higher-quality sources.
 ```
 
-Cargo doesn't have a built-in "waterfall" primitive — you implement this as N sequential `action execute-batch` calls with the records pruned between calls. Each step's rows come from `cargo-ai orchestration batch download --uuid <batch-uuid>` (a signed CSV URL: the input columns plus each top-level output key as `cargo_<key>`; failed runs keep only the input columns). `--wait-until-finished` prints the batch object, not the rows.
+**For email, phone and verification the waterfall already exists.** Every workspace is seeded with read-only preset tools that run the chain server-side, one row per record: see [Start here](#start-here-the-workspaces-preset-tools) below. Use them first. Build the chain by hand only for the other goals on this page, or when the preset does not fit (see [When to hand-roll instead](#when-to-hand-roll-instead)).
+
+A hand-rolled chain is N sequential `action execute-batch` calls with the records pruned between calls. Each step's rows come from `cargo-ai orchestration batch download --uuid <batch-uuid>` (a signed CSV URL: the input columns plus each top-level output key as `cargo_<key>`; failed runs keep only the input columns). `--wait-until-finished` prints the batch object, not the rows.
+
+## Start here: the workspace's preset tools
+
+Every workspace carries a **Cargo Tools** folder of read-only tools that Cargo creates and keeps in sync. Three of them are the email and phone waterfalls this page used to tell you to build:
+
+| Tool (exact name) | What runs inside, in order | Inputs (camelCase, exactly) | Output today | Declared credits per row |
+|---|---|---|---|---|
+| **Find email** | `apolloio.enrichPerson` → `FullEnrich.findEmail` → `findyMail.findEmail` → `peopleDataLabs.enrichPerson` → `waterfall.enrichContact`, each found address checked by `zeroBounce.verifyEmail` before the chain stops | `firstName` + `lastName` + `companyDomain`, **or** `linkedinUrl`; optional `returns_catchalls` (boolean) | `{email}` | 1.1 to 4 |
+| **Find phone** | `FullEnrich.findPhone` → `findyMail.findPhone` → `waterfall.findPhone` → `peopleDataLabs.enrichPerson` | `linkedinUrl` (a `linkedin.com/in/` profile URL, required) | `{phone}` | 3 to 7 |
+| **Verify email** | `neverBounce.verifyEmail` | `email` | `{status, is_safe}` (`is_safe` is `status == "valid"`) | 0.2 |
+
+The same folder holds **Find work email from LinkedIn URL** (`linkedinUrl` in, `{email}` out, no verification step inside) and **Find work email from personal email**. **Enrich person** and **Enrich company** are there too, but each calls a single provider, so person and company enrichment still follow the chains further down this page.
+
+### The first move
+
+1. **Find the tool's `toolUuid`.** It differs per workspace, so look it up every time:
+
+   ```bash
+   cargo-ai orchestration action list "find email" --kind tool
+   # several rows can match (copies, custom tools); take the read-only preset:
+   cargo-ai orchestration tool list | jq -r '.tools[] | select(.isReadOnly and .name == "Find email") | .uuid'
+   ```
+
+   On the MCP server: `search_actions` with `{"query":"find email","kind":"tool"}`, and use the `action` object it returns. A signed-out session or the public MCP endpoint lists no tools, because tools belong to a workspace.
+
+2. **Sample 10 to 20 rows**, the same gate as any paid batch ([`cost-discipline.md`](cost-discipline.md)):
+
+   ```bash
+   cargo-ai orchestration action execute-batch \
+     --action '{"kind":"tool","toolUuid":"<toolUuid>"}' \
+     --records '[{"firstName":"Ada","lastName":"Lovelace","companyDomain":"example.com"},{"linkedinUrl":"https://www.linkedin.com/in/ada"}]' \
+     --limit 20 --wait-until-finished
+   ```
+
+   MCP: `execute_action_batch` with the same `{"kind":"tool","toolUuid":"<toolUuid>"}` and records.
+
+3. **Read the results and the receipt.** `cargo-ai orchestration batch download --uuid <batch-uuid>` gives the CSV, with the address in `cargo_email` (`cargo_phone` for Find phone, `cargo_status` and `cargo_is_safe` for Verify email); MCP `get_batch` returns the same rows. Report the hit rate and the credits actually spent, then ask for approval of the full volume.
+
+4. **Run the full batch** on the approved rows, minus any that already hold the field.
+
+### What it returns, and what it costs
+
+- **The address and nothing else.** Find email returns `{email}`: no verification status, no catch-all flag, no record of which provider found it. With `returns_catchalls` unset, every address it returns passed `zeroBounce` as `valid`, so there is no separate verify step to run on it. With `returns_catchalls: true` it may also return a catch-all address, and the output does not say which ones are; run **Verify email** on those if the status matters.
+- **A miss is roughly free.** The tool stops at the first verified hit, a provider rung generally bills only when it finds something, and verification runs only on a found address. So a row nobody covers costs close to nothing, and a row the first rung settles costs about 1.1. Treat this as an estimate until the sample's receipt confirms it for your segment.
+- **Rows with bad inputs exit empty and free.** The tool checks its inputs before calling anyone: a domain that does not parse, a first or last name under two characters, or a LinkedIn URL that is not a `/in/` profile ends the run with no email.
+- **Input names are not checked.** A tool run drops a key it does not know without an error, so `linkedin_url` or `first_name` is silently ignored and the row exits empty. Use the camelCase names in the table.
+- **Find phone does not verify** a number before returning it.
+
+### When to hand-roll instead
+
+- The preset is missing from the workspace, or someone deleted it.
+- The user wants a different provider order or a provider the preset does not call, such as `aiArk`, `hunter`, `icypeas` or `prospeo`.
+- The user needs per-row provenance or a verification status the preset does not return.
+
+Then use the chains below, and keep the verification rules.
 
 ## Chain — Find email
 
-Goal: get a verifiable email for a person given name + company (or LinkedIn).
+Goal: get a verifiable email for a person given name + company (or LinkedIn). Start with the **Find email** preset tool above; build this chain only when it does not fit.
 
 ```
 1. FullEnrich.findEmail (1 cred)              ← default; best hit rate
@@ -102,7 +159,7 @@ See [`../recipes/linkedin-url-lookup.md`](../recipes/linkedin-url-lookup.md) for
 
 ## Chain — Phone number
 
-Goal: get a phone number for a person.
+Goal: get a phone number for a person. Start with the **Find phone** preset tool above; build this chain only when it does not fit.
 
 ```
 1. prospeo.findPhone (3 cred)               ← cheapest landline/DID (aiArk.findMobilePhone, 0.5, goes first when a LinkedIn URL is in hand)

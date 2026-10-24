@@ -55,11 +55,13 @@ Costs are credits/record and are the pack's own priority stack. Confirm each aga
 | What the Clay column does | Cargo action | Cost |
 |---|---|---|
 | Find work email, **LinkedIn URL in hand** | `aiArk.enrichPerson` | 0.1 |
-| Find work email, name + domain | `FullEnrich.findEmail` | 1 |
+| Find work email (a Clay email waterfall) | the workspace's **Find email** preset tool (`{"kind":"tool"}`) | 1.1 to 4 on a hit |
+| Find work email, name + domain, one provider | `FullEnrich.findEmail` | 1 |
 | Find work email, budget rung | `hunter.findEmail` | 0.5 |
 | Find work email, bulk last resort | `icypeas.findEmail` | 0.1 |
-| Validate / verify email | `waterfall.verifyEmail` | 0.1 |
+| Validate / verify email | **Verify email** preset tool, or `waterfall.verifyEmail` by hand | 0.2 / 0.1 |
 | Find mobile phone | `aiArk.findMobilePhone` | 0.5 |
+| Find phone (a Clay phone waterfall) | **Find phone** preset tool, `linkedinUrl` in | 3 to 7 |
 | Enrich person from LinkedIn URL | `aiArk.enrichPerson` | 0.1 |
 | Enrich person from name + company | `waterfall.enrichContact` | 2 |
 | Email → LinkedIn (reverse lookup) | `FullEnrich.reverseEmailLookup` | 1 |
@@ -98,7 +100,7 @@ gets cheaper on migration rather than more expensive.
 
 This is where real migrations break, and every one of them is invisible in a CSV export.
 
-1. **Waterfalls.** A Clay email waterfall is one column hiding an ordered provider list. In Cargo it becomes explicit rungs, cheapest first, each escalating only the misses ([`../references/waterfall-strategy.md`](../references/waterfall-strategy.md)). That is the point rather than a workaround: the user can see which rung paid and drop the ones that never hit. Ask which providers the waterfall contained. If the answer is unavailable (path C), start from the pack's stack and say the order is Cargo's rather than theirs.
+1. **Waterfalls.** A Clay email waterfall is one column hiding an ordered provider list. If the user does not care which providers ran, the workspace's **Find email** (or **Find phone**) preset tool is that column already: one tool, five providers, each hit verified ([`../references/waterfall-strategy.md`](../references/waterfall-strategy.md#start-here-the-workspaces-preset-tools)). When they do care, it becomes explicit rungs, cheapest first, each escalating only the misses ([`../references/waterfall-strategy.md`](../references/waterfall-strategy.md)). That is the point rather than a workaround: the user can see which rung paid and drop the ones that never hit. Ask which providers the waterfall contained. If the answer is unavailable (path C), start from the pack's stack and say the order is Cargo's rather than theirs.
 2. **Run conditions.** Clay columns run conditionally per row. Cargo's equivalent is a filtered segment feeding the batch, or a conditional node in the graph. A migration that ignores run conditions runs every action on every row and bills accordingly, which is the most common way a "cheaper" migration comes back more expensive.
 3. **Auto-update / continuous runs.** A Clay table that re-runs on new rows becomes a play with a schedule ([`save-as-play.md`](save-as-play.md)), and the cadence is a cost decision, not a default. Re-billing gates are in each provider playbook's **Recurring use** section.
 4. **Row limits and partial runs.** A Clay table that only ever ran on the first 500 of 5,000 rows has a fill rate that describes 500 rows. Check before quoting it as the baseline.

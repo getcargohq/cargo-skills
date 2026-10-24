@@ -2,6 +2,8 @@
 
 How to enrich companies and contacts on Cargo. Covers waterfall enrichment, fallback chains, signal extraction, and output retrieval.
 
+**Finding an email or a phone, or verifying an email? Run the workspace's preset tool first.** Every workspace has read-only **Find email**, **Find phone** and **Verify email** tools in its Cargo Tools folder: the multi-provider waterfall with verification, already built, run as `{"kind":"tool","toolUuid":"<uuid>"}`. Look the UUID up with `cargo-ai orchestration action list "find email" --kind tool`, sample 10 to 20 rows, then run the approved batch. Inputs, outputs, costs and when to hand-roll instead: [`../references/waterfall-strategy.md`](../references/waterfall-strategy.md#start-here-the-workspaces-preset-tools).
+
 ## Default chain by enrichment goal
 
 ```
@@ -20,20 +22,24 @@ Contact details on a known person (title, location, social, …)?
   └─ Heavy backfill: peopleDataLabs.enrichPerson (3)
 
 Find an email?
-  ├─ LinkedIn URL in hand: aiArk.enrichPerson (0.1) — email comes with the profile
-  ├─ From name + company: FullEnrich.findEmail (1)   ← default
-  ├─ Cheap fallback: hunter.findEmail (0.5) / icypeas.findEmail (0.1)
-  └─ Last resort: peopleDataLabs.enrichPerson (3, includes email)
+  ├─ Find email preset tool (1.1 to 4, roughly 0 on a miss)   ← first move: the waterfall, verified
+  │    name + companyDomain, or linkedinUrl
+  ├─ Already enriching the profile from a LinkedIn URL? aiArk.enrichPerson (0.1)
+  │    returns a verified email with it; run the tool on the rows it left empty
+  └─ Hand-rolled chain only when the tool is missing or a custom order is wanted:
+       FullEnrich.findEmail (1) → hunter.findEmail (0.5) → peopleDataLabs.enrichPerson (3) → icypeas.findEmail (0.1)
 
 Verify an email?
-  ├─ waterfall.verifyEmail (0.1)            ← default (cheap, multi-source)
-  └─ Alt: zeroBounce.verifyEmail (0.1) / icypeas.verifyEmail (0.01)
+  ├─ Verify email preset tool (0.2)         ← first move; returns status + is_safe
+  ├─ Cheaper by hand: waterfall.verifyEmail (0.1) / zeroBounce.verifyEmail (0.1)
+  └─ Very large lists: icypeas.verifyEmail (0.01)
 
 Find a phone number?
-  ├─ aiArk.findMobilePhone (0.5)            ← first rung; mobile-only, bills 0 on a miss
-  ├─ Landline/DID fallback: prospeo.findPhone (3)
-  ├─ FullEnrich.findPhone (6)               ← higher quality
-  └─ Combined: FullEnrich.findPhoneAndEmail (7) when both are needed
+  ├─ Find phone preset tool (3 to 7)        ← first move; linkedinUrl in, unverified number out
+  ├─ Mobile only and budget tight? aiArk.findMobilePhone (0.5, bills 0 on a miss) first,
+  │    then the tool on the rows it missed
+  └─ Hand-rolled: prospeo.findPhone (3) → FullEnrich.findPhone (6) → waterfall.findPhone (7);
+       FullEnrich.findPhoneAndEmail (7) when both are needed
 
 Resolve a LinkedIn URL from name + company?
   └─ linkedin.findProfileUrl (0.25) → linkedin.enrichProfile (0.25) for validation
@@ -82,7 +88,20 @@ cargo-ai orchestration action execute-batch \
 # Step 4 — coalesce all three into a single enriched dataset
 ```
 
-Same shape applies for person enrichment (`aiArk.enrichPerson` where a LinkedIn URL exists → `waterfall.enrichContact` → `apolloio.enrichPerson` → `peopleDataLabs.enrichPerson`) and for email lookup (`FullEnrich.findEmail` → `hunter.findEmail` → `peopleDataLabs.enrichPerson`).
+Same shape applies for person enrichment (`aiArk.enrichPerson` where a LinkedIn URL exists → `waterfall.enrichContact` → `apolloio.enrichPerson` → `peopleDataLabs.enrichPerson`).
+
+Email and phone lookup do not need this pattern: the **Find email** and **Find phone** preset tools run it server-side in one batch.
+
+```bash
+TOOL=$(cargo-ai orchestration tool list | jq -r '.tools[] | select(.isReadOnly and .name == "Find email") | .uuid')
+cargo-ai orchestration action execute-batch \
+  --action "{\"kind\":\"tool\",\"toolUuid\":\"$TOOL\"}" \
+  --records '[{"firstName":"Ada","lastName":"Lovelace","companyDomain":"example.com"}]' \
+  --limit 20 --wait-until-finished
+# rows: cargo-ai orchestration batch download --uuid <batch-uuid>   (address in cargo_email)
+```
+
+Hand-roll the email chain (`FullEnrich.findEmail` → `hunter.findEmail` → `peopleDataLabs.enrichPerson`) only when the tool is missing or the user wants a custom provider order.
 
 ## Coalesce pattern (multi-pass enrichment)
 
@@ -93,7 +112,7 @@ When enriching the same record across multiple providers, merge results column-b
 | Firmographics (industry, size, hq) | aiArk > companyEnrich > peopleDataLabs > waterfall > apolloio |
 | Funding / financials | enrichCrm.getFunding (only source) |
 | Technographics | builtwith.getDomainSummary (free) > theirStack > builtwith.enrichDomain > peopleDataLabs |
-| Email | aiArk.enrichPerson > FullEnrich > hunter > peopleDataLabs |
+| Email | aiArk.enrichPerson > Find email tool > FullEnrich > hunter > peopleDataLabs |
 | Phone | aiArk.findMobilePhone (mobile) > FullEnrich > prospeo > waterfall |
 | LinkedIn URL | linkedin.findProfileUrl > FullEnrich.reverseEmailLookup |
 | Job change signal | waterfall.detectJobChange (only source) |
@@ -132,6 +151,6 @@ Two failure modes:
 2. **Quality issue** — provider returns data but it's wrong. Compare two sources; if they disagree, flag the record for manual review rather than picking one blindly.
 
 Common quality pitfalls:
-- Email finders return catch-all emails that look valid but bounce. Always verify with `waterfall.verifyEmail`.
+- Email finders return catch-all emails that look valid but bounce. Verify every address that did not come from the Find email tool (which only returns `zeroBounce`-valid addresses unless `returns_catchalls` is set), with the Verify email tool or `waterfall.verifyEmail`.
 - LinkedIn URL resolvers return profiles for the wrong person with the same name. Use the strict-validation pattern in [`../recipes/linkedin-url-lookup.md`](../recipes/linkedin-url-lookup.md).
 - Job-change signals can show stale data on small companies. Cross-check with the contact's current LinkedIn before acting on `waterfall.detectJobChange` results.
