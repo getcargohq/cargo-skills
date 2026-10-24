@@ -26,7 +26,7 @@ acme-gtm/
   cargo.state.json        # the committed pointer to the deploy state, beside cargo.json
   package.json            # depends on @cargo-ai/cdk + zod
   .gitignore              # .cargo-ai/, cargo.state.lock, cargo.state.bak.json, cargo.state.cache.json, cargo.state.audit.jsonl
-  outputs/                # executions (the default; "executions" in cargo.json overrides it)
+  outputs/                # run-once executions — defineBatch / defineRun (the default; "executions" in cargo.json overrides it)
   infra/                  # the folder cargo.json names: every .ts here is loaded
     tsconfig.json         # include: ["**/*.ts", ".cargo-ai/**/*.d.ts"]
     connectors/hubspot.ts   # defineConnector + secret()

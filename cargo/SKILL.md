@@ -645,6 +645,12 @@ against the workspace) → author `define*` files → `project plan` (diff again
   the provider's playbook in `../cargo-gtm/provider-playbooks/` (esp. its
   **Recurring use** section) before `project deploy` — a deployed play re-bills its
   nodes on every scheduled run.
+- **`defineBatch` / `defineRun` run once, on the next deploy, with no undo.** Files
+  under `outputs/` declare executions that start a real batch or run after the
+  resources apply; a ledger in the workspace-held state makes each id run exactly once
+  (no retry — a new id runs it again). One over a segment or filter is a **full
+  batch**: pilot and approve it per `../cargo-gtm/references/cost-discipline.md`
+  before it is deployed. Guide: `../cargo-project/guides/executions.md`.
 
 **Recipes shipped:** `recipes/scaffold-a-project.md`, `add-connector-and-model.md`,
 `build-an-agent.md`, `migrate-existing-workspace.md`, `deploy-from-ci.md`.

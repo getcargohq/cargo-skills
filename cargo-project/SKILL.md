@@ -167,6 +167,7 @@ project` with no subcommand prints its help.
 - **Level 2** — Guides:
   [`guides/authoring-resources.md`](guides/authoring-resources.md),
   [`guides/deploy-and-state.md`](guides/deploy-and-state.md),
+  [`guides/executions.md`](guides/executions.md),
   [`guides/typed-config.md`](guides/typed-config.md).
 - **Level 2.5** — Recipes: [`recipes/*.md`](recipes/) — step-by-step playbooks to
   follow as your execution plan.
@@ -182,6 +183,7 @@ project` with no subcommand prints its help.
 |---|---|---|
 | Writing `define*` files, wiring resources, `secret()`/`env()`, `defineWorkflow` bodies (tool/play logic) | [`guides/authoring-resources.md`](guides/authoring-resources.md) | The builder catalog, the handle/ref model, secrets, and how workflow bodies compile. |
 | `plan` / `deploy` / `destroy`, the state file, drift, adopting existing resources, CI | [`guides/deploy-and-state.md`](guides/deploy-and-state.md) | The deploy lifecycle, `cargo.state.json` semantics, drift/import/rollback, async builds. |
+| Running a play, tool or workflow **once** from code (`defineBatch` / `defineRun`, `outputs/`, the ledger) | [`guides/executions.md`](guides/executions.md) | Builders, `data` kinds, where executions live, what `plan` prints, the exactly-once ledger and its statuses. |
 | Typed config, `cargo-ai project types`, tsconfig wiring, `uses.<key>.<action>` connector calls in workflow bodies | [`guides/typed-config.md`](guides/typed-config.md) | What `project types` generates and how to wire it into your project. |
 | A field/spec/output for a specific builder | [`references/resources.md`](references/resources.md) | Every builder → spec fields → which ref each takes → outputs. |
 | Exact command flags | [`references/commands.md`](references/commands.md) | Every `cargo-ai project` subcommand and its flags. |
@@ -324,7 +326,8 @@ it. Either way, treat the skill's `Done when` as the acceptance test and review
 - **A project is the folder holding `cargo.json` (`@cargo-ai/cdk` ≥ 1.0.112).** The
   file names the folder whose `.ts` files are loaded, `{ "resources": "infra" }`, and
   optionally where executions live, `"executions": ["outputs"]` (default `outputs/`
-  beside `cargo.json`). Every command walks **up** from where it runs, as far as the
+  beside `cargo.json`, read at any depth; a `*` segment globs folders, e.g.
+  `["outputs/*/executions"]` — see [`guides/executions.md`](guides/executions.md)). Every command walks **up** from where it runs, as far as the
   repo root, to the nearest `cargo.json`, so any subdirectory works; a repo with
   several projects has one `cargo.json` each, and the nearest wins. **Without one, the
   command stops** — it no longer guesses from an `infra/` folder or a `package.json`
@@ -352,6 +355,18 @@ it. Either way, treat the skill's `Done when` as the acceptance test and review
   (`../cargo-gtm/provider-playbooks/<slug>.md`, esp. its *Recurring use* section)
   and the gate in
   [`../cargo-gtm/references/cost-discipline.md`](../cargo-gtm/references/cost-discipline.md).
+- **An execution runs exactly once, on the next deploy, with no undo and no retry.**
+  `defineBatch` / `defineRun` files under `outputs/` (or the `cargo.json`
+  `executions` folders) start a real batch or run after the resources apply; a play
+  batch can send email and LinkedIn actions and spends credits, and reverting the code
+  takes nothing back. A `filter` / `segment` execution over the whole audience **is a
+  full batch**: pilot it first and get approval on the record count and credit
+  estimate per
+  [`../cargo-gtm/references/cost-discipline.md`](../cargo-gtm/references/cost-discipline.md)
+  before it reaches a `deploy` (or a merge on a connected repo). The ledger lives in
+  the workspace-held state, so a refused or finished execution never re-runs — give it
+  a new id; executions need workspace-held state and never run under `--draft`. See
+  [`guides/executions.md`](guides/executions.md).
 - **A `defineAlert` whose actions call paid nodes re-bills on every breach.** An
   alert's `actions` fire as real runs, so a badly-sized `threshold` on a tight
   `schedule` can breach — and bill — every tick. Size the threshold with

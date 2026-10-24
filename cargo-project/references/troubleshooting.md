@@ -45,8 +45,8 @@ holds, or should hold, `cargo.state.json` — naming the folder of `.ts` resourc
 echo '{ "resources": "infra" }' > cargo.json
 ```
 
-`"executions": ["outputs"]` is optional (`outputs/` beside `cargo.json` is the
-default). A repo with several projects has one `cargo.json` per project; commands use
+`"executions": ["outputs"]` is optional (`outputs/` beside `cargo.json`, at any depth,
+is the default; entries take a `*` segment, e.g. `"outputs/*/executions"`). A repo with several projects has one `cargo.json` per project; commands use
 the nearest. `--dir <path>` changes where the lookup starts, not the rule. A
 `cargo.json` that is not JSON, has unknown keys, or names a folder outside its own
 also stops the command, with the reason.
@@ -126,3 +126,26 @@ you migrated a workspace without importing — bind it: `cargo-ai project import
 File a report so the Cargo team sees it:
 `cargo-ai workspaceManagement report create --title "<summary>" --description "<commands tried, errorMessage, expected vs actual>"`
 — see [`../../cargo-workspace-management/SKILL.md`](../../cargo-workspace-management/SKILL.md).
+
+## `Executions run only on a state in your workspace, where every deploy shares one ledger`
+
+A `defineBatch` / `defineRun` is pending and the project's `cargo.state.json` still
+holds the resource map inline. The exactly-once ledger only exists on workspace-held
+state, so the deploy stops before running anything. Run `cargo-ai project state create`,
+commit the new pointer, and deploy again. See [`../guides/executions.md`](../guides/executions.md).
+
+## An execution says `refused`, `unconfirmed` or `not started`
+
+- `refused` — Cargo would not take it and nothing ran, but it **is** in the ledger
+  (`plan` shows `= batch <id> refused on <date>: <reason>`). Fix it and give it a new id;
+  editing it in place does nothing.
+- `unconfirmed` — the deploy never heard back, so it may have started. It is in the
+  ledger. Check `cargo-ai orchestration batch list` (or `run list`) before adding a new
+  id, or you may run it twice.
+- `not started` — failed before reaching Cargo (a CSV upload, say). Not in the ledger;
+  the next deploy retries it.
+
+## `Duplicate execution "…" — execution ids must be unique in a project`
+
+Two files declare the same id with different specs. Ids are the ledger key: rename the
+newer one (a date prefix keeps the order readable).

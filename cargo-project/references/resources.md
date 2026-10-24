@@ -33,6 +33,11 @@ per-call options).
 | `defineMailbox(slug, spec)` | Sending inbox on a domain (**monthly credit charge**) | `domain`, `type` (`google`/`shared`/`private` — no `outlook`), `username?` (defaults to slug), `firstName`, `lastName`, `signature?`, `dailySendLimit?` (0–40), `folder?`, `adopt?` | `domain`, `folder` | `uuid` |
 | `defineAlert(slug, spec)` | Scheduled threshold alert (observability) | `schedule`, `scope`, `threshold`, `actions`, `name?`, `description?`, `enabled?`, `folder?` | scope: `workflow`/`connector`/`tool`/`agent`/`model`; each action's `ref`; `folder` | `uuid` |
 
+**Executions** are not resources: `defineBatch(id, { workflow, data })` and
+`defineRun(id, { workflow, data? })` run once on the next deploy and are remembered in
+the state's ledger, never reconciled. They live under `outputs/`, not `infra/`. See
+[`../guides/executions.md`](../guides/executions.md).
+
 `defineWorkflow(slug, { input, output, uses? }, build)` is re-exported from
 `@cargo-ai/cdk` for `defineTool`/`definePlay` bodies — see
 [`../guides/authoring-resources.md`](../guides/authoring-resources.md).
