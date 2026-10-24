@@ -10,6 +10,10 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### Repo: list the hosted MCP server in the official MCP Registry
+
+`server.json` at the repo root describes `https://mcp.getcargo.io/mcp` as `io.github.getcargohq/cargo` ("Cargo GTM"), and `.github/workflows/publish-mcp-registry.yml` publishes it to `registry.modelcontextprotocol.io` on a release or a manual dispatch, authenticating with GitHub OIDC so no secret is involved. `server.json` carries the bundle version, and `skills-lint` now fails when it drifts from `cargo/SKILL.md`, the same lockstep the three plugin manifests already keep. No skill content changes.
+
 ### Plugin — migrating from `cargo@cargo`
 
 - **README: how to move a `cargo@cargo` install to `cargo@cargo-skills`.** Installs made under the old marketplace name are frozen: Claude Code refuses to update *or* uninstall anything from the reserved `cargo` marketplace ("Installing plugins from cargo (`<package>@cargo`) is not available yet"). `/plugin marketplace remove cargo` still works and drops the plugin with it, so the README now gives remove, add, install, plus the two keys to change in a template project's `.claude/settings.json`.

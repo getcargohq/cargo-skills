@@ -1,0 +1,19 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.getcargohq/cargo",
+  "title": "Cargo GTM",
+  "description": "Cargo GTM (cargo-ai), the go-to-market platform, not Rust's cargo: enrich, score and run plays.",
+  "version": "1.29.6",
+  "websiteUrl": "https://getcargo.ai/mcp",
+  "repository": {
+    "url": "https://github.com/getcargohq/cargo-skills",
+    "source": "github",
+    "subfolder": "cargo-mcp"
+  },
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://mcp.getcargo.io/mcp"
+    }
+  ]
+}

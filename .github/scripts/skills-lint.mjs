@@ -539,7 +539,11 @@ function main() {
 
   // 5. The agent plugin manifests (Claude Code, Codex, Cursor) must parse and
   //    stay in lockstep with the router's version — the plugin version IS the
-  //    bundle version, identical across all three targets.
+  //    bundle version, identical across all three targets. `server.json` (the
+  //    MCP Registry entry for the hosted server) carries the same version, so
+  //    each release publishes a registry version that names the bundle it
+  //    shipped with, and a release that forgot to bump it fails here rather
+  //    than in the publish job.
   const routerVersion = existsSync(routerPath)
     ? (readFileSync(routerPath, "utf8").match(/^version:\s*"([^"]+)"/m) || [])[1]
     : null;
@@ -547,6 +551,7 @@ function main() {
     ".claude-plugin/plugin.json",
     ".codex-plugin/plugin.json",
     ".cursor-plugin/plugin.json",
+    "server.json",
   ]) {
     const pluginPath = join(repoRoot, rel);
     if (!existsSync(pluginPath)) continue;
