@@ -699,6 +699,7 @@ copies into the project and adapts, not a template to fill in:
 **Critical rules:**
 
 - Most commands require a token with **admin access**.
+- **Automation runs as a service user, never a person.** A service user (`kind: "service"`) is created through the API, the web app or `defineUser` — `user create` in the CLI only invites people. Assigning one as a worker's or coding agent's run-as user needs your permissions to cover all of its own (`runAsUserNotPermitted`).
 - `workspaceManagement token create` requires `--name` (the legacy `--from-user` flag was removed). Pick a name that makes the token's purpose obvious in `token list` later.
 - Token values are secrets, and `token list` returns them for your own tokens (and service-user tokens, for admins), not only `token create`. Store them in a secrets manager (GitHub Secrets, AWS Secrets Manager, etc.) and never paste `token list` output.
 - **Always send a `workspaceManagement report create`** when the CLI errors, is being used incorrectly, or you (user or agent) are struggling to make progress on a CLI task — see the section at the top of this file and `../cargo-workspace-management/references/examples/reports.md`.

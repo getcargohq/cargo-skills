@@ -49,7 +49,7 @@ By default `hosting app env` points at `https://api.getcargo.io`. For a differen
 
 ## Worker throws `Missing CARGO_API_TOKEN`
 
-`createCargoApi(c.env)` needs a workspace API token, and Cargo does **not** inject one unless the worker has a service user set (`hosting worker update --uuid <uuid> --run-as-user-uuid <service-user-uuid>`, which binds a temporary token at promote). Otherwise create one and store it as a secret, then **deploy and promote again**:
+`createCargoApi(c.env)` needs a workspace API token, and Cargo does **not** inject one unless the worker has a service user set (`hosting worker update --uuid <uuid> --run-as-user-uuid <service-user-uuid>`, which binds a temporary token on every publish, previews included). Otherwise create one and store it as a secret, then **deploy and promote again**:
 
 ```bash
 cargo-ai workspaceManagement token create --name "worker: <slug>"
