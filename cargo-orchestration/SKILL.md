@@ -243,11 +243,19 @@ Action kinds: `tool`, `connector`, `agent`, `native` (plus `worker`, which calls
 > an agent's or MCP server's `--actions` are where `config` still lives; that is
 > a node's configuration, not an action's input.
 >
-> **Inputs put in `config` are now dropped, not rejected.** The guard that used to
-> answer `A top-level action does not use action.config…` is gone, so the action
-> runs with *no input* — you get a provider-side missing-field error or an empty
-> result that never mentions `config`. Check this first when a call comes back
-> empty for no visible reason.
+> **Unknown inputs are refused before the run; inputs put in `config` are stripped.**
+> `action execute` and `execute-batch` check a connector or native action's inputs
+> against its schema before creating anything (the MCP `execute_action*` tools and an
+> agent's action calls do too): an undeclared key — top-level or nested inside a
+> declared object — fails with `invalidData` naming it (`Unknown field: secs`; in a
+> batch `Record 1: Unknown field: fields.job_titles`, and one bad record refuses the
+> whole batch). Extra top-level columns on a batch record still pass, tool actions
+> are not checked, and inside a workflow node an unknown key is still dropped
+> silently. A `config` key is different: the guard that used to answer
+> `A top-level action does not use action.config…` is gone, so `config` is stripped
+> with no error that names it and its inputs never arrive — an action with a required
+> input is refused on that missing field, one without runs on nothing. Check this
+> first when a call comes back empty for no visible reason.
 
 > **`execute-batch` bills per record.** Pass a 10–20 record slice of `--records` first, report the observed per-record cost and hit-rate, and get approval (with the full record count and credit estimate) before sending the rest — same gate as [Create a batch](#the-sample-gate).
 

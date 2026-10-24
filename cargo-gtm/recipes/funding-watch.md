@@ -41,7 +41,12 @@ curl -fsSL "$URL" \
 
 ### Pattern B — Detect a *new* event on a known company (diff, not feed)
 
-There is no since-timestamp event feed in the catalog. A "new round" is detected
+No credits-based action returns a since-timestamp event feed. (With the user's own
+Explorium key, `explorium.fetchBusinessEvents` does — `event_types: ["new_funding_round"]`
+plus `timestamp_from`, keyed on an Explorium `business_id` from `explorium.matchBusiness` —
+and the `listenBusinessEvents` extractor pushes the same events as they happen, once the
+connector has its Partner ID. That bills the user's Explorium plan, not Cargo credits.)
+Without one, a "new round" is detected
 by **diffing a fresh pull against what the Companies model already stores**, which
 is why `last_funding_round_at` has to be a column before the watch is worth running:
 
@@ -101,7 +106,7 @@ To make this recurring, follow [`save-as-play.md`](save-as-play.md) — it walks
 
 500 target accounts × 1 = 500 credits per scan. A **daily** cron over 30 days is 15,000 credits, and it is almost always wrong: rounds are announced on a scale of months, so the pull re-bills unchanged data 29 days out of 30.
 
-Because there is no since-timestamp feed, cadence is the only cost dial. Default to **weekly**, and gate the node on `last_funding_round_at` so an account that raised recently is skipped until the window reopens.
+Because there is no credits-based since-timestamp feed (Explorium, above, is own-key), cadence is the only cost dial. Default to **weekly**, and gate the node on `last_funding_round_at` so an account that raised recently is skipped until the window reopens.
 
 ## Surfacing the signal
 

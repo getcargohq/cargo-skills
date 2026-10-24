@@ -66,7 +66,9 @@ Rows with `cargo_job_change_status` = `moved` (lowercase) are immediate revive c
 
 ### Step 3 — Check company-level events (funding / acquisition)
 
-The catalog has no since-timestamp event feed, so a "fresh" round is the
+The catalog has no credits-based since-timestamp event feed (`explorium.fetchBusinessEvents`
+is one, on the user's own Explorium key — see [`funding-watch.md`](funding-watch.md)
+Pattern B), so a "fresh" round is the
 difference between a new pull and the round date already on the record. That
 date lives on the **Companies** model — `/tmp/stale.json` is a Contacts segment
 and does not carry it, so read it separately or the diff compares against empty

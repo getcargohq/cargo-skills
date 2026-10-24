@@ -23,13 +23,13 @@ per-call options).
 | `defineMcpServer(slug, spec)` | MCP endpoint bundling resources | `name?`, `description?`, `uses?` (tools, agents, models, connector + native actions in one array), `capabilities?`, `folder?` | everything in `uses`; `folder` | `uuid` |
 | `defineFolder(slug, spec)` | Per-kind folder | `kind`, `name?`, `emojiSlug?`, `parent?` | `parent` | `uuid` |
 | `defineFile(slug, spec)` | Content file from a local path | `path`, `name?`, `folder?` | `folder` | `uuid` |
-| `defineContext(spec)` | Workspace context repo (singleton) | `path?` (deprecated alias `dir?`), `files?` | — | `uuid` |
+| `defineContext(spec)` | Workspace context repo (singleton) | `path?` (deprecated alias `dir?`), `files?` (`plan` fails on frontmatter that doesn't parse, or a `references:` / `[[wikilink]]` / relative `.md` link matching no declared file) | — | `uuid` |
 | `defineSegment(slug, spec)` | Saved view over a model | `model` (immutable), `filter` (required) | `model` | `uuid` |
 | `defineCapacity(slug, spec)` | Revenue-org capacity | `model?`, `idColumnSlug?`, `timeColumnSlug?`, `memberCapacity?`, `allocationExpirationPolicy?`, `filter?`, `color?`, `description?` | `model` | `uuid` |
 | `defineTerritory(slug, spec)` | Revenue-org territory | `label?`, `members?` (`{ ref, weight? }[]`), `fallback?`, `color?`, `description?` | `members[].ref`, `fallback` | `uuid` |
 | `defineWorker(slug, spec)` | Hosted worker (built server-side) | `path`, `description?`, `triggers?`, `env?`, `folder?` | `folder` | `uuid`, `url` |
 | `defineApp(slug, spec)` | Hosted Vite SPA | `path`, `description?`, `env?`, `domains?`, `folder?` | `folder` | `uuid`, `url` |
-| `defineDomain(name, spec)` | Sending domain + its DNS zone | `adopt?`, `dnsRecords?` (**replaces the whole zone**), `redirectUrl?`, `dmarcEmail?` (`rua=`), `dmarcPolicy?` (`p=`: `none`/`quarantine`/`reject`) | — | `uuid` |
+| `defineDomain(name, spec)` | Sending domain + its DNS zone | `adopt?`, `dnsRecords?` (records the deploy **manages**, merged into the live zone; dropping one deletes it next deploy; an app's `domainRecords` allowed), `redirectUrl?`, `dmarcEmail?` (`rua=`), `dmarcPolicy?` (`p=`: `none`/`quarantine`/`reject`) | — | `uuid` |
 | `defineMailbox(slug, spec)` | Sending inbox on a domain (**monthly credit charge**) | `domain`, `type` (`google`/`shared`/`private` — no `outlook`), `username?` (defaults to slug), `firstName`, `lastName`, `signature?`, `dailySendLimit?` (0–40), `folder?`, `adopt?` | `domain`, `folder` | `uuid` |
 | `defineAlert(slug, spec)` | Scheduled threshold alert (observability) | `schedule`, `scope`, `threshold`, `actions`, `name?`, `description?`, `enabled?`, `folder?` | scope: `workflow`/`connector`/`tool`/`agent`/`model`; each action's `ref`; `folder` | `uuid` |
 

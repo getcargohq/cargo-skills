@@ -90,14 +90,20 @@ several domains at one address on a *different* domain requires a `_report._dmar
 record on the receiving domain. A fleet of six lookalikes all reporting to the primary needs six of
 them, or the receivers that enforce cross-domain reporting drop the reports.
 
-## Do not declare `dnsRecords` on a sending domain
+## What `dnsRecords` owns on a sending domain
 
-`dnsRecords` is the whole zone, not a patch. Declaring it replaces every live record, including the
-MX and DKIM records the registrar wrote at purchase and the mailboxes depend on.
+`dnsRecords` is the set of records the deploy manages, not the whole zone. They are merged into the
+live zone, so the MX, SPF and DKIM records the registrar wrote at purchase — the ones the mailboxes
+depend on — stay where they are, unless one shares a name with a declared CNAME (DNS forbids the
+pair). Omit `dnsRecords` and the zone is untouched; `redirectUrl`, `dmarcEmail` and `dmarcPolicy`
+left undeclared keep their live values.
 
-The failure is silent in the worst way: the domain stays `active`, every mailbox stays `active`, and
-mail stops arriving. `redirectUrl`, `dmarcEmail` and `dmarcPolicy` are additive and are the supported
-way to configure the zone.
+What the deploy published, it owns: dropping a record from the list deletes it on the next deploy,
+and `[]` deletes every record earlier deploys published. So never copy the registrar's MX or DKIM
+records into `dnsRecords` to "keep" them — that hands them to the deploy, and a later edit to the
+list removes them. The failure is silent in the worst way: the domain stays `active`, every mailbox
+stays `active`, and mail stops arriving. Edit a managed record in code, not in the registrar UI; an
+outside edit stops the deploy (`dns record … was edited outside the deploy`) rather than guessing.
 
 ## Naming
 

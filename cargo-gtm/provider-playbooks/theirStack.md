@@ -89,7 +89,7 @@ This is the unique strength of theirStack — combined tech-stack AND hiring-int
 
 ## Anti-patterns
 
-- **Free-text technology names.** `company_technology_slug_or` wants theirStack's canonical slugs (case sensitive): resolve them with the `listTechnologies` autocomplete or read `technology.slug` from `searchTechnologies`. Unknown field names are dropped silently, so a misspelled filter key runs the search unfiltered and bills per row. Guessing (`"Snowflake"` vs `"snowflake"` vs `"snowflake-db"`) silently narrows results.
+- **Free-text technology names.** `company_technology_slug_or` wants theirStack's canonical slugs (case sensitive): resolve them with the `listTechnologies` autocomplete or read `technology.slug` from `searchTechnologies`. A misspelled filter key is refused by `action execute` / `execute-batch` (`Unknown field: companyFields.company_domains`), but inside a workflow node it is still dropped silently, so the search runs unfiltered and bills per row. Guessing (`"Snowflake"` vs `"snowflake"` vs `"snowflake-db"`) silently narrows results.
 - **theirStack for plain firmographics.** No intent signal in the filter → salesNavigator (0.2) is 2.5× cheaper and `aiArk.searchCompanies` (0.01) 50×. theirStack earns its cost only when the job-posting or tech-stack signal IS the filter.
 - **Skipping the count check.** Start with 1–2 filters and a small `limit`, read the result count, then narrow — over-filtered queries return zero and the credits for the probe calls add up.
 

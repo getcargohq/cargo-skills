@@ -50,7 +50,7 @@ cargo-ai orchestration action execute \
 
 ## Common pitfalls
 
-- **`currrentEmployer` has three r's.** That misspelling is the literal schema key — a correctly-spelled `currentEmployer` is silently ignored and the lookup runs on name alone.
+- **`currrentEmployer` has three r's.** That misspelling is the literal schema key — a correctly-spelled `currentEmployer` is refused by `action execute` (`Unknown field: currentEmployer`), and inside a workflow node it is silently ignored and the lookup runs on name alone.
 - **No field is required** — the schema accepts any subset, but an identifier-free call can't match; pass at least a LinkedIn URL, an email, an NPI, or name + employer.
 - **`lookupType` doesn't change the billed cost** — the credits schedule is a fixed 1 regardless of the enum value. Treat the phone-bearing output as gated anyway: the phone-cost guard in [`../references/cost-discipline.md`](../references/cost-discipline.md) is about intent, not just price.
 - **Rate limit 250/minute** (spread) — comfortable for fallback residues, slow for full-list enrichment (another reason the stack leads).

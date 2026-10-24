@@ -1,6 +1,6 @@
 # Credits cost table
 
-Every credits-based action Cargo can run — 180 of the 517 actions exposed by 123 of the catalog's 136 integrations, plus Cargo's own native actions — sorted by cost. The other 337 carry no *provider* price; they are not free, because every node execution bills 0.01 credits (1 per 100) regardless. See [`../../cargo-billing/SKILL.md`](../../cargo-billing/SKILL.md) → "The execution charge".
+Every credits-based action Cargo can run — 190 of the 594 actions exposed by 134 of the catalog's 148 integrations, plus Cargo's own native actions — sorted by cost. The other 404 carry no *provider* price; they are not free, because every node execution bills 0.01 credits (1 per 100) regardless. See [`../../cargo-billing/SKILL.md`](../../cargo-billing/SKILL.md) → "The execution charge".
 
 Rows whose provider is `native` are Cargo's own platform actions, run as `{"kind":"native","actionSlug":"<action>"}` with no integration; every other row runs as `{"kind":"connector","integrationSlug":"<provider>","actionSlug":"<action>"}`.
 
@@ -13,7 +13,7 @@ cargo-ai orchestration action list --kind native
 
 Omit `--limit` so both return the full set, then render one row per action. Each `credits` entry is one of three shapes: `fixed` bills `cost` per call; `unit` bills `cost` per `unit` consumed; `package` bills `cost` per block of `unitsCount` `unit`. For `unit` and `package`, `fixedCost` is a base charge that **adds to** the metered rate rather than replacing it — a search billed `0.175` `fixedCost` + `0.025` per item costs `0.2` for one billable item. (`exa.search` and `parallel.search` count only the results past the first 10 as billable items, so up to 10 results cost the `fixedCost` alone.) `package` rounds up: a partial block bills as a full one. Several entries mean the price depends on config, and each entry's `config.jsonSchema` const/enum is what selects it; those go in the per-config section at the end rather than the main table.
 
-Generated: 2026-08-28. Hand-corrected 2026-10-16 against the product source (no generator script ships in this repo): new and changed rows below; the action counts in the first paragraph are from the 2026-08-28 snapshot.
+Generated: 2026-08-28. Hand-corrected 2026-10-23 against the product source and the live catalog (no generator script ships in this repo): new and changed rows below; the action counts in the first paragraph are from the 2026-10-23 catalog.
 
 | Cost | Provider | Category | Action | Description |
 |---|---|---|---|---|
@@ -34,6 +34,7 @@ Generated: 2026-08-28. Hand-corrected 2026-10-16 against the product source (no 
 | 0.01 / organization | `apolloio` | enrichment | `searchOrganizations` | Search Apollo's company database by firmographic, funding, technology, and hiring filters |
 | 0.01 | `icypeas` | enrichment | `verifyEmail` | Verify a person's email status |
 | 0.01 | `piloterr` | enrichment | `getG2ProductInfo` | Retrieve detailed information about a product from G2 including reviews, ratings, pricing plans, and product specificati… |
+| 0.01 | `storeleads` | enrichment | `enrichDomain` | Retrieve detailed information about a domain including company details, technologies used, and ecommerce platform data |
 | 0.01–0.25 / 1k token + base | `gemini` | freeform | `instruct` | Instruct prompt |
 | 0.02 / 100 item | `icypeas` | enrichment | `findCompanies` | Search the Icypeas lead database for companies matching the given criteria. Returns a paginated list of matching compani… |
 | 0.02 / 100 item | `icypeas` | enrichment | `findPeople` | Search the Icypeas lead database for people matching the given criteria. Returns a paginated list of matching profiles. |
@@ -58,6 +59,7 @@ Generated: 2026-08-28. Hand-corrected 2026-10-16 against the product source (no 
 | 0.05 | `aiArk` | enrichment | `analyzePersonality` | Analyze a LinkedIn profile to get personality insights (OCEAN, DISC) and tailored selling and hiring guidance |
 | 0.05 | `aiArk` | enrichment | `reverseLookup` | Find a person's full profile from an email address or a phone number |
 | 0.05 / item | `aiArk` | enrichment | `searchPeople` | Search for people matching person and company filters |
+| 0.05 / credit | `firecrawl` | enrichment | `agent` | Search and browse the web to answer a prompt, optionally as structured data. Billed per **Firecrawl** credit the run spends; `maxCredits` defaults to 250, so up to 12.5 a call (a run that hits the cap fails unbilled) |
 | 0.05 / item | `firecrawl` | enrichment | `crawl` | Recursively search through a urls subdomains, and gather the content |
 | 0.05 / item | `firecrawl` | enrichment | `map` | List the URLs of a website without scraping them, optionally ranked by a search term |
 | 0.05 / item | `firecrawl` | enrichment | `scrape` | Turn any url into clean data |
@@ -167,8 +169,13 @@ Generated: 2026-08-28. Hand-corrected 2026-10-16 against the product source (no 
 | 1 / item | `proxycurl` | enrichment | `search` | Retrieve object records |
 | 1 | `rocketreach` | enrichment | `lookupPerson` | Lookup person and company |
 | 1 | `waterfall` | enrichment | `enrichCompany` | Retrieve company data |
+| 1 | `xAccount` | engagement | `likePost` | Like one X post as the connected account, when a person asked for it. X's automation rules forbid automated or bulk liking |
+| 1 / 2 item | `xAccount` | engagement | `listMessages` | List recent direct messages of the connected X account, optionally only the conversation with one account |
+| 1 | `xAccount` | engagement | `sendMessage` | Send a direct message on X as the connected account. X's automation rules forbid automated unsolicited DMs |
 | 1–3 / item | `contactOut` | enrichment | `search` | Search person / company data from linkedin URL |
 | 1–9 | `apolloio` | enrichment | `enrichPerson` | Enrich a person |
+| 1–10 | `xAccount` | engagement | `createPost` | Publish a post on X as the connected account |
+| 1–10 | `xAccount` | engagement | `replyToPost` | Reply to an X post as the connected account (only posts that mention it or that it wrote) |
 | 2 | `datagma` | enrichment | `enrichPersonFromPersonalEmail` | Retrieve a person's profile from a personal email address (outside of the EU) |
 | 2 | `forager` | enrichment | `findPersonalEmail` | Find a person's personal email |
 | 2 | `forager` | enrichment | `findWorkEmail` | Find a person's work email |
@@ -397,3 +404,9 @@ These bill differently depending on how the node is configured, so the range abo
 | revealPhoneNumber=false | 1 |
 | revealPhoneNumber=true | 9 |
 
+### `xAccount.createPost` / `xAccount.replyToPost` — varies by `text`
+
+| Config | Cost |
+|---|---|
+| `text` contains a link (`http://`, `https://` or `www.`) | 10 |
+| otherwise | 1 |

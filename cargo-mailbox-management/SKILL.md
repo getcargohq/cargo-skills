@@ -123,8 +123,8 @@ guessing a UUID.
 Pricing a domain before buying it has the same gap, and one direct API call closes it:
 `GET /v1/domainManagement/domains/search?name=<domain>` returns `available` and `priceCredits`
 (where **`null` means not purchasable, not free**). The domain side of a fleet — that call,
-sizing domains by blast radius rather than capacity, the apex redirect, DMARC, naming, and why
-`dnsRecords` must stay undeclared — is
+sizing domains by blast radius rather than capacity, the apex redirect, DMARC, naming, and what
+`dnsRecords` owns once declared — is
 **[`references/sending-domains.md`](references/sending-domains.md)**.
 
 ```bash

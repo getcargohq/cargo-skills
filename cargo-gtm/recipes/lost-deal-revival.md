@@ -83,7 +83,9 @@ jq -c '[.[] | select(.cargo_job_change_status == "moved")]' /tmp/champion-change
 
 ### Step 3b — Budget branch: detect fresh funding
 
-There is no since-timestamp event feed in the catalog, so "fresh round" is a
+There is no credits-based since-timestamp event feed (`explorium.fetchBusinessEvents`
+with `timestamp_from` is one, on the user's own Explorium key — see
+[`funding-watch.md`](funding-watch.md) Pattern B), so "fresh round" is a
 **diff**: pull current funding data, then keep the accounts whose latest round
 post-dates the deal's close date.
 

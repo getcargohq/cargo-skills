@@ -113,7 +113,7 @@ cargo-ai context runtime read --path play/inbound-trial-to-paid.md --start-line 
 
 `write` creates (or overwrites) a file and pushes a commit to the default branch.
 
-Begin every `.md`/`.mdx` file with a YAML frontmatter block setting `title` and `description`. Frontmatter is **not validated** — a file with missing, empty, or malformed frontmatter is still written and committed; it just indexes poorly in the graph (a missing `title` falls back to the filename, the node summary to the first paragraph). `write` can still fail for other reasons — `repositoryNotFound`, `failedToWrite` (including a push that did not land), or `deniedPath` (e.g. writing under `.files/`); see `references/response-shapes.md`.
+Begin every `.md`/`.mdx` file with a YAML frontmatter block setting `title` and `description`. Frontmatter is **not validated** by `write` (a project's `defineContext` is — see [File conventions](#file-conventions)) — a file with missing, empty, or malformed frontmatter is still written and committed; it just indexes poorly in the graph (a missing `title` falls back to the filename, the node summary to the first paragraph). `write` can still fail for other reasons — `repositoryNotFound`, `failedToWrite` (including a push that did not land), or `deniedPath` (e.g. writing under `.files/`); see `references/response-shapes.md`.
 
 ```bash
 cargo-ai context runtime write \
@@ -222,7 +222,7 @@ The Cargo context repo is a typed knowledge base. The canonical example — and 
 ### File conventions
 
 - **Filename:** `kebab-case.md` (e.g. `vp-sales-mid-market.md`).
-- **Frontmatter:** start every `.md`/`.mdx` file with YAML frontmatter setting `title` and `description`. This is a **strong convention, not enforced** — a write with missing, empty, or malformed frontmatter is still created and committed; it just indexes poorly. The graph reads `title` (fallback: filename) and `summary` (fallback: `description`, then the file's first paragraph), so add a `summary:` only if you want the node summary to differ from `description`. See [Source references and graph edges](#source-references-and-graph-edges).
+- **Frontmatter:** start every `.md`/`.mdx` file with YAML frontmatter setting `title` and `description`. This is a **strong convention, not enforced** — a write with missing, empty, or malformed frontmatter is still created and committed; it just indexes poorly. The graph reads `title` (fallback: filename) and `summary` (fallback: `description`, then the file's first paragraph), so add a `summary:` only if you want the node summary to differ from `description`. See [Source references and graph edges](#source-references-and-graph-edges). The exception is context declared in a project (`defineContext`, see `../cargo-project/SKILL.md`): there `project check`/`plan`/`deploy` fail on frontmatter that doesn't parse and on a `references:` entry, `[[wikilink]]` or relative `.md` link that matches no file declared under `files` — including one that exists in the workspace repo but not in code. A missing `title`/`description` still passes.
 - **Cross-references:** use the `domain/slug` form, **no `.md` extension** (e.g. `persona/vp-sales-mid-market`). To register as a graph **edge** a reference must use one of the three link forms below — a bare `domain/slug` (or file path) in plain prose creates no edge.
 - **Templates:** each domain ships an `_template.md`. Read it (`cargo-ai context runtime read --path persona/_template.md`) before authoring a new entry. `_template.*` files are excluded from the graph — never reference them.
 

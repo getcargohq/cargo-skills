@@ -40,7 +40,7 @@ Company profile:
 ICP criteria: {icp_description}
 ```
 
-Use openAi with `output: {"responseFormat": "json_schema", "jsonSchema": {...}}` to enforce structured output. anthropic's `instruct` has no output-format field (an `output` key is dropped), so with Haiku the JSON shape rests on the prompt alone.
+Use openAi with `output: {"responseFormat": "json_schema", "jsonSchema": {...}}` to enforce structured output. anthropic's `instruct` has no output-format field (an `output` key is refused by `action execute` as `Unknown field: output`, and dropped inside a workflow node), so with Haiku the JSON shape rests on the prompt alone.
 
 ### Personalization (one-paragraph opener)
 

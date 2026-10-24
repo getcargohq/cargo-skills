@@ -83,7 +83,7 @@ cargo-ai orchestration action execute-batch \
 
 ## Anti-patterns
 
-- **camelCase field names.** waterfall inputs are **snake_case**: `first_name`, `last_name`, `full_name`, `company_domain`, `professional_email`, `contact_linkedin`. Do NOT reuse FullEnrich's `firstName`/`lastName`/`domainName` shape here — the call fails or silently ignores the field.
+- **camelCase field names.** waterfall inputs are **snake_case**: `first_name`, `last_name`, `full_name`, `company_domain`, `professional_email`, `contact_linkedin`. Do NOT reuse FullEnrich's `firstName`/`lastName`/`domainName` shape here — `action execute` refuses it (`Unknown field: firstName`), and inside a workflow node the field is silently ignored.
 - **Trusting a finder's own "verified" flag.** `verifyEmail` exists precisely because providers grade their own homework — run it on every found email regardless of what the finder claimed (see [`../references/waterfall-strategy.md`](../references/waterfall-strategy.md), verification hard rules).
 - **`detectJobChange` on a fresh cadence.** At 3 credits/record, re-running the same segment weekly re-bills rows whose status can't have changed — every 2 weeks is the right default (see [`../recipes/save-as-play.md`](../recipes/save-as-play.md) cadence table).
 

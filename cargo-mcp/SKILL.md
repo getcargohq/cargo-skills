@@ -152,8 +152,11 @@ downstream:
 **Pass that `action` object exactly as it comes, with no `config` key.** Inputs
 belong in `data` (single) or `records` (batch) — never in a `config`, which is a
 *node's* configuration and has no meaning on a top-level action. Inputs
-misplaced there are silently dropped and the action runs with none, so an
-unexplained empty result is worth checking against this first.
+misplaced there are stripped without an error that names `config`: an action with
+a required input is refused on the missing field, one without runs on nothing, so
+an unexplained empty result is worth checking against this first. A misspelled key
+in `data` or a batch record is refused before anything runs (`invalidData`,
+`Unknown field: <key>`); tool actions are not checked.
 
 `get_action_schema` takes the same pair: the action, plus an optional `data` for
 the actions whose output depends on their inputs — a HubSpot object type or a

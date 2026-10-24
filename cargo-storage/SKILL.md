@@ -131,7 +131,7 @@ a payload script, and an API token pasted into the node config. The webhook is f
 systems outside Cargo.
 
 Check the extractor's mode first — when it reports `"autoIngest": true` (calendly,
-smartlead, instantlyV2, heyReach, rodz, cargo signals) Cargo registers the
+smartlead, instantlyV2, heyReach, `cargoSignals` — the slug that replaced `rodz`) Cargo registers the
 hook with the provider itself and the URL must **not** be handed out. Full flow,
 payload shapes, and limits: `references/examples/ingest-webhook.md`.
 

@@ -48,9 +48,9 @@ cargo-ai orchestration action execute \
 ## Common pitfalls
 
 - **`search` is unit-priced, `enrich` is fixed** — same 4-credit sticker, very different bills. Cap search results; a "quick look" that returns a page of companies costs a page × 4.
-- **Name/value pair arrays, not flat keys.** Filters go in `searchFields` / `enrichFields` as `[{"name":"...","value":...}]` objects — a flat `{"query":"..."}` config is silently ignored.
+- **Name/value pair arrays, not flat keys.** Filters go in `searchFields` / `enrichFields` as `[{"name":"...","value":...}]` objects — a flat `{"query":"..."}` is refused by `action execute` (`Unknown field: query`) and silently ignored inside a workflow node.
 - **Contact mode requires `registrationNumber`** — the French company registration id, not a domain or name. Get it from a company `search`/`enrich` first; that's a 2-step, 8+-credit sequence.
-- **`objectType` switches the whole schema.** Company and contact modes accept different fields; a `searchFields` name from the other mode (e.g. `contactRoleQuery` in company mode) fails validation, while an unknown top-level key is silently dropped.
+- **`objectType` switches the whole schema.** Company and contact modes accept different fields; a `searchFields` name from the other mode (e.g. `contactRoleQuery` in company mode) fails validation, and so does an unknown top-level key on `action execute` (inside a workflow node that key is silently dropped instead).
 
 ## Anti-patterns
 
