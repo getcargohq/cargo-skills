@@ -651,6 +651,13 @@ against the workspace) → author `define*` files → `project plan` (diff again
   (no retry — a new id runs it again). One over a segment or filter is a **full
   batch**: pilot and approve it per `../cargo-gtm/references/cost-discipline.md`
   before it is deployed. Guide: `../cargo-project/guides/executions.md`.
+- **Deploy from GitHub by connecting the repo, not with a token in Actions.**
+  `cargo-ai project state connect` plans every PR in a comment and deploys every push
+  to the production branch — and the branch head the moment it connects. A merge over
+  100 sends of a kind, 5,000 audience adds or 2,500 credits fails `Needs approval: large
+  impact` until the PR is labelled `cargo:approve-impact`, which only the user's yes
+  should add. Running an Actions deploy as well fails (`stateAutoDeployed`). Recipe:
+  `../cargo-project/recipes/deploy-from-ci.md`.
 
 **Recipes shipped:** `recipes/scaffold-a-project.md`, `add-connector-and-model.md`,
 `build-an-agent.md`, `migrate-existing-workspace.md`, `deploy-from-ci.md`.

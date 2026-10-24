@@ -255,7 +255,7 @@ it. Either way, treat the skill's `Done when` as the acceptance test and review
 | [`recipes/add-connector-and-model.md`](recipes/add-connector-and-model.md) | Adding a data source + a model sourced from it, wired by handle. |
 | [`recipes/build-an-agent.md`](recipes/build-an-agent.md) | Composing a model + tool + agent (wired through `uses`) and deploying. |
 | [`recipes/migrate-existing-workspace.md`](recipes/migrate-existing-workspace.md) | Bringing an already-live workspace under a project via `project import`. |
-| [`recipes/deploy-from-ci.md`](recipes/deploy-from-ci.md) | Deploying non-interactively from CI (token auth + committed state). |
+| [`recipes/deploy-from-ci.md`](recipes/deploy-from-ci.md) | Plan every PR and deploy every merge: connect the GitHub repo (`project state connect`), or your own CI with a token as the fallback. |
 
 ## 6) Critical rules
 
@@ -343,6 +343,17 @@ it. Either way, treat the skill's `Done when` as the acceptance test and review
   names, and a repo root also holds `scripts/` — whose files run on import.
 - **`--yes` in CI.** `deploy` and `destroy` prompt for confirmation; non-interactive
   runs must pass `--yes`.
+- **A connected GitHub repo deploys on merge — and on connect.** `cargo-ai project
+  state connect` plans every PR in a comment and runs `deploy --yes` on every push to
+  the production branch, starting with the branch head **the moment you connect**
+  (`--no-auto-deploy` to plan only). A merge whose plays and executions would exceed 100
+  emails, 100 LinkedIn actions, 100 chat messages, 5,000 audience adds or 2,500 credits —
+  or can't be counted — fails `Needs approval: large impact` until someone labels the PR
+  `cargo:approve-impact`. That label is the user's cost approval: add it only on their
+  explicit yes. `secret()` does not resolve there (use `workspaceEnv()`), and while
+  auto-deploy is on every other deploy of the state is refused (409
+  `stateAutoDeployed`) — remove a GitHub Actions deploy rather than running both. See
+  [`recipes/deploy-from-ci.md`](recipes/deploy-from-ci.md).
 - **A `definePlay`/`defineTool` graph with paid nodes gets a sample run before it
   goes wide.** Deploying is not running, but the first thing that runs a deployed
   play is usually a batch over the whole segment — and a scheduled play re-bills

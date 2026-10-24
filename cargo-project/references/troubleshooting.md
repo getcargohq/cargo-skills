@@ -149,3 +149,34 @@ commit the new pointer, and deploy again. See [`../guides/executions.md`](../gui
 
 Two files declare the same id with different specs. Ids are the ledger key: rename the
 newer one (a date prefix keeps the order readable).
+
+## `409 stateAutoDeployed` — "Cargo deploys this state from <repo> when <branch> changes"
+
+The state is connected to GitHub with Deploy on push on, so only Cargo's service user
+may deploy it. A GitHub Actions deploy or a hand-run `deploy` is refused. Delete the
+Actions deploy workflow, or turn auto-deploy off (**Settings → States**, or
+`cargo-ai project state disconnect`) to deploy by hand.
+
+## PR check: `Needs approval: large impact`
+
+The merge would exceed an impact threshold (100 emails / LinkedIn actions / chat
+messages, 5,000 audience adds, 2,500 credits) or its impact can't be counted (model or
+segment created in the same change, unreadable steps, a send inside a loop, a
+`workflowRef` batch). Read the "What a merge will set in motion" table in the PR
+comment, get the user's approval on those numbers, then add the `cargo:approve-impact`
+label; Cargo re-plans and the check passes. See
+[`../recipes/deploy-from-ci.md`](../recipes/deploy-from-ci.md).
+
+## An execution shows `held` after a merge
+
+On a connected repo a merge starts an execution only when an approved PR plan counted
+that exact version of it and its record count hasn't grown past the preview's
+allowance (10%, at least one record). Otherwise it stays pending; open a PR that touches
+the project so it is previewed again.
+
+## A connected-repo deploy fails on an unresolved `secret()`
+
+Cargo's run has no `.env`. Move the value into a workspace env var
+(`cargo-ai workspaceManagement envVar create --key NAME --secret`) and reference it with
+`workspaceEnv("NAME")` at the secret-typed position; workers and apps inherit workspace
+env vars without a reference.
