@@ -116,6 +116,8 @@ cargo-ai connection connector update --uuid <uuid> --name <name>
 cargo-ai connection connector remove <connector-uuid>
 cargo-ai connection connector get <connector-uuid>
 cargo-ai connection connector autocomplete --connector-uuid <uuid> --slug <slug> --params '<json>'
+cargo-ai connection connector get-dynamic-schema --connector-uuid <uuid> --slug <slug> --params '<json>'
+cargo-ai connection custom-integration list
 cargo-ai connection integration list
 cargo-ai connection integration get <slug>
 cargo-ai connection integration get-documentation <slug>
@@ -143,6 +145,11 @@ cargo-ai connection connector create \
 # Update a connector
 cargo-ai connection connector update --uuid <connector-uuid> --name "Clearbit - Staging"
 
+# Throttle and cache a connector (on create or update)
+cargo-ai connection connector update --uuid <connector-uuid> \
+  --rate-limit '{"unit":"minute","max":100,"strategy":"spread"}' \
+  --cache-ttl-milliseconds 86400000
+
 # Remove a connector
 cargo-ai connection connector remove <connector-uuid>
 
@@ -151,6 +158,8 @@ cargo-ai connection connector exists-by-slug --slug clearbit_production
 ```
 
 **Note:** `--slug` (unique identifier) and `--name` (display name) are required with `--config`, and rejected without it (the hosted form asks for them). For OAuth-based integrations, the authentication flow is completed separately via `connection integration complete-oauth`.
+
+**Rate limit and cache are per connector.** `--rate-limit` takes `{"unit": "second" | "minute" | "hour" | "day", "max": <n>, "strategy": "spread" | "burst"}` — `spread` paces calls evenly, `burst` lets them through and then waits, and `burst` with `"second"` is rejected. Set it below the provider's own ceiling when one API key is shared across plays. `--cache-ttl-milliseconds` makes a workflow node with an **identical computed config** inside the TTL return the cached result instead of calling the provider — and bill **0** provider credits for it. It only takes effect on integrations whose actions are cache-compatible; elsewhere it is ignored. A day-long TTL on an enrichment connector is a free dedupe across overlapping batches.
 
 ## Integrations
 
@@ -182,6 +191,21 @@ cargo-ai connection native-integration get
 **Integration categories:** `engagement`, `marketing`, `sales`, `finance`, `analytics`, `freeform`, `success`, `support`, `enrichment`, `storage`, `custom`.
 
 Use `integration get <slug>` to discover all actions available for a specific third-party service (e.g. HubSpot, Salesforce). Use `native-integration get` only for built-in Cargo actions — it does **not** return HubSpot or other service-specific actions. Actions are referenced by `actionSlug` in workflow node graphs (see the `cargo-orchestration` skill's `references/nodes.md`).
+
+## Custom integrations
+
+A **custom integration** is an integration you host: an HTTP server that speaks Cargo's integration protocol — `GET /manifest`, `POST /actions/<slug>/execute`, `POST /extractors/<slug>/fetch` (and `/count`), `POST /autocompletes/<slug>`, `POST /dynamicSchemas/<slug>` — registered with the workspace so its actions and extractors show up beside the catalog's. It runs either on your own server (`external`) or on a Cargo Hosting worker (`worker`; scaffold one with `cargo-ai hosting worker init <dir> --template custom-integration`).
+
+```bash
+cargo-ai connection custom-integration create --kind external --base-url https://integrations.example.com
+cargo-ai connection custom-integration create --kind worker --worker-uuid <worker-uuid>
+cargo-ai connection custom-integration list
+cargo-ai connection custom-integration get <uuid>
+cargo-ai connection custom-integration update --uuid <uuid> --base-url https://new.example.com   # or --worker-uuid; kind cannot change
+cargo-ai connection custom-integration remove <uuid>
+```
+
+Registration assigns the integration a generated `slug`; create a connector against it with `connector create --integration-slug <that slug>` as for any other integration. An `external` base URL must be publicly reachable — private and loopback addresses are refused (`unsafeOutboundUrl`), so a local server needs a tunnel. `worker` fails with `workerNotFound` until the worker exists in this workspace.
 
 ## Connector autocomplete — fetching available values for action fields
 
@@ -278,6 +302,17 @@ cargo-ai connection connector autocomplete \
 ```
 
 Use the `value` field in your node config. The `label` is the human-readable display name. Results may also include optional `description` and `parent` fields.
+
+### Dynamic schemas — fields whose shape depends on another value
+
+A field whose `uiSchema` carries `"ui:widget": "DynamicSchemaWidget"` has no fixed schema: its sub-fields come from the connector at configuration time (HubSpot's form-consent options, for one, depend on the chosen `formId`). Fetch the schema the same way as an autocomplete — the `ui:options.slug` and its `params`, with `$this.$parent…` references replaced by the values you chose:
+
+```bash
+cargo-ai connection connector get-dynamic-schema \
+  --connector-uuid <uuid> --slug getConsentOptions --params '{"formId":"<form-id>"}'
+```
+
+`--slug` is the **dynamic-schema** slug from `ui:options`, not the action slug (the CLI help says "action slug"). The response carries `schema` (JSON Schema for the field) and `uiSchema`; fill the field to match. Params that don't validate return an **empty** result (no `schema`) rather than an error, so an empty answer usually means a missing or misnamed param.
 
 ### End-to-end example: configuring a HubSpot action
 
