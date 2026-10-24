@@ -266,7 +266,7 @@ Action kinds: `tool`, `connector`, `agent`, `native` (plus `worker`, which calls
 
 **Never guess what an action outputs.** Two free sources — no run, no credits:
 
-1. **Connector actions:** the integration catalog carries the output schema inline — `integration get <slug>` (and `integration list`) return `actions.<actionSlug>.output.schema` next to the input `config.jsonSchema`. Not every action declares one.
+1. **Connector actions:** the integration catalog carries the output schema inline — `integration get <slug>` (and `integration list`) return `actions.<actionSlug>.output.schema` next to the input `config.schema` (`config.jsonSchema`, the form-UI copy, is missing on many actions). Not every action declares one.
 2. **Any action kind** (`tool` / `connector` / `agent` / `native`) — resolve it with the same `--action` object as `action execute`:
 
 ```bash

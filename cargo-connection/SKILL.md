@@ -317,7 +317,7 @@ cargo-ai connection connector list
 # 2. Discover the action — search first, and only then read its schema
 cargo-ai orchestration action list <keywords> --integration-slug <integration-slug>
 cargo-ai connection integration get <integration-slug>
-# → actions are keyed by actionSlug, with config.jsonSchema (input) for each
+# → actions are keyed by actionSlug, with config.schema (input) for each
 # → many actions also carry output.schema — the JSON Schema of what the action
 #   emits; use it to wire downstream nodes instead of guessing (absent on some actions)
 # → Or use get-documentation for a plain text overview
