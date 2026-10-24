@@ -163,9 +163,9 @@ cargo-ai segmentation change fetch --uuid <change-uuid> --kinds added --limit 50
 cargo-ai segmentation change download --uuid <change-uuid> --kinds added,removed
 ```
 
-`--kinds` is **required** on `change fetch` and takes `added`, `updated`, `removed`, or `unchanged` (comma-separated). Returned rows carry the `_kind`, `_id`, `_title`, and `_time` meta-columns alongside the model's own columns. `change download` returns signed URLs rather than rows, and takes the same four kinds (`unchanged` from CLI 1.0.127, cargo#6369; before it the API refused that one).
+`--kinds` is **required** on `change fetch` and takes `added`, `updated`, `removed`, or `unchanged` (comma-separated). Returned rows carry the `_kind`, `_id`, `_title`, and `_time` meta-columns alongside the model's own columns. `change download` returns signed URLs rather than rows, and takes the same four kinds (`unchanged` from CLI 1.0.128, cargo#6369; before it the API refused that one).
 
-`change list --not-empty` keeps only the deltas where a record was added, updated or removed, and `--has-records` takes any of the four kinds. Both need CLI 1.0.127 (cargo#6369): before it the API answered `--not-empty` with a 400 (`Unrecognized key: "notEmpty"`) and refused `--has-records unchanged`, so on an older CLI use `--has-records <kind>` to skip empty deltas.
+`change list --not-empty` keeps only the deltas where a record was added, updated or removed, and `--has-records` takes any of the four kinds. Both need CLI 1.0.128 (cargo#6369): before it the API answered `--not-empty` with a 400 (`Unrecognized key: "notEmpty"`) and refused `--has-records unchanged`, so on an older CLI use `--has-records <kind>` to skip empty deltas.
 
 `updatedRecordsCount` is always `0` unless the segment was created with `--tracking-column-slugs` — the tracked columns define what "updated" means. Set them at creation time when the segment is meant to feed a monitoring motion.
 

@@ -121,8 +121,8 @@ cargo-ai workspaceManagement user remove-permission --user-uuid <uuid> --resourc
 
 Two things to know about `upsert-permission`:
 
-- **`--action` is a permission action, not `read` / `write`.** It must be one of the actions listed under [Roles](#roles) — the resource-scoped ones are `orchestration:workflow:*|read|write`, `ai:agent:…`, `ai:mcpServer:…`, `hosting:app:…`, `hosting:worker:…`, `content:file:…` and `workspaceManagement:folder:…`. (The help's own `--action read` example was invalid before CLI 1.0.127.)
-- **`--effect deny` applies to existing members only**, so it takes `--user-uuids`; with `--emails` it is refused, because that path invites. Before cargo#6369 (CLI 1.0.127) the API ignored the effect and always wrote an **allow** — on a workspace still doing so, put the deny in a role (`role create|update --permissions`). `remove-permission` honors `--effect` either way.
+- **`--action` is a permission action, not `read` / `write`.** It must be one of the actions listed under [Roles](#roles) — the resource-scoped ones are `orchestration:workflow:*|read|write`, `ai:agent:…`, `ai:mcpServer:…`, `hosting:app:…`, `hosting:worker:…`, `content:file:…` and `workspaceManagement:folder:…`. (The help's own `--action read` example was invalid before CLI 1.0.128.)
+- **`--effect deny` applies to existing members only**, so it takes `--user-uuids`; with `--emails` it is refused, because that path invites. Before cargo#6369 (CLI 1.0.128) the API ignored the effect and always wrote an **allow** — on a workspace still doing so, put the deny in a role (`role create|update --permissions`). `remove-permission` honors `--effect` either way.
 
 `--emails` **invites** any address that isn't a member yet, so check `user list` first.
 

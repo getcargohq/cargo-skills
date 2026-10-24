@@ -10,11 +10,11 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
-### `cargo-segmentation` 1.2.1, `cargo-orchestration` 1.17.1, `cargo-workspace-management` 1.6.1, `cargo-ai` 2.8.1, `cargo-connection` 1.7.1, `cargo-project` 4.3.1, `cargo-mailbox-management` 1.5.0: CLI 1.0.127 fixes the bugs the skills worked around
+### `cargo-segmentation` 1.2.1, `cargo-orchestration` 1.17.1, `cargo-workspace-management` 1.6.1, `cargo-ai` 2.8.1, `cargo-connection` 1.7.1, `cargo-project` 4.3.1, `cargo-mailbox-management` 1.5.0: CLI 1.0.128 fixes the bugs the skills worked around
 
-cargo#6369 (CLI 1.0.127) fixes the CLI and API bugs the October docs PRs found, so the workarounds become notes about older versions.
+cargo#6369 (CLI 1.0.128) fixes the CLI and API bugs the October docs PRs found, so the workarounds become notes about older versions.
 
-- **`segmentation change list --not-empty`** works (deltas where a record was added, updated or removed), and `--has-records` and `change download` take `unchanged`. Before 1.0.127 the API answered 400 to all three.
+- **`segmentation change list --not-empty`** works (deltas where a record was added, updated or removed), and `--has-records` and `change download` take `unchanged`. Before 1.0.128 the API answered 400 to all three.
 - **`batch list --included-data-kinds a,b`** matches a batch of any listed kind. It used to AND them and return nothing.
 - **`user upsert-permission --effect deny`** writes a deny for existing members (`--user-uuids`), and is refused with `--emails`. It used to write an allow whatever was passed.
 - **The help-text caveats** for `prompt evaluate` and `get-dynamic-schema --slug` now name the version that fixed them.

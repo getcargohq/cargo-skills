@@ -312,7 +312,7 @@ cargo-ai connection connector get-dynamic-schema \
   --connector-uuid <uuid> --slug getConsentOptions --params '{"formId":"<form-id>"}'
 ```
 
-`--slug` is the **dynamic-schema** slug from `ui:options`, not the action slug (the help said "action slug" before CLI 1.0.127). The response carries `schema` (JSON Schema for the field) and `uiSchema`; fill the field to match. Params that don't validate return an **empty** result (no `schema`) rather than an error, so an empty answer usually means a missing or misnamed param.
+`--slug` is the **dynamic-schema** slug from `ui:options`, not the action slug (the help said "action slug" before CLI 1.0.128). The response carries `schema` (JSON Schema for the field) and `uiSchema`; fill the field to match. Params that don't validate return an **empty** result (no `schema`) rather than an error, so an empty answer usually means a missing or misnamed param.
 
 ### End-to-end example: configuring a HubSpot action
 
