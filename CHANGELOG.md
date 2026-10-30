@@ -10,6 +10,18 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### `cargo` 1.33.0, `cargo-project` 4.4.0, `cargo-storage` 1.5.0, `cargo-orchestration` 1.18.0, `cargo-mcp` 1.3.0, `cargo-content` 1.3.0, `cargo-gtm` 2.6.0, + 2 patches: what shipped between CLI 1.0.134 and 1.0.140
+
+Checked against getcargohq/cargo master (2026-10-30), CLI 1.0.140 and cdk 1.0.134.
+
+- **Projects (cargo-project).** Enabling a cron, dependency or dbt play captures a skipped baseline batch first, so it no longer backfills every row on its first tick (cargo#6445). Computed columns take a typed function of `record` with `imports` (cargo#6440). Metric columns reference a unified model's generated relationships as `model.relationships.<column>` (cargo#6436). Relationship deploy and destroy leave unify-owned rows out of the merge (cargo#6438). `project init` reads the company's own site into `cadence/log/raw/web/pages/` for about 0.23 credits and briefs the agent to seed empty context domains (cargo#6433). The large-impact gate now shows **Action required** with the title `Needs approval: add the cargo:approve-impact label` (cargo#6437). Cookbook procedures live in `.agents/skills/`, with `.claude/skills/` linked to them (cargo#6459).
+- **`defineQuery` model (cargo-storage, cargo-project).** A native model that materializes one scheduled `SELECT` over `<dataset>.<model>` references (cargo#6425).
+- **Cargo Signals unification (cargo-storage, cargo-gtm).** The 20 company signals default to Account Events, not Contact Events, and existing models on the default move at their next sync (cargo#6425).
+- **Action search (cargo-orchestration, cargo-mcp).** Read-only presets win ties, tools carry `credits`, and signed out the catalog lists presets as `{kind, templateSlug}`, which runs unchanged once signed in (cargo#6383).
+- **Content uploads (cargo-content).** Types OpenAI won't index are stored unindexed instead of failing, a failed index answers `502 indexingFailed`, the CLI sends a content type, upload errors show the server's message, and a `413` on raw reads names `download` / `url` (cargo#6447, cargo#6458).
+- **Credit refusals (cargo-billing, cargo-workspace-management).** A capped member gets `reason: "userCreditsLimitReached"`, distinct from `notEnoughCredits` (cargo#6456).
+- **Sign-in and doctor (cargo).** Sign-in offers to install the skills, and `doctor` reports `skills-missing` (cargo#6423).
+
 ### `cargo-workspace-management` 1.6.2, `cargo-billing` 2.1.2: the per-member credit cap is enforced
 
 cargo#6379 switches on the per-member monthly credit cap from cargo#6126. A member who reaches `monthlyCreditsLimit` has new credit-consuming work refused until the next UTC month. The skills drop the "stored, not enforced" warning. They describe enforcement: it gates work before it starts, spend is cached for up to a minute, and it fails open. They also add the web-app path (Settings → Users), and cargo-billing says to check a member's spend when their runs fail for credits while the workspace balance is healthy.
