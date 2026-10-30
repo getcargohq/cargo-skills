@@ -119,11 +119,13 @@ function render(examples: Cookbook[]): string {
   L.push("```");
   L.push("");
   L.push("After either `project` command the files are in `infra/<slug>/`, helper scripts (if the");
-  L.push("cookbook ships any) in `scripts/<slug>/`, and the procedure in both `.claude/skills/<slug>/`");
-  L.push("and `.agents/skills/<slug>/` — written twice because Claude Code discovers project skills");
-  L.push("only under `.claude/skills/`, while Cursor, Codex and Gemini read `.agents/skills/`. They are");
-  L.push("copies, not symlinks, so **if you edit a cookbook's procedure, edit both.** The `infra/` and");
-  L.push("`scripts/` halves are written once: resources are loaded by path, and a second copy would");
+  L.push("cookbook ships any) in `scripts/<slug>/`, and the procedure in `.agents/skills/<slug>/`, the");
+  L.push("cross-agent location Cursor, Codex, Gemini and Copilot read. `.claude/skills/<slug>` is a");
+  L.push("relative symlink to it, because Claude Code discovers project skills only there, so **edit");
+  L.push("the procedure in `.agents/skills/`** and both agents see the change. Where a link cannot be");
+  L.push("made (Windows without developer mode) it is a copy, and the handoff brief says so; then edit");
+  L.push("both. An existing `.claude/skills/<slug>` is left alone. Projects installed before cdk 1.0.134");
+  L.push("(cargo#6459) hold two independent copies. The `infra/` and `scripts/` halves are written once: resources are loaded by path, and a second copy would");
   L.push("register everything twice. Scripts live outside `infra/` so the resource loader never");
   L.push("imports them.");
   L.push("Start the skill at its Adapt section: its earlier steps assume you found the folder in");

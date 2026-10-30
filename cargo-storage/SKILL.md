@@ -1,7 +1,7 @@
 ---
 name: cargo-storage
 description: "Work with the data inside a Cargo workspace — models (Companies, Contacts, Deals…), datasets, columns, relationships, records, and SQL over workspace storage. Triggers: \"what models do I have\", \"show me the schema\", \"add a column for\", \"how many contacts do I have\", \"SELECT … FROM\", \"query my companies table\", \"join contacts to companies\", \"what is the DDL\", \"set up a webhook-fed model\", \"where does this field live\", \"import this into a model\", \"unify these models\", \"merge duplicate accounts\", \"link contacts to companies\", \"set up a relationship between\". Skip when: querying run or batch telemetry rather than business data — use cargo-orchestration; naming a reusable filtered audience — use cargo-segmentation."
-version: "1.4.0"
+version: "1.5.0"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -109,6 +109,20 @@ cargo-ai storage model remove <model-uuid>
 # Is a slug taken in this dataset? → {"exists": true|false}
 cargo-ai storage model exists-by-slug --dataset-uuid <uuid> --slug contacts
 ```
+
+### A model that is a SQL query over other models
+
+The native `defineQuery` extractor re-runs one `SELECT` on each sync and materializes the result as a table: no SQL connector, and models referenced as `<datasetSlug>.<modelSlug>` are rewritten to their physical tables and the warehouse dialect, exactly as `storage query execute` does (unlike `sql.fetchCommand`, which sends its command unchanged). Reach for it when a value depends on `now()` or on many rows, such as a signal score that decays with age, which a computed column can't express.
+
+```bash
+cargo-ai storage model create \
+  --slug account_scores --name "Account scores" \
+  --dataset-uuid <native-dataset-uuid> \
+  --extractor-slug defineQuery \
+  --config '{"query":"select account_id, count(*) as signals from object.account_events group by account_id","idColumnSlug":"account_id","titleColumnSlug":"account_id"}'
+```
+
+The columns come from the query. A compile error or a missing id column fails the sync, not the create, so read the first `storage run list` result before building on it. Declared in a project, it is `defineModel({ kind: "native", extractSlug: "defineQuery", … })` (cargo-project).
 
 ### Dry-run an extractor config before creating the model
 
@@ -318,6 +332,8 @@ cargo-ai storage model update --uuid <model-uuid> --unification '{
 | `timeColumnSlug` | custom | Event timestamp — for the two `*Event` types |
 | `parent` | custom | Links contacts/events to their account: `{"kind":"model","columnSlug":…,"parentModelUuid":…}` or `{"kind":"reference","columnSlug":…,"reference":…}` |
 | `filter` | custom | Segmentation filter restricting which rows unify — same `conjonction` shape as segments |
+
+**`{"source":"integration"}` is resolved live.** The integration's default is read at each sync, not stored on the model, so a change to an integration's default moves existing models with it. Cargo Signals did this in cargo#6425: company signals (fundraising, hiring, tech adoption…) now default to `accountEvent` instead of `contactEvent`, so their rows leave Contact Events for Account Events at the next unify sync. Pin a `custom` unification to keep a model where it is.
 
 **Writing the config does not recompute anything.** The unified rows are rebuilt
 by the model's sync run, so follow the update with a run and poll it:

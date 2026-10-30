@@ -86,8 +86,10 @@ command to fix it.
 
 ### Approving a large merge
 
-The check fails with **`Needs approval: large impact`** when the merge, summed over its
-plays and executions, would exceed any of:
+The check is held with the title **`Needs approval: add the cargo:approve-impact label`** and the conclusion
+**Action required** (not a failure: a required check still blocks the merge, and real plan or
+deploy errors still fail) when the merge, summed over its plays and executions, would exceed
+any of:
 
 | Effect | Threshold (strictly greater than) |
 |---|---|

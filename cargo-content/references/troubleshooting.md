@@ -28,7 +28,15 @@ It was stored with `mirrorToContext: true`, the default for `upload`, web-app up
 
 ## Upload fails or times out
 
-Large files may take longer to upload. Ensure the file path is correct and the file is not locked by another process.
+Large files may take longer to upload. Ensure the file path is correct and the file is not locked by another process. Since CLI 1.0.139 a failed upload prints the server's status and `errorMessage` instead of a bare `Upload failed`; read that first.
+
+- **`502` with `indexingFailed`.** The file reached storage but OpenAI failed while indexing it (an outage, a timeout, vector store creation). The message says to retry, or to upload with `--index none`.
+- **A video, archive or other type OpenAI won't index no longer fails.** Under the default `--index vectorStore`, a type outside OpenAI's file list (an MP4, a MOV) is stored with no OpenAI copy (`openAiFileId: null`), the same as `--index none`. The upload succeeds, but the file is not searchable by an agent; `capability_file_analyze` reads it with the file read tool instead. Spreadsheets and images (csv, xlsx, gif, jpeg, png) keep their OpenAI copy. Before cargo#6458 such uploads ended in a `500`.
+- **Content type.** `content file upload` and `workspaceManagement file upload` send a type guessed from the file extension (CLI 1.0.140). Older CLIs sent none, and the server now infers it from the file name.
+
+## `413 tooLarge` reading a file's raw bytes
+
+`GET /v1/content/files/<uuid>/raw` refuses files too large to serve inline. Download it with `cargo-ai content file download <path> --out <local>`, or get a signed link with `cargo-ai content file url <path>` (`POST /v1/content/files/<uuid>/url`). The error message names both.
 
 ## Library created but the agent doesn't use it
 

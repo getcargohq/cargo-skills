@@ -20,6 +20,18 @@ user wants a working pipeline to adapt rather than an empty project.
 `cargo-ai project cookbook list` names them; see
 [`references/cookbooks.md`](../references/cookbooks.md).
 
+`init` asks for the company domain (Enter skips it). With one, it reads the company's own
+site with two `parallel.extract` calls on Cargo's key, about **0.23 credits** (0.025 a
+page): the home page, then up to 8 pages its navigation links (pricing, customers, case
+studies, enterprise, about, product, compare; `/pricing`, `/customers` and `/about` are
+tried even when unlinked). The pages land in `cadence/log/raw/web/pages/<page>.md`, and
+`context/global/company.md` keeps your two answers plus the list of pages read. When pages
+were read, the handoff brief tells the coding agent to seed the **empty** context domains
+from them (`global/`, `icp/` marked inferred, `client/`, `proof/`, `alternative/`,
+`signal/`), tagging each sentence `[R: url]` / `[I]` / `[TR]`, never editing an existing
+file and never writing `persona/` or `jtbd/`. `project add` passes the same brief to a
+cookbook handoff.
+
 ## 2. Install and authenticate
 
 ```bash

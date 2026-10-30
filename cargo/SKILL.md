@@ -1,7 +1,7 @@
 ---
 name: cargo
 description: "Router for the Cargo CLI skill bundle — load first for anything Cargo, and whenever a task spans two Cargo domains. Explains what each skill owns, declarative GTM as Code projects (cargo-project) vs the imperative CLI, the UUID and slug flow between skills, async polling of runs and batches, end-to-end use cases, and the gotchas that fail silently (inputs in a top-level action's `config` stripped without an error, run vs batch, model-uuid vs segment-uuid). Triggers: \"set up Cargo\", \"what can Cargo do\", \"which Cargo skill\", \"bootstrap my workspace\", \"I have a Cargo account\", \"cargo-ai …\", or any `cargo-ai` command whose domain you are unsure of. Skip when: the task obviously belongs to one skill — load that skill directly."
-version: "1.32.9"
+version: "1.33.0"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -66,6 +66,8 @@ cargo-ai whoami
 **Look before signing up.** With no account at all, `cargo-ai orchestration action list <keywords>`, `connection integration list|get` and `orchestration action execute … --dry-run` (connector and native actions: validates `--data`, prints sample output in the finished-run shape with the credit price, calls nothing) work against the public catalog; `project plan` and `project types` do too.
 
 **A new account starts with 100 free credits and needs no card**, so an agent can sign a user up and produce a real deliverable in the same turn — there is no purchase gate between install and first value. Useful anchors for what that buys: ~500 leads sourced (`salesNavigator.searchLeads`, 0.2/record), ~1,000 profile+verified-email enriches (`aiArk.enrichPerson`, 0.1), ~1,000 email verifications (`waterfall.verifyEmail`, 0.1), or ~50 fully enriched contacts (`waterfall.enrichContact`, 2). The [quickstart demo](../cargo-quickstart/SKILL.md) spends about **5**. Say the free balance out loud before the first paid call on a new account.
+
+Every sign-in path (CLI ≥ 1.0.136) then offers to install these skills with a y/N when they're missing, says nothing when they're present, and only prints the install command where there is no terminal. The installer's output goes to stderr, so the sign-in JSON on stdout stays clean.
 
 `--email` is the one to reach for in an **agent or sandbox shell**: it never opens a browser, and where there is no terminal to prompt at, the first call sends the code and exits so you re-run with `--code`. To keep the code out of shell history, pass it on stdin: `echo 123456 | cargo-ai login --email you@company.com --code -`. Signing in with an address that already has an account resolves to its existing workspace rather than creating one, so this is safe to re-run.
 
@@ -322,7 +324,7 @@ They are listed here so you recognize them when a user names one — not as a ro
 
 | Command | What it is |
 | --- | --- |
-| `cargo-ai doctor` | Diagnoses the setup in one JSON object: installed version vs latest, the **skills-bundle pin**, credentials, and API reachability. Exits with the most severe failure. The fastest answer to "why is this command not working" before you start reading skills. |
+| `cargo-ai doctor` | Diagnoses the setup in one JSON object: installed version vs latest, the **skills-bundle pin**, credentials, and API reachability. Exits with the most severe failure. It also lists `skills-missing` when no agent skills are found (fix: `npx skills add getcargohq/cargo-skills`) without changing the exit code; the plugin install, under the `cargo-skills` marketplace, counts as installed from cdk 1.0.134. The fastest answer to "why is this command not working" before you start reading skills. |
 | `cargo-ai start` (alias `onboard`) | Signs the user in if needed, then continues into one of: a coding agent (`--continue claude\|cursor\|codex\|gemini`), `code` to scaffold a project, `cli` for the palette, or `demo` for the guided tour. Takes `--email`/`--code`/`--oauth`, `--workspace-name`, `--directory`, `--icp`. |
 | `cargo-ai ask` | Chat in the terminal. Defaults to **Claude Code on this machine** against the working directory (`--dir`); `--agent-uuid` attaches a workspace agent to that same local session. `--print` gives one turn as JSON on stdout, `--continue` reopens the last chat. Also reachable as `cargo-ai --chat`. |
 | `cargo-ai book-demo` | Opens the calendar to book a demo with Cargo sales. `--no-open` prints the URL instead. |
@@ -665,8 +667,8 @@ deploy from GitHub). `project plan` works signed out, against the last cached st
 - **Deploy from GitHub by connecting the repo, not with a token in Actions.**
   `cargo-ai project state connect` plans every PR in a comment and deploys every push
   to the production branch — and the branch head the moment it connects. A merge over
-  100 sends of a kind, 5,000 audience adds or 2,500 credits fails `Needs approval: large
-  impact` until the PR is labelled `cargo:approve-impact`, which only the user's yes
+  100 sends of a kind, 5,000 audience adds or 2,500 credits is held as **Action required**
+  (`Needs approval: add the cargo:approve-impact label`) until the PR is labelled, which only the user's yes
   should add. Running an Actions deploy as well fails (`stateAutoDeployed`). Recipe:
   `../cargo-project/recipes/deploy-from-ci.md`.
 

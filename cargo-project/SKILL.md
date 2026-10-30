@@ -1,7 +1,7 @@
 ---
 name: cargo-project
 description: "Declare a whole Cargo workspace in a project, GTM as Code — connectors, models, plays, tools, agents, MCP servers, segments, context, folders, files, workers, and apps in TypeScript, reconciled with `cargo-ai project` (init → types → plan → deploy), the way you would run Pulumi or Terraform. Triggers: \"as code\", \"in git\", \"version-controlled\", \"reproducible\", \"Terraform for Cargo\", \"set up a whole workspace\", \"staging and production\", \"deploy the workspace from CI\", \"review this in a PR\", \"cargo.json\", \"cargo.state.json\", \"scaffold from a template\", \"is there a cookbook for this\", \"start from a cookbook\". Skills with a worked project example (TAM building, account scoring, call capture, inbound qualification, CRM enrichment, standup) live in gtm-skills; menu in references/cookbooks.md. Skip when: it is a one-off operation, a read, or an ad-hoc query — use the matching capability skill."
-version: "4.3.1"
+version: "4.4.0"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -351,7 +351,8 @@ it. Either way, treat the skill's `Done when` as the acceptance test and review
   the production branch, starting with the branch head **the moment you connect**
   (`--no-auto-deploy` to plan only). A merge whose plays and executions would exceed 100
   emails, 100 LinkedIn actions, 100 chat messages, 5,000 audience adds or 2,500 credits —
-  or can't be counted — fails `Needs approval: large impact` until someone labels the PR
+  or can't be counted — is held as **Action required** (`Needs approval: add the
+  cargo:approve-impact label`, not a failure) until someone labels the PR
   `cargo:approve-impact`. That label is the user's cost approval: add it only on their
   explicit yes. `secret()` does not resolve there (use `workspaceEnv()`), and while
   auto-deploy is on every other deploy of the state is refused (409

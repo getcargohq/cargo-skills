@@ -66,6 +66,8 @@ Pass the current title and company columns: without them the first check only sn
 
 Set `filters.volume` to `{"oneTimeExtractCount": 0, "dailyNewIntros": true}` and list introducers in `filters.introducers.sourceProfiles` (at most 500, or `sourceCompany` for your company page). That skips the 500-lead backfill and bills 5 per new introduction, up to the daily lead limit.
 
+**Where events unify.** A model left on the integration's default unification feeds **Account Events** for the 20 company signals (fundraising, M&A, company and department growth, the four forecasts, hiring, account watchlist, tech/AI adoption and displacement, competitor customers, tenders and contract awards, registrations, Google Business listings) and **Contact Events** for the 15 person signals (job changes, employee departures, new decision makers, warm intros, connections, followers, page and social engagement, event attendees, dormant posters). Before cargo#6425 every signal defaulted to Contact Events. The default is resolved live, so an existing company-signal model on the default moves to Account Events at its next unify sync: anything filtering `contact_events` on those event names stops seeing them. A custom unification is unaffected.
+
 ## Common pitfalls
 
 - **An empty model is not a broken model.** Nothing arrives until a signal fires; don't recreate it or "test" it with a looser config.

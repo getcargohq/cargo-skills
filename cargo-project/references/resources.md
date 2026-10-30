@@ -114,6 +114,49 @@ export const leads = defineModel("leads", {
 - **`definePlay` `changeKinds`**: `added` / `updated` / `removed` / `unchanged`
   (default `["added"]`); `runCreationRule`: `always` (default) / `once` /
   `noConcurrency`. Plays are created disabled: set `isEnabled: true` to enable on deploy.
+- **Enabling a scheduled play does not backfill** (cdk 1.0.133). A `cron`, `dependency`
+  or `dbt` play runs on what changed since its last batch; before its first batch every
+  row would count as `added`. So before switching one on, the deploy creates the same
+  skipped `schedule` batch (`skip: true`, the play's segment and change kinds) as the
+  web app's **Future changes only** default, then applies `isEnabled: true` as the last
+  write. A play that already ticked gets nothing new, `watch`/`realtime` plays are
+  untouched, and draft deploys never enable. To run the rows already in the segment,
+  declare a separate batch over the segment ([`../guides/executions.md`](../guides/executions.md)).
+  Earlier cdk versions ran the whole model on the first tick.
+- **`defineQuery` model: a scheduled SELECT over other models.** `defineModel(slug, {
+  kind: "native", extractSlug: "defineQuery", config: { query, idColumnSlug,
+  titleColumnSlug }, schedule })` re-runs one `SELECT` on each sync and materializes the
+  result as a table. Reference models as `<dataset>.<model>` (`object.account_events`),
+  the form `storage query execute` takes: they are rewritten to physical tables and the
+  warehouse dialect, so no SQL connector is needed (unlike `sql.fetchCommand`, which
+  sends its command unchanged). Use it for what a computed column can't express, such as
+  a score that decays with `now()`. A model the query reads must already exist: the
+  reference is a string, so deploy cannot order the two in one run.
+- **Computed columns as functions** (cdk 1.0.131). A `kind: "computed"` entry in
+  `additionalColumns` takes a plain function of the row instead of a `jsExpression`
+  string:
+
+  ```ts
+  { kind: "computed", slug: "readiness_stage", type: "string",
+    imports: { readyThreshold, warmingThreshold },
+    expression: (record) =>
+      record.metric__readiness_score >= readyThreshold ? "ready_now"
+        : record.metric__readiness_score >= warmingThreshold ? "warming" : "cold" }
+  ```
+
+  The source travels without its closure, so `check` refuses at definition time a
+  parameter not named `record` (the backend passes only the `record.<column>` it finds),
+  a free variable that is neither in `imports` nor a standard global, and an import that
+  isn't plain JSON. `record` is typed from the synced model (after `project types`), the
+  unify columns, or the extractor's declared schema. The string form still works.
+- **Metric columns over a unified model's relationships** (cdk 1.0.129). The
+  relationships unify syncs generate (Account Events `account_id → accounts.id`) have a
+  different uuid in every workspace, and `defineRelationship` can't declare them on a
+  unify model (`modelNotCompatible`). Reference them from the adopted model's handle
+  instead: `relationship: accountEvents.relationships.account_id` in a `kind: "metric"`
+  column. An unresolved `relationships.<column>` token means the unified model hasn't
+  synced yet: sync it once, then deploy again. `project pull` still writes these as
+  `relationshipRef(uuid)`.
 - **`defineFile` `path`** and **`defineWorker`/`defineApp` `path`** point at local
   files/dirs, typically via `new URL("./x", import.meta.url).pathname`. File content
   is hashed at define time, so edits show as drift. Worker `path` is the bundle
@@ -165,7 +208,10 @@ export const leads = defineModel("leads", {
   Each mailbox belongs to at most one member.
 - **`defineRelationship` merges.** It read-merges the dataset's live relationships, so
   unlike `cargo-ai storage relationship set` it does not wipe the others. Both models
-  must be in the same dataset; identity is the state uuid (the slug is local).
+  must be in the same dataset; identity is the state uuid (the slug is local). Since cdk
+  1.0.132 the merge (on deploy and on destroy) leaves out the rows unify syncs own, so
+  declaring a relationship between two native models no longer fails with
+  `modelNotCompatible` in a workspace whose unified models have synced.
 - **`defineCustomIntegration`** — Cargo reads the worker's `GET /manifest` once the
   worker is promoted.
 - **`defineApp` build and routing.** Only `package.json` is required at define time

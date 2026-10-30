@@ -1,7 +1,7 @@
 ---
 name: cargo-orchestration
 description: "Make Cargo actually run something, or show what it would run — execute one connector action, run a multi-step workflow, trigger a batch across a whole segment or model, message an AI agent, build or edit a node graph, draw a workflow, tool or play as a diagram, and query the runtime tables (runs, batches, spans, records) with SQL. Triggers: \"run this on all my contacts\", \"execute the action\", \"kick off a batch\", \"build a workflow\", \"schedule a play\", \"make it run every morning\", \"ask the agent\", \"show me the workflow\", \"what does this tool do\", \"visualize this play\", \"draw the graph\", \"explain this workflow\", \"how many runs failed today\", \"what is the output schema for this action\", \"add a step that\". Skip when: explaining why a run misbehaved — use cargo-diagnostics; downloading result files — use cargo-analytics; committing the workflow as code — use cargo-project."
-version: "1.17.1"
+version: "1.18.0"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -225,6 +225,13 @@ integration, `credits` (the cost table, when the action bills), and
 `autocompletes` (config fields that need a picked id — a HubSpot object type, a
 Slack channel). Returns every match unless you pass `--limit`.
 
+**Cargo's presets win ties.** Every workspace is seeded with read-only preset
+tools and agents (the email waterfall, for one). On an equal score a read-only
+tool or agent ranks above a single provider's action, so "find email" surfaces
+the waterfall preset before one provider's `findEmail`. A tool with a credit
+cost now carries it in `credits` too: one fixed entry when min = max, else one
+per bound, so a preset is priced like any connector action.
+
 ```bash
 # One action, one record → returns a run
 cargo-ai orchestration action execute \
@@ -312,7 +319,7 @@ Runs nothing and calls no provider: it validates `--data` against the action's i
 - **The values are fake; the shape and the price are real.** Sample data is generated from the output schema. `estimatedCredits` prices one call (one unit or one block for unit / package pricing — `creditsFormula` says which) and **excludes the 0.01 node execution charge**.
 - **Config-dependent outputs can't be shown** — ``… has no fixed output schema: what it returns depends on its configuration, so a dry run cannot show it.`` Signed in, `action get-output-schema --data …` resolves it. Open-schema actions show an empty object (`classify` shows `answers: {}`).
 
-Signed out, the catalog is browsable too: `orchestration action list` (connector and native actions only — tools and agents need a workspace), `connection integration list|get|get-documentation`, `connection action search`, plus `project plan` / `project types`. Everything that runs needs a sign-in (`cargo-ai login --email …`, 100 free credits).
+Signed out, the catalog is browsable too: `orchestration action list` (connector and native actions, plus Cargo's preset tools and agents listed from their templates as `{"kind":"tool","templateSlug":"…"}` / `{"kind":"agent","templateSlug":"…"}`, tools priced in `credits`; a template slug also matches as words, `waterfall` → `email_waterfall`). A `templateSlug` action resolves to the workspace's own copy of that preset once signed in, so it pastes unchanged into `execute`, `execute-batch` and `get-output-schema`. The other signed-out commands: `connection integration list|get|get-documentation`, `connection action search`, plus `project plan` / `project types`. Everything that runs needs a sign-in (`cargo-ai login --email …`, 100 free credits).
 
 ## Create a run
 

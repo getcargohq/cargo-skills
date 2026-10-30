@@ -1,7 +1,7 @@
 ---
 name: cargo-content
 description: "Manage the files a Cargo workspace holds — upload knowledge (PDF, CSV, text) and build native or connector-backed libraries agents retrieve from (RAG), and use files as plain storage: write and read by path, list a folder, hand out a signed or public link. Triggers: \"upload this PDF\", \"add these docs as knowledge\", \"build a knowledge base\", \"sync our help center into Cargo\", \"what files are in the workspace\", \"index this folder\", \"attach our pricing sheet\", \"store this file\", \"save the report somewhere\", \"give me a link to the file\", \"make this file public\". Skip when: wiring the file or library into an agent — use cargo-ai; uploading a CSV that drives a batch run — that is a workspace-management file upload."
-version: "1.2.0"
+version: "1.3.0"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -133,7 +133,7 @@ cargo-ai content library remove <library-uuid>
 ## Critical rules
 
 - **A signed URL is unauthenticated.** Anyone holding it opens the file until it expires (default 3600 s, max 10800 s). A `public` file adds a stable no-auth link, `https://api.getcargo.io/files/public/<uuid>/<name>`, that works until the file is made private or deleted. Hand out either only when the user asked for the file to be shared, and never for record-level personal data.
-- **`upload` and `put` default differently.** `upload` indexes (`vectorStore`, sent to OpenAI) and mirrors into the context repo; `put` does neither. A `put` file is not searchable by an agent — `capability_file_search` skips it and `capability_file_analyze` refuses it — until written with `--index vectorStore`.
+- **`upload` and `put` default differently.** `upload` indexes (`vectorStore`, sent to OpenAI) and mirrors into the context repo; `put` does neither. A type OpenAI won't index (video, for one) is still stored under `vectorStore`, unindexed, rather than failing the upload. A `put` file is not searchable by an agent — `capability_file_search` skips it and `capability_file_analyze` refuses it — until written with `--index vectorStore`.
 - **A mirrored file is in git.** `mirrorToContext: true` commits the file to the context repository under `.files/`; pass `--index none` and keep mirroring off (`put`) for files that should stay in Content.
 - **A path write overwrites without asking.** The newest file of that name in that folder is replaced in place, and its `uuid` (and every agent resource pointing at it) now serves the new bytes. A read-only (connector) folder refuses with `folderReadOnly`.
 

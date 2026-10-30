@@ -1,7 +1,7 @@
 ---
 name: cargo-mcp
 description: "Drive Cargo from its hosted MCP server at https://mcp.getcargo.io/mcp — connect a client, discover and price an action, run it over one record or a batch, poll it, and read workspace models, with no CLI install. Also when to call an MCP tool instead of shelling out to `cargo-ai`. Triggers: \"connect Cargo to Claude Desktop\", \"add Cargo to ChatGPT\", \"Cargo MCP server\", \"mcp.getcargo.io\", \"use Cargo without installing anything\", \"which Cargo tool do I call\", \"search_actions\", \"execute_action_batch\", \"MCP server is showing the wrong workspace\". Tools: whoami, search_actions, get_action_schema, execute_action, execute_action_batch, get_run, query_models. Skip when: you have a shell and the job is a workflow, a project deploy, warehouse SQL, or a mailbox — use the CLI skills; when publishing an MCP server out of your own workspace or attaching one to a Cargo agent — use cargo-ai."
-version: "1.2.0"
+version: "1.3.0"
 compatibility: Requires the hosted Cargo MCP server at https://mcp.getcargo.io/mcp — OAuth (discovered from the 401 challenge) or a workspace-scoped API token as a bearer. The CLI is needed only for the jobs this skill routes away
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -167,6 +167,13 @@ Four `kind` values come back: `connector` (a third-party integration), `native`
 (a built-in platform operation), `tool` (a saved workflow in this workspace),
 and `agent` (an AI agent in this workspace). Narrow a noisy catalog with the
 `kind` and `integrationSlug` filters.
+
+On a tie, Cargo's own read-only presets rank first, so "find email" returns the
+email-waterfall tool ahead of a single provider's action, priced in `credits`
+like the rest. The signed-out catalog lists those presets too, addressed as
+`{"kind":"tool","templateSlug":"…"}` (or `"agent"`), and `get_action_schema`
+answers for them from the template. Once signed in, the same `templateSlug`
+action runs the workspace's own copy of the preset.
 
 ## Three ways this goes wrong
 

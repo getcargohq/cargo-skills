@@ -157,9 +157,11 @@ may deploy it. A GitHub Actions deploy or a hand-run `deploy` is refused. Delete
 Actions deploy workflow, or turn auto-deploy off (**Settings → States**, or
 `cargo-ai project state disconnect`) to deploy by hand.
 
-## PR check: `Needs approval: large impact`
+## PR check: `Needs approval: add the cargo:approve-impact label`
 
-The merge would exceed an impact threshold (100 emails / LinkedIn actions / chat
+The check concludes **Action required**, not failed: nothing is broken, and the PR comment
+leads with an `[!IMPORTANT]` callout saying so (older backends titled it `Needs approval:
+large impact` with a red ✗). A required check still blocks the merge either way. The merge would exceed an impact threshold (100 emails / LinkedIn actions / chat
 messages, 5,000 audience adds, 2,500 credits) or its impact can't be counted (model or
 segment created in the same change, unreadable steps, a send inside a loop, a
 `workflowRef` batch). Read the "What a merge will set in motion" table in the PR

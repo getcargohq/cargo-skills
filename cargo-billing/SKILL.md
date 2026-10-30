@@ -1,7 +1,7 @@
 ---
 name: cargo-billing
 description: "Understand what Cargo is costing — remaining credits, usage broken down by workflow, connector, or agent, subscription state, and invoice history. Triggers: \"how many credits do I have left\", \"what did that cost\", \"why is my bill so high\", \"am I about to run out\", \"will this fit in our budget\", \"show me my invoices\", \"how much have I spent this month\", \"what plan am I on\", \"what do I get for free\", \"how many free credits\", \"can I afford this run\", \"add a card\", \"update my payment method\", \"why was my card declined\". Needs a token with admin access. Skip when: attributing spend to specific nodes or cutting a play cost — use cargo-diagnostics."
-version: "2.1.2"
+version: "2.1.3"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -152,7 +152,7 @@ cargo-ai billing usage get-metrics --from <start-date> --to <end-date> --unit st
 
 Available filters: `--workflow-uuid`, `--model-uuid`, `--connector-uuid`, `--integration-slug`, `--slug`, `--agent-uuid`. Combine with `--group-by` and `--unit`.
 
-**Spend per member.** `--group-by user_uuid --unit billing.credits` attributes credits to the member who triggered the run, batch or agent message. Usage recorded before attribution shipped (October 2026) carries no user, so earlier months don't split by member. The API also filters to one member (`GET /v1/billing/usage/metrics?userUuid=<uuid>&…`); the CLI has no `--user-uuid` flag, so group and read that member's row instead. Admins can set a per-member monthly cap (`monthlyCreditsLimit`, from the API or Settings → Users in the web app; see `cargo-workspace-management` → Users). A member who reaches it has new credit-consuming work refused until the next UTC month. When a member's runs start failing for lack of credits while the workspace balance is healthy, read this breakdown for that member before blaming the balance.
+**Spend per member.** `--group-by user_uuid --unit billing.credits` attributes credits to the member who triggered the run, batch or agent message. Usage recorded before attribution shipped (October 2026) carries no user, so earlier months don't split by member. The API also filters to one member (`GET /v1/billing/usage/metrics?userUuid=<uuid>&…`); the CLI has no `--user-uuid` flag, so group and read that member's row instead. Admins can set a per-member monthly cap (`monthlyCreditsLimit`, from the API or Settings → Users in the web app; see `cargo-workspace-management` → Users). A member who reaches it has new credit-consuming work refused until the next UTC month. Run, batch and action creation tell the two refusals apart: a capped member gets `400` with `reason: "userCreditsLimitReached"` (an admin can raise the limit), an empty workspace gets `reason: "notEnoughCredits"`. Agent run/batch tools say "User monthly credits limit reached". Storage writes, hosting and mailbox creation still answer `notEnoughCredits` for a capped member, so when those fail for credits while the workspace balance is healthy, read this breakdown for that member before blaming the balance.
 
 ### The usage units
 
