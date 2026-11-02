@@ -17,7 +17,13 @@ expect_output() {
 }
 
 expect_output \
-  "Grok allows cargo-ai reads" \
+  "Grok allows cargo-ai reads through its public terminal tool" \
+  grok \
+  '{"toolName":"run_terminal_command","toolInput":{"command":"cargo-ai whoami"}}' \
+  '{"decision":"allow"}'
+
+expect_output \
+  "Grok accepts its internal terminal tool name" \
   grok \
   '{"toolName":"run_terminal_cmd","toolInput":{"command":"cargo-ai whoami"}}' \
   '{"decision":"allow"}'
@@ -31,7 +37,7 @@ expect_output \
 expect_output \
   "Grok leaves login at the normal approval gate" \
   grok \
-  '{"toolName":"run_terminal_cmd","toolInput":{"command":"cargo-ai login --oauth"}}' \
+  '{"toolName":"run_terminal_command","toolInput":{"command":"cargo-ai login --oauth"}}' \
   ''
 
 expect_output \
