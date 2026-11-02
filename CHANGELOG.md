@@ -10,6 +10,10 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### `cargo-mcp` 1.3.1, `cargo` 1.33.1: SQL reads route to `query_models`, not the CLI
+
+- The `cargo-mcp` description no longer sends "warehouse SQL" to the CLI skills. The hosted server runs one read-only SELECT itself through `query_models` (joins, aggregates and CTEs; a model referenced as `dataset.model` from `describe_model`; `limit` default 20, max 50; `truncated` when the cap bites), so the skip clause now names only a full SQL export. The surface table and the paging trap say the same, and the router's CLI-versus-MCP table moves "warehouse SQL" to "full SQL result sets" and gives MCP the SQL read. Verified against `apps/backend/src/http/routes/mcp/server/{tools,queryModels,limits}.ts` and `apps/backend/src/domains/storage/services/query/transformQuery.ts` on getcargohq/cargo master. The Codex package edit that anchors on the skip clause is re-anchored.
+
 ### `cargo` 1.33.0, `cargo-project` 4.4.0, `cargo-storage` 1.5.0, `cargo-orchestration` 1.18.0, `cargo-mcp` 1.3.0, `cargo-content` 1.3.0, `cargo-gtm` 2.6.0, + 2 patches: what shipped between CLI 1.0.134 and 1.0.140
 
 Checked against getcargohq/cargo master (2026-10-30), CLI 1.0.140 and cdk 1.0.134.
