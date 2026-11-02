@@ -1,7 +1,7 @@
 ---
 name: cargo-diagnostics
 description: "Explain what a Cargo run or batch actually did, after the fact — trace one run node by node, draw the graph it executed with the failing step marked, sweep a batch or play for errors grouped by root cause, and attribute credit spend down to the node and the provider. Triggers: \"why did this fail\", \"it succeeded but the output is wrong\", \"half my rows are empty\", \"why is this column blank\", \"what broke in this batch\", \"why did that cost so much\", \"which node is burning credits\", \"it worked yesterday\", \"these results look wrong\", \"it went down the wrong path\", \"this step never ran\", \"show me what the run did\". Skip when: setting up an alert for next time — use cargo-observability; just downloading the data — use cargo-analytics."
-version: "1.6.0"
+version: "1.6.1"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:

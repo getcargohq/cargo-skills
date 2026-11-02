@@ -2,7 +2,7 @@
   "name": "cargo",
   "displayName": "Cargo",
   "description": "Build with Cargo in Grok Build: 19 skills over the cargo-ai CLI for target lists, contact enrichment and verification, lead scoring, CRM sync, signal monitoring, orchestration, storage, segments, projects, diagnostics, and the hosted MCP server.",
-  "version": "1.33.0",
+  "version": "1.34.0",
   "author": {
     "name": "Cargo",
     "url": "https://getcargo.ai"
