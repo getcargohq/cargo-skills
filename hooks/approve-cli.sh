@@ -55,10 +55,10 @@ case "$agent" in
     cmd="$(printf '%s' "$input" | jq -r '.command // empty' 2> /dev/null)"
     ;;
   grok)
-    # Grok uses camelCase event keys and names its shell tool
-    # `run_terminal_cmd`. Its Claude-compatible `Bash` alias can also appear,
-    # so accept either spelling and nothing else.
-    cmd="$(printf '%s' "$input" | jq -r 'if ((.toolName // "") == "run_terminal_cmd" or (.toolName // "") == "Bash") then .toolInput.command // empty else empty end' 2> /dev/null)"
+    # Grok uses camelCase event keys and exposes `run_terminal_command` to
+    # hooks. The internal `run_terminal_cmd` name and Claude-compatible `Bash`
+    # alias can also appear, so accept all three spellings and nothing else.
+    cmd="$(printf '%s' "$input" | jq -r 'if ((.toolName // "") == "run_terminal_command" or (.toolName // "") == "run_terminal_cmd" or (.toolName // "") == "Bash") then .toolInput.command // empty else empty end' 2> /dev/null)"
     ;;
   *)
     # Claude PreToolUse / Codex PermissionRequest both gate the Bash tool. One
