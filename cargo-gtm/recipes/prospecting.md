@@ -245,14 +245,33 @@ curl -fsSL "$(cargo-ai orchestration batch download --uuid "$B" | jq -r .url)" >
 
 The address lands in `cargo_email`; nothing else comes back (no status, no provider). No tool in the workspace, or the user wants a custom provider order? Hand-roll the chain in [`../references/waterfall-strategy.md`](../references/waterfall-strategy.md) and verify its output with `waterfall.verifyEmail`.
 
-### Step 6: Free cull (the tool already verified)
+### Step 5.5 — Coalesce the two email sources (free)
+
+Step 5 only ran on the residue, so its CSV holds 60 of the 200 leads. QA and write-back must see all 200, or the 140 aiArk already covered are silently dropped from the deliverable. aiArk nests its address under `cargo_email.` columns; the tool returns a flat `cargo_email`.
+
+```bash
+python3 -c 'import csv,json,sys; json.dump(list(csv.DictReader(open("/tmp/p2-emails.csv"))), sys.stdout)' \
+  > /tmp/p2-emails.json
+
+jq -n --slurpfile tool /tmp/p2-emails.json --slurpfile ai /tmp/p2-prospect-enriched.json '
+  def ark_email:
+    [to_entries[] | select((.key | startswith("cargo_email.")) and ((.value // "") | test("@"))) | .value]
+    | first // "";
+  ($tool[0] | map({key: .linkedinUrl, value: .cargo_email}) | from_entries) as $em
+  | [$ai[0][] | ark_email as $ark
+     | . + {email: (if $ark != "" then $ark else ($em[.linkedinUrl] // "") end),
+            email_source: (if $ark != "" then "aiArk"
+                           elif ($em[.linkedinUrl] // "") != "" then "Find email tool"
+                           else "" end)}]' > /tmp/p2-coalesced.json
+```
+
+### Step 6: Free cull (both sources already verified)
 
 ```bash
 # FREE pre-cull: stamp every row with email_risk/recommendation
-# (QA scripts: ../references/contact-accuracy.md; Node >= 22.18;
-# it reads the batch download CSV directly)
-node <skill-dir>/scripts/validate-emails.ts --input /tmp/p2-emails.csv \
-  --email-column cargo_email --json > /tmp/p2-culled.json
+# (QA scripts: ../references/contact-accuracy.md; Node >= 22.18)
+node <skill-dir>/scripts/validate-emails.ts --input /tmp/p2-coalesced.json \
+  --email-column email --json > /tmp/p2-culled.json
 ```
 
 No paid verification here: with `returns_catchalls` unset, the Find email tool only returns addresses `zeroBounce` graded `valid`. If you set `returns_catchalls: true`, run the preset **Verify email** tool on the cull's survivors and merge its `cargo_status` instead of the constant below.
@@ -262,11 +281,10 @@ No paid verification here: with `returns_catchalls` unset, the Find email tool o
 Stamp each row's verification status (the audit must see **every** row with its real status, so never pre-filter to `valid` first, or the VERIFY/REMOVE verdicts and their counts are lost), then audit:
 
 ```bash
-# Merge: a tool-returned address is zeroBounce-valid; an empty one stays empty
-# so the audit marks the row no-email.
-jq -c 'map(. + {email: .cargo_email}
-           | . + {emailStatus: (if (.email // "") != "" then "valid" else "" end)})
-' /tmp/p2-culled.json > /tmp/p2-merged.json
+# Merge: both sources return a verified address, so a non-empty one is valid;
+# an empty one stays empty so the audit marks the row no-email.
+jq -c 'map(. + {emailStatus: (if (.email // "") != "" then "valid" else "" end)})' \
+  /tmp/p2-culled.json > /tmp/p2-merged.json
 
 # Audit: SEND / VERIFY / REVIEW / REMOVE per row; summary counts go in the receipt
 node <skill-dir>/scripts/contact-accuracy-audit.ts --input /tmp/p2-merged.json --json > /tmp/p2-final.json
