@@ -132,16 +132,26 @@ batch_rows "$B" > /tmp/p1-emails.json   # address in cargo_email
 # Step 6, no paid VERIFY: aiArk.enrichPerson returns a verified email, and the
 # tool only returns addresses zeroBounce graded valid
 
-# Step 7 — Coalesce + summary: one row per lead, keyed on the LinkedIn URL
+# Step 7 — Coalesce + summary: one row per lead, keyed on the LinkedIn URL.
+# Most leads get their address from step 3a, so the coalesce has to read both
+# sources: aiArk nests its address under `cargo_email.` columns, the tool
+# returns a flat `cargo_email`.
 jq -n --slurpfile fe /tmp/p1-emails.json --slurpfile ai /tmp/p1-prospect-enriched.json '
+  def ark_email:
+    [to_entries[] | select((.key | startswith("cargo_email.")) and ((.value // "") | test("@"))) | .value]
+    | first // "";
   ($fe[0] | map({key: .linkedinUrl, value: .cargo_email}) | from_entries) as $em
-  | [$ai[0][] | {first_name, last_name, company_name, linkedinUrl,
-        found_email: ($em[.linkedinUrl] // "")}]'
+  | [$ai[0][] | ark_email as $ark
+     | {first_name, last_name, company_name, linkedinUrl,
+        found_email: (if $ark != "" then $ark else ($em[.linkedinUrl] // "") end),
+        email_source: (if $ark != "" then "aiArk"
+                       elif ($em[.linkedinUrl] // "") != "" then "Find email tool"
+                       else "" end)}]'
 ```
 
 The tool takes `linkedinUrl` only as a `linkedin.com/in/` profile URL; a row with neither that nor `companyDomain` exits empty without calling a provider. No Find email tool in the workspace? Use `FullEnrich.findEmail` with `companyName` and `linkedinUrl` here, then `waterfall.verifyEmail` on its `cargo_most_probable_email`.
 
-aiArk's own email sits inside its `email` output object (`email.output[0].address`), so in the CSV it is under the `cargo_email.` columns, not a flat `email`.
+aiArk's own email sits inside its `email` output object (`email.output[0].address`), so in the CSV it is under the `cargo_email.` columns, not a flat `email` — which is why step 7 reads the two shapes separately rather than coalescing one key.
 
 **Credit budget**: ~10 leads × (0.2 + 0 + 0.1 + 0.01 + 1.1) = ~14 credits. Step 5 (the Find email tool, ~1.1 per hit and roughly 0 on a miss) only runs on the rows step 3a left without an email, and `aiArk.enrichPerson` usually returns one, so the real figure lands under this.
 

@@ -114,15 +114,17 @@ batch_rows "$B" > /tmp/emails.json   # address in cargo_email
 
 No tool in the workspace, or a custom provider order? Hand-roll the chain in [`../references/waterfall-strategy.md`](../references/waterfall-strategy.md).
 
-### Step 6 — Verify emails
+### Step 6 — Verify emails step 5 did not verify
 
-Skip this for step 5's addresses: with `returns_catchalls` unset, the tool only returns addresses `zeroBounce` graded `valid`. Run the preset **Verify email** tool (0.2; `waterfall.verifyEmail` is 0.1 by hand) only on addresses from another source, or on step 5's output if you set `returns_catchalls: true`:
+**Do not run this on step 5's output.** With `returns_catchalls` unset, the tool only returns addresses `zeroBounce` graded `valid`, so a second pass costs 0.2 a row and changes nothing. Run the preset **Verify email** tool only on addresses from another source — the user's own CSV, a CRM export — or on step 5's output when you set `returns_catchalls: true`. On the default path there is nothing to verify here; go to step 7.
+
+With such a list in `/tmp/unverified.json` (objects carrying an `email`):
 
 ```bash
 VTOOL=$(cargo-ai orchestration tool list | jq -r '.tools[] | select(.isReadOnly and .name == "Verify email") | .uuid')
 B=$(cargo-ai orchestration action execute-batch \
   --action "{\"kind\":\"tool\",\"toolUuid\":\"$VTOOL\"}" \
-  --records "$(jq -c '[.[] | select((.cargo_email // "") != "") | {email: .cargo_email}]' /tmp/emails.json)" \
+  --records "$(jq -c '[.[] | select((.email // "") != "") | {email}]' /tmp/unverified.json)" \
   --wait-until-finished | jq -r '.batch.uuid')
 batch_rows "$B" > /tmp/verified.json   # cargo_status, cargo_is_safe
 ```
