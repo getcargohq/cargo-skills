@@ -77,7 +77,7 @@ Every sign-in path (CLI ≥ 1.0.136) then offers to install these skills with a 
 
 Without a global install, prefix every command with `npx @cargo-ai/cli` instead of `cargo-ai`.
 
-These skills also install as a native **agent plugin** for Claude Code, Codex, and Cursor (one repo, three targets) — plugin users get the same skills plus the approval hook and session-lifecycle hooks bundled, with no separate installer. See the repo `README.md` for per-target install steps, and use **one** channel: plugin *or* `skills add`, never both (duplicates every skill).
+These skills also install as a native **agent plugin** for Claude Code, Codex, Cursor, Grok Bot, and Grok Build (one repo, four plugin formats). Every target gets the same skills and a host-appropriate guarded approval hook; Claude Code also gets session-lifecycle hooks. See the repo `README.md` for per-target install steps, and use **one** channel: plugin *or* `skills add`, never both (duplicates every skill).
 
 All commands output JSON to stdout. Failed commands exit non-zero and print `{"error": "...", "status": ..., "body": {...}}` to stderr (the API's own `errorMessage` sits inside `body`). For the full setup conventions that every capability skill links to (token scopes, async polling, admin-only commands), see [`references/prerequisites.md`](references/prerequisites.md).
 

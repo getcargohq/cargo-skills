@@ -155,7 +155,7 @@ function render(skills: Skill[]): string {
 
 ## Install
 
-Paste into Claude Code, Codex, or Cursor:
+Paste into Claude Code, Codex, Cursor, or Grok Bot:
 
 \`\`\`
 Install Cargo by following every step in https://api.getcargo.io/agent-install.txt

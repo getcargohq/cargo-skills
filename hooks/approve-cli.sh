@@ -1,14 +1,15 @@
 #!/bin/sh
-# Approval hook for the Cargo plugin across Claude Code, Cursor, and Codex.
+# Approval hook for the Cargo plugin across Claude Code, Cursor, Codex, and Grok.
 # Each agent prompts before running shell commands; this auto-approves a
 # `cargo-ai` CLI call (or its `npx @cargo-ai/cli` form, optionally piped through
 # a small set of read-only helpers on either side) so the plugin stops asking on
 # every invocation. The verdict shape differs per agent, selected by the first
-# argument: claude | cursor | codex.
+# argument: claude | cursor | codex | grok.
 #
 #   claude -> PreToolUse           (input .tool_input.command)
 #   codex  -> PermissionRequest    (input .tool_input.command)
 #   cursor -> beforeShellExecution (input .command)
+#   grok   -> PreToolUse           (input .toolInput.command)
 #
 # "allow" only skips the prompt; deny/ask rules (including managed deny lists)
 # still take precedence, so this can't punch through an admin block. Conservative
@@ -52,6 +53,12 @@ case "$agent" in
   cursor)
     # Cursor's beforeShellExecution event is shell-specific; command is top-level.
     cmd="$(printf '%s' "$input" | jq -r '.command // empty' 2> /dev/null)"
+    ;;
+  grok)
+    # Grok uses camelCase event keys and names its shell tool
+    # `run_terminal_cmd`. Its Claude-compatible `Bash` alias can also appear,
+    # so accept either spelling and nothing else.
+    cmd="$(printf '%s' "$input" | jq -r 'if ((.toolName // "") == "run_terminal_cmd" or (.toolName // "") == "Bash") then .toolInput.command // empty else empty end' 2> /dev/null)"
     ;;
   *)
     # Claude PreToolUse / Codex PermissionRequest both gate the Bash tool. One
@@ -260,6 +267,9 @@ case "$agent" in
     ;;
   codex)
     printf '%s\n' '{"hookSpecificOutput":{"hookEventName":"PermissionRequest","decision":{"behavior":"allow"}}}'
+    ;;
+  grok)
+    printf '%s\n' '{"decision":"allow"}'
     ;;
   claude | *)
     # claude (PreToolUse) is the default; an unknown agent also lands here, which

@@ -1,0 +1,34 @@
+{
+  "name": "cargo-skills",
+  "description": "Cargo for Grok Build: 19 GTM engineering skills plus guarded approval for safe cargo-ai CLI calls.",
+  "owner": {
+    "name": "Cargo",
+    "url": "https://getcargo.ai"
+  },
+  "plugins": [
+    {
+      "name": "cargo",
+      "displayName": "Cargo",
+      "version": "1.33.0",
+      "source": {
+        "type": "local",
+        "path": "./"
+      },
+      "category": "sales-and-marketing",
+      "description": "Build target lists, enrich and verify contacts, score and qualify leads, sync CRM data, monitor buying signals, run workflows, and manage GTM systems as code.",
+      "homepage": "https://github.com/getcargohq/cargo-skills",
+      "keywords": [
+        "cargo",
+        "cargo-ai",
+        "getcargohq",
+        "gtm engineering",
+        "revenue operations"
+      ],
+      "domains": [
+        "getcargo.ai",
+        "api.getcargo.io",
+        "mcp.getcargo.io"
+      ]
+    }
+  ]
+}
