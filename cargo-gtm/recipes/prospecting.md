@@ -328,12 +328,23 @@ jq -s '([.[1][] | select([to_entries[] | select(.key | startswith("cargo")) | .v
   /tmp/p3-missing-email.json /tmp/p3-aiark-enriched.json > /tmp/p3-still-missing.json
 
 TOOL=$(cargo-ai orchestration tool list | jq -r '.tools[] | select(.isReadOnly and .name == "Find email") | .uuid')
+RECORDS=$(jq -c '[.[] | {firstName, lastName, companyDomain: .domainName, linkedinUrl: .linkedin}]' /tmp/p3-still-missing.json)
+
+# 4a. SAMPLE — the first 20 rows only. This is a quote, not the job.
 B=$(cargo-ai orchestration action execute-batch \
   --action "{\"kind\":\"tool\",\"toolUuid\":\"$TOOL\"}" \
-  --records "$(jq -c '[.[] | {firstName, lastName, companyDomain: .domainName, linkedinUrl: .linkedin}]' /tmp/p3-still-missing.json)" \
-  --limit 20 --wait-until-finished | jq -r '.batch.uuid')
-batch_rows "$B" > /tmp/p3-found.json   # address in cargo_email
-# Report the sample's hit rate and credits, get approval, then rerun without --limit.
+  --records "$RECORDS" --limit 20 --wait-until-finished | jq -r '.batch.uuid')
+batch_rows "$B" > /tmp/p3-sample.json   # address in cargo_email
+
+# 4b. Report the sample's hit rate and the credits it actually spent, quote the
+#     rest of the residue at that rate, and WAIT for approval. Then the real
+#     batch, over the rows the sample did not cover (--limit takes the first N,
+#     so the rest is .[20:]). Stopping after 4a leaves 20 of the 80 rows done.
+B=$(cargo-ai orchestration action execute-batch \
+  --action "{\"kind\":\"tool\",\"toolUuid\":\"$TOOL\"}" \
+  --records "$(jq -c '.[20:]' <<<"$RECORDS")" --wait-until-finished | jq -r '.batch.uuid')
+batch_rows "$B" > /tmp/p3-rest.json
+jq -s 'add' /tmp/p3-sample.json /tmp/p3-rest.json > /tmp/p3-found.json
 
 # 5. No paid verify: every cargo_email the tool returned passed zeroBounce as
 #    valid (returns_catchalls is unset). Rows with an empty cargo_email are the
