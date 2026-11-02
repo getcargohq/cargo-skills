@@ -1,0 +1,42 @@
+{
+  "name": "cargo",
+  "displayName": "Cargo",
+  "description": "Build with Cargo in Grok Build: 19 skills over the cargo-ai CLI for target lists, contact enrichment and verification, lead scoring, CRM sync, signal monitoring, orchestration, storage, segments, projects, diagnostics, and the hosted MCP server.",
+  "version": "1.33.0",
+  "author": {
+    "name": "Cargo",
+    "url": "https://getcargo.ai"
+  },
+  "homepage": "https://github.com/getcargohq/cargo-skills",
+  "repository": "https://github.com/getcargohq/cargo-skills",
+  "license": "MIT",
+  "keywords": [
+    "cargo",
+    "cargo-ai",
+    "getcargohq",
+    "gtm engineering",
+    "revenue operations"
+  ],
+  "skills": [
+    "./cargo",
+    "./cargo-quickstart",
+    "./cargo-gtm",
+    "./cargo-project",
+    "./cargo-orchestration",
+    "./cargo-storage",
+    "./cargo-segmentation",
+    "./cargo-connection",
+    "./cargo-ai",
+    "./cargo-content",
+    "./cargo-context",
+    "./cargo-analytics",
+    "./cargo-billing",
+    "./cargo-diagnostics",
+    "./cargo-observability",
+    "./cargo-hosting",
+    "./cargo-mailbox-management",
+    "./cargo-workspace-management",
+    "./cargo-mcp"
+  ],
+  "hooks": "./hooks/grok-hooks.json"
+}

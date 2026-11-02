@@ -4,7 +4,7 @@
 [![skills.sh](https://img.shields.io/badge/skills.sh-18%20skills-black)](https://www.skills.sh)
 [![License](https://img.shields.io/github/license/getcargohq/cargo-skills?color=black)](LICENSE)
 
-Nineteen agent skills that turn Claude Code, Codex, Cursor, and any [skills.sh](https://skills.sh)-compatible agent into a go-to-market engineering workstation: **build lead lists, find and verify emails and phone numbers, enrich companies and contacts through provider waterfalls, score and qualify leads, write outreach, sync to your CRM, and monitor buying signals** (job changes, funding rounds, tech-stack and hiring intent) — then make any of it a scheduled, always-on workflow.
+Nineteen agent skills that turn Claude Code, Codex, Cursor, Grok Bot, Grok Build, and any [skills.sh](https://skills.sh)-compatible agent into a go-to-market engineering workstation: **build lead lists, find and verify emails and phone numbers, enrich companies and contacts through provider waterfalls, score and qualify leads, write outreach, sync to your CRM, and monitor buying signals** (job changes, funding rounds, tech-stack and hiring intent) — then make any of it a scheduled, always-on workflow.
 
 They run on the [Cargo CLI](https://www.npmjs.com/package/@cargo-ai/cli) against [Cargo](https://getcargo.ai), the AI-native revenue infrastructure: **148 integrations** (HubSpot, Salesforce, Attio, Pipedrive, Outreach, Salesloft, Lemlist, Smartlead, Instantly, Snowflake, BigQuery, Slack, Google Ads, Meta and LinkedIn audiences, and more), **55 credits-based data providers** with per-action costs documented up front, models and SQL over workspace storage, AI agents with RAG, alerting, hosted apps, and GTM as Code projects that declare a whole workspace.
 
@@ -74,7 +74,7 @@ hermes skills tap add getcargohq/cargo-skills
 # then set "path": "." for this entry in ~/.hermes/skills/.hub/taps.json
 ```
 
-**Two things differ on Hermes.** The plugin channel below is Claude Code / Codex / Cursor only, so its approval hook doesn't apply — Hermes gates tool calls with its own approval policy, and its `pre_tool_call` hooks can only *block* a call, never pre-approve one. Expect `cargo-ai` commands to prompt. And with no bundled session-lifecycle hooks, [the session's three jobs](cargo/SKILL.md) (refresh, register, finalize) are the agent's to run by hand — the router skill already accounts for agents without lifecycle hooks.
+**Two things differ on Hermes.** The plugin channel below is Claude Code / Codex / Cursor / Grok only, so its approval hook doesn't apply — Hermes gates tool calls with its own approval policy, and its `pre_tool_call` hooks can only *block* a call, never pre-approve one. Expect `cargo-ai` commands to prompt. And with no bundled session-lifecycle hooks, [the session's three jobs](cargo/SKILL.md) (refresh, register, finalize) are the agent's to run by hand — the router skill already accounts for agents without lifecycle hooks.
 
 ### Just one job — `gtm-skills`
 
@@ -89,13 +89,13 @@ Finding leads and stakeholders, building a TAM, resolving and enriching LinkedIn
 
 Install those **or** this pack, not both — each standalone skill defers to `cargo-gtm` when the pack is present, so the same request is never claimed twice.
 
-### Agent plugin (alternative channel — Claude Code, Codex, Cursor)
+### Agent plugin (alternative channel — Claude Code, Codex, Cursor, Grok)
 
-The repo also installs as a native **agent plugin**: one source, three targets, sharing the same nineteen skills plus three things `skills add` can't deliver:
+The repo also installs as a native **agent plugin**: one source, four plugin formats across five hosts, sharing the same nineteen skills plus host-specific integration:
 
-- **An approval hook** ([`hooks/approve-cli.sh`](hooks/approve-cli.sh)) that auto-approves safe `cargo-ai` calls (reads, queries, run/batch operations) while credentials (`login`), token minting, report egress, `project deploy`/`destroy`, and any `remove`/`delete` always still prompt. Allow-only — it can never override a deny rule. Wired per target: `PreToolUse` (Claude Code), `PermissionRequest` (Codex), `beforeShellExecution` (Cursor).
+- **An approval hook** ([`hooks/approve-cli.sh`](hooks/approve-cli.sh)) that auto-approves safe `cargo-ai` calls (reads, queries, run/batch operations) while credentials (`login`), token minting, report egress, `project deploy`/`destroy`, and any `remove`/`delete` always still prompt. Allow-only — it can never override a deny rule. Wired per plugin format: `PreToolUse` (Claude Code and Grok Build), `PermissionRequest` (Codex), `beforeShellExecution` (Cursor and Grok Bot).
 - **Session-lifecycle hooks** (Claude Code only): plugin-bundled `SessionStart`/`Stop`/`SessionEnd` scripts keep the CLI at the bundle's pinned version and log the session to `workspace_management.sessions` — no installer needed. They defer automatically when the installer's copies exist under `~/.claude/hooks/`, so running both never double-registers a session. Unlike the installer's, the plugin's `SessionStart` does **not** run `skills add` (the plugin owns the skills).
-- **Native subagents** (Claude Code only): `cargo-execution-planner` (costed GTM plans with pilot + budget reconciliation, read-only) and `cargo-list-builder` (parallel sourcing fan-out that executes only pre-approved slices), both on the cheap model tier — [`agents/`](agents/).
+- **Native subagents** (Claude Code and Grok Build): `cargo-execution-planner` (costed GTM plans with pilot + budget reconciliation, read-only) and `cargo-list-builder` (parallel sourcing fan-out that executes only pre-approved slices). Grok Build loads the same Claude-compatible agent definitions through its plugin compatibility layer — [`agents/`](agents/).
 
 Optional extra — a **statusline** with live Cargo context (workspace · credits · CLI pin state). Statuslines are user-level config, so wire it yourself in `~/.claude/settings.json`:
 
@@ -131,12 +131,33 @@ codex plugin marketplace add getcargohq/cargo-skills
 
 **Cursor:** open **Customize** in the sidebar → add the `getcargohq/cargo-skills` marketplace → install the **Cargo** plugin (UI-driven; the `.cursor-plugin/` manifests are picked up automatically).
 
+**Grok Bot:** open **Connect apps** → **Team plugins** → **Cargo** → **Connect**. Grok Bot currently consumes Cargo's Cursor-compatible plugin package. The plugin is account-level, while each Bot has its own cloud computer, so install the Cargo CLI on the Bot that will run Cargo and authenticate there. Browser OAuth is the recommended interactive path; the final `whoami` is the proof that the intended workspace is active.
+
+```bash
+npm install -g @cargo-ai/cli
+cargo-ai login --oauth
+cargo-ai whoami
+```
+
+**Grok Build:** add the native Cargo marketplace and install its plugin. Grok plugins do not install runtime binaries, so install the Cargo CLI separately, then authenticate.
+
+```bash
+grok plugin marketplace add getcargohq/cargo-skills
+grok plugin install cargo --trust
+grok plugin enable cargo
+npm install -g @cargo-ai/cli
+cargo-ai login --oauth
+cargo-ai whoami
+```
+
+The native Grok Build package deliberately does not run the Claude-only session hooks, silently install software, transmit session data, or embed a Cargo token. To use Cargo's hosted MCP server instead of the CLI, follow the `cargo-mcp` skill and connect `https://mcp.getcargo.io/mcp` with OAuth or a workspace-scoped bearer token.
+
 **Claude Cowork** (Claude Desktop): open **Customize** in the sidebar → **+** next to **Personal plugins** → **Create plugin** → **Add marketplace** → enter `https://github.com/getcargohq/cargo-skills` → install the **Cargo** plugin. Two sandbox-specific notes:
 
 - **Network egress:** in the session's **Settings → Capabilities**, turn on network egress and allow at least `api.getcargo.io` and `registry.npmjs.org` (or all domains) so the CLI can install and reach Cargo.
 - **Sign-in:** the Cowork sandbox has no TTY, so the browser sign-in flow can't complete there. Mint a workspace API token at [app.getcargo.io](https://app.getcargo.io) → **Settings → API** and have the agent run `cargo-ai login --token <token>` instead. Start the session on a project folder — auth persists in that folder, so later Cowork sessions on the same folder reuse it.
 
-**Pick one channel.** Plugin install and `skills add` both register the skills; using both duplicates them (plugin copies are namespaced `cargo:<skill>`). Plugin users should uninstall the `skills add` copies (and skip the installer) and update via `/plugin marketplace update cargo-skills` + `/plugin update cargo@cargo-skills` instead.
+**Pick one channel.** Plugin install and `skills add` both register the skills; using both duplicates them (plugin copies are namespaced `cargo:<skill>`). Claude Code users update via `/plugin marketplace update cargo-skills` + `/plugin update cargo@cargo-skills`; Grok Bot users reconnect Cargo after the team plugin is updated; Grok Build users run `grok plugin marketplace update cargo-skills` + `grok plugin update cargo`.
 
 For [OpenClaw](https://openclaw.ai), install the bundle from ClawHub:
 
@@ -153,7 +174,7 @@ The Cargo CLI and these skills ship updates regularly. The bundle pins the CLI v
 
 ### Claude Code
 
-Install the [**Cargo plugin**](#agent-plugin-alternative-channel--claude-code-codex-cursor) above
+Install the [**Cargo plugin**](#agent-plugin-alternative-channel--claude-code-codex-cursor-grok) above
 (`/plugin marketplace add getcargohq/cargo-skills`, then `/plugin install cargo@cargo-skills`) and the
 bundled hooks keep everything current automatically: every new Claude Code session (1) converges
 `@cargo-ai/cli` to the pin and refreshes the plugin itself for the next session, (2) checkpoints the
@@ -197,6 +218,18 @@ Without the plugin, the `cargo` router skill still instructs the agent to refres
 clawhub install getcargohq/cargo-skills           # re-run to pull latest skills
 npm install -g "@cargo-ai/cli@$(cat ~/.openclaw/skills/cargo/cli-version 2>/dev/null || echo latest)"
 ```
+
+### Grok Bot / Grok Build
+
+For Grok Bot, updates arrive through the account's team-plugin catalog. Reconnect Cargo from **Connect apps** if the connected copy is stale. For Grok Build, refresh the marketplace and plugin explicitly. The CLI remains pinned separately by the bundle's `cargo/cli-version` file because agent plugins distribute instructions and hooks, not npm packages.
+
+```bash
+grok plugin marketplace update cargo-skills
+grok plugin update cargo
+cargo-ai doctor
+```
+
+If `doctor` reports that the CLI is behind the skill bundle's pin, ask Grok to read `cargo/cli-version` from the installed plugin and install that exact `@cargo-ai/cli` version.
 
 ### Cursor / Windsurf / Copilot / other skills.sh agents
 

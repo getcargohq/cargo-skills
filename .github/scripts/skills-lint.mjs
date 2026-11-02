@@ -537,9 +537,9 @@ function main() {
     }
   }
 
-  // 5. The agent plugin manifests (Claude Code, Codex, Cursor) must parse and
+  // 5. The agent plugin manifests (Claude Code, Codex, Cursor, Grok) must parse and
   //    stay in lockstep with the router's version — the plugin version IS the
-  //    bundle version, identical across all three targets.
+  //    bundle version, identical across all four targets.
   const routerVersion = existsSync(routerPath)
     ? (readFileSync(routerPath, "utf8").match(/^version:\s*"([^"]+)"/m) || [])[1]
     : null;
@@ -547,6 +547,7 @@ function main() {
     ".claude-plugin/plugin.json",
     ".codex-plugin/plugin.json",
     ".cursor-plugin/plugin.json",
+    ".grok-plugin/plugin.json",
   ]) {
     const pluginPath = join(repoRoot, rel);
     if (!existsSync(pluginPath)) continue;
@@ -563,19 +564,45 @@ function main() {
         `${rel} version \`${plugin.version}\` does not match cargo/SKILL.md version \`${routerVersion}\` — the plugin version mirrors the router's.`
       );
     }
+    if (plugin && rel === ".grok-plugin/plugin.json") {
+      const declaredSkills = Array.isArray(plugin.skills)
+        ? plugin.skills
+        : [plugin.skills].filter(Boolean);
+      const expectedSkills = SKILL_DIRS.map((dir) => `./${dir}`).sort();
+      const actualSkills = [...declaredSkills].sort();
+      if (JSON.stringify(actualSkills) !== JSON.stringify(expectedSkills)) {
+        err(
+          pluginPath,
+          0,
+          ".grok-plugin/plugin.json must enumerate every non-redirect skill directory so xAI's marketplace index can discover all 19 skills."
+        );
+      }
+    }
   }
   // The marketplace manifests and hook-wiring files just need to parse.
   for (const rel of [
     ".claude-plugin/marketplace.json",
     ".agents/plugins/marketplace.json",
     ".cursor-plugin/marketplace.json",
+    ".grok-plugin/marketplace.json",
     "hooks/codex-hooks.json",
     "hooks/cursor-hooks.json",
+    "hooks/grok-hooks.json",
   ]) {
     const p = join(repoRoot, rel);
     if (!existsSync(p)) continue;
     try {
-      JSON.parse(readFileSync(p, "utf8"));
+      const parsed = JSON.parse(readFileSync(p, "utf8"));
+      if (rel === ".grok-plugin/marketplace.json" && routerVersion) {
+        const cargoEntry = parsed.plugins?.find((entry) => entry?.name === "cargo");
+        if (cargoEntry?.version !== routerVersion) {
+          err(
+            p,
+            0,
+            `.grok-plugin/marketplace.json version \`${cargoEntry?.version ?? "missing"}\` does not match cargo/SKILL.md version \`${routerVersion}\`.`
+          );
+        }
+      }
     } catch (e) {
       err(p, 0, `${rel} does not parse as JSON: ${e.message}`);
     }

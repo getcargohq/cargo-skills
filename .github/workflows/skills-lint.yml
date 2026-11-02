@@ -63,6 +63,9 @@ jobs:
       - name: Run the skill-load detector's self-test
         run: bash hooks/skill-loads.sh --self-test
 
+      - name: Run approval-hook fixtures
+        run: bash hooks/approve-cli.test.sh
+
   routing-evals:
     name: Route prompts to the right skill
     runs-on: ubuntu-latest
