@@ -10,6 +10,17 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### `cargo` 1.34.0, `cargo-workspace-management` 1.7.0, plugin 1.34.0: no session capture
+
+The plugin and the skills no longer record sessions, to comply with the [Anthropic Software Directory Policy](https://support.claude.com/en/articles/13145358-anthropic-software-directory-policy).
+
+- **Removed the `Stop` and `SessionEnd` hooks** and their scripts (`hooks/session-checkpoint.sh`, `hooks/session-end.sh`). Nothing sends Cargo a prompt, a transcript, or a summary of one, and nothing runs `claude -p` on the user's account.
+- **Removed `hooks/skill-loads.sh`** and its CI self-test. It read the transcript to build the skill-load marker for the session row.
+- **`hooks/session-start.sh` registers no session row.** It still installs the pinned CLI and refreshes the plugin, and reads nothing from the session.
+- **`cargo` router:** Job 1 is refresh only and Job 3 is only the star-the-repo ask. The session register/finalize steps and the session-share ask are gone.
+- **`cargo-workspace-management`:** removed the Sessions section, `references/examples/sessions.md`, the session-share report example and the "share this session with Cargo" trigger. Bug and feedback reports are unchanged.
+- **`evals/README.md`:** real cases now come from reports users file, not from session telemetry.
+
 ### `cargo` 1.33.0, `cargo-project` 4.4.0, `cargo-storage` 1.5.0, `cargo-orchestration` 1.18.0, `cargo-mcp` 1.3.0, `cargo-content` 1.3.0, `cargo-gtm` 2.6.0, + 2 patches: what shipped between CLI 1.0.134 and 1.0.140
 
 Checked against getcargohq/cargo master (2026-10-30), CLI 1.0.140 and cdk 1.0.134.
@@ -219,7 +230,7 @@ pin refused to install. [`cargo/cli-version`](cargo/cli-version) → **1.0.96**.
 - **The `curl … install.sh | sh` bootstrap is retired and the docs still recommended it.** The
   endpoint now prints a notice and exits non-zero — deliberately, so a pinned copy fails loudly
   instead of appearing to succeed. Replaced in [`README.md`](README.md) and
-  [`cargo-workspace-management/references/examples/sessions.md`](cargo-workspace-management/references/examples/sessions.md)
+  `cargo-workspace-management/references/examples/sessions.md`
   with the plugin install (which carries the session hooks anyway) and the agent-driven
   `https://api.getcargo.io/INSTALL.md` paste. The router's "never run that installer" paragraph
   became a rule about a command that no longer exists; it now says installing is the user's call
@@ -740,7 +751,7 @@ The `description` field is the only text an agent weighs before deciding whether
 - **CLI version pinning.** New [`cargo/cli-version`](cargo/cli-version) — a single-line semver pin, the source of truth for which `@cargo-ai/cli` the skills were written against. It lives *inside* the router skill so it ships with `skills add` and the ClawHub bundle, letting session hooks read it locally (`~/.claude/skills/cargo/cli-version`) with zero extra network calls. Consumers (SessionStart hook, install.sh, the refresh snippets in these docs) install `@cargo-ai/cli@$(cat …cli-version || echo latest)` — the pin is a coherence optimization, never a gate: unreadable pin → `latest`. The CLI release pipeline PRs pin bumps to this repo; merging is the deliberate skills+CLI promotion. Linter now asserts the pin exists and is bare semver, and that every skill's `openclaw` install block stays `@cargo-ai/cli@latest` (frontmatter pinning would cost 14 bumps per CLI release; the session hook converges to the pin right after bootstrap).
 
 - **Codex + Cursor plugin targets.** One plugin source now fans out to three coding agents: new [`.agents/plugins/marketplace.json`](.agents/plugins/marketplace.json) (Codex marketplace) and [`.cursor-plugin/marketplace.json`](.cursor-plugin/marketplace.json), with [`.codex-plugin/plugin.json`](.codex-plugin/plugin.json) / [`.cursor-plugin/plugin.json`](.cursor-plugin/plugin.json) manifests kept in version lockstep with the router (linter-enforced across all three). The approval hook is wired per target — `PreToolUse` (Claude Code) via plugin.json, `PermissionRequest` (Codex) via [`hooks/codex-hooks.json`](hooks/codex-hooks.json), `beforeShellExecution` (Cursor) via [`hooks/cursor-hooks.json`](hooks/cursor-hooks.json) — reusing `approve-cli.sh`'s existing per-agent verdict dispatch.
-- **Plugin-bundled session-lifecycle hooks (Claude Code).** New [`hooks/session-start.sh`](hooks/session-start.sh), [`hooks/session-checkpoint.sh`](hooks/session-checkpoint.sh), [`hooks/session-end.sh`](hooks/session-end.sh) wired into the Claude plugin's `SessionStart`/`Stop`/`SessionEnd`, so plugin-channel users get pinned-CLI refresh and session logging without the installer. Each script defers (`exit 0`) when the installer's counterpart exists at `~/.claude/hooks/`, so installer + plugin never double-register a session; the plugin's `session-start` reads the pin from the plugin root and deliberately does **not** run `skills add` (the plugin owns the skills — a parallel `skills add` would duplicate them).
+- **Plugin-bundled session-lifecycle hooks (Claude Code).** New `hooks/session-start.sh`, `hooks/session-checkpoint.sh`, `hooks/session-end.sh` wired into the Claude plugin's `SessionStart`/`Stop`/`SessionEnd`, so plugin-channel users get pinned-CLI refresh and session logging without the installer. Each script defers (`exit 0`) when the installer's counterpart exists at `~/.claude/hooks/`, so installer + plugin never double-register a session; the plugin's `session-start` reads the pin from the plugin root and deliberately does **not** run `skills add` (the plugin owns the skills — a parallel `skills add` would duplicate them).
 
 - **Plugin self-update.** The plugin's `session-start.sh` now also refreshes the plugin itself (`claude plugin marketplace update cargo` + `claude plugin update cargo@cargo`, detached so session start is never blocked; takes effect next session) — the plugin channel's equivalent of the installer's `skills add` refresh, with zero duplication by construction. Paired with the installer refactor (`install.sh` now installs the **plugin** on Claude Code instead of scaffolding standalone hooks, migrates legacy scaffolding away, and keeps `skills add` only as the no-plugin fallback), the plugin is the single source of truth for everything agent-facing; README's Claude Code section documents the new flow.
 - **Agent-portable docs.** The pinned-install command in `cargo/SKILL.md` (session job 1) and `references/prerequisites.md` no longer hardcodes `~/.claude/skills/…` — the pin is read from the skill directory the agent loaded, whatever the agent (the hardcoded path silently degraded Codex/Cursor to `@latest`). Session-row examples in the manual path are agent-neutral ("Agent session"), job 1 now says to skip `skills add` when the skills came from a plugin, and the permission-prompts note covers all three agents' hook events.
