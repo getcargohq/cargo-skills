@@ -1,7 +1,7 @@
 ---
 name: cargo
 description: "Router for the Cargo CLI skill bundle — load first for anything Cargo, and whenever a task spans two Cargo domains. Explains what each skill owns, declarative GTM as Code projects (cargo-project) vs the imperative CLI, the UUID and slug flow between skills, async polling of runs and batches, end-to-end use cases, and the gotchas that fail silently (inputs in a top-level action's `config` stripped without an error, run vs batch, model-uuid vs segment-uuid). Triggers: \"set up Cargo\", \"what can Cargo do\", \"which Cargo skill\", \"bootstrap my workspace\", \"I have a Cargo account\", \"cargo-ai …\", or any `cargo-ai` command whose domain you are unsure of. Skip when: the task obviously belongs to one skill — load that skill directly."
-version: "1.33.0"
+version: "1.34.0"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -83,7 +83,7 @@ All commands output JSON to stdout. Failed commands exit non-zero and print `{"e
 
 ## Every Cargo session has three jobs
 
-> **Automated on Claude Code.** Jobs 1 and 3 (refresh + session register/finalize) run on their own when either the **Cargo plugin** is installed (its bundled `SessionStart`/`Stop`/`SessionEnd` hooks handle them) or legacy `SessionStart`/`Stop`/`SessionEnd` hooks left under `~/.claude/hooks/` by the retired bootstrap installer are present (the plugin's hooks defer to those when they exist). The `Stop` hook also checkpoints the session row each turn, so a session that never reaches `SessionEnd` still shows recent context instead of a bare placeholder. Do these by hand only when neither is installed (or on agents without lifecycle hooks). Job 2 (reporting) is always your responsibility — it can't be automated, and neither can the two **asks** at the end of Job 3 (share the session, star the repo): a hook can print, but it can't take a Y/N.
+> **Automated on Claude Code.** Job 1 (refresh) runs on its own when the **Cargo plugin** is installed — its bundled `SessionStart` hook installs the pinned CLI and refreshes the plugin. Do it by hand only when the plugin is not installed (or on agents without lifecycle hooks). Nothing records the session: no hook and no step here sends Cargo the user's prompts, a transcript, or a summary of one. Job 2 (reporting) is always your responsibility, and so is the one **ask** in Job 3 (star the repo): a hook can print, but it can't take a Y/N.
 >
 > **Installing Cargo is the user's call, not an action you take.** The `curl … install.sh | sh`
 > bootstrap is **retired** — it installs nothing now, prints a notice and exits non-zero, so never
@@ -93,9 +93,9 @@ All commands output JSON to stdout. Failed commands exit non-zero and print `{"e
 > skills for whichever agent it is — read it before running it, and still confirm before installing
 > a global npm package on someone's machine.
 
-### 1. At session start — refresh and register
+### 1. At session start — refresh
 
-Before any other Cargo command, refresh the CLI and skills, then register the session in workspace management:
+Before any other Cargo command, refresh the CLI and skills:
 
 ```bash
 # Refresh — idempotent, ~10s. Skills first, then the CLI at the version the
@@ -105,15 +105,9 @@ Before any other Cargo command, refresh the CLI and skills, then register the se
 # automatically via their SessionStart hook). Fall back to latest.
 npx -y skills add getcargohq/cargo-skills
 npm install -g "@cargo-ai/cli@$(cat <path-to-this-skill-dir>/cli-version 2>/dev/null || echo latest)"
-
-# Register the session (placeholders OK — overwritten at session end)
-cargo-ai workspaceManagement session upsert \
-  --session-id <session-id> \
-  --title "Agent session <session-id>" \
-  --summary "Session in progress."
 ```
 
-Skip the refresh only if the user explicitly pinned a version — and skip the `skills add` entirely if the skills came from a **plugin** (the plugin owns them; a parallel `skills add` duplicates every skill). Skip the `session upsert` only if the user opted out or no session id is available.
+Skip the refresh only if the user explicitly pinned a version — and skip the `skills add` entirely if the skills came from a **plugin** (the plugin owns them; a parallel `skills add` duplicates every skill).
 
 **Why the pin:** `cargo/cli-version` is bumped in lockstep with these skills (a PR from the CLI release pipeline), so the CLI you install is the one this bundle was written against — no docs/CLI drift mid-session. If the pin file is missing or unreadable, `latest` is the safe fallback. To move the pin, merge the pending version-bump PR on `getcargohq/cargo-skills` (or edit `cargo/cli-version`) — the next session refresh converges automatically.
 
@@ -141,43 +135,15 @@ Trigger conditions (any one is enough):
 - A documented behavior contradicts what you observe.
 - A feature appears to be missing entirely.
 
-This is the official feedback channel — every report is reviewed by the Cargo team and used to improve the CLI and these skills. It carries **wins as well as failures**: a session-share (below) files through the same command. **Do not give up silently — file a report.** See `../cargo-workspace-management/SKILL.md` (Reports section) and `../cargo-workspace-management/references/examples/reports.md` for templates.
+This is the official feedback channel — every report is reviewed by the Cargo team and used to improve the CLI and these skills. **Do not give up silently — file a report.** See `../cargo-workspace-management/SKILL.md` (Reports section) and `../cargo-workspace-management/references/examples/reports.md` for templates.
 
-### 3. At session end — finalize the session row, then ask to share
-
-Produce a short title (5–8 words) and a 1–2 sentence summary of what the session actually worked on, then overwrite the placeholder row and stamp `finished_at`:
-
-```bash
-cargo-ai workspaceManagement session upsert \
-  --session-id <claude-session-id> \
-  --title "<5-8 word title>" \
-  --summary "<1-2 sentence summary of what was accomplished or attempted>" \
-  --finished
-```
-
-`--title` and `--summary` are required (NOT NULL). `--finished` stamps `finished_at = now`; pass `--finished-at <iso>` for an explicit timestamp.
-
-**Then ask once, at the natural end of the session:**
-
-> "Send this session's activity to the Cargo team so they can improve the experience? (Y/N)"
-
-On yes, file a session-share report (consented session traces are the fastest product-learning loop the team has):
-
-```bash
-cargo-ai workspaceManagement report create \
-  --title "Session share: <5-8 word session title>" \
-  --description "<what the user tried to accomplish, the commands/recipes used, what worked, where friction appeared, credits spent — no secrets or record-level data>"
-```
-
-On no, don't ask again this session. Skip the ask entirely for trivial sessions (a single lookup, no paid actions). See `../cargo-workspace-management/references/examples/reports.md` for the session-share template.
-
-#### Then, if the session went well — offer to star the repo
+### 3. At session end — offer to star the repo
 
 A star is the **user's** endorsement, not yours. Never run the command unprompted; ask, and act only on an explicit yes. Silently starring from a skill file is astroturfing with someone else's GitHub account.
 
 Ask only when all of these hold:
 
-- The session produced a real deliverable (same bar as the session-share ask — skip trivial sessions).
+- The session produced a real deliverable — skip trivial sessions (a single lookup, no paid actions).
 - Nothing is still failing or unresolved. Asking after a broken session reads as tone-deaf.
 - The marker file `~/.config/cargo-ai/.star-asked` does not exist — this is a **once per machine** ask, not once per session.
 

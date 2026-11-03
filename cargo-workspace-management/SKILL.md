@@ -1,7 +1,7 @@
 ---
 name: cargo-workspace-management
-description: "Administer a Cargo workspace and talk back to the Cargo team — invite and manage members, mint and rotate API tokens, organize plays, tools, and agents into folders, inspect roles, upload batch input files, and file reports. Triggers: \"invite my teammate\", \"create an API token for CI\", \"who has access\", \"organize these into folders\", \"rotate that token\", \"upload this CSV for a batch\" — and for feedback: \"report this bug to Cargo\", \"send feedback to the Cargo team\", \"this CLI command is broken\", \"share this session with Cargo\", \"request a feature\". Most commands need a token with admin access. Skip when: the question is about credits, plans, or invoices — use cargo-billing."
-version: "1.6.3"
+description: "Administer a Cargo workspace and talk back to the Cargo team — invite and manage members, mint and rotate API tokens, organize plays, tools, and agents into folders, inspect roles, upload batch input files, and file reports. Triggers: \"invite my teammate\", \"create an API token for CI\", \"who has access\", \"organize these into folders\", \"rotate that token\", \"upload this CSV for a batch\" — and for feedback: \"report this bug to Cargo\", \"send feedback to the Cargo team\", \"this CLI command is broken\", \"request a feature\". Most commands need a token with admin access. Skip when: the question is about credits, plans, or invoices — use cargo-billing."
+version: "1.7.0"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -28,7 +28,6 @@ Workspace administration: managing users, API tokens, folders, roles, workspace-
 > See `references/examples/tokens.md` for API token creation and rotation examples.
 > See `references/examples/folders.md` for organizing resources into folders.
 > See `references/examples/reports.md` for examples of submitting workspace management reports.
-> See `references/examples/sessions.md` for session tracking — the Cargo installer scaffolds the Claude Code SessionStart + Stop + SessionEnd hooks automatically.
 
 ## Bootstrap
 
@@ -41,7 +40,7 @@ cargo-ai login --email you@company.com  # emailed code, no browser; creates the 
 cargo-ai whoami                         # confirm the active workspace before any write
 ```
 
-Every command prints JSON to stdout; failures exit non-zero and print `{"error": "...", "status": ..., "body": ...}` to stderr. Anything that creates a run or a batch is async — pass `--wait-until-finished` or poll the matching `get`. **Admin-only:** user, role, and envVar writes require workspace-management write (admin) access. Any user can create, list, and remove their own tokens; admin access adds service-user tokens. Folder writes check folder write permission, and `report create` and `session upsert` need none. When the full skill bundle is installed, [`../cargo/references/prerequisites.md`](../cargo/references/prerequisites.md) adds the CLI version pin, token scopes, and the admin-only surface.
+Every command prints JSON to stdout; failures exit non-zero and print `{"error": "...", "status": ..., "body": ...}` to stderr. Anything that creates a run or a batch is async — pass `--wait-until-finished` or poll the matching `get`. **Admin-only:** user, role, and envVar writes require workspace-management write (admin) access. Any user can create, list, and remove their own tokens; admin access adds service-user tokens. Folder writes check folder write permission, and `report create` needs none. When the full skill bundle is installed, [`../cargo/references/prerequisites.md`](../cargo/references/prerequisites.md) adds the CLI version pin, token scopes, and the admin-only surface.
 
 ## Discover resources first
 
@@ -67,7 +66,6 @@ cargo-ai workspaceManagement token remove <token-uuid>
 cargo-ai workspaceManagement folder list
 cargo-ai workspaceManagement folder create --name <name> --emoji-slug <slug> --kind <kind>
 cargo-ai workspaceManagement report create --title <title> --description <description>
-cargo-ai workspaceManagement session upsert --session-id <id> --title <title> --summary <summary> [--finished]
 cargo-ai workspaceManagement envVar list
 cargo-ai workspaceManagement envVar create --key <KEY> [--value <v>] [--secret]
 ```
@@ -269,31 +267,6 @@ cargo-ai workspaceManagement report create \
 ```
 
 > Do not silently give up on a failing CLI task. **Send a report.** This closes the feedback loop so the CLI and these skills can be improved.
-
-## Sessions
-
-Record a Claude Code session in `workspace_management.sessions`. One row per `(workspaceUuid, sessionId)`. Used by the `cargo` router's Claude Code SessionStart + Stop + SessionEnd hook recipe — see [`../cargo/SKILL.md`](../cargo/SKILL.md) for when to wire them up.
-
-```bash
-# Upsert a session. Idempotent on --session-id within the workspace.
-cargo-ai workspaceManagement session upsert \
-  --session-id <claude-session-id> \
-  --title "<short title>" \
-  --summary "<one-or-two sentence summary>"
-
-# Same call, but also stamp finished_at = now
-cargo-ai workspaceManagement session upsert \
-  --session-id <claude-session-id> \
-  --title "<final title>" \
-  --summary "<final summary>" \
-  --finished
-```
-
-- `--session-id`, `--title`, `--summary` are required on every call. `title` and `summary` are `NOT NULL` in the schema — pass placeholders on the start call and overwrite on the end call.
-- `--finished` stamps `finished_at = now`. Use `--finished-at <iso>` for an explicit timestamp instead.
-- Calling `upsert` twice with the same `--session-id` updates the same row — `title` and `summary` are overwritten; `finished_at` only when `--finished` or `--finished-at` is passed.
-
-Returns the upserted session as JSON. The [Cargo installer](https://github.com/getcargohq/cargo-skills#staying-current) wires SessionStart + Stop + SessionEnd hooks that call this command automatically: SessionStart writes a placeholder, the per-turn Stop hook checkpoints the row (no `--finished`), and SessionEnd writes the transcript-driven AI summary with `--finished` — see [`references/examples/sessions.md`](references/examples/sessions.md).
 
 ## Environment variables
 

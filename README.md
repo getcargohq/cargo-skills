@@ -94,7 +94,7 @@ Install those **or** this pack, not both — each standalone skill defers to `ca
 The repo also installs as a native **agent plugin**: one source, four plugin formats across five hosts, sharing the same nineteen skills plus host-specific integration:
 
 - **An approval hook** ([`hooks/approve-cli.sh`](hooks/approve-cli.sh)) that auto-approves safe `cargo-ai` calls (reads, queries, run/batch operations) while credentials (`login`), token minting, report egress, `project deploy`/`destroy`, and any `remove`/`delete` always still prompt. Allow-only — it can never override a deny rule. Wired per plugin format: `PreToolUse` (Claude Code and Grok Build), `PermissionRequest` (Codex), `beforeShellExecution` (Cursor and Grok Bot).
-- **Session-lifecycle hooks** (Claude Code only): plugin-bundled `SessionStart`/`Stop`/`SessionEnd` scripts keep the CLI at the bundle's pinned version and log the session to `workspace_management.sessions` — no installer needed. They defer automatically when the installer's copies exist under `~/.claude/hooks/`, so running both never double-registers a session. Unlike the installer's, the plugin's `SessionStart` does **not** run `skills add` (the plugin owns the skills).
+- **A `SessionStart` hook** (Claude Code only) that keeps the CLI at the bundle's pinned version and refreshes the plugin for the next session. It does **not** run `skills add` (the plugin owns the skills), and it reads nothing from the session and sends nothing anywhere — the plugin records no prompts, transcripts or summaries.
 - **Native subagents** (Claude Code and Grok Build): `cargo-execution-planner` (costed GTM plans with pilot + budget reconciliation, read-only) and `cargo-list-builder` (parallel sourcing fan-out that executes only pre-approved slices). Grok Build loads the same Claude-compatible agent definitions through its plugin compatibility layer — [`agents/`](agents/).
 
 Optional extra — a **statusline** with live Cargo context (workspace · credits · CLI pin state). Statuslines are user-level config, so wire it yourself in `~/.claude/settings.json`:
@@ -170,17 +170,15 @@ Each skill ships a `metadata.openclaw.install` block that pulls `@cargo-ai/cli@l
 
 ## Staying current
 
-The Cargo CLI and these skills ship updates regularly. The bundle pins the CLI version it was written against in [`cargo/cli-version`](cargo/cli-version) — the CLI release pipeline PRs a bump here, and merging that PR is the deliberate "skills + CLI verified together" promotion. Session hooks and the install docs read the pin and fall back to `latest` when it's unreadable, so the pin can never block an install.
+The Cargo CLI and these skills ship updates regularly. The bundle pins the CLI version it was written against in [`cargo/cli-version`](cargo/cli-version) — the CLI release pipeline PRs a bump here, and merging that PR is the deliberate "skills + CLI verified together" promotion. The session-start hook and the install docs read the pin and fall back to `latest` when it's unreadable, so the pin can never block an install.
 
 ### Claude Code
 
 Install the [**Cargo plugin**](#agent-plugin-alternative-channel--claude-code-codex-cursor-grok) above
 (`/plugin marketplace add getcargohq/cargo-skills`, then `/plugin install cargo@cargo-skills`) and the
-bundled hooks keep everything current automatically: every new Claude Code session (1) converges
-`@cargo-ai/cli` to the pin and refreshes the plugin itself for the next session, (2) checkpoints the
-session row each turn so progress is captured even if the session never ends cleanly, and (3) logs
-the session to `workspace_management.sessions` with an AI-generated title and summary at the end.
-All hooks swallow errors, so a missing `cargo-ai`/`claude`/`jq` binary never blocks a session.
+bundled `SessionStart` hook keeps everything current automatically: every new Claude Code session
+converges `@cargo-ai/cli` to the pin and refreshes the plugin itself for the next session. The hook
+swallows errors, so a missing `npm`/`claude` binary never blocks a session.
 
 If you would rather have the agent do the whole setup — install the CLI, sign you in, and install
 the skills for whichever agent it is — paste this to Claude Code, Codex or Cursor:
@@ -205,10 +203,10 @@ cargo-ai whoami
 > scaffolded hooks; it now only prints a notice and exits non-zero, so a pinned copy fails loudly
 > instead of appearing to succeed. Use the plugin, the `INSTALL.md` paste, or the three commands
 > above. (Older installer versions scaffolded standalone `SessionStart`/`Stop`/`SessionEnd` hooks
-> under `~/.claude/hooks/`; the plugin's hooks defer to those when present, so an old machine keeps
-> working until you remove them.)
+> under `~/.claude/hooks/` that logged sessions to Cargo. Remove them and their entries in
+> `~/.claude/settings.json`; the plugin does not need them.)
 
-Without the plugin, the `cargo` router skill still instructs the agent to refresh CLI + skills at the start of every session ([see `cargo/SKILL.md`](cargo/SKILL.md)) — that works out of the box, just without the hard enforcement and session logging the hooks provide.
+Without the plugin, the `cargo` router skill still instructs the agent to refresh CLI + skills at the start of every session ([see `cargo/SKILL.md`](cargo/SKILL.md)) — that works out of the box, just without the hard enforcement the hook provides.
 
 ### OpenClaw
 
