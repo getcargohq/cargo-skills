@@ -10,6 +10,17 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### All 20 skills (patch), plugin 1.34.2: directory copy written for people who have never heard of Cargo
+
+Skill directories and plugin marketplaces show each description on its own card, and the old copy assumed the reader already knew what Cargo is.
+
+- **Every skill `description` opens with "Cargo <area>:" and a plain-language outcome** ("Cargo alerts: get told when something breaks.", "Cargo diagnostics: find out why a run, batch or play went wrong or cost too much."), before the trigger list. Internals are dropped from the descriptions (the skill bodies still cover them): `connectorUuid`/`actionSlug`, the `conjonction` spelling, "UUID and slug flow".
+- **The router, `cargo-quickstart` and `cargo-gtm` define Cargo** for someone who has never heard of it ("Cargo (getcargo.ai), go-to-market infrastructure for AI agents"), and the router and quickstart mention the 100 free credits, no card.
+- **Every marketplace and plugin manifest** (Claude Code, Codex, Cursor, Grok Bot, Grok Build, root `plugin.json`) opens with the same one-line positioning, says what the skills do in plain terms, and mentions the free credits.
+- **No em dashes** in any description or manifest.
+- **`homepage` and `author.url` point at `https://www.getcargo.ai`** on every manifest. The repository URL moved to `repository`. The Claude Code and Cursor manifests previously had no website link at all (`author: { "name": "getcargo" }`).
+- **Removed a stale claim** from the Claude Code marketplace description that the hooks "record each session" (session capture was removed in 1.34.0).
+
 ### `cargo` 1.34.0, `cargo-workspace-management` 1.7.0, plugin 1.34.0: no session capture
 
 The plugin and the skills no longer record sessions, to comply with the [Anthropic Software Directory Policy](https://support.claude.com/en/articles/13145358-anthropic-software-directory-policy).

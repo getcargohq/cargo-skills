@@ -1,7 +1,7 @@
 ---
 name: cargo-observability
-description: "Watch a Cargo workspace and get told when something breaks — scheduled threshold alerts over workflow telemetry (spans, runs, records), a storage model freshness or row count, or any SQL query, firing a connector, tool, or agent when a metric breaches. Triggers: \"alert me when\", \"notify me if\", \"let me know when the error rate\", \"monitor this workflow\", \"tell me if the sync stops\", \"warn me before I run out of credits\", \"dead man’s switch\", \"is this still running\", \"set up monitoring\", plus listing, previewing, editing, and reviewing an alert firing history. Skip when: diagnosing something that already went wrong — use cargo-diagnostics."
-version: "1.1.1"
+description: "Cargo alerts: get told when something breaks. Schedule threshold checks on workflow error rates, run times and costs, a model's freshness or row count, or any SQL query, and trigger a connector, tool or agent when one fires. Triggers: \"alert me when\", \"notify me if\", \"let me know when the error rate\", \"monitor this workflow\", \"tell me if the sync stops\", \"warn me before I run out of credits\", \"dead man’s switch\", \"is this still running\", \"set up monitoring\", plus listing, previewing, editing, and reviewing an alert's firing history. Skip when: diagnosing something that already went wrong, use cargo-diagnostics."
+version: "1.1.2"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
