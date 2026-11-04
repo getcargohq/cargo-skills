@@ -1,10 +1,16 @@
 {
   "name": "cargo",
-  "description": "Build with Cargo in Cursor and Grok Bot — 19 skills over the cargo-ai CLI, plus the hosted MCP server (target lists, contact enrichment and verification from licensed data providers, lead scoring, CRM sync, signal monitoring, orchestration, storage, segments, projects, diagnostics) plus prompt-free approval for safe cargo-ai calls.",
+  "description": "Cargo is go-to-market infrastructure for AI agents. These 19 skills let your agent build B2B lead and account lists, find and verify work emails, enrich companies and contacts from 55 licensed data providers, score leads, sync your CRM (HubSpot, Salesforce, Attio and 140+ other tools), and watch buying signals like job changes, funding and hiring. Any of it can run as a scheduled workflow. New accounts get 100 free credits, no card needed. Includes the hosted MCP server and prompt-free approval for safe cargo-ai CLI calls in Cursor and Grok Bot.",
   "version": "1.35.0",
-  "author": { "name": "getcargo" },
-  "homepage": "https://github.com/getcargohq/cargo-skills",
+  "author": {
+    "name": "Cargo",
+    "url": "https://www.getcargo.ai"
+  },
+  "homepage": "https://www.getcargo.ai",
   "logo": "assets/logo.svg",
-  "skills": ["./"],
-  "hooks": "./hooks/cursor-hooks.json"
+  "skills": [
+    "./"
+  ],
+  "hooks": "./hooks/cursor-hooks.json",
+  "repository": "https://github.com/getcargohq/cargo-skills"
 }
