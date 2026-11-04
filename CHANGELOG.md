@@ -19,13 +19,25 @@ Every one-off skill in gtm-skills defers to `cargo-gtm` when the pack is install
 - **`recipes/research-account.md`**: a sourced one-page briefing (`linkedin`, `parallel`, `theirStack.searchJobs`), every line traced, inference marked.
 - **`recipes/monitor-buying-signals.md`**: dated, linked signals per account, free Sillage rung first, paid rungs on the residue, reported as timing rather than a score.
 
-Corrections against the source job skills: no `config` on top-level actions; unknown `theirStack.searchJobs` keys are refused on `action execute` (not dropped); `x.getUserPosts` bills 0.02 per 100 posts; Sillage's read is free but its `listenSignals` model bills 0.5 per detection. Four routing evals added; the description traded "find 50 <title> at <segment>" and "who actually buys from us" for "decision makers at <account>", "which target accounts are in market" and "brief me on <account>", and stays at 1,483 characters.
+Corrections against the source job skills: no `config` on top-level actions; unknown `theirStack.searchJobs` and `aiArk.searchPeople` keys are refused on `action execute` (not dropped); `x.getUserPosts` bills 0.02 per 100 posts; Sillage's read is free but its `listenSignals` model bills 0.5 per detection. Four routing evals added. To fit them under the 1,024-character cap, the `cargo-gtm` description adds "decision makers", "brief me on <account>" and "target accounts in market" and shortens three others; `sync-trigger-slugs` now names 2 providers (salesNavigator, aiArk) and summarizes the rest.
 
-### `cargo-gtm` 2.7.0, `cargo` 1.35.0, plugin 1.35.0: Sales Navigator past the cap, and a description that fits
+### `cargo-gtm` 2.7.0, `cargo` 1.35.0, plugin 1.35.0: Sales Navigator past the cap
 
-- **New recipe `cargo-gtm/recipes/sales-navigator-extraction.md`**: get a Sales Navigator search past the 1,000-account / 2,500-people cap by counting it, splitting it, merging it back to the fewest searches and loading those into a few models, cookieless. The procedure lived only in the `extract-sales-navigator-search` job skill in gtm-skills, which tells the agent to defer to `cargo-gtm` whenever the pack is installed, so a pack user never got it. The Sales Navigator playbook now points to it under pitfalls, and the router lists it.
-- **`cargo-gtm` description: 1,845 → 1,477 characters.** Claude Code cut it at about 1,500, so the last third of `Providers:` (salesNavigator, theirStack, waterfall…) and the Skip-when clause never reached routing. Routing evals: 95/95 core, unchanged, plus one new Sales Navigator prompt.
-- **`skills-lint`** now fails a description over 1,500 characters.
+- **New recipe `cargo-gtm/recipes/sales-navigator-extraction.md`**: get a Sales Navigator search past the 1,000-account / 2,500-people cap by counting it, splitting it, merging it back to the fewest searches and loading those into a few models, cookieless. The procedure lived only in the `extract-sales-navigator-search` job skill in gtm-skills, which tells the agent to defer to `cargo-gtm` whenever the pack is installed, so a pack user never got it. The Sales Navigator playbook points to it under pitfalls, and the router and README list it.
+- **`cargo-gtm` description** gains a "Sales Navigator cap" trigger (a routing eval for "the extraction stopped at 1,000" went to the wrong skill without it); two triggers were shortened to keep it under 1,024 characters.
+
+### All 20 skills (patch), plugin 1.34.2: directory copy written for people who have never heard of Cargo
+
+Skill directories and plugin marketplaces show each description on its own card, and the old copy assumed the reader already knew what Cargo is.
+
+- **Every skill `description` opens with a third-person sentence that names Cargo and says what the skill does** ("Sets up Cargo alerts that report when something breaks…", "Finds out why a Cargo run, batch or play went wrong or cost too much…"), per Anthropic's skill authoring guide. Internals are dropped from the descriptions (the skill bodies still cover them): `connectorUuid`/`actionSlug`, the `conjonction` spelling, "UUID and slug flow".
+- **The router defines Cargo** for someone who has never heard of it ("Cargo (getcargo.ai), go-to-market infrastructure for AI agents"), and the router, quickstart and billing skills mention the 100 free credits, no card.
+- **No description exceeds 1,024 characters**, the Agent Skills spec limit. `cargo-gtm` (about 2,000) and `cargo-connection` (about 1,270) were over it, and hosts were already truncating `cargo-gtm` mid-list. `sync-trigger-slugs.ts` now fills the `Providers:` and `Integrations:` lists most-used names first and stops at the limit with "and N more"; `cargo-gtm`'s own text and trigger list were tightened. `routing-eval.ts` fails any description over 1,024, and `CONTRIBUTING.md` documents the third-person and length rules.
+- **Every marketplace and plugin manifest** (Claude Code, Codex, Cursor, Grok Bot, Grok Build, root `plugin.json`) opens with the same one-line positioning, says what the skills do in plain terms, and mentions the free credits.
+- **No em dashes** in any description or manifest.
+- **Codex package:** the quickstart override, the `cargo-gtm`/`cargo-connection` Codex rewrites and the package description follow the same third-person, no-em-dash style, keeping the wording the directory review asked for. Package homepage is `https://www.getcargo.ai`.
+- **`homepage` and `author.url` point at `https://www.getcargo.ai`** on every manifest. The repository URL moved to `repository`. The Claude Code and Cursor manifests previously had no website link at all (`author: { "name": "getcargo" }`).
+- **Removed a stale claim** from the Claude Code marketplace description that the hooks "record each session" (session capture was removed in 1.34.0).
 
 ### `cargo` 1.34.0, `cargo-workspace-management` 1.7.0, plugin 1.34.0: no session capture
 

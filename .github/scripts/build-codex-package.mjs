@@ -93,9 +93,9 @@ const SKILL_DESCRIPTION_LIMIT = LIMITS.skillDescription;
 // rather than getting silently truncated into a rejected upload.
 const SHORT_DESCRIPTIONS = {
   "cargo-connection":
-    'Connect Cargo to an external system and find out what it can do — authenticate connectors, browse the integration catalog, and resolve the `connectorUuid` and `actionSlug` a workflow node needs. Triggers: "connect my HubSpot", "is Salesforce connected", "what integrations do you support", "can Cargo talk to <tool>", "what actions does <provider> have", "I need the connector UUID", "set up the API key for", "it is asking for credentials again", "why is this connector failing auth", "list my connectors". 136 integrations including HubSpot, Salesforce, Attio, Pipedrive, Outreach, Salesloft, Slack, Snowflake, BigQuery, Postgres, Stripe, and Google/LinkedIn ad audiences. Skip when: choosing between enrichment providers for a GTM job — use cargo-gtm and its provider playbooks.',
+    'Connects Cargo to the CRM, sequencer, warehouse and other tools a team already runs, checks what is connected, fixes authentication, and lists what each integration can do. Triggers: "connect my HubSpot", "is Salesforce connected", "what integrations do you support", "can Cargo talk to <tool>", "what actions does <provider> have", "I need the connector UUID", "set up the API key for", "it is asking for credentials again", "why is this connector failing auth", "list my connectors". 140+ integrations including HubSpot, Salesforce, Attio, Pipedrive, Outreach, Salesloft, Slack, Snowflake, BigQuery, Postgres, Stripe, and Google/LinkedIn ad audiences. Skip when: choosing between enrichment providers for a GTM job, use cargo-gtm and its provider playbooks.',
   "cargo-gtm":
-    "Business-to-business go-to-market work on Cargo \u2014 research accounts and buying committees, enrich and verify B2B contact records from licensed data providers, score and qualify leads, draft outreach for the user's own sequencer, sync to CRM, and monitor buying signals. Runs on audiences with a documented lawful basis, screens every contact step against a workspace-wide suppression list, and requires per-recipient relevance; the skill sends no messages itself. Triggers: \"build me a list of\", \"find 50 <title> at <segment>\", \"who works at\", \"find work emails for these accounts\", \"enrich this CSV\", \"verify these emails\", \"build a TAM\", \"who fits our ICP\", \"score these leads\", \"write a first-touch email\", \"push these to my CRM\", \"who changed jobs\", \"who just raised funding\", \"companies using <tech>\", \"who is hiring <role>\", \"find the buying committee\", \"upload this audience to Google/LinkedIn ads\". Licensed B2B data providers only. Skip when: a run already happened and misbehaved \u2014 use cargo-diagnostics.",
+    "Does B2B go-to-market work on Cargo (getcargo.ai): researches accounts and buying committees, enriches and verifies B2B contact records from licensed data providers, scores and qualifies leads, drafts outreach for the user's own sequencer, syncs to CRM, and monitors buying signals. Runs on audiences with a documented lawful basis, screens every contact step against a workspace-wide suppression list, and requires per-recipient relevance; the skill sends no messages itself. Triggers: \"build me a list of\", \"find 50 <title> at <segment>\", \"who works at\", \"find work emails for these accounts\", \"enrich this CSV\", \"verify these emails\", \"build a TAM\", \"who fits our ICP\", \"score these leads\", \"write a first-touch email\", \"push these to my CRM\", \"who changed jobs\", \"who just raised funding\", \"companies using <tech>\", \"who is hiring <role>\", \"find the buying committee\", \"upload this audience to Google/LinkedIn ads\". Licensed B2B data providers only. Skip when: a past run misbehaved, use cargo-diagnostics.",
 };
 
 // Skills held out of this package. The directory review rejected
@@ -304,8 +304,8 @@ const PACKAGE_EDITS = [
   },
   {
     file: "cargo-mcp/SKILL.md",
-    find: "a project deploy, warehouse SQL, or a mailbox \u2014 use the CLI skills",
-    replace: "a project deploy, or warehouse SQL \u2014 use the CLI skills",
+    find: "a project deploy, warehouse SQL, or a mailbox, use the CLI skills",
+    replace: "a project deploy, or warehouse SQL, use the CLI skills",
   },
   {
     file: "README.md",
@@ -879,9 +879,9 @@ const manifest = {
   name: "cargo-skills",
   version,
   description:
-    `GTM engineering for coding agents — ${skillDirs.length} skills over the Cargo CLI: research accounts, enrich and verify B2B contact records from licensed data providers, score and qualify leads, sync to your CRM, monitor buying signals, and manage your GTM as Code in projects. Consent and suppression gates apply to every step that touches a person; the pack sends no messages itself.`,
-  author: { name: "getcargo" },
-  homepage: "https://getcargo.ai",
+    `Cargo (getcargo.ai) is go-to-market infrastructure for AI agents. ${skillDirs.length} skills over the Cargo CLI research accounts, enrich and verify B2B contact records from licensed data providers, score and qualify leads, sync to the CRM, monitor buying signals, and manage GTM as Code in projects. Consent and suppression gates apply to every step that touches a person; the pack sends no messages itself.`,
+  author: { name: "Cargo", url: "https://www.getcargo.ai" },
+  homepage: "https://www.getcargo.ai",
   repository: "https://github.com/getcargohq/cargo-skills",
   license: "MIT",
   keywords: [

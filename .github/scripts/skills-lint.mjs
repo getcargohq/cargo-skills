@@ -136,17 +136,6 @@ function parseFrontmatter(content, file) {
   return { fields, bodyStart: end + 4 };
 }
 
-const DESCRIPTION_MAX_CHARS = 1500;
-
-/** The text of a one-line YAML scalar: `"…"` (JSON escapes), `'…'` (`''` escapes), or plain. */
-function unquoteYamlScalar(raw) {
-  if (raw.startsWith('"')) {
-    try { return JSON.parse(raw); } catch { return raw.slice(1, -1); }
-  }
-  if (raw.startsWith("'")) return raw.slice(1, -1).replace(/''/g, "'");
-  return raw;
-}
-
 function validateFrontmatter(file, content) {
   const result = parseFrontmatter(content, file);
   if (!result) {
@@ -165,18 +154,6 @@ function validateFrontmatter(file, content) {
   const version = (result.fields.version || "").replace(/^"|"$/g, "");
   if (version && !/^\d+\.\d+\.\d+$/.test(version)) {
     err(file, 1, `Frontmatter \`version\` must be MAJOR.MINOR.PATCH (got "${version}").`);
-  }
-  // Claude Code cuts a skill's description off at about 1,500 characters in
-  // the list the model routes from: cargo-gtm's was cut at "pilote…", 1,500
-  // characters in, dropping a third of its providers and its Skip-when clause.
-  // Whatever sits past the cut does not exist for routing.
-  const description = unquoteYamlScalar(result.fields.description || "");
-  if (description.length > DESCRIPTION_MAX_CHARS) {
-    err(
-      file,
-      1,
-      `Frontmatter \`description\` is ${description.length} characters; hosts truncate past ~${DESCRIPTION_MAX_CHARS}, so the end never reaches routing. Shorten it.`,
-    );
   }
   const name = (result.fields.name || "").replace(/^"|"$/g, "");
   const expectedName = file.split("/").slice(-2, -1)[0];
