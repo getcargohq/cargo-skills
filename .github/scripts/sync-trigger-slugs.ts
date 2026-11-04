@@ -200,8 +200,11 @@ function rewriteDescription(
     const shown = slugs.slice(0, n).join(", ");
     return head + (rest > 0 ? `${shown}, and ${rest} more` : shown) + tail;
   };
+  // Measure the parsed value, not the YAML source: `\"` is one character to
+  // a host and to routing-eval.ts, which reads it the same way (JSON.parse).
+  const parsedLength = (n: number) => (JSON.parse(`"${render(n)}"`) as string).length;
   let n = slugs.length;
-  while (n > 0 && render(n).length > DESCRIPTION_MAX) n--;
+  while (n > 0 && parsedLength(n) > DESCRIPTION_MAX) n--;
   const after = before.replace(pattern, () => `${open}${render(n)}"`);
   return { path, before, after };
 }
