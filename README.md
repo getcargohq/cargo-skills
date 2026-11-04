@@ -270,6 +270,7 @@ Built-in recipes:
 | `source-planning.md` | **Read first when the source isn't obvious.** Probe candidate sources on 5–10 rows and cost them per *hit* before any fan-out. |
 | `prospecting.md` | Find people matching a description, enrich, verify, sync. End-to-end flagship. |
 | `build-tam.md` | Build a Total Addressable Market list at scale (100–10,000 companies). |
+| `sales-navigator-extraction.md` | Extract a Sales Navigator search past the 1,000-account / 2,500-people cap: count, split, merge, load into models. |
 | `linkedin-url-lookup.md` | Resolve a person's LinkedIn URL from name + company with strict identity validation. |
 | `portfolio-prospecting.md` | Find every company backed by a specific investor / accelerator, then prospect into them. |
 | `job-change-monitoring.md` | Detect job changes in a contact segment (waterfall.detectJobChange — cargo-unique). |

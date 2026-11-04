@@ -10,6 +10,11 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### `cargo-gtm` 2.7.0, `cargo` 1.35.0, plugin 1.35.0: Sales Navigator past the cap
+
+- **New recipe `cargo-gtm/recipes/sales-navigator-extraction.md`**: get a Sales Navigator search past the 1,000-account / 2,500-people cap by counting it, splitting it, merging it back to the fewest searches and loading those into a few models, cookieless. The procedure lived only in the `extract-sales-navigator-search` job skill in gtm-skills, which tells the agent to defer to `cargo-gtm` whenever the pack is installed, so a pack user never got it. The Sales Navigator playbook points to it under pitfalls, and the router and README list it.
+- **`cargo-gtm` description** gains a "Sales Navigator cap" trigger (a routing eval for "the extraction stopped at 1,000" went to the wrong skill without it); two triggers were shortened to keep it under 1,024 characters.
+
 ### All 20 skills (patch), plugin 1.34.2: directory copy written for people who have never heard of Cargo
 
 Skill directories and plugin marketplaces show each description on its own card, and the old copy assumed the reader already knew what Cargo is.
