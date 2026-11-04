@@ -271,6 +271,10 @@ Built-in recipes:
 | `prospecting.md` | Find people matching a description, enrich, verify, sync. End-to-end flagship. |
 | `build-tam.md` | Build a Total Addressable Market list at scale (100–10,000 companies). |
 | `sales-navigator-extraction.md` | Extract a Sales Navigator search past the 1,000-account / 2,500-people cap: count, split, merge, load into models. |
+| `find-stakeholders.md` | Find the buying committee at a named account by title, seniority and department. |
+| `score-leads.md` | Score and tier a company list against the ICP, with the reason on every row. |
+| `research-account.md` | Brief one account before a meeting, every line traced to a source. |
+| `monitor-buying-signals.md` | Watch target accounts for dated, linked buying signals, free rung first. |
 | `linkedin-url-lookup.md` | Resolve a person's LinkedIn URL from name + company with strict identity validation. |
 | `portfolio-prospecting.md` | Find every company backed by a specific investor / accelerator, then prospect into them. |
 | `job-change-monitoring.md` | Detect job changes in a contact segment (waterfall.detectJobChange — cargo-unique). |

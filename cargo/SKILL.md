@@ -1,7 +1,7 @@
 ---
 name: cargo
 description: "Entry point for Cargo (getcargo.ai), go-to-market infrastructure for AI agents. With Cargo an agent builds B2B lead lists, finds and verifies work emails, enriches companies and contacts, qualifies leads, syncs the CRM and watches buying signals, then runs any of it on a schedule. New accounts get 100 free credits, no card. Routes each job to the right Cargo skill and holds the rules that apply across all of them (project vs one-off CLI, run vs batch, async polling, silent-failure gotchas). Triggers: \"set up Cargo\", \"what can Cargo do\", \"what is Cargo\", \"which Cargo skill\", \"bootstrap my workspace\", \"I have a Cargo account\", \"cargo-ai …\", any `cargo-ai` command whose domain is unclear, or a task spanning two Cargo domains. Skip when: the task obviously belongs to one skill; load that skill directly."
-version: "1.35.0"
+version: "1.36.0"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -413,6 +413,10 @@ The non-obvious rules for each skill — the things that fail silently or cost m
 | `recipes/prospecting.md` | End-to-end find → enrich → verify → sync (P1/P2/P3 variants). |
 | `recipes/build-tam.md` | Build a Total Addressable Market list at scale (100–10,000 companies). |
 | `recipes/sales-navigator-extraction.md` | Extract a Sales Navigator search past the 1,000-account / 2,500-people cap. |
+| `recipes/find-stakeholders.md` | Find the buying committee at a named account by title, seniority and department. |
+| `recipes/score-leads.md` | Score and tier a company list against the ICP, with the reason on every row. |
+| `recipes/research-account.md` | Brief one account before a meeting, every line traced to a source. |
+| `recipes/monitor-buying-signals.md` | Watch target accounts for dated, linked buying signals, free rung first. |
 | `recipes/linkedin-url-lookup.md` | Resolve LinkedIn URL from name + company with strict validation. |
 | `recipes/portfolio-prospecting.md` | Investor / accelerator → portfolio companies → contacts. |
 | `recipes/job-change-monitoring.md` | `waterfall.detectJobChange` (cargo-unique) on a contact segment. |

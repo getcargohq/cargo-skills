@@ -137,6 +137,10 @@ const EXCLUDED_FILES = [
   // person-level social surface the review rejected with attendees and visitors.
   "cargo-gtm/provider-playbooks/cargoSignals.md",
   "cargo-gtm/provider-playbooks/x.md",
+  // Built on the two playbooks above: X posts are one of its signal rungs and
+  // cargoSignals is its detection feed. A copy with both cut out would be a
+  // different recipe, so the whole file stays out of this package.
+  "cargo-gtm/recipes/monitor-buying-signals.md",
 ];
 
 // Asserted against the built archive. `scope` is the path prefix the term must
@@ -154,6 +158,7 @@ const REMOVED_TERMS = [
   { term: "personality", scope: "skills/" },
   { term: "attendee", scope: "skills/cargo-gtm/provider-playbooks/linkedin.md" },
   { term: "provider-playbooks/x.md", scope: "skills/" },
+  { term: "monitor-buying-signals", scope: "skills/" },
   { term: "extractEventAttendees", scope: "skills/cargo-gtm/" },
   { term: "xAccount", scope: "skills/cargo-gtm/references/credits-cost-table.md" },
 ];
@@ -164,6 +169,22 @@ const REMOVED_TERMS = [
 // Every `find` must match exactly once or the build fails — these are anchored
 // to prose that will drift, and a silent no-op would ship a dangling link.
 const PACKAGE_EDITS = [
+  // monitor-buying-signals.md is excluded above; drop its recipe-table rows.
+  {
+    file: "cargo-gtm/SKILL.md",
+    find: "| [`recipes/monitor-buying-signals.md`](recipes/monitor-buying-signals.md) | Which target accounts are in market now (hiring the role, saying something new, a detection feed), cheapest rung first, reported as timing |\n",
+    replace: "",
+  },
+  {
+    file: "cargo/SKILL.md",
+    find: "| `recipes/monitor-buying-signals.md` | Watch target accounts for dated, linked buying signals, free rung first. |\n",
+    replace: "",
+  },
+  {
+    file: "README.md",
+    find: "| `monitor-buying-signals.md` | Watch target accounts for dated, linked buying signals, free rung first. |\n",
+    replace: "",
+  },
   {
     file: "cargo-gtm/SKILL.md",
     find: "- [`provider-playbooks/cargoSignals.md`](provider-playbooks/cargoSignals.md) — intent-signal feeds (formerly `rodz`), billed per lead delivered; warm-intro backfills and Company Followers auto-start are the cost traps.\n",
