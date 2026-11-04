@@ -10,6 +10,12 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### `cargo-gtm` 2.7.0, `cargo` 1.35.0, plugin 1.35.0: Sales Navigator past the cap, and a description that fits
+
+- **New recipe `cargo-gtm/recipes/sales-navigator-extraction.md`**: get a Sales Navigator search past the 1,000-account / 2,500-people cap by counting it, splitting it, merging it back to the fewest searches and loading those into a few models, cookieless. The procedure lived only in the `extract-sales-navigator-search` job skill in gtm-skills, which tells the agent to defer to `cargo-gtm` whenever the pack is installed, so a pack user never got it. The Sales Navigator playbook now points to it under pitfalls, and the router lists it.
+- **`cargo-gtm` description: 1,845 → 1,477 characters.** Claude Code cut it at about 1,500, so the last third of `Providers:` (salesNavigator, theirStack, waterfall…) and the Skip-when clause never reached routing. Routing evals: 95/95 core, unchanged, plus one new Sales Navigator prompt.
+- **`skills-lint`** now fails a description over 1,500 characters.
+
 ### `cargo` 1.34.0, `cargo-workspace-management` 1.7.0, plugin 1.34.0: no session capture
 
 The plugin and the skills no longer record sessions, to comply with the [Anthropic Software Directory Policy](https://support.claude.com/en/articles/13145358-anthropic-software-directory-policy).
