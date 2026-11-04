@@ -12,6 +12,12 @@
  *   cargo-connection  `Integrations: …`  ← .github/data/integrations.json
  *                                          (systems-of-record categories)
  *
+ * A description may not exceed 1,024 characters (the Agent Skills spec; hosts
+ * truncate or reject longer ones). So each list is filled in priority order —
+ * the names users most often type first, then alphabetical — until the next
+ * name would overflow, and ends with "and N more". The full lists live in the
+ * skill bodies (the provider playbook catalog, `connection integration list`).
+ *
  * Usage:
  *   node .github/scripts/sync-trigger-slugs.ts           # rewrite descriptions
  *   node .github/scripts/sync-trigger-slugs.ts --check   # CI: fail if stale
@@ -62,6 +68,30 @@ const OPS_CATEGORIES = new Set([
   "support",
   "finance",
 ]);
+
+/** Agent Skills spec limit on the `description` field. */
+const DESCRIPTION_MAX = 1024;
+
+/**
+ * Names listed first, in this order, when a description can't hold them all.
+ * Providers lead with the priority stack the recipes use; integrations lead
+ * with the systems users name most when connecting Cargo to what they run.
+ */
+const GTM_PRIORITY = [
+  "salesNavigator", "aiArk", "waterfall", "FullEnrich", "apolloio", "theirStack",
+  "peopleDataLabs", "linkedin", "hunter", "zeroBounce", "builtwith", "perplexity",
+];
+const OPS_PRIORITY = [
+  "hubspot", "salesforce", "attio", "pipedrive", "outreach", "salesloft", "lemlist",
+  "smartlead", "instantly", "heyReach", "snowflake", "bigQuery", "postgresql",
+  "googleSheets", "slack", "microsoftTeams", "googleAds", "linkedinAds", "metaAds",
+  "intercom", "stripe", "customerio", "marketo", "amplitude", "mixpanel",
+];
+
+function byPriority(slugs: string[], priority: string[]): string[] {
+  const head = priority.filter((p) => slugs.includes(p));
+  return [...head, ...slugs.filter((s) => !head.includes(s))];
+}
 
 /** Freeform-category integrations that are still recognizable destinations. */
 const OPS_EXTRAS = ["slack", "microsoftTeams", "notionMcp", "http"];
@@ -143,23 +173,36 @@ function opsIntegrationSlugs(catalog: Integration[]): string[] {
   return [...new Set(slugs)].sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
 }
 
-/** Replace `<label>: a, b, c.` inside a SKILL.md description line. */
+/**
+ * Replace `<label>: a, b, c.` inside a SKILL.md description line, keeping as
+ * many names as fit under DESCRIPTION_MAX and summarizing the rest as
+ * "and N more". `extra` counts names beyond `slugs` (catalog entries never
+ * listed by name) so the total stays honest.
+ */
 function rewriteDescription(
   skillDir: string,
   label: string,
   slugs: string[],
-  suffix = "",
+  extra = 0,
 ): { path: string; before: string; after: string } {
   const path = join(repoRoot, skillDir, "SKILL.md");
   const before = readFileSync(path, "utf8");
-  const list = slugs.join(", ") + suffix;
-  const pattern = new RegExp(`(^description:.*?${label}: )[^.]*\\.`, "m");
-  if (!pattern.test(before)) {
+  const pattern = new RegExp(`(^description: ")(.*?${label}: )[^.]*(\\..*)"$`, "m");
+  const m = before.match(pattern);
+  if (!m) {
     throw new Error(
       `${skillDir}/SKILL.md description has no \`${label}: … .\` sentence for the generator to fill.`,
     );
   }
-  const after = before.replace(pattern, `$1${list}.`);
+  const [, open, head, tail] = m;
+  const render = (n: number) => {
+    const rest = slugs.length - n + extra;
+    const shown = slugs.slice(0, n).join(", ");
+    return head + (rest > 0 ? `${shown}, and ${rest} more` : shown) + tail;
+  };
+  let n = slugs.length;
+  while (n > 0 && render(n).length > DESCRIPTION_MAX) n--;
+  const after = before.replace(pattern, () => `${open}${render(n)}"`);
   return { path, before, after };
 }
 
@@ -171,12 +214,12 @@ function main(): void {
   const catalog = loadCatalog();
   const ops = opsIntegrationSlugs(catalog);
   const edits = [
-    rewriteDescription("cargo-gtm", "Providers", gtmProviderSlugs()),
+    rewriteDescription("cargo-gtm", "Providers", byPriority(gtmProviderSlugs(), GTM_PRIORITY)),
     rewriteDescription(
       "cargo-connection",
       "Integrations",
-      ops,
-      `, and ${catalog.length - ops.length} more`,
+      byPriority(ops, OPS_PRIORITY),
+      catalog.length - ops.length,
     ),
   ];
 
