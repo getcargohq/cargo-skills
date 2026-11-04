@@ -139,3 +139,7 @@
 {"prompt": "The Cargo MCP server is showing the wrong workspace", "expect": "cargo-mcp", "why": "Token-binds-workspace is the silent failure this skill exists to catch.", "tier": "hard"}
 {"prompt": "my cargo-ai action ran but ignored the filter I passed", "expect": "cargo", "why": "The router description names inputs in a top-level action's config stripped without an error as a silent gotcha.", "tier": "hard"}
 {"prompt": "My Sales Navigator search has 30,000 accounts but the extraction stopped at 1,000", "expect": "cargo-gtm", "why": "The per-search cap case; the recipe lives in cargo-gtm, not a separate job skill."}
+{"prompt": "Brief me on Northwind before my call tomorrow", "expect": "cargo-gtm", "why": "Job that used to live only in a gtm-skills job skill; the recipe is now in cargo-gtm."}
+{"prompt": "Which of my target accounts are in market right now?", "expect": "cargo-gtm", "why": "Job that used to live only in a gtm-skills job skill; the recipe is now in cargo-gtm."}
+{"prompt": "Who are the decision makers at Globex for a security purchase?", "expect": "cargo-gtm", "why": "Job that used to live only in a gtm-skills job skill; the recipe is now in cargo-gtm."}
+{"prompt": "Rank this list of 200 companies against our ICP and drop the bad ones", "expect": "cargo-gtm", "why": "Job that used to live only in a gtm-skills job skill; the recipe is now in cargo-gtm."}

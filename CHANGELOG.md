@@ -10,6 +10,17 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### `cargo-gtm` 2.8.0, `cargo` 1.36.0, plugin 1.36.0: four job-skill procedures move into cargo-gtm
+
+Every one-off skill in gtm-skills defers to `cargo-gtm` when the pack is installed. These four jobs had no recipe here, so the deferral dropped the procedure. Each is ported with its measured numbers, checked against the provider playbooks and cost table, and gated by the pilot rule:
+
+- **`recipes/find-stakeholders.md`**: the buying committee at a named account via `aiArk.countPeople` (free) then `searchPeople` (0.05 a row).
+- **`recipes/score-leads.md`**: ICP scoring with visible arithmetic; enriches with `aiArk.enrichCompany` (0.01) first and moves only thin rows up to `companyEnrich.enrichByDomain` (0.25), per the playbooks.
+- **`recipes/research-account.md`**: a sourced one-page briefing (`linkedin`, `parallel`, `theirStack.searchJobs`), every line traced, inference marked.
+- **`recipes/monitor-buying-signals.md`**: dated, linked signals per account, free Sillage rung first, paid rungs on the residue, reported as timing rather than a score.
+
+Corrections against the source job skills: no `config` on top-level actions; unknown `theirStack.searchJobs` keys are refused on `action execute` (not dropped); `x.getUserPosts` bills 0.02 per 100 posts; Sillage's read is free but its `listenSignals` model bills 0.5 per detection. Four routing evals added; the description traded "find 50 <title> at <segment>" and "who actually buys from us" for "decision makers at <account>", "which target accounts are in market" and "brief me on <account>", and stays at 1,483 characters.
+
 ### `cargo-gtm` 2.7.0, `cargo` 1.35.0, plugin 1.35.0: Sales Navigator past the cap, and a description that fits
 
 - **New recipe `cargo-gtm/recipes/sales-navigator-extraction.md`**: get a Sales Navigator search past the 1,000-account / 2,500-people cap by counting it, splitting it, merging it back to the fewest searches and loading those into a few models, cookieless. The procedure lived only in the `extract-sales-navigator-search` job skill in gtm-skills, which tells the agent to defer to `cargo-gtm` whenever the pack is installed, so a pack user never got it. The Sales Navigator playbook now points to it under pitfalls, and the router lists it.

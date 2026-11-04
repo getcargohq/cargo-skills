@@ -1,7 +1,7 @@
 ---
 name: cargo
 description: "Router for the Cargo CLI skill bundle — load first for anything Cargo, and whenever a task spans two Cargo domains. Explains what each skill owns, declarative GTM as Code projects (cargo-project) vs the imperative CLI, the UUID and slug flow between skills, async polling of runs and batches, end-to-end use cases, and the gotchas that fail silently (inputs in a top-level action's `config` stripped without an error, run vs batch, model-uuid vs segment-uuid). Triggers: \"set up Cargo\", \"what can Cargo do\", \"which Cargo skill\", \"bootstrap my workspace\", \"I have a Cargo account\", \"cargo-ai …\", or any `cargo-ai` command whose domain you are unsure of. Skip when: the task obviously belongs to one skill — load that skill directly."
-version: "1.35.0"
+version: "1.36.0"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -413,6 +413,10 @@ The non-obvious rules for each skill — the things that fail silently or cost m
 | `recipes/prospecting.md` | End-to-end find → enrich → verify → sync (P1/P2/P3 variants). |
 | `recipes/build-tam.md` | Build a Total Addressable Market list at scale (100–10,000 companies). |
 | `recipes/sales-navigator-extraction.md` | Extract a Sales Navigator search past the 1,000-account / 2,500-people cap. |
+| `recipes/find-stakeholders.md` | Find the buying committee at a named account by title, seniority and department. |
+| `recipes/score-leads.md` | Score and tier a company list against the ICP, with the reason on every row. |
+| `recipes/research-account.md` | Brief one account before a meeting, every line traced to a source. |
+| `recipes/monitor-buying-signals.md` | Watch target accounts for dated, linked buying signals, free rung first. |
 | `recipes/linkedin-url-lookup.md` | Resolve LinkedIn URL from name + company with strict validation. |
 | `recipes/portfolio-prospecting.md` | Investor / accelerator → portfolio companies → contacts. |
 | `recipes/job-change-monitoring.md` | `waterfall.detectJobChange` (cargo-unique) on a contact segment. |
