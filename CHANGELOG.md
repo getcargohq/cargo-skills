@@ -19,6 +19,7 @@ Skill directories and plugin marketplaces show each description on its own card,
 - **No description exceeds 1,024 characters**, the Agent Skills spec limit. `cargo-gtm` (about 2,000) and `cargo-connection` (about 1,270) were over it, and hosts were already truncating `cargo-gtm` mid-list. `sync-trigger-slugs.ts` now fills the `Providers:` and `Integrations:` lists most-used names first and stops at the limit with "and N more"; `cargo-gtm`'s own text and trigger list were tightened. `routing-eval.ts` fails any description over 1,024, and `CONTRIBUTING.md` documents the third-person and length rules.
 - **Every marketplace and plugin manifest** (Claude Code, Codex, Cursor, Grok Bot, Grok Build, root `plugin.json`) opens with the same one-line positioning, says what the skills do in plain terms, and mentions the free credits.
 - **No em dashes** in any description or manifest.
+- **Codex package:** the quickstart override, the `cargo-gtm`/`cargo-connection` Codex rewrites and the package description follow the same third-person, no-em-dash style, keeping the wording the directory review asked for. Package homepage is `https://www.getcargo.ai`.
 - **`homepage` and `author.url` point at `https://www.getcargo.ai`** on every manifest. The repository URL moved to `repository`. The Claude Code and Cursor manifests previously had no website link at all (`author: { "name": "getcargo" }`).
 - **Removed a stale claim** from the Claude Code marketplace description that the hooks "record each session" (session capture was removed in 1.34.0).
 
