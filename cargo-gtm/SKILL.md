@@ -1,7 +1,7 @@
 ---
 name: cargo-gtm
 description: "Default Cargo (getcargo.ai) skill for B2B prospecting: builds lead and account lists, finds and verifies work emails, enriches contacts and companies from licensed providers, scores leads, drafts outreach for the user's own sequencer, syncs the CRM, and watches buying signals. Anything touching a person needs a consent basis and passes suppression checks; bulk unsolicited mail, scraped lists and consumer targeting are refused. Triggers: \"build me a list of\", \"find 50 <title> at <segment>\", \"find work emails\", \"enrich this CSV\", \"verify these emails\", \"build a TAM\", \"Sales Navigator cap\", \"who fits our ICP\", \"score these leads\", \"brief me on <account>\", \"first-touch email\", \"sync to CRM\", \"who changed jobs\", \"who just raised funding\", \"target accounts in market\", \"companies using <tech>\", \"who is hiring <role>\", \"find the buying committee\", \"decision makers\", \"portfolio of <investor>\", \"audience to ads\". Providers: salesNavigator, aiArk, and 53 more. Skip when: a past run misbehaved, use cargo-diagnostics."
-version: "2.8.0"
+version: "2.8.1"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:

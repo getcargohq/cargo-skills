@@ -11,7 +11,7 @@
     {
       "name": "cargo",
       "source": "./",
-      "description": "Cargo is go-to-market infrastructure for AI agents. These 19 skills let your agent build B2B lead and account lists, find and verify work emails, enrich companies and contacts from 55 licensed data providers, score leads, sync your CRM (HubSpot, Salesforce, Attio and 140+ other tools), and watch buying signals like job changes, funding and hiring. Any of it can run as a scheduled workflow. New accounts get 100 free credits, no card needed."
+      "description": "Cargo is go-to-market infrastructure for AI agents. These 19 skills let your agent build B2B lead and account lists, find and verify work emails, enrich companies and contacts from 50+ licensed data providers, score leads, sync your CRM (HubSpot, Salesforce, Attio and 140+ other tools), and watch buying signals like job changes, funding and hiring. Any of it can run as a scheduled workflow. New accounts get 100 free credits for their first 30 days, no card needed."
     }
   ]
 }

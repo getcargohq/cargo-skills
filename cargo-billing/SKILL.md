@@ -1,7 +1,7 @@
 ---
 name: cargo-billing
 description: "Reports what Cargo is costing: remaining credits, usage by workflow, connector or agent, the plan, and invoices. New accounts start with 100 free credits, no card. Triggers: \"how many credits do I have left\", \"what did that cost\", \"why is my bill so high\", \"am I about to run out\", \"will this fit in our budget\", \"show me my invoices\", \"how much have I spent this month\", \"what plan am I on\", \"what do I get for free\", \"how many free credits\", \"can I afford this run\", \"add a card\", \"update my payment method\", \"why was my card declined\". Needs a token with admin access. Skip when: attributing spend to specific nodes or cutting a play cost, use cargo-diagnostics."
-version: "2.1.4"
+version: "2.1.5"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -214,7 +214,7 @@ Remaining credits = `subscriptionAvailableCreditsCount + additionalAvailableCred
 
 ### The free tier
 
-A new account starts with **100 free credits and no card on file**. When `subscription get` shows a fresh or near-fresh balance, answer cost questions against that budget rather than as an abstract number — "you've used 12 of your 100 free credits" is the useful answer to "how am I doing?", and it is also the honest one when the user is deciding whether to keep going.
+A new account starts with **100 free credits, valid for its first 30 days, and no card on file**. When `subscription get` shows a fresh or near-fresh balance, answer cost questions against that budget rather than as an abstract number — "you've used 12 of your 100 free credits" is the useful answer to "how am I doing?", and it is also the honest one when the user is deciding whether to keep going.
 
 What 100 credits buys, as ballpark anchors (per-action costs in [`../cargo-gtm/references/credits-cost-table.md`](../cargo-gtm/references/credits-cost-table.md)):
 
