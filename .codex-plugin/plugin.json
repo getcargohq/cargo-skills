@@ -1,7 +1,7 @@
 {
   "name": "cargo",
-  "description": "Cargo is go-to-market infrastructure for AI agents. These 19 skills let your agent build B2B lead and account lists, find and verify work emails, enrich companies and contacts from 55 licensed data providers, score leads, sync your CRM (HubSpot, Salesforce, Attio and 140+ other tools), and watch buying signals like job changes, funding and hiring. Any of it can run as a scheduled workflow. New accounts get 100 free credits, no card needed. Includes the hosted MCP server and prompt-free approval for safe cargo-ai CLI calls in Codex.",
-  "version": "1.36.0",
+  "description": "Cargo is go-to-market infrastructure for AI agents. These 19 skills let your agent build B2B lead and account lists, find and verify work emails, enrich companies and contacts from 50+ licensed data providers, score leads, sync your CRM (HubSpot, Salesforce, Attio and 140+ other tools), and watch buying signals like job changes, funding and hiring. Any of it can run as a scheduled workflow. New accounts get 100 free credits for their first 30 days, no card needed. Includes prompt-free approval for safe cargo-ai CLI calls in Codex.",
+  "version": "1.36.1",
   "author": {
     "name": "Cargo",
     "url": "https://www.getcargo.ai"
