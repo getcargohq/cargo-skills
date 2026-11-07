@@ -1,7 +1,7 @@
 ---
 name: cargo-quickstart
-description: "Runs a two-minute guided Cargo demo for new users: one question about who they sell to, then 25 real leads with a cost receipt, saved as a recurring play. Works on a fresh account (100 free credits, no card). Triggers: \"show me what Cargo can do\", \"give me a demo\", \"take me on a tour\", \"quickstart\", \"getting started with Cargo\", \"I just installed Cargo\", \"my workspace is empty\", \"does this actually work\". Skip when: the user has a real job to run (build a list, enrich a CSV, find emails), use cargo-gtm; when they want CLI reference or routing, use the cargo router skill."
-version: "1.1.2"
+description: "Runs a two-minute guided Cargo demo for new users: one question with a fixed menu of three starter searches (companies like yours, a persona, fast-growing lookalikes), 25 real rows with a cost receipt, then saves the search as a recurring play. Needs nothing connected and works on a fresh account (100 free credits, no card). Triggers: \"show me what Cargo can do\", \"give me a demo\", \"take me on a tour\", \"quickstart\", \"getting started with Cargo\", \"I just installed Cargo\", \"my workspace is empty\", \"does this actually work\". Skip when: the user has a real job to run (build a list, enrich a CSV, find emails), use cargo-gtm; when they want CLI reference or routing, use the cargo router skill."
+version: "1.2.0"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -18,11 +18,11 @@ metadata:
     homepage: https://github.com/getcargohq/cargo-skills
 ---
 
-# Cargo Quickstart — first value in two minutes
+# Cargo Quickstart: first rows in two minutes
 
-One guided demo: pull ~25 fresh leads matching a buyer persona the user picks, show the cost receipt, then save the pull as a recurring play. The point is not the list — it's that in minute 3 the user owns a running system, not a one-off result.
+One question, one fixed command, 25 real rows from the user's own workspace with a cost receipt, then an offer to save the search as a play. **Done means the human has seen the rows.** A finished install or a `whoami` is not the deliverable.
 
-**A new account starts with 100 free credits — no card.** This demo spends about **5** of them. Say that out loud before the first paid call ("this costs about 5 of your 100 free credits"): it converts the moment from *a purchase decision* into *a look around*, which is the whole job of a quickstart. Never let a new user think the demo is why they'd run out.
+**A new account gets 100 free credits, valid for 30 days, no card.** Every starter here costs **at most 1.25 credits** (AI Ark people search is 0.05 a row, company search 0.01 a row). Say it before the first paid call ("this costs at most 1.25 of your 100 free credits"): it turns the moment from a purchase decision into a look around.
 
 ## Bootstrap
 
@@ -31,83 +31,102 @@ Already signed in (`cargo-ai whoami` returns a workspace)? Skip to the next sect
 ```bash
 npm install -g @cargo-ai/cli            # no global install? prefix every command with `npx @cargo-ai/cli`
 cargo-ai login --email you@company.com  # emailed code, no browser; creates the account on first use
-                                        # alternatives: --oauth (browser) · --agentid (an agent as itself) · --token <api-token> (CI)
-cargo-ai whoami                         # confirm the active workspace before any write
+                                        # alternatives: --oauth (browser) · --token <api-token> (CI)
+cargo-ai whoami                         # confirm the active workspace; keep the email domain
 ```
 
-**Not ready to sign up?** Two things work with no account, free: browse the catalog (`cargo-ai orchestration action list enrich company`) and dry-run an action (`cargo-ai orchestration action execute --action '<from action list>' --data '{"domain":"example.com"}' --dry-run` — validates the inputs, shows sample output in the real shape and the credit price, calls nothing). Offer it once if the user hesitates at the email step; don't detour a user who is ready — the demo is the real thing.
+**Not ready to sign up?** `--dry-run` on any starter below validates the inputs and prints sample rows in the real shape with the credit price, free and with no account. Offer it once if the user hesitates at the email step.
 
-A first sign-in lands in a new workspace named **`Personal`**; pass `--workspace-name "<Company> GTM"` to the login that creates the account and it renames that one (within 10 minutes, while you're its only member) instead of making a second. Starter connectors and agents seed in the background, so an empty-looking workspace a minute after sign-up may still be filling in — that is not a reason to stop.
+Every command prints JSON to stdout; failures exit non-zero with `{"error": ...}` on stderr. `--wait-until-finished` returns the finished run, and the rows are in `.runContext.action` (absent, not an empty array, when nothing matched). When the full bundle is installed, [`../cargo/references/prerequisites.md`](../cargo/references/prerequisites.md) covers the CLI pin and token scopes.
 
-Every command prints JSON to stdout; failures exit non-zero and print `{"error": "...", "status": ..., "body": {...}}` to stderr. Anything that creates a run or a batch is async — pass `--wait-until-finished` or poll the matching `get`. When the full skill bundle is installed, [`../cargo/references/prerequisites.md`](../cargo/references/prerequisites.md) adds the CLI version pin, token scopes, and the admin-only surface.
+## Why these starters
+
+Every new workspace is seeded with a Cargo-managed connector for each managed-compatible integration, AI Ark among them, billed in Cargo credits. So the starters need **nothing connected**, no API key and no Sales Navigator seat, and they never end in a question. Use them as the default path.
 
 ## The one question
 
-Ask exactly **one** question before doing anything:
+Ask exactly this, then wait:
 
-> **"Who do you sell to?"** (a persona in a few words — e.g. "Heads of RevOps at mid-market SaaS")
+> **What would you like to do with Cargo?**
+> 1. Companies like yours: 25 lookalikes of `<their domain>`
+> 2. A persona you name: 25 people with a job title you pick
+> 3. Growing fast: 25 companies like yours whose headcount grew 20%+ in six months
+> 4. Tell me what you want
 
-Everything else — provider, filters, limits — you decide. Don't ask about output format, volume, or providers; defaults below.
+`<their domain>` is the domain of the signed-in email. If it is personal (gmail, outlook, icloud), ask for the company website first. Option 4 leaves the demo: load [`cargo-gtm`](../cargo-gtm/SKILL.md).
 
-## Speed budget — HARD RULES
+## Speed rules
 
-The demo has a two-minute budget from answer to deliverable. On the fast path:
-
-- **No discovery detours.** Do not run `cargo-ai --version`, `cargo-ai whoami`, `connection connector list`, or any exploratory command first. Auth problems will surface as errors on the first real call — handle them then.
+- **No discovery detours.** No `--version`, `connector list`, `action list` or pricing lookups first. The commands below are fixed; errors surface on the call.
+- **Run the starter as written.** Only the placeholder changes. Do not add filters, raise `limit`, or switch provider.
 - **One command block per step**, no narration between commands.
-- **Paid work is capped at ~5 credits total.** The demo uses LinkedIn-native people search (`salesNavigator.searchLeads`, 0.2/record → 25 records ≈ 5 credits). Nothing else paid runs without asking.
-- **Never dead-end.** Every step has a fallback (ladder below). If a rung fails, drop one rung silently and keep moving.
+- **Demo cap: 1.25 credits a starter**, 5 only on the Sales Navigator fallback below. Anything else paid needs a credit estimate and an explicit yes first.
 
-## Fast path
+## Starter 1: companies like yours
 
-Translate the persona into a `searchLeads` filter (quote the exact title phrase in `keywords`; a bare keyword matches loosely and pollutes the page) and run:
+At most 25 × 0.01 = **0.25 credits**.
 
 ```bash
-# 1. Execute — returns a run object; note run.uuid and run.workflowUuid.
-#    searchLeads bills 0.2 per returned lead, so limit 25 costs at most 5 credits.
 cargo-ai orchestration action execute \
-  --action '{"kind":"connector","integrationSlug":"salesNavigator","actionSlug":"searchLeads"}' \
-  --data '{"keywords": "\"<persona title phrase>\"", "limit": 25}' \
-  --wait-until-finished > /tmp/quickstart-run.json
-
-# 2. Fetch the output data (NOT in the execute stdout) — signed URL, then filter to THIS run
-RUN_UUID=$(jq -r '.run.uuid' /tmp/quickstart-run.json)
-WF_UUID=$(jq -r '.run.workflowUuid' /tmp/quickstart-run.json)
-curl -s "$(cargo-ai orchestration run download-outputs \
-  --workflow-uuid "$WF_UUID" --output-node-slug action --format json | jq -r '.url')" \
-  > /tmp/quickstart-outputs.json
-
-# 3. Show the table (the file holds ALL of the workflow's runs — filter by _uuid;
-#    each row's .output is the leads array directly, fields are snake_case)
-jq -r --arg u "$RUN_UUID" \
-  '[.[] | select(._uuid==$u)][0].output[] | [.full_name, .job_title, .company_name, (.recently_hired // false)] | @tsv' \
-  /tmp/quickstart-outputs.json | head -25
+  --action '{"kind":"connector","integrationSlug":"aiArk","actionSlug":"searchCompanies"}' \
+  --data '{"lookalikeDomains":["<domain>"],"limit":25}' \
+  --wait-until-finished > /tmp/cargo-starter.json
+jq -r '(.runContext.action // [])[] | [.name, .domain, .industry, .employee_count, .country] | @tsv' /tmp/cargo-starter.json
 ```
 
-Show the table (name · title · company · recently-hired), not the raw JSON. `recently_hired: true` rows are the demo's headline — lead with them ("6 of these 25 just started the job — the exact moment to reach out").
+## Starter 2: a persona you name
 
-### Fallback ladder (on auth/error, drop a rung — don't stop)
+At most 25 × 0.05 = **1.25 credits**. Put one to three exact job titles in `title_or` (for "RevOps leaders": `["Head of Revenue Operations","VP Revenue Operations"]`). If they named a company size, add `employeeSize` and nothing else: a band ("50 to 200") is `{"min_employee_count":50,"max_employee_count":200}`, a floor ("200+") is `{"min_employee_count":200}` with no max. If a sized search comes back empty, drop `employeeSize` before broadening titles.
 
-1. `salesNavigator.searchLeads` (0.2/record) — primary.
-2. `theirStack.searchJobs` (0.5/record) — reframe as "companies hiring your persona right now" (job postings for the persona's title). Same wow, different angle.
-3. `waterfall.searchProspects` (3/record) — **exceeds the ~5-credit demo cap, so this rung asks first**: "The two cheap sources aren't connected; I can pull 5 matches via waterfall for ~15 credits instead — run it, or connect Sales Navigator first (free)?" Run only on an explicit yes, with `limit` capped at 5.
-4. Nothing connected at all → run the free path: `cargo-ai connection integration list | head`, show what *could* be wired, and offer to connect one (browser auth) — the demo resumes after.
+```bash
+cargo-ai orchestration action execute \
+  --action '{"kind":"connector","integrationSlug":"aiArk","actionSlug":"searchPeople"}' \
+  --data '{"jobRole":{"title_or":["<title>"]},"limit":25}' \
+  --wait-until-finished > /tmp/cargo-starter.json
+jq -r '(.runContext.action // [])[] | [.full_name, .title, .company_name, .company_domain, .country] | @tsv' /tmp/cargo-starter.json
+```
 
-## The receipt (mandatory, verbatim discipline)
+## Starter 3: growing fast
 
-The demo is itself the pilot from [`../cargo-gtm/references/cost-discipline.md`](../cargo-gtm/references/cost-discipline.md). Close it with a receipt:
+At most 25 × 0.01 = **0.25 credits**. Headcount growth is the hiring signal: a company adding 20% in six months is buying.
 
-- Credits spent + balance remaining (`cargo-ai billing subscription get` — remaining = `subscriptionAvailableCreditsCount + additionalAvailableCreditsCount − subscriptionCreditsUsedCount` on `.subscription`). For a brand-new account, frame it against the **100 free starting credits** rather than as a bare number — "5 spent, 95 of your 100 free credits left" lands very differently from "95 credits remaining".
-- Hit-rate: "25 of 25 returned" (or what actually came back, and which rows look off).
+```bash
+cargo-ai orchestration action execute \
+  --action '{"kind":"connector","integrationSlug":"aiArk","actionSlug":"searchCompanies"}' \
+  --data '{"lookalikeDomains":["<domain>"],"headcountGrowth":[{"min":20,"time_frame":"SIX"}],"limit":25}' \
+  --wait-until-finished > /tmp/cargo-starter.json
+jq -r '(.runContext.action // [])[] | [.name, .domain, .industry, .employee_count, .country] | @tsv' /tmp/cargo-starter.json
+```
 
-## Minute 3 — save it as a play
+## When a starter comes back short
 
-Immediately offer to make the pull recurring — this is the step that shows what Cargo *is*:
+Zero rows cost nothing (AI Ark bills per row returned). Retry once, then report:
 
-> "Want this to run by itself? I can save this exact search as a play that runs weekly and writes new matches into a model — new `<persona>` leads land without you asking."
+| Result | Retry once with |
+| --- | --- |
+| Starter 3, zero rows | `"min":10,"time_frame":"TWELVE"` |
+| Starter 1 or 3, zero rows | a better-known lookalike: ask "which company is your best customer?" and use its domain |
+| Starter 2, zero rows | without `employeeSize` if it was set, otherwise broader titles (drop seniority words, add the common variant) |
+| AI Ark errors | Starter 2 only: `salesNavigator.searchLeads` with `{"keywords":"\"<title>\"","limit":25}`, also Cargo-managed, 0.2 a lead, so **5 credits**; say the price first. Rows are in `.runContext.action[]` with `full_name`, `job_title`, `company_name`. |
 
-On yes, follow [`../cargo-gtm/recipes/save-as-play.md`](../cargo-gtm/recipes/save-as-play.md) with the demo's action + filter as the workflow body and a weekly cron.
+Never fall through to a 3-credit-a-row source on the demo. If the retry also fails, show the error verbatim and offer `cargo-ai workspaceManagement report create`.
 
-## After the demo — route onward
+## The receipt (mandatory)
 
-Propose 2–3 next steps grounded in the rows just pulled, per the next-step spec in [`../cargo-gtm/SKILL.md`](../cargo-gtm/SKILL.md) (§4): e.g. "enrich these 25 with firmographics (~0.5 cr each)", "find + verify emails for the best 10 (~1.4 cr each)", or something else entirely. From here, real GTM work belongs to [`cargo-gtm`](../cargo-gtm/SKILL.md) — read it before anything beyond the demo.
+```bash
+cargo-ai billing subscription get | jq '.subscription | .subscriptionAvailableCreditsCount + .additionalAvailableCreditsCount - .subscriptionCreditsUsedCount'
+```
+
+Show the rows as a table, never raw JSON, then one line framed against the free credits, with what that starter actually cost: "25 rows, 0.25 credits spent, 99.75 of your 100 free credits left" for starter 1 or 3, up to 1.25 spent for starter 2. Name the rows that look strongest and any that look off. This is the pilot step of [`../cargo-gtm/references/cost-discipline.md`](../cargo-gtm/references/cost-discipline.md).
+
+## Save it as a play
+
+Offer it immediately; this is the step that shows what Cargo is:
+
+> "Want this to run by itself? I can save this search as a play that runs every week and writes new matches into your workspace."
+
+On yes, follow [`../cargo-gtm/recipes/save-as-play.md`](../cargo-gtm/recipes/save-as-play.md) with the starter's action and data as the workflow body and a weekly cron. A play re-bills on every run, so quote it: at most 0.25 (starters 1 and 3) or 1.25 (starter 2) credits a week.
+
+## After the demo
+
+Propose two or three next steps grounded in the rows, per the next-step spec in [`../cargo-gtm/SKILL.md`](../cargo-gtm/SKILL.md) (§4): for example "find the buyer at the best 10 of these companies" after starter 1 or 3, or "find and verify emails for the best 10 people" after starter 2. Real GTM work belongs to [`cargo-gtm`](../cargo-gtm/SKILL.md); read it before anything beyond the demo.
