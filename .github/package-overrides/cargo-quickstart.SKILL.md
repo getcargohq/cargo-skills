@@ -25,7 +25,7 @@ cargo-ai whoami                         # confirm the active workspace; keep the
 
 **Not ready to sign up?** `--dry-run` on any starter below validates the inputs and prints sample rows in the real shape with the credit price, free and with no account. Offer it once if the user hesitates at the email step.
 
-Every command prints JSON to stdout; failures exit non-zero with `{"error": ...}` on stderr. `--wait-until-finished` returns the finished run, and the rows are in `.runContext.action`. When the full bundle is installed, [`../cargo/references/prerequisites.md`](../cargo/references/prerequisites.md) covers the CLI pin and token scopes.
+Every command prints JSON to stdout; failures exit non-zero with `{"error": ...}` on stderr. `--wait-until-finished` returns the finished run, and the rows are in `.runContext.action` (absent, not an empty array, when nothing matched). When the full bundle is installed, [`../cargo/references/prerequisites.md`](../cargo/references/prerequisites.md) covers the CLI pin and token scopes.
 
 ## Why these starters
 
@@ -59,19 +59,19 @@ cargo-ai orchestration action execute \
   --action '{"kind":"connector","integrationSlug":"aiArk","actionSlug":"searchCompanies"}' \
   --data '{"lookalikeDomains":["<domain>"],"limit":25}' \
   --wait-until-finished > /tmp/cargo-starter.json
-jq -r '.runContext.action[] | [.name, .domain, .industry, .employee_count, .country] | @tsv' /tmp/cargo-starter.json
+jq -r '(.runContext.action // [])[] | [.name, .domain, .industry, .employee_count, .country] | @tsv' /tmp/cargo-starter.json
 ```
 
 ## Starter 2: companies that employ your buyer
 
-At most 25 × 0.01 = **0.25 credits**. Put one to three exact job titles in `employee_title_or` (for "RevOps leaders": `["Head of Revenue Operations","VP Revenue Operations"]`). If they named a company size, add `"employeeSize":{"min_employee_count":<n>,"max_employee_count":<n>}`; nothing else.
+At most 25 × 0.01 = **0.25 credits**. Put one to three exact job titles in `employee_title_or` (for "RevOps leaders": `["Head of Revenue Operations","VP Revenue Operations"]`). If they named a company size, add `employeeSize` and nothing else: a band ("50 to 200") is `{"min_employee_count":50,"max_employee_count":200}`, a floor ("200+") is `{"min_employee_count":200}` with no max. If a sized search comes back empty, drop `employeeSize` before broadening titles.
 
 ```bash
 cargo-ai orchestration action execute \
   --action '{"kind":"connector","integrationSlug":"aiArk","actionSlug":"searchCompanies"}' \
   --data '{"employeeRole":{"employee_title_or":["<title>"]},"limit":25}' \
   --wait-until-finished > /tmp/cargo-starter.json
-jq -r '.runContext.action[] | [.name, .domain, .industry, .employee_count, .country] | @tsv' /tmp/cargo-starter.json
+jq -r '(.runContext.action // [])[] | [.name, .domain, .industry, .employee_count, .country] | @tsv' /tmp/cargo-starter.json
 ```
 
 ## Starter 3: growing fast
@@ -83,7 +83,7 @@ cargo-ai orchestration action execute \
   --action '{"kind":"connector","integrationSlug":"aiArk","actionSlug":"searchCompanies"}' \
   --data '{"lookalikeDomains":["<domain>"],"headcountGrowth":[{"min":20,"time_frame":"SIX"}],"limit":25}' \
   --wait-until-finished > /tmp/cargo-starter.json
-jq -r '.runContext.action[] | [.name, .domain, .industry, .employee_count, .country] | @tsv' /tmp/cargo-starter.json
+jq -r '(.runContext.action // [])[] | [.name, .domain, .industry, .employee_count, .country] | @tsv' /tmp/cargo-starter.json
 ```
 
 ## When a starter comes back short
@@ -94,7 +94,7 @@ Zero rows cost nothing (AI Ark bills per row returned). Retry once, then report:
 | --- | --- |
 | Starter 3, zero rows | `"min":10,"time_frame":"TWELVE"` |
 | Starter 1 or 3, zero rows | a better-known lookalike: ask "which company is your best customer?" and use its domain |
-| Starter 2, zero rows | broader titles (drop seniority words, add the common variant) |
+| Starter 2, zero rows | without `employeeSize` if it was set, otherwise broader titles (drop seniority words, add the common variant) |
 | AI Ark errors | `salesNavigator.searchAccounts`, also Cargo-managed, 0.2 a company, so **5 credits** for 25; say the price first. |
 
 Never fall through to a pricier source on the demo. If the retry also fails, show the error verbatim and offer `cargo-ai workspaceManagement report create`.
