@@ -531,8 +531,8 @@ const PACKAGE_EDITS = [
   },
   {
     file: "README.md",
-    find: "the [two-minute quickstart demo](#onboarding--cargo-quickstart) spends about 5 of them",
-    replace: "the [two-minute quickstart demo](#onboarding--cargo-quickstart) spends about 0.25 of them",
+    find: "the [two-minute quickstart demo](#onboarding--cargo-quickstart) pulls 25 leads for about 5 of them",
+    replace: "the [two-minute quickstart demo](#onboarding--cargo-quickstart) reads company-level hiring intent for about 0.25 of them",
   },
   {
     file: "cargo-gtm/provider-playbooks/aiArk.md",
