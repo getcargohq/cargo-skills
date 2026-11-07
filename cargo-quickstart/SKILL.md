@@ -117,7 +117,7 @@ Never fall through to a 3-credit-a-row source on the demo. If the retry also fai
 cargo-ai billing subscription get | jq '.subscription | .subscriptionAvailableCreditsCount + .additionalAvailableCreditsCount - .subscriptionCreditsUsedCount'
 ```
 
-Show the rows as a table, never raw JSON, then one line framed against the free credits: "25 rows, 0.25 credits spent, 99.75 of your 100 free credits left." Name the rows that look strongest and any that look off. This is the pilot step of [`../cargo-gtm/references/cost-discipline.md`](../cargo-gtm/references/cost-discipline.md).
+Show the rows as a table, never raw JSON, then one line framed against the free credits, with what that starter actually cost: "25 rows, 0.25 credits spent, 99.75 of your 100 free credits left" for starter 1 or 3, up to 1.25 spent for starter 2. Name the rows that look strongest and any that look off. This is the pilot step of [`../cargo-gtm/references/cost-discipline.md`](../cargo-gtm/references/cost-discipline.md).
 
 ## Save it as a play
 
