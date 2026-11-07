@@ -10,6 +10,16 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### `cargo-quickstart` 1.2.0: a fixed starter menu that needs nothing connected
+
+The demo asked one persona question and ran `salesNavigator.searchLeads` (0.2 a lead, about 5 credits), with a fallback ladder that ended in a 3-credit-a-row source and a permission question. It now asks "What would you like to do with Cargo?" with a fixed menu of three starters, each one copy-runnable command on AI Ark's Cargo-managed connection (seeded into every new workspace):
+
+- **Companies like yours**: `aiArk.searchCompanies` with `lookalikeDomains` from the signed-in email's domain, 25 rows, at most 0.25 credits.
+- **A persona you name**: `aiArk.searchPeople` with `jobRole.title_or`, 25 rows, at most 1.25 credits.
+- **Growing fast**: lookalikes whose headcount grew 20%+ in six months, 25 rows, at most 0.25 credits.
+
+Rows are read straight from `.runContext.action` in the `--wait-until-finished` output, with no download step. Zero rows bill nothing; one retry per starter, Sales Navigator only as a priced fallback for the persona starter, and the save-as-play ending is unchanged. Free credits are stated as 100, valid 30 days. The `cargo` router's pointers to the demo are updated to match (no version change).
+
 ### `cargo` 1.36.2, `cargo-gtm` 2.8.1, `cargo-billing` 2.1.5, plugin 1.36.2: free-tier figures, install copy and manifests that match the product
 
 - **Free-tier anchors checked against [pricing.json](https://www.getcargo.ai/pricing.json)** (generated 2026-11-04): `salesNavigator.searchLeads` 0.2 a lead, so 100 credits is ~500 leads and the 25-lead quickstart is ~5; `aiArk.enrichPerson` 0.1 (~1,000 verified-email enrichments); `waterfall.enrichContact` 2 (~50 fully enriched contacts). `cost-discipline.md` and `llms.txt` still said ~5,000 leads and a 0.5-credit demo.
