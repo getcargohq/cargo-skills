@@ -10,6 +10,13 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### `cargo` 1.36.2, `cargo-gtm` 2.8.1, `cargo-billing` 2.1.5, plugin 1.36.2: free-tier figures, install copy and manifests that match the product
+
+- **Free-tier anchors checked against [pricing.json](https://www.getcargo.ai/pricing.json)** (generated 2026-11-04): `salesNavigator.searchLeads` 0.2 a lead, so 100 credits is ~500 leads and the 25-lead quickstart is ~5; `aiArk.enrichPerson` 0.1 (~1,000 verified-email enrichments); `waterfall.enrichContact` 2 (~50 fully enriched contacts). `cost-discipline.md` and `llms.txt` still said ~5,000 leads and a 0.5-credit demo.
+- **The 100 signup credits are valid for 30 days** (getcargohq/cargo#6543). The router, prerequisites, billing, cost discipline, README, `llms.txt` and every plugin manifest now say so.
+- **README install copy**: the one-line prompt points at `INSTALL.md` and describes what it really does (latest CLI, emailed-code sign-in, one skills channel), not a pinned CLI, browser sign-in and numbered steps. The Claude Code plugin section says an agent cannot type slash commands, so an agent-run install uses `npx skills add … --agent claude-code --global --yes` and the plugin is the human's step. Cowork sign-in offers `login --email`. Badge says 19 skills; integrations 150+ and credit-based providers 50+, per the public integrations list and pricing.json.
+- **Plugin manifests** no longer claim to include the hosted MCP server (none ships an `mcpServers` entry). `.claude-plugin/plugin.json` gains `license` and `keywords` for the Anthropic plugin directory.
+
 ### `cargo-gtm` 2.8.0, `cargo` 1.36.0, plugin 1.36.0: four job-skill procedures move into cargo-gtm
 
 Every one-off skill in gtm-skills defers to `cargo-gtm` when the pack is installed. These four jobs had no recipe here, so the deferral dropped the procedure. Each is ported with its measured numbers, checked against the provider playbooks and cost table, and gated by the pilot rule:
