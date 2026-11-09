@@ -48,7 +48,7 @@ Ask exactly this, then wait:
 - **No discovery detours.** No `--version`, `connector list`, `action list` or pricing lookups first. The commands below are fixed; errors surface on the call.
 - **Run the starter as written.** Only the placeholder changes. Do not add filters, raise `limit`, or switch provider.
 - **One command block per step**, no narration between commands.
-- **Demo cap: 0.25 credits a starter**, 5 only on the Sales Navigator fallback below. Anything else paid needs a credit estimate and an explicit yes first.
+- **Demo cap: 0.25 credits a starter.** Anything else paid needs a credit estimate and an explicit yes first.
 
 ## Starter 1: companies like yours
 
@@ -95,7 +95,7 @@ Zero rows cost nothing (AI Ark bills per row returned). Retry once, then report:
 | Starter 3, zero rows | `"min":10,"time_frame":"TWELVE"` |
 | Starter 1 or 3, zero rows | a better-known lookalike: ask "which company is your best customer?" and use its domain |
 | Starter 2, zero rows | without `employeeSize` if it was set, otherwise broader titles (drop seniority words, add the common variant) |
-| AI Ark errors | `salesNavigator.searchAccounts`, also Cargo-managed, 0.2 a company, so **5 credits** for 25; say the price first. |
+| AI Ark errors | the same call once more, unchanged |
 
 Never fall through to a pricier source on the demo. If the retry also fails, show the error verbatim and offer `cargo-ai workspaceManagement report create`.
 
