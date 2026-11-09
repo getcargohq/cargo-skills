@@ -24,7 +24,7 @@ Tell your agent what you want and it picks the skill:
 > *"Alert me when my enrichment error rate goes above 5%."*
 > *"Set up our whole workspace as code so I can review it in a PR."*
 
-**A new account starts with 100 free credits, valid for its first 30 days, and no card.** At the prices in [pricing.json](https://www.getcargo.ai/pricing.json) that is ~500 leads sourced (`salesNavigator.searchLeads`, 0.2 a lead), ~1,000 verified-email enrichments (`aiArk.enrichPerson`, 0.1), or ~50 fully enriched contacts (`waterfall.enrichContact`, 2), and the [two-minute quickstart demo](#onboarding--cargo-quickstart) pulls 25 leads for about 5 of them. Your agent can install, sign you up, and hand back a real list in one turn.
+**A new account starts with 100 free credits, valid for its first 30 days, and no card.** At the prices in [pricing.json](https://www.getcargo.ai/pricing.json) that is ~500 leads sourced (`salesNavigator.searchLeads`, 0.2 a lead), ~1,000 verified-email enrichments (`aiArk.enrichPerson`, 0.1), or ~50 fully enriched contacts (`waterfall.enrichContact`, 2), and the [two-minute quickstart demo](#onboarding--cargo-quickstart) returns 25 rows for at most 1.25 of them. Your agent can install, sign you up, and hand back a real list in one turn.
 
 Machine-readable index for agents and crawlers: [`llms.txt`](llms.txt).
 

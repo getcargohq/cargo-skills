@@ -531,7 +531,7 @@ const PACKAGE_EDITS = [
   },
   {
     file: "README.md",
-    find: "the [two-minute quickstart demo](#onboarding--cargo-quickstart) pulls 25 leads for about 5 of them",
+    find: "the [two-minute quickstart demo](#onboarding--cargo-quickstart) returns 25 rows for at most 1.25 of them",
     replace: "the [two-minute quickstart demo](#onboarding--cargo-quickstart) reads company-level hiring intent for about 0.25 of them",
   },
   {
