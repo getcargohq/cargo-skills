@@ -60,7 +60,7 @@ Ask exactly this, then wait:
 - **No discovery detours.** No `--version`, `connector list`, `action list` or pricing lookups first. The commands below are fixed; errors surface on the call.
 - **Run the starter as written.** Only the placeholder changes. Do not add filters, raise `limit`, or switch provider.
 - **One command block per step**, no narration between commands.
-- **Demo cap: 1.25 credits a starter**, 5 only on the Sales Navigator fallback below. Anything else paid needs a credit estimate and an explicit yes first.
+- **Demo cap: 1.25 credits a starter.** Anything else paid needs a credit estimate and an explicit yes first.
 
 ## Starter 1: companies like yours
 
