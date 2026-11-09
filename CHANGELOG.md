@@ -10,7 +10,7 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
-### `cargo` 1.36.1, `cargo-gtm` 2.8.1, `cargo-billing` 2.1.5, plugin 1.36.1: free-tier figures, install copy and manifests that match the product
+### `cargo` 1.36.2, `cargo-gtm` 2.8.1, `cargo-billing` 2.1.5, plugin 1.36.2: free-tier figures, install copy and manifests that match the product
 
 - **Free-tier anchors checked against [pricing.json](https://www.getcargo.ai/pricing.json)** (generated 2026-11-04): `salesNavigator.searchLeads` 0.2 a lead, so 100 credits is ~500 leads and the 25-lead quickstart is ~5; `aiArk.enrichPerson` 0.1 (~1,000 verified-email enrichments); `waterfall.enrichContact` 2 (~50 fully enriched contacts). `cost-discipline.md` and `llms.txt` still said ~5,000 leads and a 0.5-credit demo.
 - **The 100 signup credits are valid for 30 days** (getcargohq/cargo#6543). The router, prerequisites, billing, cost discipline, README, `llms.txt` and every plugin manifest now say so.
