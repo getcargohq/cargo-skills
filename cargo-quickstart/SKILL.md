@@ -107,7 +107,7 @@ Zero rows cost nothing (AI Ark bills per row returned). Retry once, then report:
 | Starter 3, zero rows | `"min":10,"time_frame":"TWELVE"` |
 | Starter 1 or 3, zero rows | a better-known lookalike: ask "which company is your best customer?" and use its domain |
 | Starter 2, zero rows | without `employeeSize` if it was set, otherwise broader titles (drop seniority words, add the common variant) |
-| AI Ark errors | Starter 2 only: `salesNavigator.searchLeads` with `{"keywords":"\"<title>\"","limit":25}`, also Cargo-managed, 0.2 a lead, so **5 credits**; say the price first. Rows are in `.runContext.action[]` with `full_name`, `job_title`, `company_name`. |
+| Any starter, AI Ark errors | the same call once more, unchanged. A failed call returns no rows and costs nothing. |
 
 Never fall through to a 3-credit-a-row source on the demo. If the retry also fails, show the error verbatim and offer `cargo-ai workspaceManagement report create`.
 

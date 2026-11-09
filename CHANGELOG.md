@@ -18,7 +18,7 @@ The demo asked one persona question and ran `salesNavigator.searchLeads` (0.2 a 
 - **A persona you name**: `aiArk.searchPeople` with `jobRole.title_or`, 25 rows, at most 1.25 credits.
 - **Growing fast**: lookalikes whose headcount grew 20%+ in six months, 25 rows, at most 0.25 credits.
 
-Rows are read straight from `.runContext.action` in the `--wait-until-finished` output, with no download step. Zero rows bill nothing; one retry per starter, Sales Navigator only as a priced fallback for the persona starter, and the save-as-play ending is unchanged. Free credits are stated as 100, valid 30 days. The `cargo` router's pointers to the demo are updated to match (no version change).
+Rows are read straight from `.runContext.action` in the `--wait-until-finished` output, with no download step. Zero rows bill nothing; one retry per starter (an AI Ark error retries the same call once, never another source), and the save-as-play ending is unchanged. Free credits are stated as 100, valid 30 days. The `cargo` router's pointers to the demo are updated to match (no version change).
 
 ### `cargo` 1.36.2, `cargo-gtm` 2.8.1, `cargo-billing` 2.1.5, plugin 1.36.2: free-tier figures, install copy and manifests that match the product
 
