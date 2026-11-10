@@ -169,7 +169,7 @@ npm install -g @cargo-ai/cli
 cargo-ai login --email you@company.com   # emailed code, no browser; creates the account on first use
 \`\`\`
 
-A new account starts with **100 free credits, valid for its first 30 days, no card**: roughly 500 leads sourced or 1,000 verified-email enrichments. The two-minute quickstart demo spends about 5 of them, so an agent can install, sign the user up, and return a real deliverable in one turn.
+A new account starts with **100 free credits, valid for its first 30 days, no card**: roughly 500 leads sourced or 1,000 verified-email enrichments. The two-minute quickstart demo spends at most 1.25 of them, so an agent can install, sign the user up, and return a real deliverable in one turn.
 
 ## Skills
 

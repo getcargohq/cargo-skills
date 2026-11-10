@@ -120,9 +120,9 @@ const EXCLUDED_SKILLS = ["cargo-mailbox-management"];
 // A whole-file swap, for a skill this channel cannot take as written.
 // cargo-quickstart's demo pulls 25 named people; the directory rejected it under
 // "Spam mass abuse" for the same reason it rejected the two before it. The
-// override runs the same two-minute arc for ~0.25 credits (upstream: ~5) against
-// company-level hiring intent instead — the skill's own fallback rung 2, which
-// it already describes as "same wow, different angle". Editing this into place
+// override runs the same starter menu for at most 0.25 credits (upstream: 1.25)
+// with company searches only: its persona starter becomes companies that
+// employ the buyer, so the demo names no individuals. Editing this into place
 // line by line would be a dozen brittle anchors through a rewritten spine, so it
 // ships as a file. The version guard below is what keeps the copy honest.
 const PACKAGE_OVERRIDES = {
@@ -511,13 +511,13 @@ const PACKAGE_EDITS = [
   },
   {
     file: "cargo/SKILL.md",
-    find: "Fresh workspace \u2192 real deliverable (25 leads for the user's persona, with a cost receipt) in under two minutes",
-    replace: "Fresh workspace \u2192 real deliverable (the accounts matching the user's persona, sized for free and sampled for a quarter of a credit) in under two minutes",
+    find: "Fresh workspace \u2192 real deliverable (25 rows from a fixed starter menu: lookalike companies, a persona, or fast-growing companies, with a cost receipt) in under two minutes",
+    replace: "Fresh workspace \u2192 real deliverable (25 companies from a fixed starter menu: lookalikes, companies that employ the user's buyer, or fast-growing companies, with a cost receipt) in under two minutes",
   },
   {
     file: "cargo/SKILL.md",
-    find: "one persona question \u2192 25 leads in under two minutes \u2192 cost receipt \u2192 save as a recurring play",
-    replace: "one persona question \u2192 a free pool count and 25 matching accounts, in under two minutes \u2192 cost receipt \u2192 save as a recurring play",
+    find: "one menu question \u2192 25 real rows in under two minutes \u2192 cost receipt \u2192 save as a recurring play",
+    replace: "one menu question \u2192 25 real companies in under two minutes \u2192 cost receipt \u2192 save as a recurring play",
   },
   {
     file: "README.md",
@@ -526,12 +526,12 @@ const PACKAGE_EDITS = [
   },
   {
     file: "cargo/SKILL.md",
-    find: "The [quickstart demo](../cargo-quickstart/SKILL.md) spends about **5**.",
+    find: "The [quickstart demo](../cargo-quickstart/SKILL.md) spends at most **1.25**.",
     replace: "The [quickstart demo](../cargo-quickstart/SKILL.md) spends about **0.25**.",
   },
   {
     file: "README.md",
-    find: "the [two-minute quickstart demo](#onboarding--cargo-quickstart) pulls 25 leads for about 5 of them",
+    find: "the [two-minute quickstart demo](#onboarding--cargo-quickstart) returns 25 rows for at most 1.25 of them",
     replace: "the [two-minute quickstart demo](#onboarding--cargo-quickstart) reads company-level hiring intent for about 0.25 of them",
   },
   {
