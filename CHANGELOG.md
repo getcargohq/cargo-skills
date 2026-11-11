@@ -10,6 +10,15 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### `cargo` 1.36.6, plugin 1.36.6: two ways past the approval hook's gates are closed
+
+Anthropic's directory review found two inputs that `hooks/approve-cli.sh` auto-approved although they run something it means to prompt for:
+
+- **Brace expansion.** `cargo-ai log{in,}` was approved, and the shell then ran `cargo-ai login`; the same worked for every gated verb. An unquoted `{` or `}` now falls through to the normal prompt. Braces inside quotes, such as a JSON `--data '{...}'`, are literal to the shell and stay approved.
+- **`npx --package`.** `npx --package=x @cargo-ai/cli …` was approved while `--package` changed what npx installs and runs. Only `-y`/`--yes` may now come before `@cargo-ai/cli`; any other npx flag, `-p`/`--package` included, falls through to the prompt.
+
+`hooks/approve-cli.test.sh` gains 11 fixtures for both, including the forms that must stay approved.
+
 ### `cargo` 1.36.5, plugin 1.36.5: the plugin updates itself again
 
 The session-start hook again refreshes the plugin for the next session (`claude plugin marketplace update cargo-skills`, then `claude plugin update cargo@cargo-skills`, detached), as before 1.36.4. Removing it did not help the Anthropic plugin directory, which refuses every command hook from an organization it has not verified, and it left people who installed from this repository's marketplace without updates unless they turned on auto-update. The standalone mode stays removed.

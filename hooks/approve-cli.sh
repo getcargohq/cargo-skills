@@ -104,17 +104,20 @@ esac
 #   - any segment that leads with a `VAR=value` env-var assignment is rejected
 #     outright -- we never vet the variable, so a prefix like `LD_PRELOAD=` or
 #     `CARGO_API_TOKEN=` must not ride in as a plain call;
+#   - an unquoted `{` or `}` refuses the command: brace expansion would let
+#     `cargo-ai log{in,}` run `cargo-ai login` past the token gates. Braces
+#     inside quotes (a JSON `--data '{…}'`) are literal to the shell and pass;
 #   - at least one segment must be a cargo CLI call -- `cargo-ai …` or
 #     `npx [-y|--yes] @cargo-ai/cli[@<version>] …` (its own path/URL args are
 #     left alone), so the pipeline stays anchored to a Cargo call wherever it
-#     sits; an `npx` of any other package is refused;
+#     sits; an `npx` of any other package, or with any npx flag other than
+#     -y/--yes (`-p`/`--package` change what npx runs), is refused;
 #   - the cargo segment is gated POSITION-INDEPENDENTLY: a credential command
 #     token (login, logout), a destructive verb token (remove, delete,
 #     destroy), or a gated adjacent pair (workspaceManagement token,
 #     workspaceManagement report, project|cdk deploy, project|cdk destroy) ANYWHERE in the
-#     segment refuses it. Positional checks alone are bypassable -- valid
-#     prefixes like `npx -p @cargo-ai/cli cargo-ai login` or a global flag
-#     with a value shift the real subcommand out of the first argument slots,
+#     segment refuses it. Positional checks alone are bypassable -- a global flag
+#     with a value shifts the real subcommand out of the first argument slots,
 #     so leading `cargo-ai` binary tokens are dropped and every token is
 #     scanned. Ordinary read/write subcommands (whoami, storage,
 #     orchestration, billing, ...) still auto-approve; the accepted cost is
@@ -156,6 +159,9 @@ verdict="$(printf '%s' "$cmd_stripped" | awk -v helpers="$allowed_helpers" -v ga
       c = substr($0, i, 1)
       if (inq != "") { cur = cur c; if (c == inq) inq = ""; continue }
       if (c == sq || c == "\"") { inq = c; cur = cur c; continue }
+      # An unquoted brace is shell brace expansion: `cargo-ai log{in,}` runs
+      # `cargo-ai login`, so no token check below would see the real verb.
+      if (c == "{" || c == "}") exit
       if (c == "|") { seg[nseg++] = cur; cur = ""; continue }
       cur = cur c
     }
@@ -179,16 +185,22 @@ verdict="$(printf '%s' "$cmd_stripped" | awk -v helpers="$allowed_helpers" -v ga
         rest = t
         sub(/^cargo-ai([ \t]+|$)/, "", rest)
       } else if (tok == "npx") {
-        # `npx [-y|--yes|other flags] @cargo-ai/cli[@<version>] …` -- resolve
-        # the first non-flag word as the package and require it to be the
-        # Cargo CLI; an npx of anything else must not auto-approve.
+        # `npx [-y|--yes] @cargo-ai/cli[@<version>] …` -- resolve the first
+        # non-flag word as the package and require it to be the Cargo CLI; an
+        # npx of anything else must not auto-approve. Only -y/--yes may come
+        # before it: `-p`/`--package` (and any other npx flag) can change what
+        # npx installs and runs, so `npx --package=x @cargo-ai/cli` must not
+        # pass as a Cargo call.
         body = t
         sub(/^npx([ \t]+|$)/, "", body)
         m = split(body, w, /[ \t]+/)
         pkg = ""; pidx = 0
         for (j = 1; j <= m; j++) {
           if (w[j] == "") continue
-          if (substr(w[j], 1, 1) == "-") continue
+          if (substr(w[j], 1, 1) == "-") {
+            if (w[j] == "-y" || w[j] == "--yes") continue
+            exit
+          }
           pkg = w[j]; pidx = j; break
         }
         gsub(/"/, "", pkg); gsub(sq, "", pkg)
