@@ -94,7 +94,7 @@ Install those **or** this pack, not both — each standalone skill defers to `ca
 The repo also installs as a native **agent plugin**: one source, four plugin formats across five hosts, sharing the same nineteen skills plus host-specific integration:
 
 - **An approval hook** ([`hooks/approve-cli.sh`](hooks/approve-cli.sh)) that auto-approves safe `cargo-ai` calls (reads, queries, run/batch operations) while credentials (`login`), token minting, report egress, `project deploy`/`destroy`, and any `remove`/`delete` always still prompt. Allow-only — it can never override a deny rule. Wired per plugin format: `PreToolUse` (Claude Code and Grok Build), `PermissionRequest` (Codex), `beforeShellExecution` (Cursor and Grok Bot).
-- **A `SessionStart` hook** (Claude Code only) that keeps the CLI at the bundle's pinned version (`npm install -g @cargo-ai/cli@<pin>`, falling back to `@latest`). It does **not** run `skills add` (the plugin owns the skills), and it reads nothing from the session and sends nothing anywhere — the plugin records no prompts, transcripts or summaries.
+- **A `SessionStart` hook** (Claude Code only) that keeps the CLI at the bundle's pinned version (`npm install -g @cargo-ai/cli@<pin>`, falling back to `@latest`) and refreshes the plugin for the next session (`claude plugin marketplace update cargo-skills`, then `claude plugin update cargo@cargo-skills`, in the background). It does **not** run `skills add` (the plugin owns the skills), and it reads nothing from the session and sends nothing anywhere — the plugin records no prompts, transcripts or summaries.
 - **Native subagents** (Claude Code and Grok Build): `cargo-execution-planner` (costed GTM plans with pilot + budget reconciliation, read-only) and `cargo-list-builder` (parallel sourcing fan-out that executes only pre-approved slices). Grok Build loads the same Claude-compatible agent definitions through its plugin compatibility layer — [`agents/`](agents/).
 
 Optional extra — a **statusline** with live Cargo context (workspace · credits · CLI pin state). Statuslines are user-level config, so wire it yourself in `~/.claude/settings.json`:
@@ -178,10 +178,9 @@ The Cargo CLI and these skills ship updates regularly. The bundle pins the CLI v
 
 Install the [**Cargo plugin**](#agent-plugin-alternative-channel--claude-code-codex-cursor-grok) above
 (`/plugin marketplace add getcargohq/cargo-skills`, then `/plugin install cargo@cargo-skills`) and the
-bundled `SessionStart` hook keeps the CLI current automatically: every new Claude Code session
-converges `@cargo-ai/cli` to the pin. The hook swallows errors, so a missing `npm` never blocks a
-session. Update the plugin itself with `/plugin marketplace update cargo-skills` and
-`/plugin update cargo@cargo-skills`, or turn on auto-update for the `cargo-skills` marketplace in `/plugin`.
+bundled `SessionStart` hook keeps everything current automatically: every new Claude Code session
+converges `@cargo-ai/cli` to the pin and refreshes the plugin itself for the next session. The hook
+swallows errors, so a missing `npm`/`claude` binary never blocks a session.
 
 If you would rather have the agent do the whole setup — install the CLI, sign you in, and install
 the skills for whichever agent it is — paste this to Claude Code, Codex or Cursor:
