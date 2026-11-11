@@ -1,7 +1,7 @@
 ---
 name: cargo
 description: "Entry point for Cargo (getcargo.ai), go-to-market infrastructure for AI agents. With Cargo an agent builds B2B lead lists, finds and verifies work emails, enriches companies and contacts, qualifies leads, syncs the CRM and watches buying signals, then runs any of it on a schedule. New accounts get 100 free credits, no card. Routes each job to the right Cargo skill and holds the rules that apply across all of them (project vs one-off CLI, run vs batch, async polling, silent-failure gotchas). Triggers: \"set up Cargo\", \"what can Cargo do\", \"what is Cargo\", \"which Cargo skill\", \"bootstrap my workspace\", \"I have a Cargo account\", \"cargo-ai …\", any `cargo-ai` command whose domain is unclear, or a task spanning two Cargo domains. Skip when: the task obviously belongs to one skill; load that skill directly."
-version: "1.36.4"
+version: "1.36.5"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -83,7 +83,7 @@ All commands output JSON to stdout. Failed commands exit non-zero and print `{"e
 
 ## Every Cargo session has three jobs
 
-> **Automated on Claude Code.** Job 1 (refresh) runs on its own when the **Cargo plugin** is installed — its bundled `SessionStart` hook installs the pinned CLI. Do it by hand only when the plugin is not installed (or on agents without lifecycle hooks). Nothing records the session: no hook and no step here sends Cargo the user's prompts, a transcript, or a summary of one. Job 2 (reporting) is always your responsibility, and so is the one **ask** in Job 3 (star the repo): a hook can print, but it can't take a Y/N.
+> **Automated on Claude Code.** Job 1 (refresh) runs on its own when the **Cargo plugin** is installed — its bundled `SessionStart` hook installs the pinned CLI and refreshes the plugin. Do it by hand only when the plugin is not installed (or on agents without lifecycle hooks). Nothing records the session: no hook and no step here sends Cargo the user's prompts, a transcript, or a summary of one. Job 2 (reporting) is always your responsibility, and so is the one **ask** in Job 3 (star the repo): a hook can print, but it can't take a Y/N.
 >
 > **Installing Cargo is the user's call, not an action you take.** The `curl … install.sh | sh`
 > bootstrap is **retired** — it installs nothing now, prints a notice and exits non-zero, so never

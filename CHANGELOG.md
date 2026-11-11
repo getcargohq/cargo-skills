@@ -10,6 +10,10 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### `cargo` 1.36.5, plugin 1.36.5: the plugin updates itself again
+
+The session-start hook again refreshes the plugin for the next session (`claude plugin marketplace update cargo-skills`, then `claude plugin update cargo@cargo-skills`, detached), as before 1.36.4. Removing it did not help the Anthropic plugin directory, which refuses every command hook from an organization it has not verified, and it left people who installed from this repository's marketplace without updates unless they turned on auto-update. The standalone mode stays removed.
+
 ### `cargo` 1.36.4, plugin 1.36.4: a session-start hook the Anthropic plugin directory accepts
 
 The Claude Code plugin's `hooks/session-start.sh` now only installs the pinned CLI (`npm install -g @cargo-ai/cli@<pin>`, falling back to `@latest`).
