@@ -10,6 +10,13 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### `cargo` 1.36.4, plugin 1.36.4: a session-start hook the Anthropic plugin directory accepts
+
+The Claude Code plugin's `hooks/session-start.sh` now only installs the pinned CLI (`npm install -g @cargo-ai/cli@<pin>`, falling back to `@latest`).
+
+- **The standalone mode is gone.** It ran when the retired installer had copied the script to `~/.claude/hooks/`, refreshed the skills with an unpinned `npx -y skills add`, and made the plugin copy defer to it. The installer no longer writes that copy and the CLI removes old ones, so the branch was dead code, and the directory's validator refuses any unpinned package launcher in a hook script, run or not.
+- **The background plugin self-update is gone.** The hook no longer runs `claude plugin marketplace update` and `claude plugin update` detached. Claude Code updates plugins itself (`/plugin update cargo@cargo-skills`, or marketplace auto-update), and the directory delivers new versions to the people who install from it.
+
 ### `cargo-quickstart` 1.2.0, `cargo` 1.36.3, `cargo-billing` 2.1.6, plugin 1.36.3: a fixed starter menu that needs nothing connected
 
 The demo asked one persona question and ran `salesNavigator.searchLeads` (0.2 a lead, about 5 credits), with a fallback ladder that ended in a 3-credit-a-row source and a permission question. It now asks "What would you like to do with Cargo?" with a fixed menu of three starters, each one copy-runnable command on AI Ark's Cargo-managed connection (seeded into every new workspace):
