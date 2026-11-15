@@ -80,8 +80,9 @@ harness agent's hash, so all of them redeploy.
 `env` (the same record or `HarnessEnvVarSpec[]` shapes as `defineApp`/`defineWorker`,
 `secret("NAME")` for secrets) and `runAs` (a `defineUser` service user or `userRef`,
 which gives the sandbox a temporary `CARGO_API_TOKEN` for that user) sit at the top
-level beside `harness`, and apply bound or unbound. Removing either from code clears
-it on the release at the next deploy.
+level beside `harness`. `runAs` applies bound or unbound; `env` needs a project, so an
+unbound agent gets no env vars. Removing either from code clears it on the release at
+the next deploy.
 
 ```ts
 import { defineAgent, defineUser, roleRef, secret } from "@cargo-ai/cdk";
@@ -100,9 +101,11 @@ export const reviewer = defineAgent({
 **`repository` is removed (`@cargo-ai/cdk` 1.0.150).** `repository: { repository,
 defaultBranch, rootDirectory, env, runAs }` and `repository: null` no longer
 type-check: move `env` and `runAs` to the top level and drop the rest (the branch is
-now the state's production branch). Older CDKs send `repository`, which the API
-rejects with a 400. A pulled agent comes back without a `state` and binds to the
-pulling project on its next deploy. The agent clones, pushes and comments as the
+now the state's production branch). Older CDKs send `repository` on every agent
+release, harness or not, so they cannot deploy any agent: the API answers 400
+`repository is no longer accepted: upgrade @cargo-ai/cdk to 1.0.150 or later …`.
+`project pull` emits `state: stateRef("<uuid>")` for a bound agent, the way it emits
+`runAs: userRef(…)`. The agent clones, pushes and comments as the
 **Cargo GitHub app**, which must be installed on the repo — see
 [`../../cargo-ai/SKILL.md`](../../cargo-ai/SKILL.md).
 
