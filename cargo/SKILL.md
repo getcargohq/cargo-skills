@@ -1,7 +1,7 @@
 ---
 name: cargo
 description: "Entry point for Cargo (getcargo.ai), go-to-market infrastructure for AI agents. With Cargo an agent builds B2B lead lists, finds and verifies work emails, enriches companies and contacts, qualifies leads, syncs the CRM and watches buying signals, then runs any of it on a schedule. New accounts get 100 free credits, no card. Routes each job to the right Cargo skill and holds the rules that apply across all of them (project vs one-off CLI, run vs batch, async polling, silent-failure gotchas). Triggers: \"set up Cargo\", \"what can Cargo do\", \"what is Cargo\", \"which Cargo skill\", \"bootstrap my workspace\", \"I have a Cargo account\", \"cargo-ai …\", any `cargo-ai` command whose domain is unclear, or a task spanning two Cargo domains. Skip when: the task obviously belongs to one skill; load that skill directly."
-version: "1.36.6"
+version: "1.37.0"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -530,7 +530,7 @@ The non-obvious rules for each skill — the things that fail silently or cost m
 
 - Knowledge for RAG attaches to an agent via the release's `resources`: **files** + **libraries** come from [`cargo-content`](#cargo-content). Wire them in with `release update-draft --resources …` then `release deploy-draft`.
 - **`cargo-ai mcp` with no `--server` now bridges the first-party platform MCP** (`mcp.getcargo.io/mcp`), not "the workspace's only MCP server". `ai mcp-server` still builds a curated server; pass its uuid with `--server`. See "These skills vs Cargo's MCP surfaces" above.
-- **A coding agent (`--harness-slug` + `--repository` on a release or a new chat) pushes as the Cargo GitHub app**, which must be installed on the repo; its token is scoped to that repo, it works on `cargo/<name>` branches and never pushes the default branch, and a mention on its PR continues the chat. Harness and repository are fixed when a chat is created — passing them with `--chat-uuid` is refused.
+- **A coding agent (`--harness-slug` + `--state-uuid` on a release or a new chat) clones a project (a connected deploy state) and pushes as the Cargo GitHub app**, which must be installed on the repo; its token is scoped to that repo, it works on `cargo/<name>` branches and never pushes the default branch, and a mention on its PR continues the chat. `--repository` is gone since CLI 1.0.154 (`--state-uuid`, `--env`, `--run-as-user-uuid` replace it; in a project, `defineAgent({ state, env, runAs })`). Harness, project, env and run-as user are fixed when a chat is created — passing them with `--chat-uuid` is refused.
 - **CLI ≥ 1.0.19:** files and libraries moved out of the `ai` domain into the top-level **`content`** domain (now the `cargo-content` skill). The old `cargo-ai ai file …` commands no longer exist.
 
 > For _using_ agents (sending messages, multi-turn chat, polling), use `cargo-orchestration`.

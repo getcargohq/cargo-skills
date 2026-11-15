@@ -10,6 +10,14 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### `cargo-ai` 3.0.0, `cargo-project` 5.0.0, `cargo` 1.37.0, `cargo-workspace-management` 1.7.2, plugin 1.37.0: a coding agent clones a project, not a repository (cargo#6677)
+
+Breaking. Agent releases and chats now point at a project (a connected deploy state) instead of naming a repository, and the harness's env vars and run-as user move beside it. Needs CLI 1.0.154 and `@cargo-ai/cdk` 1.0.150; older clients that send `repository` get a 400 (`Unrecognized key: "repository"`).
+
+- **CLI.** `--repository <json>` on `ai release update-draft` / `deploy-draft`, `ai chat create` and `ai message create` is gone. It is replaced by `--state-uuid <uuid>` (the project the harness clones: its repository, directory and production branch), `--env <json>` and `--run-as-user-uuid <uuid>`. On a chat each overrides the release separately, and all three are refused with `--chat-uuid`. A state that is missing, disconnected or from another workspace is refused with 403 `stateNotConnected`.
+- **CDK.** `defineAgent({ repository: { repository, defaultBranch, rootDirectory, env, runAs } | null })` is removed with no alias. `state?: StateRef` (`stateRef(uuid)`; omitted binds the project's own connected state from `cargo.state.json`), `env?` and `runAs?` sit at the top level. There is no unbound opt-out: an agent is unbound only when the project has no connected state.
+- **`cargo/cli-version`** pins 1.0.154.
+
 ### `cargo` 1.36.6, plugin 1.36.6: two ways past the approval hook's gates are closed
 
 Anthropic's directory review found two inputs that `hooks/approve-cli.sh` auto-approved although they run something it means to prompt for:
