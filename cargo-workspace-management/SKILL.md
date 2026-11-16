@@ -1,7 +1,7 @@
 ---
 name: cargo-workspace-management
 description: "Administers a Cargo workspace: invites teammates, creates and rotates API tokens, organizes plays, tools and agents into folders, checks roles, uploads CSVs for batch runs, and sends bug reports or feature requests to the Cargo team. Triggers: \"invite my teammate\", \"create an API token for CI\", \"who has access\", \"organize these into folders\", \"rotate that token\", \"upload this CSV for a batch\", and for feedback: \"report this bug to Cargo\", \"send feedback to the Cargo team\", \"this CLI command is broken\", \"request a feature\". Most commands need a token with admin access. Skip when: the question is about credits, plans, or invoices, use cargo-billing."
-version: "1.7.1"
+version: "1.7.2"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -151,8 +151,8 @@ or the API (workspace-management write access):
 for the caller, so a service user's own token also goes through the API or the web app.
 
 **Run-as.** A worker (`hosting worker update --run-as-user-uuid`, `defineWorker({ runAs })`),
-an agent's coding repository (`repository.runAsUserUuid`, `defineAgent({ repository: {
-runAs } })`) or a connected repo can run as a service user; Cargo then binds a temporary
+a coding agent (`ai release … --run-as-user-uuid`, `defineAgent({ runAs })`) or a
+connected repo can run as a service user; Cargo then binds a temporary
 `CARGO_API_TOKEN` for it. Two checks guard the assignment:
 
 | Reason | When | Status |
