@@ -51,8 +51,8 @@ Stack every identifier you have per row — more keys, better match confidence a
 
 ## Common pitfalls
 
-- **No required fields.** The schema marks nothing required, so an empty `--data '{}'` still executes and still bills 4 credits. Always pass at least one identifier; guard the node with a filter on identifier presence.
-- **Fixed cost on miss.** 4 credits whether or not a match comes back — gate mixrank on prior-rung misses only ([`../references/cost-discipline.md`](../references/cost-discipline.md)).
+- **No required fields.** The schema marks nothing required, so an empty `--data '{}'` still executes — it matches nothing and bills nothing, but burns a call against the rate limit. Always pass at least one identifier; guard the node with a filter on identifier presence.
+- **Misses bill 0, hits bill 4.** Gate mixrank on prior-rung misses only ([`../references/cost-discipline.md`](../references/cost-discipline.md)) so a hit never re-buys a field a cheaper rung already filled.
 - **Bare-name matching is fuzzy.** `name` or `companyName` alone can mismatch namesakes; anchor with `domain` or `socialUrl` whenever possible, and pilot 10 rows before a batch.
 
 ## Position in the waterfall

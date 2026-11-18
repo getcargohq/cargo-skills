@@ -66,6 +66,7 @@ Any one of `domain`, `linkedin_url`, `name` or `website` is accepted (at least o
 
 ## Common pitfalls
 
+- **Misses bill 0.** `enrichPerson` and `enrichOrganization` bill only when Apollo returns a match — no person or no organization costs nothing, same as every other provider.
 - **`revealPhoneNumber: true` multiplies the price by nine** (1 → 9). Gate it like any phone action — and the phone chain starts cheaper at `prospeo.findPhone` (3, [`../references/stage-action-map.md`](../references/stage-action-map.md)), so reveal only when you're enriching the person anyway. `revealPersonalEmails` does **not** change the cost.
 - **Own-key actions fail without an Apollo connector.** The seven non-credits actions need a connector authenticated with your Apollo `apiKey` — they can't run on cargo's managed connection.
 - **Rate limit: 400 calls/hour** (spread) on your own Apollo key — the tightest in this group; large batches stretch over hours, so prefer the stack for volume enrichment. On cargo's managed key the enrich actions share 1,000/minute and the two searches share 10,000/hour.
