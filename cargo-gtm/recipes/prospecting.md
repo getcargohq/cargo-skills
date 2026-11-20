@@ -121,9 +121,8 @@ batch_rows "$B" > /tmp/p1-firmo.json
 # step 3a left without an email (aiArk returns no output on a miss, so every
 # cargo_ column is empty). The tool walks five providers and checks each hit
 # with zeroBounce before returning it.
-TOOL=$(cargo-ai orchestration tool list | jq -r '.tools[] | select(.isReadOnly and .name == "Find email") | .uuid')
 B=$(cargo-ai orchestration action execute-batch \
-  --action "{\"kind\":\"tool\",\"toolUuid\":\"$TOOL\"}" \
+  --action '{"kind":"tool","templateSlug":"email_waterfall"}' \
   --records "$(jq -c '[.[] | select([to_entries[] | select(.key | startswith("cargo")) | .value] | all(. == ""))
                        | {firstName: .first_name, lastName: .last_name, linkedinUrl}]' /tmp/p1-prospect-enriched.json)" \
   --wait-until-finished | jq -r '.batch.uuid')
@@ -151,7 +150,7 @@ jq -n --slurpfile fe /tmp/p1-emails.json --slurpfile ai /tmp/p1-prospect-enriche
 
 The tool takes `linkedinUrl` only as a `linkedin.com/in/` profile URL; a row with neither that nor `companyDomain` exits empty without calling a provider. No Find email tool in the workspace? Use `FullEnrich.findEmail` with `companyName` and `linkedinUrl` here, then `waterfall.verifyEmail` on its `cargo_most_probable_email`.
 
-aiArk's own email sits inside its `email` output object (`email.output[0].address`), so in the CSV it is under the `cargo_email.` columns, not a flat `email` — which is why step 7 reads the two shapes separately rather than coalescing one key.
+aiArk's own email sits inside its `email` output object (`email.output[0].address`), so in the CSV it is under the `cargo_email.` columns, not a flat `email`, which is why step 7 reads the two shapes separately rather than coalescing one key.
 
 **Credit budget**: ~10 leads × (0.2 + 0 + 0.1 + 0.01 + 1.1) = ~14 credits. Step 5 (the Find email tool, ~1.1 per hit and roughly 0 on a miss) only runs on the rows step 3a left without an email, and `aiArk.enrichPerson` usually returns one, so the real figure lands under this.
 
@@ -234,9 +233,8 @@ The workspace's read-only **Find email** tool is the email waterfall, already bu
 # ONLY the rows step 4 left without an email (aiArk returns no output on a
 # miss, so every cargo_ column is empty). This gate is what keeps step 5 to
 # the 60-row residue instead of all 200.
-TOOL=$(cargo-ai orchestration tool list | jq -r '.tools[] | select(.isReadOnly and .name == "Find email") | .uuid')
 B=$(cargo-ai orchestration action execute-batch \
-  --action "{\"kind\":\"tool\",\"toolUuid\":\"$TOOL\"}" \
+  --action '{"kind":"tool","templateSlug":"email_waterfall"}' \
   --records "$(jq -c '[.[] | select([to_entries[] | select(.key | startswith("cargo")) | .value] | all(. == ""))
                        | {firstName: .first_name, lastName: .last_name, companyDomain: .domain, linkedinUrl}]' /tmp/p2-prospect-enriched.json)" \
   --wait-until-finished | jq -r '.batch.uuid')
@@ -345,12 +343,11 @@ jq -s '([.[1][] | select([to_entries[] | select(.key | startswith("cargo")) | .v
   | [.[0][] | select((.linkedin // "") as $l | $hit | index($l) | not)]' \
   /tmp/p3-missing-email.json /tmp/p3-aiark-enriched.json > /tmp/p3-still-missing.json
 
-TOOL=$(cargo-ai orchestration tool list | jq -r '.tools[] | select(.isReadOnly and .name == "Find email") | .uuid')
 RECORDS=$(jq -c '[.[] | {firstName, lastName, companyDomain: .domainName, linkedinUrl: .linkedin}]' /tmp/p3-still-missing.json)
 
-# 4a. SAMPLE — the first 20 rows only. This is a quote, not the job.
+# 4a. SAMPLE: the first 20 rows only. This is a quote, not the job.
 B=$(cargo-ai orchestration action execute-batch \
-  --action "{\"kind\":\"tool\",\"toolUuid\":\"$TOOL\"}" \
+  --action '{"kind":"tool","templateSlug":"email_waterfall"}' \
   --records "$RECORDS" --limit 20 --wait-until-finished | jq -r '.batch.uuid')
 batch_rows "$B" > /tmp/p3-sample.json   # address in cargo_email
 
@@ -359,7 +356,7 @@ batch_rows "$B" > /tmp/p3-sample.json   # address in cargo_email
 #     batch, over the rows the sample did not cover (--limit takes the first N,
 #     so the rest is .[20:]). Stopping after 4a leaves 20 of the 80 rows done.
 B=$(cargo-ai orchestration action execute-batch \
-  --action "{\"kind\":\"tool\",\"toolUuid\":\"$TOOL\"}" \
+  --action '{"kind":"tool","templateSlug":"email_waterfall"}' \
   --records "$(jq -c '.[20:]' <<<"$RECORDS")" --wait-until-finished | jq -r '.batch.uuid')
 batch_rows "$B" > /tmp/p3-rest.json
 jq -s 'add' /tmp/p3-sample.json /tmp/p3-rest.json > /tmp/p3-found.json

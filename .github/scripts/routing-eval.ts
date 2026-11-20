@@ -229,9 +229,13 @@ function checkStructure(skills: Skill[]): string[] {
     if (phrases.length < 4) {
       failures.push(`${s.name}: only ${phrases.length} quoted trigger phrase(s); write at least 4 literal things a user would type.`);
     }
-    // Generated slug lists make these two long on purpose.
-    const exempt = s.name === "cargo-gtm" || s.name === "cargo-connection";
-    if (!exempt && d.length > 900) {
+    // 1,024 is the Agent Skills spec limit; hosts truncate or reject past it.
+    // The two skills with generated slug lists fill up to it on purpose
+    // (sync-trigger-slugs.ts); every other skill keeps headroom under ~900.
+    const generated = s.name === "cargo-gtm" || s.name === "cargo-connection";
+    if (d.length > 1024) {
+      failures.push(`${s.name}: description is ${d.length} chars (spec limit 1,024).`);
+    } else if (!generated && d.length > 900) {
       failures.push(`${s.name}: description is ${d.length} chars (cap ~900).`);
     }
   }

@@ -193,9 +193,8 @@ cargo-ai orchestration action execute-batch \
 Use the workspace's preset **Find email** tool: the multi-provider waterfall, with every found address checked by `zeroBounce` before it is returned ([`../references/waterfall-strategy.md`](../references/waterfall-strategy.md#start-here-the-workspaces-preset-tools)). Run it with `--limit 20` first and report the hit rate before the full batch.
 
 ```bash
-TOOL=$(cargo-ai orchestration tool list | jq -r '.tools[] | select(.isReadOnly and .name == "Find email") | .uuid')
 cargo-ai orchestration action execute-batch \
-  --action "{\"kind\":\"tool\",\"toolUuid\":\"$TOOL\"}" \
+  --action '{"kind":"tool","templateSlug":"email_waterfall"}' \
   --records "$(rows /tmp/contacts.json | jq -c '[.[] | select(.cargo != "") | .domain as $d | (.cargo | fromjson)[] | {firstName: .first_name, lastName: .last_name, companyDomain: $d}]')" \
   --wait-until-finished > /tmp/emails.json
 # the address is in cargo_email; an empty cell is a row no provider covered
@@ -205,14 +204,13 @@ No tool in the workspace, or the user wants their own provider order? Hand-roll 
 
 ### Step 6 — Verify emails that step 5 did not verify
 
-**Do not run this on step 5's output.** With `returns_catchalls` unset, the Find email tool only returns addresses `zeroBounce` graded `valid`, so verifying them again buys nothing and costs 0.2 a row. Step 6 exists for addresses that came from somewhere else — the user's own CSV, a CRM export, a scraped column — and for step 5's output in the one case where you set `returns_catchalls: true`. If every address in hand came out of step 5 on the default settings, skip to step 7.
+**Do not run this on step 5's output.** With `returns_catchalls` unset, the Find email tool only returns addresses `zeroBounce` graded `valid`, so verifying them again buys nothing and costs 0.2 a row. Step 6 exists for addresses that came from somewhere else (the user's own CSV, a CRM export, a scraped column) and for step 5's output in the one case where you set `returns_catchalls: true`. If every address in hand came out of step 5 on the default settings, skip to step 7.
 
 With such a list in `/tmp/unverified.json` (objects carrying an `email`), the preset **Verify email** tool costs 0.2 a row (`waterfall.verifyEmail` is 0.1 by hand):
 
 ```bash
-VTOOL=$(cargo-ai orchestration tool list | jq -r '.tools[] | select(.isReadOnly and .name == "Verify email") | .uuid')
 cargo-ai orchestration action execute-batch \
-  --action "{\"kind\":\"tool\",\"toolUuid\":\"$VTOOL\"}" \
+  --action '{"kind":"tool","templateSlug":"email_validator"}' \
   --records "$(jq -c '[.[] | select((.email // "") != "") | {email}]' /tmp/unverified.json)" \
   --wait-until-finished > /tmp/verified.json   # cargo_status, cargo_is_safe
 ```

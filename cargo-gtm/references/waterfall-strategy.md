@@ -32,28 +32,32 @@ The same folder holds **Find work email from LinkedIn URL** (`linkedinUrl` in, `
 
 ### The first move
 
-1. **Find the tool.** Search the catalog and take the `action` object it hands back — Cargo's read-only presets rank above a single provider's action on a tie, so "find email" surfaces the waterfall first:
+1. **Address the preset by its template slug.** No lookup is needed: `{"kind":"tool","templateSlug":"<slug>"}` resolves to the workspace's own copy of the preset, so the same action works in every workspace (CLI 1.0.138 or later).
+
+   | Tool | `templateSlug` |
+   |---|---|
+   | Find email | `email_waterfall` |
+   | Find phone | `phone_waterfall` |
+   | Verify email | `email_validator` |
+
+   To confirm the inputs and output before spending anything: `cargo-ai orchestration action get-output-schema --action '{"kind":"tool","templateSlug":"email_waterfall"}'` (MCP: `get_action_schema` with the same action). To see what else matches, `cargo-ai orchestration action list "find email" --kind tool` (MCP: `search_actions` with `{"query":"find email","kind":"tool"}`); presets rank first on a tie.
+
+   Fallback for a CLI older than 1.0.138, which does not resolve `templateSlug`: look up the workspace's copy and pass `{"kind":"tool","toolUuid":"<uuid>"}` instead.
 
    ```bash
-   cargo-ai orchestration action list "find email" --kind tool
-   # several rows can match (copies, custom tools); take the read-only preset:
    cargo-ai orchestration tool list | jq -r '.tools[] | select(.isReadOnly and .name == "Find email") | .uuid'
    ```
-
-   On the MCP server: `search_actions` with `{"query":"find email","kind":"tool"}`.
-
-   Two ways to address it, both executable. `{"kind":"tool","toolUuid":"<uuid>"}` names the workspace's own copy, and the `toolUuid` differs per workspace, so look it up each time. `{"kind":"tool","templateSlug":"email_waterfall"}` names the preset itself and resolves to that same copy once signed in, so it needs no lookup, and it is the only form a signed-out session can see. Take the slug from the search result rather than guessing it (`email_waterfall` for Find email, `phone_waterfall` for Find phone). The examples below use `toolUuid`; a `templateSlug` pastes into the same place.
 
 2. **Sample 10 to 20 rows**, the same gate as any paid batch ([`cost-discipline.md`](cost-discipline.md)):
 
    ```bash
    cargo-ai orchestration action execute-batch \
-     --action '{"kind":"tool","toolUuid":"<toolUuid>"}' \
+     --action '{"kind":"tool","templateSlug":"email_waterfall"}' \
      --records '[{"firstName":"Ada","lastName":"Lovelace","companyDomain":"example.com"},{"linkedinUrl":"https://www.linkedin.com/in/ada"}]' \
      --limit 20 --wait-until-finished
    ```
 
-   MCP: `execute_action_batch` with the same `{"kind":"tool","toolUuid":"<toolUuid>"}` and records.
+   MCP: `execute_action_batch` with the same `{"kind":"tool","templateSlug":"email_waterfall"}` and records. Find phone and Verify email run the same way with `phone_waterfall` and `email_validator`.
 
 3. **Read the results and the receipt.** `cargo-ai orchestration batch download --uuid <batch-uuid>` gives the CSV, with the address in `cargo_email` (`cargo_phone` for Find phone, `cargo_status` and `cargo_is_safe` for Verify email); MCP `get_batch` returns the same rows. Report the hit rate and the credits actually spent, then ask for approval of the full volume.
 
@@ -62,7 +66,7 @@ The same folder holds **Find work email from LinkedIn URL** (`linkedinUrl` in, `
 ### What it returns, and what it costs
 
 - **The address and nothing else.** Find email returns `{email}`: no verification status, no catch-all flag, no record of which provider found it. With `returns_catchalls` unset, every address it returns passed `zeroBounce` as `valid`, so there is no separate verify step to run on it. With `returns_catchalls: true` it may also return a catch-all address, and the output does not say which ones are; run **Verify email** on those if the status matters.
-- **A miss is roughly free.** The tool stops at the first verified hit, a provider rung generally bills only when it finds something, and verification runs only on a found address. So a row nobody covers costs close to nothing, and a row the first rung settles costs about 1.1. Treat this as an estimate until the sample's receipt confirms it for your segment.
+- **A miss is roughly free.** The tool stops at the first verified hit, a provider rung bills only when it returns a result, and verification runs only on a found address. So a row nobody covers costs close to nothing, and a row the first rung settles costs about 1.1. Treat this as an estimate until the sample's receipt confirms it for your segment.
 - **Rows with bad inputs exit empty and free.** The tool checks its inputs before calling anyone: a domain that does not parse, a first or last name under two characters, or a LinkedIn URL that is not a `/in/` profile ends the run with no email.
 - **Input names are not checked.** A tool run drops a key it does not know without an error, so `linkedin_url` or `first_name` is silently ignored and the row exits empty. Use the camelCase names in the table.
 - **Find phone does not verify** a number before returning it.

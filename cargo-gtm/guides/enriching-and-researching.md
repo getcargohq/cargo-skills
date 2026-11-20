@@ -2,7 +2,7 @@
 
 How to enrich companies and contacts on Cargo. Covers waterfall enrichment, fallback chains, signal extraction, and output retrieval.
 
-**Finding an email or a phone, or verifying an email? Run the workspace's preset tool first.** Every workspace has read-only **Find email**, **Find phone** and **Verify email** tools in its Cargo Tools folder: the multi-provider waterfall with verification, already built, run as `{"kind":"tool","toolUuid":"<uuid>"}`. Look the UUID up with `cargo-ai orchestration action list "find email" --kind tool`, sample 10 to 20 rows, then run the approved batch. Inputs, outputs, costs and when to hand-roll instead: [`../references/waterfall-strategy.md`](../references/waterfall-strategy.md#start-here-the-workspaces-preset-tools).
+**Finding an email or a phone, or verifying an email? Run the workspace's preset tool first.** Every workspace has read-only **Find email**, **Find phone** and **Verify email** tools in its Cargo Tools folder: the multi-provider waterfall with verification, already built, run as `{"kind":"tool","templateSlug":"email_waterfall"}` (`phone_waterfall` for Find phone, `email_validator` for Verify email). The slug resolves to the workspace's own copy, so there is no uuid to look up. Sample 10 to 20 rows, then run the approved batch. Inputs, outputs, costs and when to hand-roll instead: [`../references/waterfall-strategy.md`](../references/waterfall-strategy.md#start-here-the-workspaces-preset-tools).
 
 ## Default chain by enrichment goal
 
@@ -93,9 +93,8 @@ Same shape applies for person enrichment (`aiArk.enrichPerson` where a LinkedIn 
 Email and phone lookup do not need this pattern: the **Find email** and **Find phone** preset tools run it server-side in one batch.
 
 ```bash
-TOOL=$(cargo-ai orchestration tool list | jq -r '.tools[] | select(.isReadOnly and .name == "Find email") | .uuid')
 cargo-ai orchestration action execute-batch \
-  --action "{\"kind\":\"tool\",\"toolUuid\":\"$TOOL\"}" \
+  --action '{"kind":"tool","templateSlug":"email_waterfall"}' \
   --records '[{"firstName":"Ada","lastName":"Lovelace","companyDomain":"example.com"}]' \
   --limit 20 --wait-until-finished
 # rows: cargo-ai orchestration batch download --uuid <batch-uuid>   (address in cargo_email)

@@ -1,7 +1,7 @@
 ---
 name: cargo-analytics
-description: "Get data out of Cargo and measure what ran — download a run output, export a segment or model to CSV or JSON, and pull run and batch success and error counts. Triggers: \"download the results\", \"export this to CSV\", \"give me the file\", \"how many succeeded\", \"what is my error rate\", \"send me the enriched list\", \"get the output of that run\", \"how many records did it write\". Skip when: asking why something failed or where credits went — use cargo-diagnostics; asking about credits, plans, or invoices — use cargo-billing."
-version: "1.7.0"
+description: "Gets results out of Cargo and measures what ran: downloads run outputs, exports a segment or model to CSV or JSON, and counts successes and errors. Triggers: \"download the results\", \"export this to CSV\", \"give me the file\", \"how many succeeded\", \"what is my error rate\", \"send me the enriched list\", \"get the output of that run\", \"how many records did it write\". Skip when: asking why something failed or where credits went, use cargo-diagnostics; asking about credits, plans, or invoices, use cargo-billing."
+version: "1.7.1"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:

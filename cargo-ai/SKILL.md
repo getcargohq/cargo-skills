@@ -1,7 +1,7 @@
 ---
 name: cargo-ai
-description: "Build and configure AI agents inside Cargo — create an agent, choose its model and temperature, write its prompt, attach knowledge for retrieval (RAG), connect MCP tool servers, manage memories, and deploy releases. Triggers: \"create an agent\", \"make an agent that\", \"give the agent our docs\", \"attach this knowledge base\", \"attach this library to the agent\", \"add resources to the agent release\", \"connect an MCP server\", \"expose our tools as an MCP server\", \"use Cargo from Claude Desktop or ChatGPT\", \"change the agent model\", \"what does the agent remember\", \"deploy the agent\", \"the agent is answering wrong\". Skip when: uploading the knowledge files themselves — use cargo-content; sending the agent a message or running it over records — use cargo-orchestration."
-version: "2.8.1"
+description: "Builds Cargo AI agents that work on GTM data: picks the model, writes the prompt, attaches docs for retrieval (RAG), connects MCP tools, manages memories, and deploys releases. Triggers: \"create an agent\", \"make an agent that\", \"give the agent our docs\", \"attach this knowledge base\", \"attach this library to the agent\", \"add resources to the agent release\", \"connect an MCP server\", \"expose our tools as an MCP server\", \"use Cargo from Claude Desktop or ChatGPT\", \"change the agent model\", \"what does the agent remember\", \"deploy the agent\", \"the agent is answering wrong\". Skip when: uploading the knowledge files themselves, use cargo-content; sending the agent a message or running it over records, use cargo-orchestration."
+version: "3.0.0"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -161,25 +161,28 @@ cargo-ai ai release deploy-draft --agent-uuid <uuid> \
 
 `--with-reasoning [true|false]` on `update-draft` / `deploy-draft` turns reasoning mode on (bare flag = `true`) for models that support it.
 
-### Coding agents (`--harness-slug`, `--repository`)
+### Coding agents (`--harness-slug`, `--state-uuid`)
 
 A release with a **harness** runs as a coding agent: each turn works in a sandbox with a git checkout instead of a plain chat loop. Harness slugs: `claudeCode`, `codex`, `openCode`, `deepAgents`.
 
 ```bash
 cargo-ai ai release deploy-draft --agent-uuid <uuid> \
   --harness-slug claudeCode --integration-slug anthropic --language-model-slug <model-slug> \
-  --repository '{"connectorUuid":"<github-connector-uuid>","repository":"acme/app","defaultBranch":"main","rootDirectory":null}' \
+  --state-uuid <state-uuid> \
   --actions '[]' --mcp-clients '[]' --resources '[]' --capabilities '[]' --suggested-actions '[]'
 ```
 
-- **`--repository`** (JSON): `connectorUuid` (a GitHub connector — it identifies the user, it is not the identity the agent acts as), `repository` as `owner/name`, `defaultBranch`, `rootDirectory`, `env` (`[{key, type:"public", value}]` or `{key, type:"secret", secretValue}`), and `runAsUserUuid` — a **service user** whose temporary `CARGO_API_TOKEN` the sandbox gets (the help omits it; see [`../cargo-workspace-management/SKILL.md`](../cargo-workspace-management/SKILL.md) → "Service users"; your permissions must cover it or the call fails 403 `runAsUserNotFound` / `runAsUserNotPermitted`).
+- **`--state-uuid`**: the **project** (a deploy state of the workspace) the harness clones. The state carries the repository, its directory and its production branch, and must be **connected**. The uuid is not checked when written: a state that is missing, disconnected or from another workspace is saved, then refused at every turn, so pass a connected one. Omitted, the agent is **unbound**: an empty sandbox. List the workspace's states with `cargo-ai project state list` (a project's own is the `stateUuid` in its `cargo.state.json`).
+- **`--env-vars`** (JSON array): `[{key, type:"public", value}]` or `{key, type:"secret", secretValue}`, on top of the workspace's env-var catalog, which the sandbox inherits. Applies only with a project: an unbound agent gets no env vars.
+- **`--run-as-user-uuid`**: a **service user** whose temporary `CARGO_API_TOKEN` the sandbox gets (see [`../cargo-workspace-management/SKILL.md`](../cargo-workspace-management/SKILL.md) → "Service users"; your permissions must cover it or the call fails 403 `runAsUserNotFound` / `runAsUserNotPermitted`). Applies bound or unbound.
+- **`--repository` is gone (CLI 1.0.154).** It took `{connectorUuid, repository, defaultBranch, rootDirectory, env, runAsUserUuid}`; a client that still sends `repository` gets a 400 (`ai release`: `repository is no longer accepted: upgrade @cargo-ai/cdk to 1.0.150 or later and set state, env and runAs on the agent.`; `ai chat` / `ai message`: `Unrecognized key: "repository"`). The branch is now the state's production branch, not a `defaultBranch` you name. On `update-draft` / `deploy-draft`, an omitted flag keeps the draft's value; the API also takes `null` to clear `stateUuid`, `envVars` or `runAsUserUuid`.
 - **The agent acts as the Cargo GitHub app**, never as the connected user: it clones, pushes, comments and opens PRs as the app's installation. **Install the app on the repo first** — without it the turn fails. The sandbox's GitHub token is scoped to that one repository — any other repository is refused — lasts 1 hour, and is refreshed each turn; it is redacted from chat output but readable by the agent.
 - It works on a branch `cargo/<short-name>`, never pushes to the default branch, never force-pushes, and opens or updates the PR through its own PR tool, which links the PR to the chat.
-- **A mention of the app on a PR the agent's chat opened continues that same chat** — no trigger needed (skipped if the chat moved to another repository, or another agent opened the PR). Close the chat to stop it. The GitHub trigger adds `allPullRequests` (answer mentions on any PR in the repo), `fixFailedChecks` (+ `maxCheckFixAttempts` 1–10, reset when someone mentions or reviews) and `addressReviews`, all default `false`.
+- **A mention of the app on a PR the agent's chat opened continues that same chat** — no trigger needed (skipped if the chat's project is no longer connected to that repository, or another agent opened the PR). Close the chat to stop it. The GitHub trigger adds `allPullRequests` (answer mentions on any PR in the repo), `fixFailedChecks` (+ `maxCheckFixAttempts` 1–10, reset when someone mentions or reviews) and `addressReviews`, all default `false`.
 
-**Per chat instead of per release.** `ai chat create --harness-slug … --repository …` and `ai message create` (for the chat it auto-creates) take the same two flags; omitted, the agent's pinned release decides. They are **set when the chat is created**: passing either with `--chat-uuid` is a 400 — `harnessSlug and repository are not allowed with chatUuid: they are set when the chat is created. Create a new chat to use another harness or repository.`
+**Per chat instead of per release.** `ai chat create` and `ai message create` (for the chat it auto-creates) take `--harness-slug`, `--state-uuid`, `--env-vars` and `--run-as-user-uuid`. Each one overrides the release's value **separately**: a chat that sets only `--state-uuid` keeps the release's env vars and run-as user. They are **set when the chat is created**: passing any of them with `--chat-uuid` is a 400 — `harnessSlug, stateUuid, envVars and runAsUserUuid are not allowed with chatUuid: they are set when the chat is created. Create a new chat to use another harness or project.`
 
-A message sent to a chat that is still answering is **queued**: `202` with `userMessage` and no assistant message yet; the reply follows once the turn ahead finishes (`chatClosed` → 409, `chatNotFound` → 404). Sending and polling: [`../cargo-orchestration/SKILL.md`](../cargo-orchestration/SKILL.md). In a project: `defineAgent({ harness, repository })` — [`../cargo-project/references/resources.md`](../cargo-project/references/resources.md).
+A message sent to a chat that is still answering is **queued**: `202` with `userMessage` and no assistant message yet; the reply follows once the turn ahead finishes (`chatClosed` → 409, `chatNotFound` → 404). Sending and polling: [`../cargo-orchestration/SKILL.md`](../cargo-orchestration/SKILL.md). In a project: `defineAgent({ harness, state, env, runAs })` — [`../cargo-project/references/resources.md`](../cargo-project/references/resources.md).
 
 ### Structured output & heartbeat — not yet exposed as CLI flags
 

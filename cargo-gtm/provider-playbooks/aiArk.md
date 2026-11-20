@@ -116,7 +116,7 @@ Conventions inside a group:
 - **Search bills per returned record.** `limit` (default 10, max 2,000; fetched 100 per page) is the cap; a stray high limit paginates and bills every row. The 0.01/0.05 rate is per *result*, not per call.
 - **`findMobilePhone` is mobile-only** and needs a `linkedinUrl` or a full `domain` + `name` pair — it won't resolve from a name alone.
 - **Rate limit: 240 calls/minute** (spread; Cargo holds 80% of AI Ark's 300/minute key cap) — large batches stretch out; fine for enrich, plan for it on big searches.
-- **Flat filter maps express nothing.** `{"title": "CTO"}` at the top level is ignored — it must be `{"jobRole": {"title_or": "CTO"}}`.
+- **Flat filter maps express nothing.** `{"title": "CTO"}` at the top level is not a declared key: `action execute` refuses it (`Unknown field: title`), and a workflow node drops it silently so the search runs unfiltered. It must be `{"jobRole": {"title_or": "CTO"}}`.
 
 ## Anti-patterns
 

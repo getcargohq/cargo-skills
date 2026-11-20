@@ -2,13 +2,20 @@
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "cargo",
   "version": "1.18.0",
-  "description": "19 skills over the cargo-ai CLI, plus the hosted MCP server — build target account and contact lists, enrich and verify them against licensed data providers, score and qualify leads, sync your CRM, monitor buying signals, run workflows, and manage your GTM as Code in projects.",
+  "description": "Cargo is go-to-market infrastructure for AI agents. These 19 skills let your agent build B2B lead and account lists, find and verify work emails, enrich companies and contacts from 55 licensed data providers, score leads, sync your CRM (HubSpot, Salesforce, Attio and 140+ other tools), and watch buying signals like job changes, funding and hiring. Any of it can run as a scheduled workflow. New accounts get 100 free credits, no card needed.",
   "author": {
     "name": "Cargo",
-    "url": "https://getcargo.ai"
+    "url": "https://www.getcargo.ai"
   },
-  "homepage": "https://github.com/getcargohq/cargo-skills",
+  "homepage": "https://www.getcargo.ai",
   "repository": "https://github.com/getcargohq/cargo-skills",
   "license": "MIT",
-  "keywords": ["cargo", "gtm", "revenue", "enrichment", "orchestration", "cli"]
+  "keywords": [
+    "cargo",
+    "gtm",
+    "revenue",
+    "enrichment",
+    "orchestration",
+    "cli"
+  ]
 }

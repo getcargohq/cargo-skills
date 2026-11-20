@@ -93,9 +93,9 @@ const SKILL_DESCRIPTION_LIMIT = LIMITS.skillDescription;
 // rather than getting silently truncated into a rejected upload.
 const SHORT_DESCRIPTIONS = {
   "cargo-connection":
-    'Connect Cargo to an external system and find out what it can do — authenticate connectors, browse the integration catalog, and resolve the `connectorUuid` and `actionSlug` a workflow node needs. Triggers: "connect my HubSpot", "is Salesforce connected", "what integrations do you support", "can Cargo talk to <tool>", "what actions does <provider> have", "I need the connector UUID", "set up the API key for", "it is asking for credentials again", "why is this connector failing auth", "list my connectors". 136 integrations including HubSpot, Salesforce, Attio, Pipedrive, Outreach, Salesloft, Slack, Snowflake, BigQuery, Postgres, Stripe, and Google/LinkedIn ad audiences. Skip when: choosing between enrichment providers for a GTM job — use cargo-gtm and its provider playbooks.',
+    'Connects Cargo to the CRM, sequencer, warehouse and other tools a team already runs, checks what is connected, fixes authentication, and lists what each integration can do. Triggers: "connect my HubSpot", "is Salesforce connected", "what integrations do you support", "can Cargo talk to <tool>", "what actions does <provider> have", "I need the connector UUID", "set up the API key for", "it is asking for credentials again", "why is this connector failing auth", "list my connectors". 140+ integrations including HubSpot, Salesforce, Attio, Pipedrive, Outreach, Salesloft, Slack, Snowflake, BigQuery, Postgres, Stripe, and Google/LinkedIn ad audiences. Skip when: choosing between enrichment providers for a GTM job, use cargo-gtm and its provider playbooks.',
   "cargo-gtm":
-    "Business-to-business go-to-market work on Cargo \u2014 research accounts and buying committees, enrich and verify B2B contact records from licensed data providers, score and qualify leads, draft outreach for the user's own sequencer, sync to CRM, and monitor buying signals. Runs on audiences with a documented lawful basis, screens every contact step against a workspace-wide suppression list, and requires per-recipient relevance; the skill sends no messages itself. Triggers: \"build me a list of\", \"find 50 <title> at <segment>\", \"who works at\", \"find work emails for these accounts\", \"enrich this CSV\", \"verify these emails\", \"build a TAM\", \"who fits our ICP\", \"score these leads\", \"write a first-touch email\", \"push these to my CRM\", \"who changed jobs\", \"who just raised funding\", \"companies using <tech>\", \"who is hiring <role>\", \"find the buying committee\", \"upload this audience to Google/LinkedIn ads\". Licensed B2B data providers only. Skip when: a run already happened and misbehaved \u2014 use cargo-diagnostics.",
+    "Does B2B go-to-market work on Cargo (getcargo.ai): researches accounts and buying committees, enriches and verifies B2B contact records from licensed data providers, scores and qualifies leads, drafts outreach for the user's own sequencer, syncs to CRM, and monitors buying signals. Runs on audiences with a documented lawful basis, screens every contact step against a workspace-wide suppression list, and requires per-recipient relevance; the skill sends no messages itself. Triggers: \"build me a list of\", \"find 50 <title> at <segment>\", \"who works at\", \"find work emails for these accounts\", \"enrich this CSV\", \"verify these emails\", \"build a TAM\", \"who fits our ICP\", \"score these leads\", \"write a first-touch email\", \"push these to my CRM\", \"who changed jobs\", \"who just raised funding\", \"companies using <tech>\", \"who is hiring <role>\", \"find the buying committee\", \"upload this audience to Google/LinkedIn ads\". Licensed B2B data providers only. Skip when: a past run misbehaved, use cargo-diagnostics.",
 };
 
 // Skills held out of this package. The directory review rejected
@@ -120,9 +120,9 @@ const EXCLUDED_SKILLS = ["cargo-mailbox-management"];
 // A whole-file swap, for a skill this channel cannot take as written.
 // cargo-quickstart's demo pulls 25 named people; the directory rejected it under
 // "Spam mass abuse" for the same reason it rejected the two before it. The
-// override runs the same two-minute arc for ~0.25 credits (upstream: ~5) against
-// company-level hiring intent instead — the skill's own fallback rung 2, which
-// it already describes as "same wow, different angle". Editing this into place
+// override runs the same starter menu for at most 0.25 credits (upstream: 1.25)
+// with company searches only: its persona starter becomes companies that
+// employ the buyer, so the demo names no individuals. Editing this into place
 // line by line would be a dozen brittle anchors through a rewritten spine, so it
 // ships as a file. The version guard below is what keeps the copy honest.
 const PACKAGE_OVERRIDES = {
@@ -137,6 +137,10 @@ const EXCLUDED_FILES = [
   // person-level social surface the review rejected with attendees and visitors.
   "cargo-gtm/provider-playbooks/cargoSignals.md",
   "cargo-gtm/provider-playbooks/x.md",
+  // Built on the two playbooks above: X posts are one of its signal rungs and
+  // cargoSignals is its detection feed. A copy with both cut out would be a
+  // different recipe, so the whole file stays out of this package.
+  "cargo-gtm/recipes/monitor-buying-signals.md",
 ];
 
 // Asserted against the built archive. `scope` is the path prefix the term must
@@ -154,6 +158,7 @@ const REMOVED_TERMS = [
   { term: "personality", scope: "skills/" },
   { term: "attendee", scope: "skills/cargo-gtm/provider-playbooks/linkedin.md" },
   { term: "provider-playbooks/x.md", scope: "skills/" },
+  { term: "monitor-buying-signals", scope: "skills/" },
   { term: "extractEventAttendees", scope: "skills/cargo-gtm/" },
   { term: "xAccount", scope: "skills/cargo-gtm/references/credits-cost-table.md" },
 ];
@@ -164,6 +169,22 @@ const REMOVED_TERMS = [
 // Every `find` must match exactly once or the build fails — these are anchored
 // to prose that will drift, and a silent no-op would ship a dangling link.
 const PACKAGE_EDITS = [
+  // monitor-buying-signals.md is excluded above; drop its recipe-table rows.
+  {
+    file: "cargo-gtm/SKILL.md",
+    find: "| [`recipes/monitor-buying-signals.md`](recipes/monitor-buying-signals.md) | Which target accounts are in market now (hiring the role, saying something new, a detection feed), cheapest rung first, reported as timing |\n",
+    replace: "",
+  },
+  {
+    file: "cargo/SKILL.md",
+    find: "| `recipes/monitor-buying-signals.md` | Watch target accounts for dated, linked buying signals, free rung first. |\n",
+    replace: "",
+  },
+  {
+    file: "README.md",
+    find: "| `monitor-buying-signals.md` | Watch target accounts for dated, linked buying signals, free rung first. |\n",
+    replace: "",
+  },
   {
     file: "cargo-gtm/SKILL.md",
     find: "- [`provider-playbooks/cargoSignals.md`](provider-playbooks/cargoSignals.md) — intent-signal feeds (formerly `rodz`), billed per lead delivered; warm-intro backfills and Company Followers auto-start are the cost traps.\n",
@@ -283,8 +304,8 @@ const PACKAGE_EDITS = [
   },
   {
     file: "cargo-mcp/SKILL.md",
-    find: "a project deploy, warehouse SQL, or a mailbox \u2014 use the CLI skills",
-    replace: "a project deploy, or warehouse SQL \u2014 use the CLI skills",
+    find: "a project deploy, warehouse SQL, or a mailbox, use the CLI skills",
+    replace: "a project deploy, or warehouse SQL, use the CLI skills",
   },
   {
     file: "README.md",
@@ -490,13 +511,13 @@ const PACKAGE_EDITS = [
   },
   {
     file: "cargo/SKILL.md",
-    find: "Fresh workspace \u2192 real deliverable (25 leads for the user's persona, with a cost receipt) in under two minutes",
-    replace: "Fresh workspace \u2192 real deliverable (the accounts matching the user's persona, sized for free and sampled for a quarter of a credit) in under two minutes",
+    find: "Fresh workspace \u2192 real deliverable (25 rows from a fixed starter menu: lookalike companies, a persona, or fast-growing companies, with a cost receipt) in under two minutes",
+    replace: "Fresh workspace \u2192 real deliverable (25 companies from a fixed starter menu: lookalikes, companies that employ the user's buyer, or fast-growing companies, with a cost receipt) in under two minutes",
   },
   {
     file: "cargo/SKILL.md",
-    find: "one persona question \u2192 25 leads in under two minutes \u2192 cost receipt \u2192 save as a recurring play",
-    replace: "one persona question \u2192 a free pool count and 25 matching accounts, in under two minutes \u2192 cost receipt \u2192 save as a recurring play",
+    find: "one menu question \u2192 25 real rows in under two minutes \u2192 cost receipt \u2192 save as a recurring play",
+    replace: "one menu question \u2192 25 real companies in under two minutes \u2192 cost receipt \u2192 save as a recurring play",
   },
   {
     file: "README.md",
@@ -505,13 +526,13 @@ const PACKAGE_EDITS = [
   },
   {
     file: "cargo/SKILL.md",
-    find: "The [quickstart demo](../cargo-quickstart/SKILL.md) spends about **5**.",
+    find: "The [quickstart demo](../cargo-quickstart/SKILL.md) spends at most **1.25**.",
     replace: "The [quickstart demo](../cargo-quickstart/SKILL.md) spends about **0.25**.",
   },
   {
     file: "README.md",
-    find: "the [two-minute quickstart demo](#onboarding--cargo-quickstart) spends about 5 of them",
-    replace: "the [two-minute quickstart demo](#onboarding--cargo-quickstart) spends about 0.25 of them",
+    find: "the [two-minute quickstart demo](#onboarding--cargo-quickstart) returns 25 rows for at most 1.25 of them",
+    replace: "the [two-minute quickstart demo](#onboarding--cargo-quickstart) reads company-level hiring intent for about 0.25 of them",
   },
   {
     file: "cargo-gtm/provider-playbooks/aiArk.md",
@@ -858,9 +879,9 @@ const manifest = {
   name: "cargo-skills",
   version,
   description:
-    `GTM engineering for coding agents — ${skillDirs.length} skills over the Cargo CLI: research accounts, enrich and verify B2B contact records from licensed data providers, score and qualify leads, sync to your CRM, monitor buying signals, and manage your GTM as Code in projects. Consent and suppression gates apply to every step that touches a person; the pack sends no messages itself.`,
-  author: { name: "getcargo" },
-  homepage: "https://getcargo.ai",
+    `Cargo (getcargo.ai) is go-to-market infrastructure for AI agents. ${skillDirs.length} skills over the Cargo CLI research accounts, enrich and verify B2B contact records from licensed data providers, score and qualify leads, sync to the CRM, monitor buying signals, and manage GTM as Code in projects. Consent and suppression gates apply to every step that touches a person; the pack sends no messages itself.`,
+  author: { name: "Cargo", url: "https://www.getcargo.ai" },
+  homepage: "https://www.getcargo.ai",
   repository: "https://github.com/getcargohq/cargo-skills",
   license: "MIT",
   keywords: [

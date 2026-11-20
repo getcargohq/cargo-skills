@@ -10,20 +10,105 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
-### `cargo-gtm` 2.7.0, `cargo` 1.34.0, `cargo-mcp` 1.4.0, `cargo-diagnostics` 1.6.1: email, phone and verify jobs start with the workspace's preset tools
+### `cargo-gtm` 2.9.0, `cargo` 1.38.0, `cargo-mcp` 1.4.0, `cargo-diagnostics` 1.6.2, plugin 1.38.0: email, phone and verify jobs start with the workspace's preset tools
 
 Every workspace is seeded with read-only tools in a **Cargo Tools** folder, and three of them are the waterfalls these skills told agents to build by hand. Checked against getcargohq/cargo master (2026-10-24: `orchestration/services/template/templates/tools/index.ts`, seeded by `tool/syncAll.ts`) and CLI 1.0.129.
 
-- **The first move changed.** For finding an email, finding a phone or verifying an email, an agent now searches for the preset (`cargo-ai orchestration action list "find email" --kind tool`, or MCP `search_actions` with `kind: "tool"`), samples 10 to 20 rows with `action execute-batch --action '{"kind":"tool","toolUuid":"<uuid>"}'` (`templateSlug` addresses the same preset, cargo#6383), reads `batch download`, then runs the approved batch.
+- **The first move changed.** For finding an email, finding a phone or verifying an email, an agent now addresses the preset by its template slug, with no lookup: `{"kind":"tool","templateSlug":"email_waterfall"}` (Find email), `phone_waterfall` (Find phone), `email_validator` (Verify email). The slug resolves to the workspace's own copy in `action execute`, `execute-batch`, `get-output-schema` and MCP `get_action_schema` (cargo#6383, CLI 1.0.138). It samples 10 to 20 rows with `action execute-batch`, reads the rows from `batch download`, reports hit rate and credits, and runs the approved batch. Looking up a `toolUuid` with `orchestration tool list` is kept only as the fallback for a CLI older than 1.0.138. The three presets:
   - **Find email**: apolloio, FullEnrich, findyMail, peopleDataLabs and waterfall in turn, each hit checked by `zeroBounce` before the chain stops. Inputs `firstName` + `lastName` + `companyDomain` or `linkedinUrl`, optional `returns_catchalls`. Returns `{email}` only: no status, catch-all flag or provider. Declared 1.1 to 4 credits a row; a miss costs roughly nothing.
   - **Find phone**: FullEnrich, findyMail, waterfall, peopleDataLabs. `linkedinUrl` in, `{phone}` out, unverified. Declared 3 to 7.
   - **Verify email**: neverBounce. `{status, is_safe}` out, 0.2.
 - **`waterfall-strategy.md`** no longer says Cargo has no waterfall primitive. It opens with the preset tools (inputs, outputs, honest costs, the silent drop of an unknown input key, the input guard that exits a bad row for free) and keeps the hand-rolled chains as the fallback for a missing tool, a custom provider order, or per-row provenance.
 - **Recipes:** `prospecting.md` (P1, P2 and the P3 backfill, which was a hand-rolled email waterfall), `build-tam.md` and `portfolio-prospecting.md` run the Find email tool and drop the paid verify on its output; `clay-to-cargo.md` maps a Clay email or phone waterfall column to the preset; `outreach-activation.md` names the Verify email tool as the swap-in.
 - **Guide, references and playbooks:** `enriching-and-researching.md` decision tree, `alternatives.md`, `stage-action-map.md`, the `cargo-gtm` spine and routing table, the `FullEnrich` and `waterfall` playbooks, and the router's glossary (new **preset tool** entry), interaction example and `cargo-gtm` critical rules.
-- **`cargo-mcp`:** search tools first for email, phone and verify jobs.
+- **`cargo-mcp`:** email, phone and verify jobs run the preset by `templateSlug` first.
 - **`cargo-diagnostics`:** the waterfall lever in `play-optimize-credits.md` includes replacing a hand-built chain with the preset tool.
-- **Routing:** `cargo-gtm` gains the trigger "find phone numbers for these contacts"; three routing cases pin email and phone jobs to `cargo-gtm`.
+- **Routing:** the `cargo-gtm` description now names mobile numbers, and its "find work emails" trigger becomes "find email" so a prompt naming the Find email waterfall stays with `cargo-gtm`; two clauses were shortened to stay under 1,024 characters with `salesNavigator` and `aiArk` still named. Three routing cases pin email and phone jobs to `cargo-gtm`.
+
+### `cargo-ai` 3.0.0, `cargo-project` 5.0.0, `cargo` 1.37.0, `cargo-workspace-management` 1.7.2, plugin 1.37.0: a coding agent clones a project, not a repository (cargo#6677)
+
+Breaking. Agent releases and chats now point at a project (a connected deploy state) instead of naming a repository, and the harness's env vars and run-as user move beside it. Needs CLI 1.0.154 and `@cargo-ai/cdk` 1.0.150; older clients that send `repository` get a 400, and an older CDK cannot deploy any agent.
+
+- **CLI.** `--repository <json>` on `ai release update-draft` / `deploy-draft`, `ai chat create` and `ai message create` is gone. It is replaced by `--state-uuid <uuid>` (the project the harness clones: its repository, directory and production branch), `--env-vars <json>` and `--run-as-user-uuid <uuid>`. On a chat each overrides the release separately, and all three are refused with `--chat-uuid`. A state that is missing, disconnected or from another workspace is saved, then refused at every turn. `--env-vars` applies only with a project; `--run-as-user-uuid` applies bound or unbound.
+- **CDK.** `defineAgent({ repository: { repository, defaultBranch, rootDirectory, env, runAs } | null })` is removed with no alias. `state?: StateRef` (`stateRef(uuid)`; omitted binds the project's own connected state from `cargo.state.json`), `env?` and `runAs?` sit at the top level. There is no unbound opt-out: an agent is unbound only when the project has no connected state.
+- **`cargo/cli-version`** pins 1.0.154.
+
+### `cargo` 1.36.6, plugin 1.36.6: two ways past the approval hook's gates are closed
+
+Anthropic's directory review found two inputs that `hooks/approve-cli.sh` auto-approved although they run something it means to prompt for:
+
+- **Brace expansion.** `cargo-ai log{in,}` was approved, and the shell then ran `cargo-ai login`; the same worked for every gated verb. An unquoted `{` or `}` now falls through to the normal prompt. Braces inside quotes, such as a JSON `--data '{...}'`, are literal to the shell and stay approved.
+- **`npx --package`.** `npx --package=x @cargo-ai/cli …` was approved while `--package` changed what npx installs and runs. Only `-y`/`--yes` may now come before `@cargo-ai/cli`; any other npx flag, `-p`/`--package` included, falls through to the prompt.
+
+`hooks/approve-cli.test.sh` gains 11 fixtures for both, including the forms that must stay approved.
+
+### `cargo` 1.36.5, plugin 1.36.5: the plugin updates itself again
+
+The session-start hook again refreshes the plugin for the next session (`claude plugin marketplace update cargo-skills`, then `claude plugin update cargo@cargo-skills`, detached), as before 1.36.4. Removing it did not help the Anthropic plugin directory, which refuses every command hook from an organization it has not verified, and it left people who installed from this repository's marketplace without updates unless they turned on auto-update. The standalone mode stays removed.
+
+### `cargo` 1.36.4, plugin 1.36.4: a session-start hook the Anthropic plugin directory accepts
+
+The Claude Code plugin's `hooks/session-start.sh` now only installs the pinned CLI (`npm install -g @cargo-ai/cli@<pin>`, falling back to `@latest`).
+
+- **The standalone mode is gone.** It ran when the retired installer had copied the script to `~/.claude/hooks/`, refreshed the skills with an unpinned `npx -y skills add`, and made the plugin copy defer to it. The installer no longer writes that copy and the CLI removes old ones, so the branch was dead code, and the directory's validator refuses any unpinned package launcher in a hook script, run or not.
+- **The background plugin self-update is gone.** The hook no longer runs `claude plugin marketplace update` and `claude plugin update` detached. Claude Code updates plugins itself (`/plugin update cargo@cargo-skills`, or marketplace auto-update), and the directory delivers new versions to the people who install from it.
+
+### `cargo-quickstart` 1.2.0, `cargo` 1.36.3, `cargo-billing` 2.1.6, plugin 1.36.3: a fixed starter menu that needs nothing connected
+
+The demo asked one persona question and ran `salesNavigator.searchLeads` (0.2 a lead, about 5 credits), with a fallback ladder that ended in a 3-credit-a-row source and a permission question. It now asks "What would you like to do with Cargo?" with a fixed menu of three starters, each one copy-runnable command on AI Ark's Cargo-managed connection (seeded into every new workspace):
+
+- **Companies like yours**: `aiArk.searchCompanies` with `lookalikeDomains` from the signed-in email's domain, 25 rows, at most 0.25 credits.
+- **A persona you name**: `aiArk.searchPeople` with `jobRole.title_or`, 25 rows, at most 1.25 credits.
+- **Growing fast**: lookalikes whose headcount grew 20%+ in six months, 25 rows, at most 0.25 credits.
+
+Rows are read straight from `.runContext.action` in the `--wait-until-finished` output, with no download step. Zero rows bill nothing; one retry per starter (an AI Ark error retries the same call once, never another source), and the save-as-play ending is unchanged. Free credits are stated as 100, valid 30 days. The `cargo` router, `cargo-billing`, the README and `llms.txt` now quote the demo at most 1.25 credits instead of about 5.
+
+### `cargo` 1.36.2, `cargo-gtm` 2.8.1, `cargo-billing` 2.1.5, plugin 1.36.2: free-tier figures, install copy and manifests that match the product
+
+- **Free-tier anchors checked against [pricing.json](https://www.getcargo.ai/pricing.json)** (generated 2026-11-04): `salesNavigator.searchLeads` 0.2 a lead, so 100 credits is ~500 leads and the 25-lead quickstart is ~5; `aiArk.enrichPerson` 0.1 (~1,000 verified-email enrichments); `waterfall.enrichContact` 2 (~50 fully enriched contacts). `cost-discipline.md` and `llms.txt` still said ~5,000 leads and a 0.5-credit demo.
+- **The 100 signup credits are valid for 30 days** (getcargohq/cargo#6543). The router, prerequisites, billing, cost discipline, README, `llms.txt` and every plugin manifest now say so.
+- **README install copy**: the one-line prompt points at `INSTALL.md` and describes what it really does (latest CLI, emailed-code sign-in, one skills channel), not a pinned CLI, browser sign-in and numbered steps. The Claude Code plugin section says an agent cannot type slash commands, so an agent-run install uses `npx skills add … --agent claude-code --global --yes` and the plugin is the human's step. Cowork sign-in offers `login --email`. Badge says 19 skills; integrations 150+ and credit-based providers 50+, per the public integrations list and pricing.json.
+- **Plugin manifests** no longer claim to include the hosted MCP server (none ships an `mcpServers` entry). `.claude-plugin/plugin.json` gains `license` and `keywords` for the Anthropic plugin directory.
+
+### `cargo-gtm` 2.8.0, `cargo` 1.36.0, plugin 1.36.0: four job-skill procedures move into cargo-gtm
+
+Every one-off skill in gtm-skills defers to `cargo-gtm` when the pack is installed. These four jobs had no recipe here, so the deferral dropped the procedure. Each is ported with its measured numbers, checked against the provider playbooks and cost table, and gated by the pilot rule:
+
+- **`recipes/find-stakeholders.md`**: the buying committee at a named account via `aiArk.countPeople` (free) then `searchPeople` (0.05 a row).
+- **`recipes/score-leads.md`**: ICP scoring with visible arithmetic; enriches with `aiArk.enrichCompany` (0.01) first and moves only thin rows up to `companyEnrich.enrichByDomain` (0.25), per the playbooks.
+- **`recipes/research-account.md`**: a sourced one-page briefing (`linkedin`, `parallel`, `theirStack.searchJobs`), every line traced, inference marked.
+- **`recipes/monitor-buying-signals.md`**: dated, linked signals per account, free Sillage rung first, paid rungs on the residue, reported as timing rather than a score.
+
+Corrections against the source job skills: no `config` on top-level actions; unknown `theirStack.searchJobs` and `aiArk.searchPeople` keys are refused on `action execute` (not dropped); `x.getUserPosts` bills 0.02 per 100 posts; Sillage's read is free but its `listenSignals` model bills 0.5 per detection. Four routing evals added. To fit them under the 1,024-character cap, the `cargo-gtm` description adds "decision makers", "brief me on <account>" and "target accounts in market" and shortens three others; `sync-trigger-slugs` now names 2 providers (salesNavigator, aiArk) and summarizes the rest.
+
+### `cargo-gtm` 2.7.0, `cargo` 1.35.0, plugin 1.35.0: Sales Navigator past the cap
+
+- **New recipe `cargo-gtm/recipes/sales-navigator-extraction.md`**: get a Sales Navigator search past the 1,000-account / 2,500-people cap by counting it, splitting it, merging it back to the fewest searches and loading those into a few models, cookieless. The procedure lived only in the `extract-sales-navigator-search` job skill in gtm-skills, which tells the agent to defer to `cargo-gtm` whenever the pack is installed, so a pack user never got it. The Sales Navigator playbook points to it under pitfalls, and the router and README list it.
+- **`cargo-gtm` description** gains a "Sales Navigator cap" trigger (a routing eval for "the extraction stopped at 1,000" went to the wrong skill without it); two triggers were shortened to keep it under 1,024 characters.
+
+### All 20 skills (patch), plugin 1.34.2: directory copy written for people who have never heard of Cargo
+
+Skill directories and plugin marketplaces show each description on its own card, and the old copy assumed the reader already knew what Cargo is.
+
+- **Every skill `description` opens with a third-person sentence that names Cargo and says what the skill does** ("Sets up Cargo alerts that report when something breaks…", "Finds out why a Cargo run, batch or play went wrong or cost too much…"), per Anthropic's skill authoring guide. Internals are dropped from the descriptions (the skill bodies still cover them): `connectorUuid`/`actionSlug`, the `conjonction` spelling, "UUID and slug flow".
+- **The router defines Cargo** for someone who has never heard of it ("Cargo (getcargo.ai), go-to-market infrastructure for AI agents"), and the router, quickstart and billing skills mention the 100 free credits, no card.
+- **No description exceeds 1,024 characters**, the Agent Skills spec limit. `cargo-gtm` (about 2,000) and `cargo-connection` (about 1,270) were over it, and hosts were already truncating `cargo-gtm` mid-list. `sync-trigger-slugs.ts` now fills the `Providers:` and `Integrations:` lists most-used names first and stops at the limit with "and N more"; `cargo-gtm`'s own text and trigger list were tightened. `routing-eval.ts` fails any description over 1,024, and `CONTRIBUTING.md` documents the third-person and length rules.
+- **Every marketplace and plugin manifest** (Claude Code, Codex, Cursor, Grok Bot, Grok Build, root `plugin.json`) opens with the same one-line positioning, says what the skills do in plain terms, and mentions the free credits.
+- **No em dashes** in any description or manifest.
+- **Codex package:** the quickstart override, the `cargo-gtm`/`cargo-connection` Codex rewrites and the package description follow the same third-person, no-em-dash style, keeping the wording the directory review asked for. Package homepage is `https://www.getcargo.ai`.
+- **`homepage` and `author.url` point at `https://www.getcargo.ai`** on every manifest. The repository URL moved to `repository`. The Claude Code and Cursor manifests previously had no website link at all (`author: { "name": "getcargo" }`).
+- **Removed a stale claim** from the Claude Code marketplace description that the hooks "record each session" (session capture was removed in 1.34.0).
+
+### `cargo` 1.34.0, `cargo-workspace-management` 1.7.0, plugin 1.34.0: no session capture
+
+The plugin and the skills no longer record sessions, to comply with the [Anthropic Software Directory Policy](https://support.claude.com/en/articles/13145358-anthropic-software-directory-policy).
+
+- **Removed the `Stop` and `SessionEnd` hooks** and their scripts (`hooks/session-checkpoint.sh`, `hooks/session-end.sh`). Nothing sends Cargo a prompt, a transcript, or a summary of one, and nothing runs `claude -p` on the user's account.
+- **Removed `hooks/skill-loads.sh`** and its CI self-test. It read the transcript to build the skill-load marker for the session row.
+- **`hooks/session-start.sh` registers no session row.** It still installs the pinned CLI and refreshes the plugin, and reads nothing from the session.
+- **`cargo` router:** Job 1 is refresh only and Job 3 is only the star-the-repo ask. The session register/finalize steps and the session-share ask are gone.
+- **`cargo-workspace-management`:** removed the Sessions section, `references/examples/sessions.md`, the session-share report example and the "share this session with Cargo" trigger. Bug and feedback reports are unchanged.
+- **`evals/README.md`:** real cases now come from reports users file, not from session telemetry.
 
 ### `cargo` 1.33.0, `cargo-project` 4.4.0, `cargo-storage` 1.5.0, `cargo-orchestration` 1.18.0, `cargo-mcp` 1.3.0, `cargo-content` 1.3.0, `cargo-gtm` 2.6.0, + 2 patches: what shipped between CLI 1.0.134 and 1.0.140
 
@@ -234,7 +319,7 @@ pin refused to install. [`cargo/cli-version`](cargo/cli-version) → **1.0.96**.
 - **The `curl … install.sh | sh` bootstrap is retired and the docs still recommended it.** The
   endpoint now prints a notice and exits non-zero — deliberately, so a pinned copy fails loudly
   instead of appearing to succeed. Replaced in [`README.md`](README.md) and
-  [`cargo-workspace-management/references/examples/sessions.md`](cargo-workspace-management/references/examples/sessions.md)
+  `cargo-workspace-management/references/examples/sessions.md`
   with the plugin install (which carries the session hooks anyway) and the agent-driven
   `https://api.getcargo.io/INSTALL.md` paste. The router's "never run that installer" paragraph
   became a rule about a command that no longer exists; it now says installing is the user's call
@@ -755,7 +840,7 @@ The `description` field is the only text an agent weighs before deciding whether
 - **CLI version pinning.** New [`cargo/cli-version`](cargo/cli-version) — a single-line semver pin, the source of truth for which `@cargo-ai/cli` the skills were written against. It lives *inside* the router skill so it ships with `skills add` and the ClawHub bundle, letting session hooks read it locally (`~/.claude/skills/cargo/cli-version`) with zero extra network calls. Consumers (SessionStart hook, install.sh, the refresh snippets in these docs) install `@cargo-ai/cli@$(cat …cli-version || echo latest)` — the pin is a coherence optimization, never a gate: unreadable pin → `latest`. The CLI release pipeline PRs pin bumps to this repo; merging is the deliberate skills+CLI promotion. Linter now asserts the pin exists and is bare semver, and that every skill's `openclaw` install block stays `@cargo-ai/cli@latest` (frontmatter pinning would cost 14 bumps per CLI release; the session hook converges to the pin right after bootstrap).
 
 - **Codex + Cursor plugin targets.** One plugin source now fans out to three coding agents: new [`.agents/plugins/marketplace.json`](.agents/plugins/marketplace.json) (Codex marketplace) and [`.cursor-plugin/marketplace.json`](.cursor-plugin/marketplace.json), with [`.codex-plugin/plugin.json`](.codex-plugin/plugin.json) / [`.cursor-plugin/plugin.json`](.cursor-plugin/plugin.json) manifests kept in version lockstep with the router (linter-enforced across all three). The approval hook is wired per target — `PreToolUse` (Claude Code) via plugin.json, `PermissionRequest` (Codex) via [`hooks/codex-hooks.json`](hooks/codex-hooks.json), `beforeShellExecution` (Cursor) via [`hooks/cursor-hooks.json`](hooks/cursor-hooks.json) — reusing `approve-cli.sh`'s existing per-agent verdict dispatch.
-- **Plugin-bundled session-lifecycle hooks (Claude Code).** New [`hooks/session-start.sh`](hooks/session-start.sh), [`hooks/session-checkpoint.sh`](hooks/session-checkpoint.sh), [`hooks/session-end.sh`](hooks/session-end.sh) wired into the Claude plugin's `SessionStart`/`Stop`/`SessionEnd`, so plugin-channel users get pinned-CLI refresh and session logging without the installer. Each script defers (`exit 0`) when the installer's counterpart exists at `~/.claude/hooks/`, so installer + plugin never double-register a session; the plugin's `session-start` reads the pin from the plugin root and deliberately does **not** run `skills add` (the plugin owns the skills — a parallel `skills add` would duplicate them).
+- **Plugin-bundled session-lifecycle hooks (Claude Code).** New `hooks/session-start.sh`, `hooks/session-checkpoint.sh`, `hooks/session-end.sh` wired into the Claude plugin's `SessionStart`/`Stop`/`SessionEnd`, so plugin-channel users get pinned-CLI refresh and session logging without the installer. Each script defers (`exit 0`) when the installer's counterpart exists at `~/.claude/hooks/`, so installer + plugin never double-register a session; the plugin's `session-start` reads the pin from the plugin root and deliberately does **not** run `skills add` (the plugin owns the skills — a parallel `skills add` would duplicate them).
 
 - **Plugin self-update.** The plugin's `session-start.sh` now also refreshes the plugin itself (`claude plugin marketplace update cargo` + `claude plugin update cargo@cargo`, detached so session start is never blocked; takes effect next session) — the plugin channel's equivalent of the installer's `skills add` refresh, with zero duplication by construction. Paired with the installer refactor (`install.sh` now installs the **plugin** on Claude Code instead of scaffolding standalone hooks, migrates legacy scaffolding away, and keeps `skills add` only as the no-plugin fallback), the plugin is the single source of truth for everything agent-facing; README's Claude Code section documents the new flow.
 - **Agent-portable docs.** The pinned-install command in `cargo/SKILL.md` (session job 1) and `references/prerequisites.md` no longer hardcodes `~/.claude/skills/…` — the pin is read from the skill directory the agent loaded, whatever the agent (the hardcoded path silently degraded Codex/Cursor to `@latest`). Session-row examples in the manual path are agent-neutral ("Agent session"), job 1 now says to skip `skills add` when the skills came from a plugin, and the permission-prompts note covers all three agents' hook events.

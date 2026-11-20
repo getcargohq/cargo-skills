@@ -54,11 +54,12 @@ Skip when: <the sibling skill that owns the adjacent case>.
 
 Rules that come out of that:
 
-1. **Lead with the job, not the CLI surface.** "Get data out of Cargo and measure what ran" beats "Manage analytics resources using the Cargo CLI." A user says the former; only the docs say the latter.
-2. **Trigger phrases are literal and quoted.** Write what a person types — `"how many credits do I have left"`, `"why did this fail"`, `"alert me when"` — not a category name.
-3. **Name proper nouns.** Integration and provider slugs are the highest-precision routing tokens available. They are generated into `cargo-gtm` and `cargo-connection` by `sync-trigger-slugs.ts` — refresh rather than hand-edit those lists.
-4. **Always end with `Skip when:`.** Nineteen skills compete for every prompt; the negative case is what stops the wrong one loading. Point at the skill that should win instead.
-5. **Keep it under ~900 characters** (the generated slug lists make `cargo-gtm` and `cargo-connection` the exceptions).
+1. **Lead with the job, not the CLI surface, and name Cargo in that first sentence.** "Gets results out of Cargo and measures what ran" beats "Manages analytics resources using the Cargo CLI." The first sentence is also what a skill directory shows a stranger, so it has to make sense to someone who has never heard of Cargo.
+2. **Write in the third person.** "Sets up Cargo alerts…", not "Get told…" or "You can…". The description is injected into the system prompt, and Anthropic's [skill authoring guide](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices) warns that a mixed point of view hurts discovery. Quoted trigger phrases are the exception: they are what the user types.
+3. **Trigger phrases are literal and quoted.** Write what a person types — `"how many credits do I have left"`, `"why did this fail"`, `"alert me when"` — not a category name.
+4. **Name proper nouns.** Integration and provider slugs are the highest-precision routing tokens available. They are generated into `cargo-gtm` and `cargo-connection` by `sync-trigger-slugs.ts`, most-used names first, filled until the description reaches 1,024 characters and ended with "and N more". Refresh rather than hand-edit those lists, and every character you add to those two descriptions pushes a name out.
+5. **Always end with `Skip when:`.** Nineteen skills compete for every prompt; the negative case is what stops the wrong one loading. Point at the skill that should win instead.
+6. **Never exceed 1,024 characters**, the Agent Skills spec limit (hosts truncate or reject longer descriptions), **and keep it under ~900** except for `cargo-gtm` and `cargo-connection`, whose generated lists fill to the limit. `routing-eval.ts` enforces both.
 
 If you change any description, run `node .github/scripts/routing-eval.ts` and add a case to `evals/routing.jsonl` for the behavior you intended.
 

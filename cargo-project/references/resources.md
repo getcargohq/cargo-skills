@@ -67,22 +67,53 @@ sandbox and works in it. `harness` takes `claudeCode`, `codex`, `openCode` or
 `deepAgents`. (`harnessSlug` is the deprecated spelling; both normalize to the same
 spec field, so renaming it is not a diff.)
 
-**Omit `repository` to bind the project's own repo.** `plan`/`deploy` read the git
-origin of the checkout they run in and fill `repository`, `defaultBranch` and
-`rootDirectory`, taking `connector` from the project's GitHub `defineConnector`.
-Declared fields always win, so a partial object is completed the same way — and the
-resolved values are what the plan prints and what the content hash covers. Pass
-`repository: null` for an unbound, empty sandbox scoped to the chat. `repository.runAs`
-(a `defineUser` service user or `userRef`) gives the sandbox a temporary
-`CARGO_API_TOKEN` for that user. The agent clones, pushes and comments as the **Cargo
-GitHub app**, which must be installed on the repo — see
+**Omit `state` to bind the project's own state.** The harness clones a *project*: a
+deploy state of the workspace, which carries the repository, its directory and its
+production branch. Left out, `plan`/`deploy` bind the state `cargo.state.json` points
+at; `state: stateRef(uuid)` names another project of the workspace. A project with no
+cloud state, or whose state is not connected, deploys its harness agents **unbound**
+(an empty sandbox) and the plan prints a note (`unbound: this project's state is not
+connected`). There is no explicit opt-out: in a project whose state is connected, every
+harness agent is bound. Changing the state `cargo.state.json` points at changes every
+harness agent's hash, so all of them redeploy.
+
+`env` (the same record or `HarnessEnvVarSpec[]` shapes as `defineApp`/`defineWorker`,
+`secret("NAME")` for secrets) and `runAs` (a `defineUser` service user or `userRef`,
+which gives the sandbox a temporary `CARGO_API_TOKEN` for that user) sit at the top
+level beside `harness`. `runAs` applies bound or unbound; `env` needs a project, so an
+unbound agent gets no env vars. Removing either from code clears it on the release at
+the next deploy.
+
+```ts
+import { defineAgent, defineUser, roleRef, secret } from "@cargo-ai/cdk";
+
+const ciUser = defineUser("ci", { kind: "service", role: roleRef("<role-uuid>") });
+
+export const reviewer = defineAgent({
+  systemPrompt: "Review open pull requests.",
+  harness: "claudeCode",
+  // state omitted: this project's connected state
+  env: { NPM_TOKEN: secret("NPM_TOKEN") },
+  runAs: ciUser,
+});
+```
+
+**`repository` is removed (`@cargo-ai/cdk` 1.0.150).** `repository: { repository,
+defaultBranch, rootDirectory, env, runAs }` and `repository: null` no longer
+type-check: move `env` and `runAs` to the top level and drop the rest (the branch is
+now the state's production branch). Older CDKs send `repository` on every agent
+release, harness or not, so they cannot deploy any agent: the API answers 400
+`repository is no longer accepted: upgrade @cargo-ai/cdk to 1.0.150 or later …`.
+`project pull` emits `state: stateRef("<uuid>")` for a bound agent, the way it emits
+`runAs: userRef(…)`. The agent clones, pushes and comments as the
+**Cargo GitHub app**, which must be installed on the repo — see
 [`../../cargo-ai/SKILL.md`](../../cargo-ai/SKILL.md).
 
 ## Ref helpers
 
 From `@cargo-ai/cdk`: `connectorRef`, `modelRef`, `folderRef`, `playRef`,
 `segmentRef`, `relationshipRef`, `memberRef`, `userRef`, `roleRef`, `domainRef`,
-`mailboxRef`, `workerRef`, `workflowRef`, `alertRef`. From the workflow SDK
+`mailboxRef`, `workerRef`, `workflowRef`, `alertRef`, `stateRef`. From the workflow SDK
 (re-exported): `toolRef`, `agentRef`. Each takes a uuid string and returns a
 kind-branded handle (`connectorActionRef(connector, actionSlug)` and
 `nativeActionRef(slug)` reference actions for `uses`):
@@ -192,10 +223,10 @@ export const leads = defineModel("leads", {
 - **`defineUser` / `runAs`.** Only `kind: "service"` can be declared (anything else
   throws `only \`kind: "service"\` can be declared. Invite people from the Cargo UI.`).
   Names are set at creation only; `role` (a `defineRole` handle or `roleRef`) is
-  reconciled every deploy. `defineWorker({ runAs })` and `defineAgent({ repository: {
-  runAs } })` take a user handle or `userRef(uuid)`: Cargo then binds a temporary
-  `CARGO_API_TOKEN` for that user. The **deploying** user's permissions must cover
-  every permission the service user holds, or the deploy is refused
+  reconciled every deploy. `defineWorker({ runAs })` and `defineAgent({ runAs })` take
+  a user handle or `userRef(uuid)`: Cargo then binds a temporary `CARGO_API_TOKEN`
+  for that user. The **deploying** user's permissions must cover every permission the
+  service user holds, or the deploy is refused
   (`runAsUserNotPermitted`; `runAsUserNotFound` for a non-service user). People are
   never declared — invite them; see
   [`../../cargo-workspace-management/SKILL.md`](../../cargo-workspace-management/SKILL.md).

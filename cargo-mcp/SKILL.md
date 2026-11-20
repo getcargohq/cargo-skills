@@ -1,6 +1,6 @@
 ---
 name: cargo-mcp
-description: "Drive Cargo from its hosted MCP server at https://mcp.getcargo.io/mcp — connect a client, discover and price an action, run it over one record or a batch, poll it, and read workspace models, with no CLI install. Also when to call an MCP tool instead of shelling out to `cargo-ai`. Triggers: \"connect Cargo to Claude Desktop\", \"add Cargo to ChatGPT\", \"Cargo MCP server\", \"mcp.getcargo.io\", \"use Cargo without installing anything\", \"which Cargo tool do I call\", \"search_actions\", \"execute_action_batch\", \"MCP server is showing the wrong workspace\". Tools: whoami, search_actions, get_action_schema, execute_action, execute_action_batch, get_run, query_models. Skip when: you have a shell and the job is a workflow, a project deploy, warehouse SQL, or a mailbox — use the CLI skills; when publishing an MCP server out of your own workspace or attaching one to a Cargo agent — use cargo-ai."
+description: "Uses Cargo from Claude Desktop, ChatGPT or any MCP client through the hosted server at https://mcp.getcargo.io/mcp, with nothing to install: connects a client, prices and runs an action on one record or a batch, checks its status, and reads workspace data. Triggers: \"connect Cargo to Claude Desktop\", \"add Cargo to ChatGPT\", \"Cargo MCP server\", \"mcp.getcargo.io\", \"use Cargo without installing anything\", \"which Cargo tool do I call\", \"search_actions\", \"execute_action_batch\", \"MCP server is showing the wrong workspace\". Tools: whoami, search_actions, get_action_schema, execute_action, execute_action_batch, get_run, query_models. Skip when: a shell is available and the job is a workflow, a project deploy, warehouse SQL, or a mailbox, use the CLI skills; when publishing an MCP server from the workspace or attaching one to a Cargo agent, use cargo-ai."
 version: "1.4.0"
 compatibility: Requires the hosted Cargo MCP server at https://mcp.getcargo.io/mcp — OAuth (discovered from the 401 challenge) or a workspace-scoped API token as a bearer. The CLI is needed only for the jobs this skill routes away
 homepage: https://github.com/getcargohq/cargo-skills
@@ -175,12 +175,13 @@ like the rest. The signed-out catalog lists those presets too, addressed as
 answers for them from the template. Once signed in, the same `templateSlug`
 action runs the workspace's own copy of the preset.
 
-**Finding an email or a phone, or verifying an email? Search tools first.**
+**Finding an email or a phone, or verifying an email? Run the preset tool first.**
 Every workspace is seeded with read-only **Find email**, **Find phone** and
 **Verify email** tools: the multi-provider waterfall, each found email verified,
-already built. `search_actions` with `{"query":"find email","kind":"tool"}`
-returns the action object to paste verbatim — `toolUuid` for the workspace's own
-copy, `templateSlug` for the preset, both executable. Pass it to
+already built. Address them by template slug, with no search or uuid needed:
+`{"kind":"tool","templateSlug":"email_waterfall"}` (Find email),
+`phone_waterfall` (Find phone), `email_validator` (Verify email). Pass that
+action to `get_action_schema` to see its inputs, then to
 `execute_action_batch` with records like
 `{"firstName":"Ada","lastName":"Lovelace","companyDomain":"example.com"}` or
 `{"linkedinUrl":"https://www.linkedin.com/in/ada"}`. Find email returns

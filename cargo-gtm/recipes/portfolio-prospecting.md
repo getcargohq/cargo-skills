@@ -104,9 +104,8 @@ batch_rows "$B" \
 Use the workspace's preset **Find email** tool, the multi-provider waterfall with a `zeroBounce` check on every hit ([`../references/waterfall-strategy.md`](../references/waterfall-strategy.md#start-here-the-workspaces-preset-tools)). Sample with `--limit 20` before the full batch.
 
 ```bash
-TOOL=$(cargo-ai orchestration tool list | jq -r '.tools[] | select(.isReadOnly and .name == "Find email") | .uuid')
 B=$(cargo-ai orchestration action execute-batch \
-  --action "{\"kind\":\"tool\",\"toolUuid\":\"$TOOL\"}" \
+  --action '{"kind":"tool","templateSlug":"email_waterfall"}' \
   --records "$(jq -c '[.[] | {firstName: .first_name, lastName: .last_name, companyDomain: .domain, linkedinUrl: .linkedin_profile_url}]' /tmp/contacts.json)" \
   --wait-until-finished | jq -r '.batch.uuid')
 batch_rows "$B" > /tmp/emails.json   # address in cargo_email
@@ -116,14 +115,13 @@ No tool in the workspace, or a custom provider order? Hand-roll the chain in [`.
 
 ### Step 6 — Verify emails step 5 did not verify
 
-**Do not run this on step 5's output.** With `returns_catchalls` unset, the tool only returns addresses `zeroBounce` graded `valid`, so a second pass costs 0.2 a row and changes nothing. Run the preset **Verify email** tool only on addresses from another source — the user's own CSV, a CRM export — or on step 5's output when you set `returns_catchalls: true`. On the default path there is nothing to verify here; go to step 7.
+**Do not run this on step 5's output.** With `returns_catchalls` unset, the tool only returns addresses `zeroBounce` graded `valid`, so a second pass costs 0.2 a row and changes nothing. Run the preset **Verify email** tool only on addresses from another source (the user's own CSV, a CRM export) or on step 5's output when you set `returns_catchalls: true`. On the default path there is nothing to verify here; go to step 7.
 
 With such a list in `/tmp/unverified.json` (objects carrying an `email`):
 
 ```bash
-VTOOL=$(cargo-ai orchestration tool list | jq -r '.tools[] | select(.isReadOnly and .name == "Verify email") | .uuid')
 B=$(cargo-ai orchestration action execute-batch \
-  --action "{\"kind\":\"tool\",\"toolUuid\":\"$VTOOL\"}" \
+  --action '{"kind":"tool","templateSlug":"email_validator"}' \
   --records "$(jq -c '[.[] | select((.email // "") != "") | {email}]' /tmp/unverified.json)" \
   --wait-until-finished | jq -r '.batch.uuid')
 batch_rows "$B" > /tmp/verified.json   # cargo_status, cargo_is_safe

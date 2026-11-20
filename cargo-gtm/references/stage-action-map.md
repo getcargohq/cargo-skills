@@ -116,7 +116,7 @@ a handful of contacts at a known account; wrong for building a list.
 
 ## Find email
 
-> **First move: the workspace's Find email preset tool** (`{"kind":"tool","toolUuid":"<uuid>"}`, 1.1 to 4 on a hit, roughly 0 on a miss), which runs apolloio → FullEnrich → findyMail → peopleDataLabs → waterfall with a zeroBounce check on each hit. The rows below are the hand-rolled chain: [`waterfall-strategy.md`](waterfall-strategy.md#start-here-the-workspaces-preset-tools).
+> **First move: the workspace's Find email preset tool** (`{"kind":"tool","templateSlug":"email_waterfall"}`, 1.1 to 4 on a hit, roughly 0 on a miss), which runs apolloio → FullEnrich → findyMail → peopleDataLabs → waterfall with a zeroBounce check on each hit. The rows below are the hand-rolled chain: [`waterfall-strategy.md`](waterfall-strategy.md#start-here-the-workspaces-preset-tools).
 
 | Provider | Action | Cost | Priority? | Notes |
 |---|---|---|---|---|

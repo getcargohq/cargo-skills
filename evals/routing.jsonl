@@ -141,3 +141,8 @@
 {"prompt": "Find work emails for every row of this CSV", "expect": "cargo-gtm", "why": "Email finding is GTM work whose first move is the workspace's preset Find email tool; running a tool must not pull it to cargo-orchestration."}
 {"prompt": "Run the Find email waterfall over these 300 contacts", "expect": "cargo-gtm", "why": "Naming the preset tool is still an email job: cargo-gtm carries the sample gate and the fallback chain, orchestration does not."}
 {"prompt": "Get mobile numbers for these 40 LinkedIn profiles", "expect": "cargo-gtm", "why": "Phone lookup routes to cargo-gtm, which leads with the preset Find phone tool and keeps phone behind the guarded-lever rule."}
+{"prompt": "My Sales Navigator search has 30,000 accounts but the extraction stopped at 1,000", "expect": "cargo-gtm", "why": "The per-search cap case; the recipe lives in cargo-gtm, not a separate job skill."}
+{"prompt": "Brief me on Northwind before my call tomorrow", "expect": "cargo-gtm", "why": "Job that used to live only in a gtm-skills job skill; the recipe is now in cargo-gtm."}
+{"prompt": "Which of my target accounts are in market right now?", "expect": "cargo-gtm", "why": "Job that used to live only in a gtm-skills job skill; the recipe is now in cargo-gtm."}
+{"prompt": "Who are the decision makers at Globex for a security purchase?", "expect": "cargo-gtm", "why": "Job that used to live only in a gtm-skills job skill; the recipe is now in cargo-gtm."}
+{"prompt": "Rank this list of 200 companies against our ICP and drop the bad ones", "expect": "cargo-gtm", "why": "Job that used to live only in a gtm-skills job skill; the recipe is now in cargo-gtm."}

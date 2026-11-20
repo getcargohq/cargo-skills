@@ -32,6 +32,7 @@ LinkedIn-anchored search for accounts and leads — `searchLeads` and `searchAcc
 
 ## Common pitfalls
 
+- **A search URL stops at 1,000 accounts or 2,500 people, silently.** The run succeeds and the rows past the cap are dropped. Count it first (`searchCompanyMetrics` / `searchPersonMetrics`); over the cap, follow [`../recipes/sales-navigator-extraction.md`](../recipes/sales-navigator-extraction.md) to split, merge and load it into models.
 - **Don't use `searchLeadsLegacy`** unless `searchLeads` literally cannot express your filter. The cost difference is enormous.
 - **`identityIds` is not a filter.** It picks which connected LinkedIn seat(s) run the search. To find leads at company X, use `company.currentCompanyIds` (or `pastCompanyIds`) with LinkedIn company IDs as strings.
 - **`recentUpdates` is an object**: `{"postedOnLinkedin": true}` narrows to leads who posted recently (also `changedJobs`, `mentionedInNews`), useful for warm-outreach signal but reduces volume.

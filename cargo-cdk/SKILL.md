@@ -1,7 +1,7 @@
 ---
 name: cargo-cdk
-description: "Renamed to cargo-project. This entry exists only so installs from before the rename are replaced by a pointer. Skip when: always — load cargo-project."
-version: "2.0.0"
+description: "Renamed to cargo-project. This entry exists only so installs from before the rename are replaced by a pointer. Skip when: always; load cargo-project."
+version: "2.0.1"
 compatibility: Requires @cargo-ai/cli (npm).
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
