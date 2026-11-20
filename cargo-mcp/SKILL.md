@@ -1,7 +1,7 @@
 ---
 name: cargo-mcp
 description: "Uses Cargo from Claude Desktop, ChatGPT or any MCP client through the hosted server at https://mcp.getcargo.io/mcp, with nothing to install: connects a client, prices and runs an action on one record or a batch, checks its status, and reads workspace data. Triggers: \"connect Cargo to Claude Desktop\", \"add Cargo to ChatGPT\", \"Cargo MCP server\", \"mcp.getcargo.io\", \"use Cargo without installing anything\", \"which Cargo tool do I call\", \"search_actions\", \"execute_action_batch\", \"MCP server is showing the wrong workspace\". Tools: whoami, search_actions, get_action_schema, execute_action, execute_action_batch, get_run, query_models. Skip when: a shell is available and the job is a workflow, a project deploy, warehouse SQL, or a mailbox, use the CLI skills; when publishing an MCP server from the workspace or attaching one to a Cargo agent, use cargo-ai."
-version: "1.3.1"
+version: "1.4.0"
 compatibility: Requires the hosted Cargo MCP server at https://mcp.getcargo.io/mcp — OAuth (discovered from the 401 challenge) or a workspace-scoped API token as a bearer. The CLI is needed only for the jobs this skill routes away
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -174,6 +174,22 @@ like the rest. The signed-out catalog lists those presets too, addressed as
 `{"kind":"tool","templateSlug":"…"}` (or `"agent"`), and `get_action_schema`
 answers for them from the template. Once signed in, the same `templateSlug`
 action runs the workspace's own copy of the preset.
+
+**Finding an email or a phone, or verifying an email? Run the preset tool first.**
+Every workspace is seeded with read-only **Find email**, **Find phone** and
+**Verify email** tools: the multi-provider waterfall, each found email verified,
+already built. Address them by template slug, with no search or uuid needed:
+`{"kind":"tool","templateSlug":"email_waterfall"}` (Find email),
+`phone_waterfall` (Find phone), `email_validator` (Verify email). Pass that
+action to `get_action_schema` to see its inputs, then to
+`execute_action_batch` with records like
+`{"firstName":"Ada","lastName":"Lovelace","companyDomain":"example.com"}` or
+`{"linkedinUrl":"https://www.linkedin.com/in/ada"}`. Find email returns
+`{email}` and nothing else, and because tool inputs are not checked, a
+snake_case key is dropped silently and the row comes back empty. Chaining
+provider actions by hand is the fallback, for when the tool is missing or the
+user wants a custom order
+([`cargo-gtm` waterfall strategy](../cargo-gtm/references/waterfall-strategy.md)).
 
 ## Three ways this goes wrong
 

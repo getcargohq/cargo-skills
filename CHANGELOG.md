@@ -10,6 +10,21 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### `cargo-gtm` 2.9.0, `cargo` 1.38.0, `cargo-mcp` 1.4.0, `cargo-diagnostics` 1.6.2, plugin 1.38.0: email, phone and verify jobs start with the workspace's preset tools
+
+Every workspace is seeded with read-only tools in a **Cargo Tools** folder, and three of them are the waterfalls these skills told agents to build by hand. Checked against getcargohq/cargo master (2026-10-24: `orchestration/services/template/templates/tools/index.ts`, seeded by `tool/syncAll.ts`) and CLI 1.0.129.
+
+- **The first move changed.** For finding an email, finding a phone or verifying an email, an agent now addresses the preset by its template slug, with no lookup: `{"kind":"tool","templateSlug":"email_waterfall"}` (Find email), `phone_waterfall` (Find phone), `email_validator` (Verify email). The slug resolves to the workspace's own copy in `action execute`, `execute-batch`, `get-output-schema` and MCP `get_action_schema` (cargo#6383, CLI 1.0.138). It samples 10 to 20 rows with `action execute-batch`, reads the rows from `batch download`, reports hit rate and credits, and runs the approved batch. Looking up a `toolUuid` with `orchestration tool list` is kept only as the fallback for a CLI older than 1.0.138. The three presets:
+  - **Find email**: apolloio, FullEnrich, findyMail, peopleDataLabs and waterfall in turn, each hit checked by `zeroBounce` before the chain stops. Inputs `firstName` + `lastName` + `companyDomain` or `linkedinUrl`, optional `returns_catchalls`. Returns `{email}` only: no status, catch-all flag or provider. Declared 1.1 to 4 credits a row; a miss costs roughly nothing.
+  - **Find phone**: FullEnrich, findyMail, waterfall, peopleDataLabs. `linkedinUrl` in, `{phone}` out, unverified. Declared 3 to 7.
+  - **Verify email**: neverBounce. `{status, is_safe}` out, 0.2.
+- **`waterfall-strategy.md`** no longer says Cargo has no waterfall primitive. It opens with the preset tools (inputs, outputs, honest costs, the silent drop of an unknown input key, the input guard that exits a bad row for free) and keeps the hand-rolled chains as the fallback for a missing tool, a custom provider order, or per-row provenance.
+- **Recipes:** `prospecting.md` (P1, P2 and the P3 backfill, which was a hand-rolled email waterfall), `build-tam.md` and `portfolio-prospecting.md` run the Find email tool and drop the paid verify on its output; `clay-to-cargo.md` maps a Clay email or phone waterfall column to the preset; `outreach-activation.md` names the Verify email tool as the swap-in.
+- **Guide, references and playbooks:** `enriching-and-researching.md` decision tree, `alternatives.md`, `stage-action-map.md`, the `cargo-gtm` spine and routing table, the `FullEnrich` and `waterfall` playbooks, and the router's glossary (new **preset tool** entry), interaction example and `cargo-gtm` critical rules.
+- **`cargo-mcp`:** email, phone and verify jobs run the preset by `templateSlug` first.
+- **`cargo-diagnostics`:** the waterfall lever in `play-optimize-credits.md` includes replacing a hand-built chain with the preset tool.
+- **Routing:** the `cargo-gtm` description now names mobile numbers, and its "find work emails" trigger becomes "find email" so a prompt naming the Find email waterfall stays with `cargo-gtm`; two clauses were shortened to stay under 1,024 characters with `salesNavigator` and `aiArk` still named. Three routing cases pin email and phone jobs to `cargo-gtm`.
+
 ### `cargo-ai` 3.0.0, `cargo-project` 5.0.0, `cargo` 1.37.0, `cargo-workspace-management` 1.7.2, plugin 1.37.0: a coding agent clones a project, not a repository (cargo#6677)
 
 Breaking. Agent releases and chats now point at a project (a connected deploy state) instead of naming a repository, and the harness's env vars and run-as user move beside it. Needs CLI 1.0.154 and `@cargo-ai/cdk` 1.0.150; older clients that send `repository` get a 400, and an older CDK cannot deploy any agent.

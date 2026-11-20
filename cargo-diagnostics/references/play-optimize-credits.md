@@ -80,7 +80,7 @@ Work down this list; the first two usually dominate. The canonical lever table i
 | **Cheaper provider for the same stage** — swap the action, keep the graph | One integration dominates the `integration_slug` grouping | [`credits-cost-table.md`](../../cargo-gtm/references/credits-cost-table.md) + [`alternatives.md`](../../cargo-gtm/references/alternatives.md) — beware cheap-but-low-hit-rate providers; total spend is dominated by misses |
 | **Cheaper model / lower `maxSteps` on agent nodes** | Agent nodes dominate per-node cost | [`cargo-billing/SKILL.md`](../../cargo-billing/SKILL.md) |
 | **Stop early on failure** (`fallbackOnFailure: false`) | Downstream nodes run after an upstream miss | [`cargo-billing/SKILL.md`](../../cargo-billing/SKILL.md) |
-| **Reshape waterfall chains** — reorder by hit-rate/price, add stop-early rules | Multi-provider enrichment stages | [`waterfall-strategy.md`](../../cargo-gtm/references/waterfall-strategy.md) |
+| **Reshape waterfall chains**: reorder by hit-rate/price, add stop-early rules, or replace a hand-built email or phone chain with one node calling the workspace's preset Find email / Find phone tool | Multi-provider enrichment stages | [`waterfall-strategy.md`](../../cargo-gtm/references/waterfall-strategy.md) |
 | **Cut phone lookup from default chains** | Phone actions present without explicit user request (3–7 credits/record, ~10× email) | [`cost-discipline.md`](../../cargo-gtm/references/cost-discipline.md) §5 |
 | **Cut node count** — collapse chained `variables`, fold branch pairs into a `switch`, inline a thin tool | Step 2b shows executions × 0.01 outweighing the provider sum | [`cargo-billing/SKILL.md`](../../cargo-billing/SKILL.md) → "The execution charge" |
 

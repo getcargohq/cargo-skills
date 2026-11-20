@@ -106,6 +106,8 @@ Filter values are plain strings, not codes — the inverse of `salesNavigator`. 
 
 ## Fallback chain
 
+For a plain email lookup, the workspace's **Find email** preset tool already runs `FullEnrich.findEmail` inside a verified multi-provider waterfall, so start there ([`../references/waterfall-strategy.md`](../references/waterfall-strategy.md#start-here-the-workspaces-preset-tools)). The chain below is for building it by hand.
+
 If `FullEnrich.findEmail` returns nothing for a row, escalate via:
 
 1. `peopleDataLabs.enrichPerson` (3 cred) — heavyweight backfill.

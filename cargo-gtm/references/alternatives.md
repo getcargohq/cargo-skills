@@ -49,8 +49,11 @@ Default rule: **don't swap to chase 2× cheaper if hit-rate drops 30%**. The tot
 
 ## Find email alternatives
 
+The first move for a plain email, phone or verify job is the workspace's preset tool, not a provider from these tables: see [`waterfall-strategy.md`](waterfall-strategy.md#start-here-the-workspaces-preset-tools). The tables are for the hand-rolled chain, when the tool is missing or the user wants a custom provider order.
+
 | Goal | Priority | Alternative | When to swap |
 |---|---|---|---|
+| Find email (first move) | Find email preset tool (1.1 to 4 on a hit, roughly 0 on a miss) | the provider rows below | Tool missing, or a custom provider order, a provider it does not call, or per-row provenance is wanted. |
 | Find email (LinkedIn URL in hand) | aiArk.enrichPerson (0.1) | — | Returns a verified email with the profile and bills 0 when it finds none; run the finders below only on the residue. |
 | Find email (default) | FullEnrich.findEmail (1) | hunter.findEmail (0.5) | When budget critical AND okay with lower hit rate. |
 |   |   | icypeas.findEmail (0.1) | Cheap last-resort for very large lists. |
@@ -63,7 +66,8 @@ Default rule: **don't swap to chase 2× cheaper if hit-rate drops 30%**. The tot
 
 | Goal | Priority | Alternative | When to swap |
 |---|---|---|---|
-| Verify email | waterfall.verifyEmail (0.1) | icypeas.verifyEmail (0.01) | When verifying very large lists (10× cheaper). |
+| Verify email (first move) | Verify email preset tool (0.2) | waterfall.verifyEmail (0.1) | Half the price by hand; returns `email_status` instead of `status` / `is_safe`. |
+| Verify email (by hand) | waterfall.verifyEmail (0.1) | icypeas.verifyEmail (0.01) | When verifying very large lists (10× cheaper). |
 |   |   | zeroBounce.verifyEmail (0.1) | Equivalent cost; different underlying provider. |
 |   |   | kitt.verifyEmail (0.05) | Cheaper alternative. |
 
@@ -71,6 +75,7 @@ Default rule: **don't swap to chase 2× cheaper if hit-rate drops 30%**. The tot
 
 | Goal | Priority | Alternative | When to swap |
 |---|---|---|---|
+| Find phone (first move) | Find phone preset tool (3 to 7, `linkedinUrl` in) | aiArk.findMobilePhone (0.5) | Mobile-only and budget tight: run aiArk first, the tool on its misses. |
 | Find phone (mobile, URL in hand) | aiArk.findMobilePhone (0.5) | prospeo.findPhone (3) | Landline/DID fallback; escalate from aiArk on a mobile miss. |
 | Find phone (no URL / mobile missed) | FullEnrich.findPhone (6) | prospeo.findPhone (3) | Cheaper first attempt; escalate to FullEnrich on a miss. |
 |   |   | forager.findPhone (5) | Mid-tier. |

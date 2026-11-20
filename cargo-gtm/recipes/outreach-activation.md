@@ -99,6 +99,8 @@ Waterfall returns a normalized contact profile under `person`: `person.professio
 
 Cheap insurance against bounces and sender-reputation damage. Free cull → paid verify on the survivors only → merge statuses back → audit **all** rows → keep SEND:
 
+This step verifies by hand with `waterfall.verifyEmail` (0.1), whose `email_status` the merge below reads. For a standalone "verify these emails" job the first move is the workspace's **Verify email** preset tool (0.2, `{status, is_safe}`; [`../references/waterfall-strategy.md`](../references/waterfall-strategy.md#start-here-the-workspaces-preset-tools)); swap it in here by merging `cargo_status` instead of `cargo_email_status`.
+
 ```bash
 # 4a. FREE pre-cull (QA scripts: ../references/contact-accuracy.md; Node >= 22.18;
 #     it reads the batch download CSV directly)
