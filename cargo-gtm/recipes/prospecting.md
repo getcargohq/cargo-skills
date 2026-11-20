@@ -355,22 +355,47 @@ batch_rows "$B" > /tmp/p3-sample.json   # address in cargo_email
 #     rest of the residue at that rate, and WAIT for approval. Then the real
 #     batch, over the rows the sample did not cover (--limit takes the first N,
 #     so the rest is .[20:]). Stopping after 4a leaves 20 of the 80 rows done.
-B=$(cargo-ai orchestration action execute-batch \
-  --action '{"kind":"tool","templateSlug":"email_waterfall"}' \
-  --records "$(jq -c '.[20:]' <<<"$RECORDS")" --wait-until-finished | jq -r '.batch.uuid')
-batch_rows "$B" > /tmp/p3-rest.json
+#     A residue of 20 rows or fewer was finished by 4a: skip the second batch.
+if [ "$(jq 'length' <<<"$RECORDS")" -gt 20 ]; then
+  B=$(cargo-ai orchestration action execute-batch \
+    --action '{"kind":"tool","templateSlug":"email_waterfall"}' \
+    --records "$(jq -c '.[20:]' <<<"$RECORDS")" --wait-until-finished | jq -r '.batch.uuid')
+  batch_rows "$B" > /tmp/p3-rest.json
+else
+  echo '[]' > /tmp/p3-rest.json
+fi
 jq -s 'add' /tmp/p3-sample.json /tmp/p3-rest.json > /tmp/p3-found.json
 
-# 5. No paid verify: every cargo_email the tool returned passed zeroBounce as
-#    valid (returns_catchalls is unset). Rows with an empty cargo_email are the
-#    ones no provider covers; leave them empty rather than guessing.
+# 5. Coalesce both sources into one email per missing contact (free). Most
+#    addresses came from aiArk in step 3, nested under its cargo_email. columns;
+#    the tool's flat cargo_email covers the residue. Reading only p3-found.json
+#    would drop every aiArk hit.
+jq -n --slurpfile miss /tmp/p3-missing-email.json \
+      --slurpfile ai /tmp/p3-aiark-enriched.json \
+      --slurpfile fe /tmp/p3-found.json '
+  def ark_email:
+    [to_entries[] | select((.key | startswith("cargo_email.")) and ((.value // "") | test("@"))) | .value]
+    | first // "";
+  def k($l; $f; $n; $d): [$l, $f, $n, $d] | map(. // "") | join("|");
+  ($ai[0] | map(select((.linkedinUrl // "") != "") | {key: .linkedinUrl, value: ark_email}) | from_entries) as $ark
+  | ($fe[0] | map({key: k(.linkedinUrl; .firstName; .lastName; .companyDomain), value: (.cargo_email // "")}) | from_entries) as $tool
+  | [$miss[0][]
+     | ($ark[.linkedin // ""] // "") as $a
+     | ($tool[k(.linkedin; .firstName; .lastName; .domainName)] // "") as $t
+     | . + {email: (if $a != "" then $a else $t end),
+            email_source: (if $a != "" then "aiArk" elif $t != "" then "Find email tool" else "" end)}]' \
+  > /tmp/p3-backfill.json   # write this back to the segment's records
+
+# No paid verify: every cargo_email the tool returned passed zeroBounce as
+# valid (returns_catchalls is unset). Rows with an empty email are the ones no
+# provider covers; leave them empty rather than guessing.
 ```
 
 **Credit budget** (200 contacts missing email; assumes 60% hit on aiArk, 35% on the Find email tool, 5% unresolvable):
 - aiArk.enrichPerson × 200: 20 (and 0 on the 40% that return no email)
 - Find email preset tool × 80: ~77 for the 70 hits at ~1.1 each, roughly 0 for the 10 misses (deeper hits cost up to 4)
 - verification: 0 (both sources return verified addresses)
-- **Total: ~97 credits for 190 verified emails** (~0.5 cred/email). The sample's receipt replaces these estimates.
+- **Total: ~97 credits for 190 verified emails** (~0.5 cred/email), all in `/tmp/p3-backfill.json` with an `email_source` per row. The sample's receipt replaces these estimates.
 
 **When to hand-roll instead.** If the workspace has no Find email tool, or the user wants their own provider order, step 4 becomes the chain in [`../references/waterfall-strategy.md`](../references/waterfall-strategy.md): `FullEnrich.findEmail` on the residue, `peopleDataLabs.enrichPerson` on what is still missing, then `waterfall.verifyEmail` on every address found, coalesced by key. Running peopleDataLabs on everyone instead would cost 600 credits for enrichment alone.
 
