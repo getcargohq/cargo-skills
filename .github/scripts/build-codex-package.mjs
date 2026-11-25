@@ -546,8 +546,8 @@ const PACKAGE_EDITS = [
   },
   {
     file: "cargo-gtm/provider-playbooks/aiArk.md",
-    find: "need a **mobile phone** cheaply (0.5 vs the 3+ phone tier), want **lookalike-company** discovery (0.01/record), or need **personality/selling guidance** for personalization.",
-    replace: "need a **mobile phone** cheaply (0.5 vs the 3+ phone tier), or want **lookalike-company** discovery (0.01/record).",
+    find: "need a **mobile phone** on a cheapest-path request (0.5 vs the 3+ phone tier), want **lookalike-company** discovery (0.01/record), or need **personality/selling guidance** for personalization.",
+    replace: "need a **mobile phone** on a cheapest-path request (0.5 vs the 3+ phone tier), or want **lookalike-company** discovery (0.01/record).",
   },
   {
     file: "cargo-gtm/provider-playbooks/linkedin.md",
