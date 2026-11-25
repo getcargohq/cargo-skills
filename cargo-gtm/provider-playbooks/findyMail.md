@@ -8,6 +8,8 @@ last-reviewed: 2026-07-09
 
 Mid-tier email finder with a phone lookup and a verify on the side. `findEmail` (0.5) is an alternative rung to `hunter.findEmail` in the find-email chain — sometimes finds what hunter misses ([`../references/alternatives.md`](../references/alternatives.md)) — and is the only 0.5-tier finder that also accepts a **LinkedIn URL** as input. Not the default: that's `FullEnrich.findEmail` (1) per [`../references/waterfall-strategy.md`](../references/waterfall-strategy.md). `findPhone` (5) sits mid-chain between prospeo (3) and FullEnrich (6).
 
+> **Email, phone and LinkedIn-from-email default to Cargo's native tools, not to this provider.** Find email (`email_waterfall`), Find phone (`phone_waterfall`), Find LinkedIn URL from email (`find_linkedin_url_from_personal_email`) and Verify email (`email_validator`) are Cargo-maintained waterfalls with far higher coverage than any single provider ([`../SKILL.md`](../SKILL.md#contact-data-cargos-native-tools-first-mandatory-default)). The chains and "default" rungs on this page rank the single-provider tier, which runs only when the user names a provider, explicitly asks for the cheapest path, or the tool is missing from the workspace. Say which.
+
 ## Credits-based actions
 
 | Action | Cost | Inputs | Use for |

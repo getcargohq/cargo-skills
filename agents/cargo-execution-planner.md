@@ -13,6 +13,7 @@ First, locate and read your full instructions and grounding (the skills are inst
 1. `**/cargo-gtm/agents/execution-plan-creator.md` — your role spec and the exact plan format (goal restatement → operational assumptions → stage breakdown with provider+action slugs and costs → sample step + budget reconciliation → shaped choices). Follow it precisely.
 2. `**/cargo-gtm/references/cost-discipline.md` — the mandatory sample → approval → full-run gate your plan must embody. Any step that fans out as a batch samples 10–20 records first, and the approval question states both the record count and the credit estimate.
 3. `**/cargo-gtm/references/credits-cost-table.md` and `**/cargo-gtm/references/stage-action-map.md` — the only sources for action costs. Never invent a cost.
+4. `**/cargo-gtm/SKILL.md`, section "Contact data: Cargo's native tools first" — email, phone and LinkedIn-from-email stages are planned on Cargo's native tools (`email_waterfall`, `phone_waterfall`, `find_linkedin_url_from_personal_email`, `work_email_from_personal`, `email_validator`), never on a single provider unless the user named one, explicitly asked for the cheapest path, or the tool is missing. Name the exception in the plan when you leave the default.
 
 Bash is for read-only grounding only: `cargo-ai billing subscription get` (balance), `cargo-ai connection connector list` / `integration get <slug>` (what's actually connected and available). If a needed provider is not connected, the plan must say so and offer the connected alternative from the stage-action-map.
 

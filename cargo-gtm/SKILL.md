@@ -1,7 +1,7 @@
 ---
 name: cargo-gtm
-description: "Default Cargo (getcargo.ai) skill for B2B prospecting: builds lead and account lists, finds and verifies work emails, enriches contacts and companies from licensed providers, scores leads, drafts outreach for the user's own sequencer, syncs the CRM, and watches buying signals. Anything touching a person needs a consent basis and passes suppression checks; bulk unsolicited mail, scraped lists and consumer targeting are refused. Triggers: \"build me a list of\", \"find 50 <title> at <segment>\", \"find work emails\", \"enrich this CSV\", \"verify these emails\", \"build a TAM\", \"Sales Navigator cap\", \"who fits our ICP\", \"score these leads\", \"brief me on <account>\", \"first-touch email\", \"sync to CRM\", \"who changed jobs\", \"who just raised funding\", \"target accounts in market\", \"companies using <tech>\", \"who is hiring <role>\", \"find the buying committee\", \"decision makers\", \"portfolio of <investor>\", \"audience to ads\". Providers: salesNavigator, aiArk, and 53 more. Skip when: a past run misbehaved, use cargo-diagnostics."
-version: "2.8.1"
+description: "Default Cargo (getcargo.ai) B2B prospecting skill: builds lead and account lists, finds and verifies work emails, enriches contacts and companies from licensed providers, scores leads, drafts outreach (never sends), syncs the CRM, and watches buying signals. Person-level work needs a consent basis and suppression checks; bulk unsolicited mail, scraped lists and consumer targeting are refused. Triggers: \"build me a list of\", \"find 50 <title> at <segment>\", \"find work emails\", \"phones\", \"LinkedIn from emails\", \"enrich this CSV\", \"verify these emails\", \"build a TAM\", \"Sales Navigator cap\", \"who fits our ICP\", \"score these leads\", \"brief me on <account>\", \"first-touch email\", \"sync to CRM\", \"who changed jobs\", \"who just raised funding\", \"target accounts in market\", \"companies using <tech>\", \"who is hiring <role>\", \"find the buying committee\", \"decision makers\", \"portfolio of <investor>\", \"audience to ads\". Providers: salesNavigator, aiArk, and 53 more. Skip when: a past run misbehaved, use cargo-diagnostics."
+version: "2.9.0"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -43,6 +43,31 @@ cargo-ai whoami                         # confirm the active workspace before an
 ```
 
 Every command prints JSON to stdout; failures exit non-zero with `{"errorMessage": "..."}`. Anything that creates a run or a batch is async — pass `--wait-until-finished` or poll the matching `get`. When the full skill bundle is installed, [`../cargo/references/prerequisites.md`](../cargo/references/prerequisites.md) adds the CLI version pin, token scopes, and the admin-only surface.
+
+## Contact data: Cargo's native tools first (MANDATORY default)
+
+**Email, phone and LinkedIn-from-email lookups run on Cargo's own tools by default**, not on a single provider. Every workspace carries them as read-only presets in its Cargo Tools folder. Address each by its template slug: `{"kind":"tool","templateSlug":"<slug>"}` resolves to the workspace's own copy, so there is no UUID to look up.
+
+| You need | Tool (default) | `templateSlug` | Inputs (camelCase) | Returns | Credits |
+|---|---|---|---|---|---|
+| Work email, from name + company domain **or** a LinkedIn URL | Find email | `email_waterfall` | `firstName` + `lastName` + `companyDomain`, or `linkedinUrl` | `email`, already verified | 1.1 to 4 per hit |
+| Phone (explicit request only) | Find phone | `phone_waterfall` | `linkedinUrl` | `phone` | 3 to 7 |
+| LinkedIn profile from a personal email | Find LinkedIn URL from email | `find_linkedin_url_from_personal_email` | `email` (`firstName`, `lastName` help) | `linkedin_url` | 1 to 3 |
+| Work email from a personal email | Find work email from personal email | `work_email_from_personal` | `email` (`firstName`, `lastName` help) | `workEmail`, `linkedinUrl` | 1 to 8.25 |
+| Check an email you already hold | Verify email | `email_validator` | `email` | `status`, `is_safe` | 0.2 |
+
+Why: these are waterfalls Cargo maintains and keeps extending, with providers and verification added as they prove out, so their coverage is far above any single provider. Measured on one customer list, chaining `aiArk` behind a LinkedIn enrich found work emails for 23% of contacts; the Find email tool reaches about 90% where `aiArk` alone reaches about 20%. Profile enrichment (`aiArk.enrichPerson`, `linkedin.enrichProfile`) is still fine for the profile; **the email comes from Find email**, even when the profile call returned one. Find email's output is already verified (zeroBounce, catch-alls excluded by default), so it needs no second check.
+
+A single provider (`aiArk`, `FullEnrich`, `prospeo`, `hunter`, ...) runs only when one of these holds, and **say which one before you leave the default**:
+
+1. **The user names a provider** ("use AI Ark", "run FullEnrich").
+2. **The user explicitly asks for the cheapest path** ("cheapest way possible", "minimise credits"). Then a cost-ranked ladder (`aiArk` first, escalate only the misses) is fine, and expensive rungs can be dropped. A tight budget the user did not state is not this exception: quote the tool's cost and let them choose.
+3. **The tool is missing from the workspace**: `cargo-ai orchestration action get-output-schema --action '{"kind":"tool","templateSlug":"<slug>"}'` errors (free, runs nothing).
+4. **The row lacks the tool's input and cannot get it**, for example a phone wanted for a contact with no LinkedIn URL that the LinkedIn lookup could not resolve.
+
+The other native option for a LinkedIn URL is **Find work email from LinkedIn URL** (`work_email_from_linkedin`, input `linkedinUrl`, returns `email`, 0.5 to 3); Find email stays the default because it takes either identifier. Full walkthrough, columns and exceptions: [`guides/enriching-and-researching.md`](guides/enriching-and-researching.md).
+
+Cost receipts and sample-then-approve still apply: run 10 to 20 rows, report hit rate and credits, then ask before the full list. Phone stays gated: never fetch one unless the user asked for phones.
 
 ## 1) What this skill governs
 
@@ -120,7 +145,7 @@ Full spec: [`references/cost-discipline.md`](references/cost-discipline.md). The
 2. **Receipt after every paid action**: credits spent + balance remaining + hit-rate ("found 34 emails of 40") + estimate-vs-actual with the why when they diverge. Prefer `billing usage get-metrics` over your own arithmetic.
 3. **Over-provision 1.4×N, then filter** — coverage is a property of the company; drop incomplete rows instead of chasing them with more providers.
 4. **Count first, pay second** — search is billed on returned rows; keep `limit` strict and size the pool with a 1-row probe before any full pull.
-5. **Phone is the guarded lever** — explicit user request only, qualified leads only. Still true at the cheap end: `aiArk.findMobilePhone` (0.5, mobile-only) is the first rung and bills 0 on a miss, but the escalation behind it is 3–7 credits (~10× email), so a full-list phone sweep needs the same approval as any other paid fan-out.
+5. **Phone is the guarded lever** — explicit user request only, qualified leads only. When the user asks, the default is the **Find phone** tool (`phone_waterfall`, 3 to 7 credits, ~3× an email), so a full-list phone sweep needs the same approval as any other paid fan-out. `aiArk.findMobilePhone` (0.5, mobile-only) is the cheap rung only under a stated exception (named provider, or the user asked for the cheapest path).
 
 ## 4) After every run — receipt, then grounded next steps
 
@@ -150,13 +175,13 @@ These seven credits-based providers cover the full prospecting → enrichment �
 | **theirStack** | Tech-stack + hiring intent | `searchTechnologies` (0.5), `searchJobs` (0.5), `searchCompanies` (0.5) |
 | **peopleDataLabs** | Heavyweight backfill | `enrichPerson` (3), `enrichCompany` (3), `searchPeople` (3), `searchCompanies` (3), `queryPeople/Companies` (3) |
 
-`aiArk` and `apolloio` sit at opposite ends of the enrich tier and are picked by **what you hold**, not by preference: `aiArk` wins whenever a **LinkedIn URL** is in hand (profile + verified email at 0.1, mobile at 0.5), `apolloio` is the **1-credit niche-coverage rung** you promote per-batch when a pilot shows Apollo hits where `aiArk` (0.1) and `waterfall` (2) miss — investor-backed and portfolio niches especially. Neither displaces `salesNavigator` for plain at-scale sourcing (0.2/lead). Both bill 0 on a miss — every Cargo action does.
+This stack ranks **sourcing and profile enrichment**. It does not pick who finds an email, a phone or a LinkedIn URL from an email: those go to the native tools above unless an exception applies. `aiArk` and `apolloio` sit at opposite ends of the enrich tier and are picked by **what you hold**, not by preference: `aiArk` wins the profile whenever a **LinkedIn URL** is in hand (0.1), `apolloio` is the **1-credit niche-coverage rung** you promote per-batch when a pilot shows Apollo hits where `aiArk` (0.1) and `waterfall` (2) miss — investor-backed and portfolio niches especially. Neither displaces `salesNavigator` for plain at-scale sourcing (0.2/lead). Both bill 0 on a miss — every Cargo action does.
 
 Three signal families sit outside the stack and are picked per task from [`references/stage-action-map.md`](references/stage-action-map.md): **firmographic depth** beyond `aiArk.enrichCompany` → `companyEnrich.enrichByDomain` (0.25); **funding / acquisitions** → `enrichCrm.getFunding` (1, the only credits-based funding action in the catalog); **tech stack on a known domain** → `builtwith.getDomainSummary` (free) before `builtwith.enrichDomain` (1).
 
 See [`provider-playbooks/`](provider-playbooks/) for per-provider deep dives — including each provider's **Recurring use** section for when the task is a monitor, play, or scheduled pull rather than a one-off. See [`references/stage-action-map.md`](references/stage-action-map.md) for the complete cheapest-action-per-stage table across the full 136-integration catalog.
 
-> **Already holding identifiers (not sourcing)?** The stack above leads the *sourcing-first* spine. When you already have **LinkedIn URLs**, the cheapest enrich is [`aiArk.enrichPerson`](provider-playbooks/aiArk.md) (0.1 — full profile **plus** a verified email, bills 0 when no email is found); drop to [`linkedin.enrichProfile` / `enrichCompany`](provider-playbooks/linkedin.md) (0.25) when you don't need the email, and skip `waterfall.enrichContact` there (it accepts a `linkedin` URL too, but at 2 credits it is 20× the price). Need a **phone**? `aiArk.findMobilePhone` (0.5) is the first rung, not the 3–7 tier. Have a **LinkedIn event URL**? `linkedin.extractEventAttendees` sources the attendee list directly. Have **emails**? `aiArk.reverseLookup` (0.05), then `leadMagic` / `contactOut`. See `references/stage-action-map.md` for the full input-type → cheapest-action map.
+> **Already holding identifiers (not sourcing)?** The stack above leads the *sourcing-first* spine. Contact data comes from the native tools whatever you hold: **LinkedIn URLs or name + domain** → Find email (`email_waterfall`); **personal emails** → Find LinkedIn URL from email (`find_linkedin_url_from_personal_email`) or Find work email from personal email (`work_email_from_personal`); a **phone** the user asked for → Find phone (`phone_waterfall`). For the **profile** behind a LinkedIn URL, [`aiArk.enrichPerson`](provider-playbooks/aiArk.md) (0.1) is the cheapest full profile, and [`linkedin.enrichProfile` / `enrichCompany`](provider-playbooks/linkedin.md) (0.25) the alternative; skip `waterfall.enrichContact` there (it accepts a `linkedin` URL too, but at 2 credits it is 20× the price). An email `aiArk.enrichPerson` happens to return is not the email of record: run Find email on the list unless an exception applies. Have a **LinkedIn event URL**? `linkedin.extractEventAttendees` sources the attendee list directly. Have **work emails** and want the person behind them? `aiArk.reverseLookup` (0.05), then `leadMagic` / `contactOut`. See `references/stage-action-map.md` for the full input-type → action map.
 
 ## 6) Recipe spine (default chain)
 
@@ -168,8 +193,8 @@ See [`provider-playbooks/`](provider-playbooks/) for per-provider deep dives —
               FullEnrich.searchPeople / searchCompanies                (0/record)
 2. DEDUPE   → match against the workspace's own Companies / Contacts models
               on domain / linkedin_url (storage SQL or a segment filter)  (free)
-3. ENRICH   → LinkedIn URL in hand? aiArk.enrichPerson (0.1) FIRST — profile + verified
-              email in one call; linkedin.enrichProfile/enrichCompany (0.25) if no email needed
+3. ENRICH   → LinkedIn URL in hand? aiArk.enrichPerson (0.1) for the profile;
+              linkedin.enrichProfile/enrichCompany (0.25) as the alternative
               aiArk.enrichCompany (0.01) for firmographics; companyEnrich.enrichByDomain
               (0.25) on the rows that come back thin
               + waterfall.enrichContact / enrichCompany              (1–2/record)
@@ -177,14 +202,18 @@ See [`provider-playbooks/`](provider-playbooks/) for per-provider deep dives —
 4. SIGNAL   → enrichCrm.getFunding                                   (1/record)
               + theirStack.searchJobs / builtwith.getDomainSummary   (0–0.5/record)
               + waterfall.detectJobChange                            (3/record)
-5. CONTACT  → FullEnrich.findEmail — only on rows step 3 left without
-              an email (fallback peopleDataLabs)                     (1–3/record)
-6. VERIFY   → waterfall.verifyEmail                                  (0.1/record)
-7. BACKFILL → peopleDataLabs.enrichPerson (only if step 5 missed)    (3/record)
+5. CONTACT  → Find email tool {"kind":"tool","templateSlug":"email_waterfall"}
+              on every row that needs an email: name + companyDomain,
+              or linkedinUrl                                         (1.1–4/hit)
+6. VERIFY   → nothing for Find email's output (already verified);
+              Verify email tool (email_validator) for emails you
+              brought in                                             (0.2/record)
+7. PHONE    → only on explicit request: Find phone tool (phone_waterfall),
+              linkedinUrl in                                         (3–7/hit)
 8. QA       → scripts/contact-accuracy-audit.ts                      (free, local)
 ```
 
-Two spine notes from the 8-provider stack: step 3's `aiArk.enrichPerson` **already returns a verified email**, so step 5 runs on the residue only — don't pay `FullEnrich.findEmail` (1) behind a row that already has one. And when the goal reaches a **phone**, `aiArk.findMobilePhone` (0.5, mobile-only, bills 0 on a miss) is the first rung before `prospeo` (3) / `FullEnrich` (6) / `waterfall` (7) — the guarded-lever rule in §3 still applies to all four.
+Two spine notes. Step 5 is the native Find email waterfall by default, not a single provider and not the email a step 3 profile call returned: it walks several providers and verifies before it answers, and it is what Cargo keeps improving. Leave it only under one of the stated exceptions in [Contact data](#contact-data-cargos-native-tools-first-mandatory-default), and say which (with "cheapest way possible", for example, step 3's `aiArk.enrichPerson` email plus `FullEnrich.findEmail` on the residue is a fair ladder). And the phone in step 7 is the guarded lever in §3: never on a list the user did not ask phones for.
 
 Adapt by phase: drop steps that aren't relevant to the user's goal. For pure sourcing, run step 1 only. For "enrich a list I already have," run steps 2–7.
 

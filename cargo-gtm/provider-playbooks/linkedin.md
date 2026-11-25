@@ -115,7 +115,7 @@ Chain with `extractSimilarCompanies` (0.25) for a cheap lookalike seed list, or 
 
 ## Position in the waterfall
 
-- `findProfileUrl` + `enrichProfile` — **default for the LinkedIn-URL lookup stage**; `FullEnrich.reverseEmailLookup` (1) only when all you have is an email.
+- `findProfileUrl` + `enrichProfile` — **default for the LinkedIn-URL lookup stage from name + company**; when all you have is an email, the default is the Find LinkedIn URL from email tool (`find_linkedin_url_from_personal_email`).
 - `enrichProfile` / `enrichCompany` — **first rung of ENRICH** when the input is a LinkedIn URL; escalate to `waterfall`, then `peopleDataLabs`, for non-LinkedIn fields.
 - Posts / jobs / activity extraction — **SIGNAL stage**: engagement pools and personalization inputs; `searchJobs` (0.5 flat) sits beside `theirStack.searchJobs` (0.5 per returned job) for hiring intent.
 - Engagement actions — post-VERIFY activation touches, outside the sourcing spine.

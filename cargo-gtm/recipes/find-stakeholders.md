@@ -91,7 +91,7 @@ Before enriching anyone, drop the stakeholders the workspace already holds. Re-e
 
 ### Step 6 — Enrich only the net-new
 
-The survivors carry a LinkedIn URL, so the cheapest next rung is `aiArk.enrichPerson` (0.1, profile plus verified email, bills 0 when no email is found). Escalation and verification follow [`prospecting.md`](prospecting.md) from its ENRICH step; outreach on the result goes through the acceptable-use checks first.
+The survivors carry a LinkedIn URL, which is all the native Find email tool needs (`{"kind":"tool","templateSlug":"email_waterfall"}`, 1.1 to 4 per address found, already verified). It is the default for their emails ([`../SKILL.md`](../SKILL.md#contact-data-cargos-native-tools-first-mandatory-default)); `aiArk.enrichPerson` (0.1) adds the profile when the goal needs one. The rest follows [`prospecting.md`](prospecting.md) from its CONTACT step; outreach on the result goes through the acceptable-use checks first.
 
 ## Example
 
@@ -114,7 +114,7 @@ Illustrative output, fictional records:
 |---|---|
 | `aiArk.countPeople` | 0 |
 | `aiArk.searchPeople` | 0.05 per returned record |
-| `aiArk.enrichPerson` (step 6, net-new only) | 0.1, 0 when no email is found |
+| Find email tool (step 6, net-new only) | 1.1 to 4 per address found, ~0 per miss |
 
 Every node execution also bills 0.01 credits, so a batch over N accounts adds N × 0.01 on top of the per-record price ([`../../cargo-billing/SKILL.md`](../../cargo-billing/SKILL.md), "The execution charge"). Prices: [`../references/credits-cost-table.md`](../references/credits-cost-table.md).
 

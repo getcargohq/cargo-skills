@@ -52,7 +52,7 @@ This map is **curated** — the cheapest few rungs per stage, with the routing j
 
 | Provider | Action | Cost | Priority? | Notes |
 |---|---|---|---|---|
-| aiArk | enrichPerson | 0.1 | ✅ | **Default in priority stack when a LinkedIn URL is in hand.** LinkedIn URL → full profile **+ verified email**; bills 0 on no-email. Cheapest URL-anchored enrich that also returns an email. |
+| aiArk | enrichPerson | 0.1 | ✅ | **Default profile enrich when a LinkedIn URL is in hand.** LinkedIn URL → full profile (it may carry an email; the email of record still comes from the Find email tool unless an exception applies). |
 | contactOut | enrich | 0–3 |   | Variable cost depending on data returned. |
 | linkedin | enrichProfile | 0.25 |   | LinkedIn-anchored (no email). |
 | prospeo | enrichLinkedin | 0.5 |   | Cheapest LinkedIn URL → details. |
@@ -66,7 +66,7 @@ This map is **curated** — the cheapest few rungs per stage, with the routing j
 
 **Personality / selling guidance:** `aiArk.analyzePersonality` (0.05) turns a LinkedIn profile into OCEAN + DISC traits with tailored selling notes. Nothing else in the catalog does it. It is a personalization input, not an identity field — treat the output as a hypothesis about how to write, never as a fact about the person.
 
-**From an email rather than a URL:** `aiArk.reverseLookup` (0.05) is the cheapest, then `companyEnrich.lookupPerson` (0.25, resolves the company from the domain), then `contactOut.enrich` (0–3 by config), then `datagma.enrichPersonFromPersonalEmail` (2, the only rung that takes a **personal** address — non-EU only).
+**From an email rather than a URL:** for a **personal** email → LinkedIn URL, the default is the native Find LinkedIn URL from email tool (`find_linkedin_url_from_personal_email`, 1–3), and for personal → work email the Find work email from personal email tool (`work_email_from_personal`, 1–8.25); see the native-tools table under Find email. For a profile from a work email, `aiArk.reverseLookup` (0.05) is the cheapest, then `companyEnrich.lookupPerson` (0.25, resolves the company from the domain), then `contactOut.enrich` (0–3 by config), then `datagma.enrichPersonFromPersonalEmail` (2, the only rung that takes a **personal** address — non-EU only).
 
 ## Enrich — Company
 
@@ -114,7 +114,22 @@ a handful of contacts at a known account; wrong for building a list.
 | hunter | searchDomain | 1 | Named people at one domain, filtered by seniority / department. **Max 10 per call** — never loop it to build a list. |
 | societeInfo | search (`objectType: contact`) | 4 / item | **France only.** Contacts at one registered company, by registry number. |
 
+## Native contact tools (default for email, phone, LinkedIn-from-email)
+
+Cargo's preset tools, in every workspace, addressed as `{"kind":"tool","templateSlug":"<slug>"}`. They are Cargo-maintained waterfalls and are the default for these stages; the provider tables below apply only under a stated exception (user named a provider, asked for the cheapest path, tool missing, or input missing). Rule: [`../SKILL.md`](../SKILL.md#contact-data-cargos-native-tools-first-mandatory-default).
+
+| Tool | `templateSlug` | Inputs | Returns | Cost |
+|---|---|---|---|---|
+| Find email | `email_waterfall` | `firstName` + `lastName` + `companyDomain`, or `linkedinUrl` | `email` (verified) | 1.1–4 |
+| Find work email from LinkedIn URL | `work_email_from_linkedin` | `linkedinUrl` | `email` | 0.5–3 |
+| Find work email from personal email | `work_email_from_personal` | `email` (+ `firstName`, `lastName`) | `workEmail`, `linkedinUrl` | 1–8.25 |
+| Find LinkedIn URL from email | `find_linkedin_url_from_personal_email` | `email` (+ `firstName`, `lastName`) | `linkedin_url` | 1–3 |
+| Verify email | `email_validator` | `email` | `status`, `is_safe` | 0.2 |
+| Find phone | `phone_waterfall` | `linkedinUrl` | `phone` | 3–7 |
+
 ## Find email
+
+Exception tier: the default is the Find email tool above.
 
 | Provider | Action | Cost | Priority? | Notes |
 |---|---|---|---|---|
@@ -123,15 +138,17 @@ a handful of contacts at a known account; wrong for building a list.
 | hunter | findEmail | 0.5 |   | Mid-tier; different underlying source. |
 | leadMagic | findEmail | 0.5 |   | Mid-tier. |
 | prospeo | findEmail | 0.5 |   | Mid-tier. |
-| FullEnrich | findEmail | 1 | ✅ | **Default in priority stack** — best hit rate. |
+| FullEnrich | findEmail | 1 | ✅ | Best single-provider hit rate; the first rung when an exception applies. |
 | dropcontact | findEmail | 1 |   | French data tier. |
 | datagma | findEmail | 1 |   | Alt mid-tier. |
 | enrichCrm | findEmail | 1 |   | CRM-friendly fallback. |
 | enrowio | findEmail | 1 |   | Alt mid-tier. |
 
-> **Check step 3 before paying here.** `aiArk.enrichPerson` (0.1, Enrich — Person above) already returns a verified email from a LinkedIn URL and bills 0 when it finds none — run this stage on the residue it left empty, not on the whole list.
+> **Only under an exception.** With "cheapest way possible", `aiArk.enrichPerson` (0.1, Enrich — Person above) returns an email from a LinkedIn URL and bills 0 when it finds none, so run this stage on the residue it left empty. Without an exception, none of this table runs: the Find email tool does.
 
 ## Verify email
+
+Exception tier: the default is the Verify email tool (`email_validator`, 0.2), and Find email's own output needs no verification.
 
 | Provider | Action | Cost | Priority? | Notes |
 |---|---|---|---|---|
@@ -139,7 +156,7 @@ a handful of contacts at a known account; wrong for building a list.
 | kitt | verifyEmail | 0.05 |   |   |
 | enrichley | verify | 0.1 |   |   |
 | enrowio | verifyEmail | 0.1 |   |   |
-| waterfall | verifyEmail | 0.1 | ✅ | **Default in priority stack** — multi-source. |
+| waterfall | verifyEmail | 0.1 | ✅ | Multi-source; the first rung when an exception applies. |
 | zeroBounce | verifyEmail | 0.1 |   |   |
 | neverBounce | verifyEmail | 0.2 |   |   |
 | findyMail | verifyEmail | 0.25 |   |   |
@@ -148,9 +165,11 @@ a handful of contacts at a known account; wrong for building a list.
 
 ## Find phone
 
+Exception tier: the default is the Find phone tool (`phone_waterfall`, 3–7, LinkedIn URL in), on explicit request only.
+
 | Provider | Action | Cost | Priority? | Notes |
 |---|---|---|---|---|
-| aiArk | findMobilePhone | 0.5 | ✅ | **Cheapest.** Mobile-only; needs a LinkedIn URL or domain+name. Bills 0 on miss. First stop with a URL in hand. |
+| aiArk | findMobilePhone | 0.5 | ✅ | **Cheapest.** Mobile-only; needs a LinkedIn URL or domain+name. Bills 0 on miss. First rung when the user asked for the cheapest path. |
 | prospeo | findPhone | 3 |   | Cheapest landline/DID; escalate from aiArk on a mobile miss. |
 | forager | findPhone | 5 |   | Mid-tier. |
 | findyMail | findPhone | 5 |   | Mid-tier. |
@@ -167,7 +186,8 @@ a handful of contacts at a known account; wrong for building a list.
 |---|---|---|---|
 | linkedin | findProfileUrl | 0.25 | Default. See `recipes/linkedin-url-lookup.md` for validation pattern. |
 | linkedin | enrichProfile | 0.25 | Validation step after findProfileUrl. |
-| FullEnrich | reverseEmailLookup | 1 | Email → LinkedIn URL. Unique action. |
+| Find LinkedIn URL from email (tool) | `find_linkedin_url_from_personal_email` | 1–3 | **Default for email → LinkedIn URL.** Native waterfall. |
+| FullEnrich | reverseEmailLookup | 1 | Email → LinkedIn URL; exception only. |
 
 ## Job change signal
 

@@ -77,59 +77,45 @@ batch_rows "$B" | jq '[.[] | {domain, signal} as $c | (.cargo // "" | if . == ""
 
 If the segment is already contact-level (e.g. job-change rows with `job_change_status` = `moved`), skip this step — use those rows directly.
 
-### Step 3 — Enrich each contact (email + LinkedIn + firmographics)
+### Step 3 — Find each contact's work email
+
+The native Find email tool is the default ([`../SKILL.md`](../SKILL.md#contact-data-cargos-native-tools-first-mandatory-default)): Cargo's maintained waterfall, which walks several providers and returns an address only after zeroBounce graded it valid. A single provider (or `waterfall.enrichContact`'s `person.professional_email`) runs only when the user names one, explicitly asks for the cheapest path, or the tool is missing; say which.
 
 ```bash
-# title, company_name and signal_summary ride along for step 5; the action
-# reads first_name, last_name, domain and linkedin
+# title, company_name and signal_summary ride along for step 5; the tool
+# reads linkedinUrl, or firstName + lastName + companyDomain
 B=$(cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"waterfall","actionSlug":"enrichContact"}' \
+  --action '{"kind":"tool","templateSlug":"email_waterfall"}' \
   --records "$(jq -c '[.[] | {
-    first_name, last_name, domain,
-    linkedin: .linkedin_profile_url,
-    title: .job_title, company_name, signal_summary: .signal
+    firstName: .first_name, lastName: .last_name, companyDomain: .domain,
+    linkedinUrl: .linkedin_profile_url,
+    first_name, last_name, title: .job_title, company_name, signal_summary: .signal
   }]' /tmp/contacts.json)" \
   --wait-until-finished | jq -r '.batch.uuid')
 curl -fsSL "$(cargo-ai orchestration batch download --uuid "$B" | jq -r .url)" > /tmp/enriched.csv
 ```
 
-Waterfall returns a normalized contact profile under `person`: `person.professional_email`, `person.mobile_phone`, `person.title` (CSV columns `cargo_person.professional_email`, …). For premium contact data (mobile direct dials, top-tier accuracy), swap in `FullEnrich.findPhoneAndEmail` (7).
+The address is in `cargo_email`, empty where no provider had one. Phones are not part of this recipe; when the user asks for them, run the Find phone tool (`phone_waterfall`, 3 to 7, `linkedinUrl` in) on the qualified rows only.
 
-### Step 4 — Verify emails before personalizing
+### Step 4 — Cull and audit before personalizing (free)
 
-Cheap insurance against bounces and sender-reputation damage. Free cull → paid verify on the survivors only → merge statuses back → audit **all** rows → keep SEND:
+Find email already verified every address it returned, so there is no paid verify. The free checks still catch what verification does not (role addresses, duplicates, disposable domains):
 
 ```bash
 # 4a. FREE pre-cull (QA scripts: ../references/contact-accuracy.md; Node >= 22.18;
 #     it reads the batch download CSV directly)
 node <skill-dir>/scripts/validate-emails.ts --input /tmp/enriched.csv \
-  --email-column cargo_person.professional_email --json \
-  | jq '[.[] | . + {email: .["cargo_person.professional_email"]}]' > /tmp/culled.json
+  --email-column cargo_email --json \
+  | jq '[.[] | . + {email: .cargo_email,
+                    emailStatus: (if (.cargo_email // "") != "" then "valid" else "" end)}]' > /tmp/merged.json
 
-# 4b. Paid verification — build the batch from the CULLED rows, never the
-#     original list (that's where the credit saving happens)
-B=$(cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"waterfall","actionSlug":"verifyEmail"}' \
-  --records "$(jq -c '[.[] | select(.recommendation != "skip" and (.email // "") != "") | {email}]' /tmp/culled.json)" \
-  --wait-until-finished | jq -r '.batch.uuid')
-batch_rows "$B" > /tmp/verified.json
-
-# 4c. Merge statuses back onto ALL culled rows — do NOT pre-filter to "valid":
-#     the audit needs the catch-all/unknown/invalid rows to issue
-#     VERIFY/REVIEW/REMOVE verdicts (and the receipt needs their counts).
-#     Join on the LOWERCASED email — verify results may re-case the address,
-#     and a missed join leaves emailStatus empty (row degrades to VERIFY).
-#     Read cargo_email_status (waterfall.verifyEmail's email_status) — not .status.
-jq -c --slurpfile ver /tmp/verified.json '
-  ($ver[0] | map({key: (.email | ascii_downcase), value: .cargo_email_status}) | from_entries) as $st
-  | map(. + {emailStatus: ($st[(.email // "" | ascii_downcase)] // "")})
-' /tmp/culled.json > /tmp/merged.json
-
-# 4d. Audit, then hand ONLY the SEND rows to the next steps — this file is
-#     what steps 5 and 6 read
+# 4b. Audit ALL rows, then hand ONLY the SEND rows to the next steps — this
+#     file is what steps 5 and 6 read
 node <skill-dir>/scripts/contact-accuracy-audit.ts --input /tmp/merged.json --json > /tmp/audited.json
 jq '[.[] | select(.audit_action == "SEND")]' /tmp/audited.json > /tmp/deliverable.json
 ```
+
+Emails the segment already carried (not found by the tool) do need a paid check: run them through the Verify email tool, `{"kind":"tool","templateSlug":"email_validator"}` (0.2; `status`, `is_safe`), and merge `status` as `emailStatus` before the audit.
 
 ### Step 5 — Generate a personalized first line per contact
 
@@ -180,7 +166,7 @@ Then execute the discovered action with `orchestration action execute-batch`, pa
 For ongoing signal-driven outreach:
 
 1. Trigger: weekly cron on the signal segment.
-2. Workflow nodes: signal-segment → enrich → verify → personalize → sequencer push.
+2. Workflow nodes: signal-segment → Find email tool → personalize → sequencer push.
 3. Source: the saved signal segment (e.g. "Recently Funded — last 30d").
 4. Output: send-ready payload + sequence-add action.
 
@@ -188,20 +174,19 @@ For play setup, see [`../../cargo-orchestration/references/examples/plays.md`](.
 
 ## Credit budget
 
-For a 500-contact signal segment (waterfall + verify + Haiku personalization):
+For a 500-contact signal segment (Find email + Haiku personalization):
 
 | Step | Per record | 500 contacts |
 |---|---|---|
-| `waterfall.enrichContact` | 2 | 1,000 |
-| `waterfall.verifyEmail` | 0.1 | 50 |
+| Find email tool (`email_waterfall`) | 1.1–4 per hit, ~0 per miss | 550–2,000 at most |
 | `anthropic.instruct` (Haiku, 0.05/1k tokens, ~0.5k tokens per line) | ~0.025 | ~13 |
-| **Total** | **~2.1** | **~1,063** |
+| **Total** | | **~563 to 2,013**; the 20-row sample's receipt sets the real figure |
 
 Cut personalization ~8× by switching to `openAi.instruct` with `gpt-5-nano` (0.006/1k tokens).
 
 ## Action shape
 
-Every action follows: `{"kind":"connector","integrationSlug":"<slug>","actionSlug":"<slug>"}`. **No `connectorUuid` in `config`** — see [`../../cargo-orchestration/references/examples/actions.md`](../../cargo-orchestration/references/examples/actions.md). Cross-node interpolation in node graphs: `{{nodes.<slug>.<field>}}`.
+Every connector action follows: `{"kind":"connector","integrationSlug":"<slug>","actionSlug":"<slug>"}`, and a native Cargo tool `{"kind":"tool","templateSlug":"<slug>"}`. **No `connectorUuid` in `config`** — see [`../../cargo-orchestration/references/examples/actions.md`](../../cargo-orchestration/references/examples/actions.md). Cross-node interpolation in node graphs: `{{nodes.<slug>.<field>}}`.
 
 ## Output retrieval
 

@@ -8,6 +8,8 @@ last-reviewed: 2026-07-09
 
 Contact-lookup specialist whose standout is **the cheapest landline/DID phone finder in the priority stack** — `findPhone` (3) sits ahead of `FullEnrich.findPhone` (6) and `waterfall.findPhone` (7), behind the mobile-only `aiArk.findMobilePhone` (0.5), which is the first rung whenever a LinkedIn URL is in hand. Its `findEmail` (0.5) is a mid-tier alternative to the `FullEnrich.findEmail` (1) default; prefer it only when budget-constrained or as a waterfall rung ([`../references/alternatives.md`](../references/alternatives.md)). Also carries cheap LinkedIn-profile and company enrichment at 0.5.
 
+> **Email, phone and LinkedIn-from-email default to Cargo's native tools, not to this provider.** Find email (`email_waterfall`), Find phone (`phone_waterfall`), Find LinkedIn URL from email (`find_linkedin_url_from_personal_email`) and Verify email (`email_validator`) are Cargo-maintained waterfalls with far higher coverage than any single provider ([`../SKILL.md`](../SKILL.md#contact-data-cargos-native-tools-first-mandatory-default)). The chains and "default" rungs on this page rank the single-provider tier, which runs only when the user names a provider, explicitly asks for the cheapest path, or the tool is missing from the workspace. Say which.
+
 ## Credits-based actions
 
 | Action | Cost | Inputs | Use for |
@@ -15,7 +17,7 @@ Contact-lookup specialist whose standout is **the cheapest landline/DID phone fi
 | `findEmail` | 0.5 | `firstName, lastName, fullName, companyDomain` (**`companyDomain` required**) | Mid-tier email finder. |
 | `enrichLinkedin` | 0.5 | `url` | Cheapest LinkedIn URL → person details in the enrich stage ([`../references/stage-action-map.md`](../references/stage-action-map.md)). |
 | `enrichCompany` | 0.5 | `companyName, companyWebsite, companyLinkedinUrl` | B2B firmographics; prefer website or LinkedIn URL over name. |
-| `findPhone` | 3 | `url` (LinkedIn URL, required) | **Default first stop of the phone chain.** |
+| `findPhone` | 3 | `url` (LinkedIn URL, required) | First single-provider landline/DID rung; the default phone is the Find phone tool. |
 
 ## What it's for
 
@@ -64,7 +66,7 @@ cargo-ai orchestration action execute-batch \
 
 - **snake_case field names.** prospeo inputs are **camelCase**: `firstName`, `lastName`, `fullName`, `companyDomain`. Do NOT reuse waterfall's `first_name`/`domain` shape here.
 - **Shipping a found email unverified.** No finder's output skips verification: free pre-cull with `validate-emails.ts` ([`../references/contact-accuracy.md`](../references/contact-accuracy.md)), then `waterfall.verifyEmail` (0.1) on the survivors.
-- **Using `findEmail` as the default over FullEnrich.** The spine default is `FullEnrich.findEmail` (better hit rate); prospeo is the budget alternative, not the starting point.
+- **Using `findEmail` as the default.** The spine default is the Find email tool; among single providers `FullEnrich.findEmail` has the better hit rate, so prospeo is the budget alternative under a cheapest-path request, not the starting point.
 
 ## Position in the waterfall
 

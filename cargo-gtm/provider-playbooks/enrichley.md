@@ -6,7 +6,9 @@ last-reviewed: 2026-07-09
 
 # enrichley (Enrichley)
 
-Dedicated email verification. **One credits-based action, 0.1 credits** — same price as the priority-stack default `waterfall.verifyEmail` (0.1) and as `zeroBounce.verifyEmail` (0.1), which makes it another equal-cost second-opinion candidate when a first verdict is ambiguous. Two things set it apart: the action slug is **`verify`** (not `verifyEmail`), and its output flags **secure-email-gateway domains** (`mx_secure_email_gateway`), where SMTP-based verdicts are least trustworthy.
+Dedicated email verification. **One credits-based action, 0.1 credits** — same price as the single-provider default `waterfall.verifyEmail` (0.1) and as `zeroBounce.verifyEmail` (0.1), which makes it another equal-cost second-opinion candidate when a first verdict is ambiguous. Two things set it apart: the action slug is **`verify`** (not `verifyEmail`), and its output flags **secure-email-gateway domains** (`mx_secure_email_gateway`), where SMTP-based verdicts are least trustworthy.
+
+> **Email, phone and LinkedIn-from-email default to Cargo's native tools, not to this provider.** Find email (`email_waterfall`), Find phone (`phone_waterfall`), Find LinkedIn URL from email (`find_linkedin_url_from_personal_email`) and Verify email (`email_validator`) are Cargo-maintained waterfalls with far higher coverage than any single provider ([`../SKILL.md`](../SKILL.md#contact-data-cargos-native-tools-first-mandatory-default)). The chains and "default" rungs on this page rank the single-provider tier, which runs only when the user names a provider, explicitly asks for the cheapest path, or the tool is missing from the workspace. Say which.
 
 ## Credits-based actions
 
@@ -20,7 +22,7 @@ The connector also accepts your own Enrichley API key (`apiKey`) — same action
 
 - ✅ **Second opinion on ambiguous verdicts** — equal cost to the default; independent signal on rows waterfall flagged catch-all/risky (especially if `zeroBounce` was already spent on this list).
 - ✅ **SEG detection** — `mx_secure_email_gateway: true` tells you the domain sits behind a secure email gateway; verdicts there are structurally unreliable, so route those rows by risk policy rather than re-verifying.
-- ❌ **Default verify step** — `waterfall.verifyEmail` (0.1) is the priority default (see [`../references/alternatives.md`](../references/alternatives.md), Verify email alternatives).
+- ❌ **Default verify step** — `waterfall.verifyEmail` (0.1) is the single-provider default (see [`../references/alternatives.md`](../references/alternatives.md), Verify email alternatives).
 - ❌ **Very large lists** — `icypeas.verifyEmail` (0.01) is 10× cheaper when per-row diagnostics don't matter.
 
 ## Patterns

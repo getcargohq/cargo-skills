@@ -2,7 +2,19 @@
 
 **Use when**: the user has a name and company (or email) and needs the correct LinkedIn profile URL.
 
-**Trigger phrases**: "Find the LinkedIn for John Smith at Acme.", "Get LinkedIn URLs for all the contacts in this list."
+**Trigger phrases**: "Find the LinkedIn for John Smith at Acme.", "Get LinkedIn URLs for all the contacts in this list.", "Find LinkedIn profiles from these personal emails."
+
+**Holding an email instead of a name + company?** The default is Cargo's native **Find LinkedIn URL from email** tool, a maintained waterfall built for exactly this ([`../SKILL.md`](../SKILL.md#contact-data-cargos-native-tools-first-mandatory-default)). It takes a personal email (gmail and the like) and returns `linkedin_url`; first and last name improve the match. 1 to 3 credits per hit, about 0 per miss.
+
+```bash
+cargo-ai orchestration action execute-batch \
+  --action '{"kind":"tool","templateSlug":"find_linkedin_url_from_personal_email"}' \
+  --records '[{"email":"jane.doe@gmail.com","firstName":"Jane","lastName":"Doe"}, ...]' \
+  --limit 20 --wait-until-finished
+# rows: cargo-ai orchestration batch download --uuid <batch-uuid>; URL in cargo_linkedin_url
+```
+
+Then run steps 2 and 3 below on the URLs it returns: validation is just as mandatory here. `FullEnrich.reverseEmailLookup` (1) is the exception-only fallback (the user named it, asked for the cheapest path, or the tool is missing). The rest of this recipe is the name + company path.
 
 ## Why this recipe is its own thing
 
@@ -65,16 +77,16 @@ If any check fails, **reject the candidate** rather than guess.
 
 ### Step 4 — Fallback for rejected candidates
 
-For rejected candidates, escalate via reverse-email lookup (only useful if you have an email):
+For rejected candidates, escalate via an email lookup (only useful if you have an email). The default is the native Find LinkedIn URL from email tool:
 
 ```bash
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"FullEnrich","actionSlug":"reverseEmailLookup"}' \
-  --records '[{"email":"john.smith@acme.com"}, ...]' \
+  --action '{"kind":"tool","templateSlug":"find_linkedin_url_from_personal_email"}' \
+  --records '[{"email":"john.smith@acme.com","firstName":"John","lastName":"Smith"}, ...]' \
   --wait-until-finished > /tmp/reverse.json
 ```
 
-`reverseEmailLookup` returns the LinkedIn URL as `profile.linkedin_url` and the current company as `profile.position.company` (`name`, `domain`) — apply the same validation gate from step 3.
+It returns `linkedin_url` (column `cargo_linkedin_url`) and no company, so run the candidate through step 2's `linkedin.enrichProfile` and apply the step 3 gate. Under an exception (named provider, cheapest path, tool missing), `FullEnrich.reverseEmailLookup` (1) returns the URL as `profile.linkedin_url` plus the company as `profile.position.company`.
 
 If that also fails: mark the row as "unresolved" and surface to the user. Do **not** return a low-confidence URL.
 
@@ -88,8 +100,8 @@ Only the rows that passed the validation gate get written back. Mark unresolved 
 |---|---|
 | `linkedin.findProfileUrl` | 0.25 |
 | `linkedin.enrichProfile` (validation) | 0.25 |
-| `FullEnrich.reverseEmailLookup` (fallback, ~30% of cases) | 1 × 0.3 = 0.3 |
-| **Effective: ~0.8 cred per resolved contact** (with ~80% resolution rate) |
+| Find LinkedIn URL from email tool (fallback, ~30% of cases, + 0.25 validation) | (1 to 3 + 0.25) × 0.3 = ~0.4 to 1 |
+| **Effective: ~0.9 to 1.5 cred per resolved contact** (with ~80% resolution rate) |
 
 ## Common pitfalls
 

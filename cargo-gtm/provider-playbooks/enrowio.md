@@ -6,7 +6,9 @@ last-reviewed: 2026-07-09
 
 # enrowio (Enrowio)
 
-Email finder + verifier pair. `findEmail` (1) is an **alt mid-tier finder at the top price tier** — same cost as the priority default `FullEnrich.findEmail` (1), so it earns a call only as an extra escalation rung on stack misses or via an existing Enrow subscription. `verifyEmail` (0.1) matches the priority default `waterfall.verifyEmail` (0.1), making it another equal-cost second-opinion verifier. Input quirk to remember: the finder takes a single **`fullName`** — there is no first/last split.
+Email finder + verifier pair. `findEmail` (1) is an **alt mid-tier finder at the top price tier** — same cost as the single-provider default `FullEnrich.findEmail` (1), so it earns a call only as an extra escalation rung on stack misses or via an existing Enrow subscription. `verifyEmail` (0.1) matches the priority default `waterfall.verifyEmail` (0.1), making it another equal-cost second-opinion verifier. Input quirk to remember: the finder takes a single **`fullName`** — there is no first/last split.
+
+> **Email, phone and LinkedIn-from-email default to Cargo's native tools, not to this provider.** Find email (`email_waterfall`), Find phone (`phone_waterfall`), Find LinkedIn URL from email (`find_linkedin_url_from_personal_email`) and Verify email (`email_validator`) are Cargo-maintained waterfalls with far higher coverage than any single provider ([`../SKILL.md`](../SKILL.md#contact-data-cargos-native-tools-first-mandatory-default)). The chains and "default" rungs on this page rank the single-provider tier, which runs only when the user names a provider, explicitly asks for the cheapest path, or the tool is missing from the workspace. Say which.
 
 ## Credits-based actions
 

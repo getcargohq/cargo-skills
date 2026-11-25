@@ -8,6 +8,8 @@ last-reviewed: 2026-07-09
 
 The **cheap tier** of the contact stack, three ways: `verifyEmail` at **0.01** is the cheapest verification in the entire catalog (10× cheaper than the `waterfall.verifyEmail` default), `findEmail` at 0.1 is the cheap last resort of the find-email chain, and `findPeople`/`findCompanies` at 0.02 per 100 records are a far cheaper non-LinkedIn sourcing alternative to `salesNavigator` (0.2 / record). Prefer it for very large lists where unit cost dominates; avoid it as the lead email finder when hit rate matters — that's `FullEnrich.findEmail` ([`../references/alternatives.md`](../references/alternatives.md)).
 
+> **Email, phone and LinkedIn-from-email default to Cargo's native tools, not to this provider.** Find email (`email_waterfall`), Find phone (`phone_waterfall`), Find LinkedIn URL from email (`find_linkedin_url_from_personal_email`) and Verify email (`email_validator`) are Cargo-maintained waterfalls with far higher coverage than any single provider ([`../SKILL.md`](../SKILL.md#contact-data-cargos-native-tools-first-mandatory-default)). The chains and "default" rungs on this page rank the single-provider tier, which runs only when the user names a provider, explicitly asks for the cheapest path, or the tool is missing from the workspace. Say which.
+
 ## Credits-based actions
 
 | Action | Cost | Inputs | Use for |

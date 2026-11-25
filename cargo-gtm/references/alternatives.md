@@ -10,7 +10,9 @@ Only swap when:
 
 1. **Filter mismatch**: priority provider doesn't expose the filter you need (e.g., salesNavigator can't filter by funding round → escalate to peopleDataLabs.queryCompanies).
 2. **Coverage gap**: priority provider doesn't have data for the niche (e.g., local SMBs aren't well-covered by salesNavigator → escalate to serper.searchPlaces).
-3. **Premium quality required**: cheap email/phone finders missed → FullEnrich was already the priority answer; further escalation goes to multi-source like waterfall.findPhone (7 credits).
+3. **Premium quality required**: on email and phone the default is already Cargo's native waterfall tools (Find email, Find phone), which walk several providers; a single provider below is not an upgrade over them.
+
+**Email, phone and LinkedIn-from-email are not swapped for cost or habit.** They default to the native tools in [`../SKILL.md`](../SKILL.md#contact-data-cargos-native-tools-first-mandatory-default); the single-provider rows below apply only when the user names a provider, explicitly asks for the cheapest path, the tool is missing from the workspace, or the row lacks the tool's input. Say which.
 
 Default rule: **don't swap to chase 2× cheaper if hit-rate drops 30%**. The total credit spend across a chain is dominated by misses (re-running across stages), not by the per-call cost.
 
@@ -30,11 +32,11 @@ Default rule: **don't swap to chase 2× cheaper if hit-rate drops 30%**. The tot
 
 | Goal | Priority | Alternative | When to swap |
 |---|---|---|---|
-| Person enrichment (LinkedIn URL in hand) | aiArk.enrichPerson (0.1) | linkedin.enrichProfile (0.25) | When you only need LinkedIn-anchored details and no email. |
+| Person enrichment (LinkedIn URL in hand) | aiArk.enrichPerson (0.1) | linkedin.enrichProfile (0.25) | When LinkedIn-anchored details are enough. Either way the email comes from the Find email tool. |
 |   |   | prospeo.enrichLinkedin (0.5) | Second opinion on a URL-anchored miss. |
 | Person enrichment (name + company) | waterfall.enrichContact (2) | apolloio.enrichPerson (1, **9** with phone reveal, priority) | The niche-coverage rung — promote per-batch when a pilot shows Apollo hits where aiArk/waterfall miss (investor-backed, portfolio niches). |
 |   |   | hunter.enrichPerson (1) | Cheap mid-tier alternative. |
-| Reverse email → person | (none in priority) | FullEnrich.reverseEmailLookup (1) | Always for email → LinkedIn. |
+| Reverse email → person | Find LinkedIn URL from email tool, `find_linkedin_url_from_personal_email` (1–3) | aiArk.reverseLookup (0.05) / FullEnrich.reverseEmailLookup (1) | Exception only (named provider, cheapest path asked for, tool missing). |
 | Person backfill (heavyweight) | peopleDataLabs.enrichPerson (3) | (none cheaper for heavyweight) | n/a |
 
 ## Company enrichment alternatives
@@ -51,8 +53,9 @@ Default rule: **don't swap to chase 2× cheaper if hit-rate drops 30%**. The tot
 
 | Goal | Priority | Alternative | When to swap |
 |---|---|---|---|
-| Find email (LinkedIn URL in hand) | aiArk.enrichPerson (0.1) | — | Returns a verified email with the profile and bills 0 when it finds none; run the finders below only on the residue. |
-| Find email (default) | FullEnrich.findEmail (1) | hunter.findEmail (0.5) | When budget critical AND okay with lower hit rate. |
+| Find email (name + domain, or LinkedIn URL) | Find email tool, `email_waterfall` (1.1–4) | aiArk.enrichPerson (0.1, LinkedIn URL) | Exception only: the user named AI Ark or asked for the cheapest path. Run finders below on its residue. |
+|   |   | FullEnrich.findEmail (1) | Exception only: named provider, cheapest path, or tool missing. |
+|   |   | hunter.findEmail (0.5) | Cheapest-path ladders, lower hit rate. |
 |   |   | icypeas.findEmail (0.1) | Cheap last-resort for very large lists. |
 |   |   | findyMail.findEmail (0.5) | Mid-tier alternative; sometimes finds what hunter misses. |
 |   |   | leadMagic.findEmail (0.5) | Mid-tier alternative. |
@@ -63,7 +66,8 @@ Default rule: **don't swap to chase 2× cheaper if hit-rate drops 30%**. The tot
 
 | Goal | Priority | Alternative | When to swap |
 |---|---|---|---|
-| Verify email | waterfall.verifyEmail (0.1) | icypeas.verifyEmail (0.01) | When verifying very large lists (10× cheaper). |
+| Verify email (an email you brought in; Find email output is already verified) | Verify email tool, `email_validator` (0.2) | waterfall.verifyEmail (0.1) | Exception only: named provider or cheapest path asked for. |
+|   |   | icypeas.verifyEmail (0.01) | When the user asked for the cheapest path on a very large list. |
 |   |   | zeroBounce.verifyEmail (0.1) | Equivalent cost; different underlying provider. |
 |   |   | kitt.verifyEmail (0.05) | Cheaper alternative. |
 
@@ -71,8 +75,9 @@ Default rule: **don't swap to chase 2× cheaper if hit-rate drops 30%**. The tot
 
 | Goal | Priority | Alternative | When to swap |
 |---|---|---|---|
-| Find phone (mobile, URL in hand) | aiArk.findMobilePhone (0.5) | prospeo.findPhone (3) | Landline/DID fallback; escalate from aiArk on a mobile miss. |
-| Find phone (no URL / mobile missed) | FullEnrich.findPhone (6) | prospeo.findPhone (3) | Cheaper first attempt; escalate to FullEnrich on a miss. |
+| Find phone (explicit request only) | Find phone tool, `phone_waterfall` (3–7, LinkedIn URL in) | aiArk.findMobilePhone (0.5) | Exception only: named provider or cheapest path asked for. Mobile-only. |
+|   |   | prospeo.findPhone (3) | Landline/DID; exception only. |
+| Find phone, no LinkedIn URL obtainable | (the tool needs one) | FullEnrich.findPhone (6) | Takes name + domain; the "input missing" exception. |
 |   |   | forager.findPhone (5) | Mid-tier. |
 |   |   | findyMail.findPhone (5) | Mid-tier. |
 |   |   | cleon1.findPhoneFromLinkedin (15) | Premium; only for high-value leads where standard sources fail. |
@@ -82,7 +87,7 @@ Default rule: **don't swap to chase 2× cheaper if hit-rate drops 30%**. The tot
 | Goal | Priority | Alternative | When to swap |
 |---|---|---|---|
 | Resolve LinkedIn from name+company | linkedin.findProfileUrl (0.25) | (no cheaper credible alternative) | n/a |
-| Resolve LinkedIn from email | FullEnrich.reverseEmailLookup (1) | (no cheaper credible alternative) | n/a |
+| Resolve LinkedIn from email | Find LinkedIn URL from email tool, `find_linkedin_url_from_personal_email` (1–3) | FullEnrich.reverseEmailLookup (1) | Exception only. |
 
 ## When the priority stack genuinely can't serve the goal
 

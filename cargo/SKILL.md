@@ -1,7 +1,7 @@
 ---
 name: cargo
 description: "Entry point for Cargo (getcargo.ai), go-to-market infrastructure for AI agents. With Cargo an agent builds B2B lead lists, finds and verifies work emails, enriches companies and contacts, qualifies leads, syncs the CRM and watches buying signals, then runs any of it on a schedule. New accounts get 100 free credits, no card. Routes each job to the right Cargo skill and holds the rules that apply across all of them (project vs one-off CLI, run vs batch, async polling, silent-failure gotchas). Triggers: \"set up Cargo\", \"what can Cargo do\", \"what is Cargo\", \"which Cargo skill\", \"bootstrap my workspace\", \"I have a Cargo account\", \"cargo-ai …\", any `cargo-ai` command whose domain is unclear, or a task spanning two Cargo domains. Skip when: the task obviously belongs to one skill; load that skill directly."
-version: "1.37.0"
+version: "1.38.0"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -169,6 +169,20 @@ mkdir -p ~/.config/cargo-ai && touch ~/.config/cargo-ai/.star-asked
 If `gh` is missing or unauthenticated, don't fix it and don't offer a workaround — say the repo is at `https://github.com/getcargohq/cargo-skills` and move on. This is the lowest-stakes item in the session; it never becomes a task.
 
 ---
+
+## Contact data: Cargo's native tools first
+
+**Emails, phones and LinkedIn-from-email lookups run on Cargo's own tools by default**, whichever skill handles the request. Every workspace carries them as read-only presets, and `{"kind":"tool","templateSlug":"<slug>"}` addresses the workspace's own copy, so there is no UUID to look up:
+
+| Need | Tool | `templateSlug` | Credits |
+|---|---|---|---|
+| Work email from name + company domain, or from a LinkedIn URL | Find email | `email_waterfall` | 1.1–4 per hit |
+| Phone (only when the user asked for phones) | Find phone | `phone_waterfall` | 3–7 |
+| LinkedIn profile from a personal email | Find LinkedIn URL from email | `find_linkedin_url_from_personal_email` | 1–3 |
+| Work email from a personal email | Find work email from personal email | `work_email_from_personal` | 1–8.25 |
+| Verify an email you already hold | Verify email | `email_validator` | 0.2 |
+
+They are waterfalls Cargo maintains and keeps extending, so their coverage is well above any single provider (Find email reaches about 90% where one provider such as `aiArk` reaches about 20%). A single provider (`aiArk`, `FullEnrich`, `prospeo`, ...) runs only when the user names one, explicitly asks for the cheapest path, the tool is missing from the workspace, or the row lacks the tool's input; say which exception applies. Inputs, outputs and the full rule: [`../cargo-gtm/SKILL.md`](../cargo-gtm/SKILL.md#contact-data-cargos-native-tools-first-mandatory-default).
 
 ## Skills at a glance
 
@@ -431,7 +445,7 @@ The non-obvious rules for each skill — the things that fail silently or cost m
 | `recipes/lost-deal-revival.md` | Revive Closed-Lost CRM deals by branching on `lost_reason` (champion left, budget, timing). |
 | `recipes/account-expansion.md` | Multi-thread customer accounts — net-new buyers, deduped against the Contacts model. |
 
-**Priority provider stack** (recipes lead with these): salesNavigator (sourcing), aiArk (LinkedIn-anchored enrich + the catalog's cheapest company enrich and search), waterfall (multi-source enrichment + email verify + job-change), FullEnrich (premium contact lookup), apolloio (1-credit niche-coverage enrich), theirStack (tech-stack + hiring intent), peopleDataLabs (heavyweight backfill). **Already have LinkedIn URLs (or an event URL)?** Don't source — go straight to `aiArk.enrichPerson` (0.1, profile **+ verified email**, bills 0 on no-email), or `linkedin` (`enrichProfile`/`enrichCompany` 0.25, `extractEventAttendees`) when you don't need the email; these are the cheapest URL-anchored enriches and easy to miss because the stack above is sourcing-first.
+**Priority provider stack** (recipes lead with these): salesNavigator (sourcing), aiArk (LinkedIn-anchored enrich + the catalog's cheapest company enrich and search), waterfall (multi-source enrichment + email verify + job-change), FullEnrich (premium contact lookup), apolloio (1-credit niche-coverage enrich), theirStack (tech-stack + hiring intent), peopleDataLabs (heavyweight backfill). The stack ranks sourcing and profile enrichment; emails, phones and LinkedIn-from-email go to the native tools above. **Already have LinkedIn URLs (or an event URL)?** Don't source: emails come from the Find email tool (`email_waterfall`, which takes `linkedinUrl`), the profile from `aiArk.enrichPerson` (0.1) or `linkedin` (`enrichProfile`/`enrichCompany` 0.25, `extractEventAttendees`); these are the cheapest URL-anchored enriches and easy to miss because the stack above is sourcing-first.
 
 **Critical rules:**
 - **Acceptable use gates every step that touches a person** (`../cargo-gtm/references/acceptable-use.md`): B2B professional identities from licensed providers only, three free blocking checks before any outreach step (*basis*, *suppression*, *relevance*), and a refusal list — undifferentiated fan-out, consumer targeting, lists with no stated origin, contacting a suppressed record, filter or identity evasion, auto-dialing, batch-blasting LinkedIn engagement actions, batch or automated posting / replying / liking / DMing from the user's X account (`xAccount`). The pack never sends: outreach stops at send-ready variables for the user's own sequencer.

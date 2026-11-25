@@ -8,6 +8,8 @@ last-reviewed: 2026-10-23
 
 A contact-data waterfall on **your own Pipecorn API key** — seven actions, none billed in Cargo credits; Pipecorn charges your account by what each call finds. It covers work email, phone, a combined email + phone call, company firmographics, reverse email lookup, people-at-a-company search, and **personal email** — the last of which is consumer data and is gated below before anything else.
 
+> **Email, phone and LinkedIn-from-email default to Cargo's native tools, not to this provider.** Find email (`email_waterfall`), Find phone (`phone_waterfall`), Find LinkedIn URL from email (`find_linkedin_url_from_personal_email`) and Verify email (`email_validator`) are Cargo-maintained waterfalls with far higher coverage than any single provider ([`../SKILL.md`](../SKILL.md#contact-data-cargos-native-tools-first-mandatory-default)). The chains and "default" rungs on this page rank the single-provider tier, which runs only when the user names a provider, explicitly asks for the cheapest path, or the tool is missing from the workspace. Say which.
+
 ## Before `findPersonalEmail` touches anyone
 
 A personal mailbox is a private individual's contact detail, not a professional identity. [`../references/acceptable-use.md`](../references/acceptable-use.md) applies in full, and two rules bind here specifically:

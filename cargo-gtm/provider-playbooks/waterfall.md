@@ -8,6 +8,8 @@ last-reviewed: 2026-04-27
 
 Multi-source enrichment with built-in fallback across multiple underlying providers. **Swiss-army-knife of the priority stack** — one provider covering contact enrichment, company enrichment, email verification, phone lookup, prospect search, and the **only credits-based job-change detection action in the catalog**.
 
+> **Email, phone and LinkedIn-from-email default to Cargo's native tools, not to this provider.** Find email (`email_waterfall`), Find phone (`phone_waterfall`), Find LinkedIn URL from email (`find_linkedin_url_from_personal_email`) and Verify email (`email_validator`) are Cargo-maintained waterfalls with far higher coverage than any single provider ([`../SKILL.md`](../SKILL.md#contact-data-cargos-native-tools-first-mandatory-default)). The chains and "default" rungs on this page rank the single-provider tier, which runs only when the user names a provider, explicitly asks for the cheapest path, or the tool is missing from the workspace. Say which.
+
 ## Credits-based actions
 
 | Action | Cost | Inputs | Use for |
@@ -21,7 +23,7 @@ Multi-source enrichment with built-in fallback across multiple underlying provid
 
 ## What it's for
 
-- ✅ **Email verification at the cheapest tier** (0.1) — default for any verify step in the spine.
+- ✅ **Email verification at the cheapest tier** (0.1) — the single-provider verify rung; the spine's default is the Verify email tool (`email_validator`, 0.2), and Find email's output needs none.
 - ✅ **Job change signal** — `detectJobChange` is the only credits-based action of its kind in the entire 136-integration catalog. Cargo-unique strength.
 - ✅ **Fallback contact / company enrichment** — when aiArk + FullEnrich miss, waterfall is the next stop before the heavyweight peopleDataLabs.
 - ✅ **Multi-identifier enrichment** — accepts LinkedIn URL, domain, name, or email. Useful when the input is weakly identified.
@@ -37,7 +39,7 @@ cargo-ai orchestration action execute-batch \
   --wait-until-finished
 ```
 
-At 0.1 cred/email, 1,000 emails = 100 credits. Default verify step in any prospecting pipeline.
+At 0.1 cred/email, 1,000 emails = 100 credits. The verify rung when the user asked for the cheapest path or named this provider.
 
 ### Pattern B — Job change detection (signal segment)
 
@@ -77,7 +79,7 @@ cargo-ai orchestration action execute-batch \
 
 ## Common pitfalls
 
-- **Don't use `findPhone` first.** At 7 credits, it's the most expensive phone action in the priority stack. Try `prospeo.findPhone` (3) first; escalate to waterfall only when prospeo misses.
+- **Don't use `findPhone` by default.** The default for a requested phone is the Find phone tool (`phone_waterfall`, 3 to 7). On a cheapest-path request, try `prospeo.findPhone` (3) first; escalate to waterfall only when prospeo misses.
 - **`detectJobChange` requires at least one identifier**. Best coverage: LinkedIn URL + company domain. Email-only inputs often return `unknown`.
 - **`searchProspects` is 3 credits per returned prospect** and needs a company `domain` — comparable to peopleDataLabs but with less rich filtering. Default to salesNavigator.searchLeads (0.2) unless you need waterfall's specific filter combinations.
 

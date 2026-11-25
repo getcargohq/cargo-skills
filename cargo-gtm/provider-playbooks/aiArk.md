@@ -6,7 +6,9 @@ last-reviewed: 2026-07-25
 
 # aiArk (AI Ark)
 
-LinkedIn-anchored people/company data with an unusually cheap enrich-and-email combo, a personality-analysis action nothing else in the catalog has, and per-record search that bills at the bottom of the catalog. **All nine actions run on cargo's managed connection** — seven credits-based, plus two free `count*` actions that size a search before it bills — no own-key connector required (unlike `apolloio`, where only two are). Category `enrichment`, sub-category list-building. Reach for it when you hold **LinkedIn URLs** (cheapest profile+email at 0.1), need a **mobile phone** cheaply (0.5 vs the 3+ phone tier), want **lookalike-company** discovery (0.01/record), or need **personality/selling guidance** for personalization. **In the priority stack** ([`../SKILL.md`](../SKILL.md) §5) as the URL-anchored enrich rung and the cheapest per-record search — but it doesn't displace the sourcing-first spine: `salesNavigator` (0.2/lead) still leads LinkedIn-native people sourcing.
+LinkedIn-anchored people/company data with an unusually cheap enrich-and-email combo, a personality-analysis action nothing else in the catalog has, and per-record search that bills at the bottom of the catalog. **All nine actions run on cargo's managed connection** — seven credits-based, plus two free `count*` actions that size a search before it bills — no own-key connector required (unlike `apolloio`, where only two are). Category `enrichment`, sub-category list-building. Reach for it when you hold **LinkedIn URLs** and want the profile (cheapest at 0.1), need a **mobile phone** on a cheapest-path request (0.5 vs the 3+ phone tier), want **lookalike-company** discovery (0.01/record), or need **personality/selling guidance** for personalization. **In the priority stack** ([`../SKILL.md`](../SKILL.md) §5) as the URL-anchored enrich rung and the cheapest per-record search — but it doesn't displace the sourcing-first spine: `salesNavigator` (0.2/lead) still leads LinkedIn-native people sourcing.
+
+> **Email, phone and LinkedIn-from-email default to Cargo's native tools, not to this provider.** Find email (`email_waterfall`), Find phone (`phone_waterfall`) and Find LinkedIn URL from email (`find_linkedin_url_from_personal_email`) are Cargo-maintained waterfalls with far higher coverage than any single provider ([`../SKILL.md`](../SKILL.md#contact-data-cargos-native-tools-first-mandatory-default)). Use this provider for those jobs only when the user names it, explicitly asks for the cheapest path, or the tool is missing from the workspace, and say which.
 
 ## Credits-based actions
 
@@ -26,8 +28,8 @@ Two extractors (`fetchPeople`, `fetchCompanies`) also exist for syncing search r
 
 ## What it's for
 
-- ✅ **URL-in-hand enrich + email** — `enrichPerson` (0.1) returns the full profile **and** a verified email from a LinkedIn URL, cheaper than `linkedin.enrichProfile` (0.25) which returns no email, and it only bills when it actually finds an email.
-- ✅ **Cheap mobile phone** — `findMobilePhone` (0.5) undercuts the whole phone tier (`prospeo.findPhone` 3, `FullEnrich.findPhone` 6). Mobile-only, LinkedIn-URL or domain+name anchored, billed only on a hit.
+- ✅ **URL-in-hand profile** — `enrichPerson` (0.1) returns the full profile (and often an email) from a LinkedIn URL, cheaper than `linkedin.enrichProfile` (0.25), and it only bills when it finds an email. Its email is the email of record only on a cheapest-path or named-provider request; otherwise the email comes from Find email.
+- ✅ **Cheap mobile phone (cheapest-path requests)** — `findMobilePhone` (0.5) undercuts the whole phone tier (`prospeo.findPhone` 3, `FullEnrich.findPhone` 6). Mobile-only, LinkedIn-URL or domain+name anchored, billed only on a hit.
 - ✅ **Lookalike-company sourcing** — `searchCompanies` with `lookalikeDomains` at 0.01/record: seed up to 5 domains, get similar companies for less than `oceanio` / `companyEnrich` lookalikes.
 - ✅ **Rich people search** — `searchPeople` filters on education, skills, tenure windows, seniority, department, and past company that `salesNavigator` can't express, at 0.05/record.
 - ✅ **Reverse lookup** — `reverseLookup` (0.05) turns a stray email or phone back into a profile.
@@ -120,16 +122,16 @@ Conventions inside a group:
 
 ## Anti-patterns
 
-- **Running `enrichPerson` and a separate email-finder.** `enrichPerson` already returns a verified email at 0.1 and bills 0 on a miss — don't chain `FullEnrich.findEmail` (1) behind it unless it came back empty.
-- **Reaching for the 3–7 credit phone tier by default.** With a LinkedIn URL in hand, `findMobilePhone` (0.5) is the first stop; escalate to `prospeo`/`FullEnrich`/`waterfall` only on a miss and only when a landline/DID is acceptable.
+- **Treating `enrichPerson`'s email as the email of record by default.** It is one provider's answer. Unless the user named AI Ark or asked for the cheapest path, run the Find email tool for emails, whatever `enrichPerson` returned. Under those exceptions, don't chain `FullEnrich.findEmail` (1) behind a row that already has one.
+- **Reaching for a single phone provider by default.** The default for a requested phone is the Find phone tool (`phone_waterfall`). On a cheapest-path request with a LinkedIn URL in hand, `findMobilePhone` (0.5) is the first stop; escalate to `prospeo`/`FullEnrich` only on a miss.
 - **Personality analysis at scale "for color".** `analyzePersonality` earns its 0.05 on qualified, about-to-be-contacted leads feeding the WRITE step — not on a raw sourced list.
 
 ## Position in the waterfall
 
-- `enrichPerson` — **ENRICH + CONTACT (person)** for URL-in-hand rows: profile + verified email at 0.1, ahead of `linkedin.enrichProfile` (0.25, no email) and the pricier `waterfall.enrichContact` (2) / `FullEnrich.findEmail` (1) chain.
-- `findMobilePhone` — **new cheapest phone rung** (0.5) ahead of `prospeo.findPhone` (3); mobile-only, so keep the higher tiers for landline/DID fallback.
+- `enrichPerson` — **ENRICH (person)** for URL-in-hand rows: profile at 0.1, ahead of `linkedin.enrichProfile` (0.25) and `waterfall.enrichContact` (2). CONTACT stays on the Find email tool unless an exception applies.
+- `findMobilePhone` — **cheapest phone rung** (0.5) on cheapest-path requests, ahead of `prospeo.findPhone` (3); mobile-only. The default phone is the Find phone tool.
 - `searchCompanies` / `searchPeople` — **SOURCE** (0.01 / 0.05 per record): `searchCompanies` is the cheapest account search in the stack and the lookalike path; `searchPeople` covers the filters `salesNavigator` can't express (education, skills, tenure, past company).
-- `reverseLookup` — **niche**: email/phone → profile, beside `FullEnrich.reverseEmailLookup` (1, email → LinkedIn URL).
+- `reverseLookup` — **niche**: email/phone → profile. For a personal email → LinkedIn URL the default is the Find LinkedIn URL from email tool.
 - `analyzePersonality` — **WRITE/personalization input**, outside the credits spine's find-and-verify path.
 
 ## Recurring use
