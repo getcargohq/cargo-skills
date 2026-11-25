@@ -36,7 +36,8 @@ Default rule: **don't swap to chase 2× cheaper if hit-rate drops 30%**. The tot
 |   |   | prospeo.enrichLinkedin (0.5) | Second opinion on a URL-anchored miss. |
 | Person enrichment (name + company) | waterfall.enrichContact (2) | apolloio.enrichPerson (1, **9** with phone reveal, priority) | The niche-coverage rung — promote per-batch when a pilot shows Apollo hits where aiArk/waterfall miss (investor-backed, portfolio niches). |
 |   |   | hunter.enrichPerson (1) | Cheap mid-tier alternative. |
-| Reverse email → person | Find LinkedIn URL from email tool, `find_linkedin_url_from_personal_email` (1–3) | aiArk.reverseLookup (0.05) / FullEnrich.reverseEmailLookup (1) | Exception only (named provider, cheapest path asked for, tool missing). |
+| Reverse email → person, **personal** email | Find LinkedIn URL from email tool, `find_linkedin_url_from_personal_email` (1–3) | aiArk.reverseLookup (0.05) / FullEnrich.reverseEmailLookup (1) | Exception only (named provider, cheapest path asked for, tool missing). |
+| Reverse email → person, **work** email | aiArk.reverseLookup (0.05) | FullEnrich.reverseEmailLookup (1) | No native tool takes a work email; escalate on a miss. |
 | Person backfill (heavyweight) | peopleDataLabs.enrichPerson (3) | (none cheaper for heavyweight) | n/a |
 
 ## Company enrichment alternatives
@@ -87,7 +88,8 @@ Default rule: **don't swap to chase 2× cheaper if hit-rate drops 30%**. The tot
 | Goal | Priority | Alternative | When to swap |
 |---|---|---|---|
 | Resolve LinkedIn from name+company | linkedin.findProfileUrl (0.25) | (no cheaper credible alternative) | n/a |
-| Resolve LinkedIn from email | Find LinkedIn URL from email tool, `find_linkedin_url_from_personal_email` (1–3) | FullEnrich.reverseEmailLookup (1) | Exception only. |
+| Resolve LinkedIn from a personal email | Find LinkedIn URL from email tool, `find_linkedin_url_from_personal_email` (1–3) | FullEnrich.reverseEmailLookup (1) | Exception only. |
+| Resolve LinkedIn from a work email | aiArk.reverseLookup (0.05) | FullEnrich.reverseEmailLookup (1) | No native tool takes a work email. |
 
 ## When the priority stack genuinely can't serve the goal
 

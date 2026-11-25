@@ -77,16 +77,19 @@ If any check fails, **reject the candidate** rather than guess.
 
 ### Step 4 — Fallback for rejected candidates
 
-For rejected candidates, escalate via an email lookup (only useful if you have an email). The default is the native Find LinkedIn URL from email tool:
+For rejected candidates, escalate via an email lookup (only useful if you have an email). Which one depends on the address:
+
+- **A personal email** (gmail and the like): the native Find LinkedIn URL from email tool, `{"kind":"tool","templateSlug":"find_linkedin_url_from_personal_email"}`, as at the top of this recipe. It returns `linkedin_url` and no company, so run the candidate through step 2's `linkedin.enrichProfile` and apply the step 3 gate.
+- **A work email**: no native tool takes one, so this is the input-missing exception. `aiArk.reverseLookup` (0.05) first, then `FullEnrich.reverseEmailLookup` (1):
 
 ```bash
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"tool","templateSlug":"find_linkedin_url_from_personal_email"}' \
-  --records '[{"email":"john.smith@acme.com","firstName":"John","lastName":"Smith"}, ...]' \
+  --action '{"kind":"connector","integrationSlug":"FullEnrich","actionSlug":"reverseEmailLookup"}' \
+  --records '[{"email":"john.smith@acme.com"}, ...]' \
   --wait-until-finished > /tmp/reverse.json
 ```
 
-It returns `linkedin_url` (column `cargo_linkedin_url`) and no company, so run the candidate through step 2's `linkedin.enrichProfile` and apply the step 3 gate. Under an exception (named provider, cheapest path, tool missing), `FullEnrich.reverseEmailLookup` (1) returns the URL as `profile.linkedin_url` plus the company as `profile.position.company`.
+`reverseEmailLookup` returns the LinkedIn URL as `profile.linkedin_url` and the current company as `profile.position.company` (`name`, `domain`); apply the same validation gate from step 3.
 
 If that also fails: mark the row as "unresolved" and surface to the user. Do **not** return a low-confidence URL.
 
@@ -100,7 +103,7 @@ Only the rows that passed the validation gate get written back. Mark unresolved 
 |---|---|
 | `linkedin.findProfileUrl` | 0.25 |
 | `linkedin.enrichProfile` (validation) | 0.25 |
-| Find LinkedIn URL from email tool (fallback, ~30% of cases, + 0.25 validation) | (1 to 3 + 0.25) × 0.3 = ~0.4 to 1 |
+| Email fallback (~30% of cases): Find LinkedIn URL from email tool for personal emails (1 to 3, + 0.25 validation), `FullEnrich.reverseEmailLookup` for work emails (1) | ~0.3 to 1 |
 | **Effective: ~0.9 to 1.5 cred per resolved contact** (with ~80% resolution rate) |
 
 ## Common pitfalls

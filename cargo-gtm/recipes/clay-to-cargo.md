@@ -60,7 +60,8 @@ Costs are credits/record and are the pack's own priority stack. Confirm each aga
 | Find phone (a phone waterfall column) | Find phone tool, `phone_waterfall` (`linkedinUrl` in) | 3–7 |
 | Enrich person from LinkedIn URL | `aiArk.enrichPerson` | 0.1 |
 | Enrich person from name + company | `waterfall.enrichContact` | 2 |
-| Email → LinkedIn (reverse lookup) | Find LinkedIn URL from email tool, `find_linkedin_url_from_personal_email` | 1–3 |
+| Personal email → LinkedIn (reverse lookup) | Find LinkedIn URL from email tool, `find_linkedin_url_from_personal_email` | 1–3 |
+| Work email → LinkedIn (reverse lookup) | `aiArk.reverseLookup`, then `FullEnrich.reverseEmailLookup` on misses | 0.05 / 1 |
 | A Clay column pinned to one named provider (Hunter, Findymail, ...) | that provider's action, e.g. `hunter.findEmail` | per provider |
 
 **A Clay email or phone waterfall maps to Cargo's own tool, not to a provider ladder.** Find email and Find phone are Cargo-maintained waterfalls with verification built in, and they are the default ([`../SKILL.md`](../SKILL.md#contact-data-cargos-native-tools-first-mandatory-default)). Rebuild a Clay waterfall provider by provider only when the user asks to keep its exact order, or explicitly asks for the cheapest path (then `aiArk.enrichPerson`, 0.1 with an email when it finds one, followed by `FullEnrich.findEmail` on the residue, is the cost ladder). Say which applies.
