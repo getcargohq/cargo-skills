@@ -241,7 +241,7 @@ If a Contacts model exists, upsert via `cargo-ai storage` patterns — see [`../
 - dedupe against the Companies model: 0
 - aiArk.enrichCompany × 95: ~1
 - salesNavigator.searchLeads × 95: ~57 (≈ 0.2 × 3 × 95)
-- Find email tool × 200: ~220 to 800 (1.1 per address the first provider settles, up to 4 when it walks further, ~0 per miss)
+- Find email tool × 200: ~220 to 800 (1.1 per address the first provider settles, up to 4 when it walks further, little or nothing per miss)
 - **Total: ~330 to 910 credits for 200 prospects with verified emails.** The sample's receipt sets the real figure; quote that, not this range.
 
 ---
@@ -282,7 +282,7 @@ batch_rows "$B" > /tmp/p3-found.json   # address in cargo_email, already verifie
 jq '[.[] | select((.cargo_email // "") == "")] | length' /tmp/p3-found.json
 ```
 
-**Credit budget** (200 contacts missing email): Find email × 200, 1.1 to 4 per address found and ~0 per miss, so roughly 200 to 700 credits depending on how far the waterfall walks. Run 20 first and quote that receipt. No verify step: every returned address already passed zeroBounce.
+**Credit budget** (200 contacts missing email): Find email × 200, 1.1 to 4 per address found and little or nothing per miss, so roughly 200 to 700 credits depending on how far the waterfall walks. Run 20 first and quote that receipt. No verify step: every returned address already passed zeroBounce.
 
 **Exception, the user asked for the cheapest path or named providers:** run `aiArk.enrichPerson` (0.1) on rows with a LinkedIn URL, `FullEnrich.findEmail` (1) on the residue, `peopleDataLabs.enrichPerson` (3) last, then verify every single-provider address with the Verify email tool (`email_validator`, 0.2; read `cargo_status` and `cargo_is_safe`). Say which exception you are acting on.
 

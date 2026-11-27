@@ -114,9 +114,9 @@ Size the pool before paying for it:
 
 ## 5) Provider-billing rules
 
-- **A miss bills 0 credits — on every provider.** Cargo bills an action only when it returns a result, so a `fixed` price is per *hit*, not per attempt. What misses cost is time and rate limit, not credits; a low hit rate still makes the effective price per found record higher, so prove coverage on the pilot before scaling.
+- **A miss bills 0 credits — with five exceptions.** Cargo bills an action only when it returns a result, so a `fixed` price is per *hit*, not per attempt. The exceptions bill on a miss: `enrichCrm.enrichPerson`, `enrichCrm.enrichCompany`, `enrichCrm.findEmail`, `enrichCrm.getFunding` (1 each), and `companyEnrich.findSimilarCompanies` (1 for an empty result). And a *hit* is the provider's match, not the field you wanted: Apollo's `enrichPerson` bills 1 for a person with a LinkedIn URL and no email, which a user counts as "found nothing". Answer "does a miss cost anything?" per action, never as a blanket rule.
 - **Phone is the guarded lever** — the Find phone tool (`phone_waterfall`, the default when phones are asked for) runs 3–7 credits/record, ~3× an email. `aiArk.findMobilePhone` (0.5, mobile-only) is the cheap rung only when the user named AI Ark or asked for the cheapest path. Either way the rule is unchanged: never include phone lookup in a default chain; it enters a plan only on explicit user request, on qualified leads only.
-- Cheap-but-low-hit-rate providers are not savings: total spend is dominated by misses, not per-call price (see [`alternatives.md`](alternatives.md)).
+- Cheap-but-low-hit-rate providers are not savings: misses mostly cost no credits, but every row a rung misses is paid for again at the next, pricier rung, so a chain's spend is set by hit rate as much as by per-hit price (see [`alternatives.md`](alternatives.md)).
 
 ## 6) Context discipline
 

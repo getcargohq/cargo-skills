@@ -223,7 +223,7 @@ For a 500-company TAM with contacts:
 | 3. enrichCrm.getFunding (optional) | 1 | 500 | 500 |
 | 3. builtwith.getDomainSummary (optional) | 0 | 500 | 0 |
 | 4. searchLeads (3 contacts each) | 0.2 × 3 | 500 | 300 |
-| 5. Find email tool (`email_waterfall`) | 1.1–4 per hit, ~0 per miss | 1500 | 1,650–6,000 at most |
+| 5. Find email tool (`email_waterfall`) | 1.1–4 per hit, little or nothing per miss | 1500 | 1,650–6,000 at most |
 | 6. Verify | 0 (already verified) | | 0 |
 
 **Total: ~2,555 to 6,905 credits for 500 companies + 1,500 contacts**, most of the range in step 5. The 20-row sample's receipt says where in the range the list lands; quote that.

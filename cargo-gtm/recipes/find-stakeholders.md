@@ -114,7 +114,7 @@ Illustrative output, fictional records:
 |---|---|
 | `aiArk.countPeople` | 0 |
 | `aiArk.searchPeople` | 0.05 per returned record |
-| Find email tool (step 6, net-new only) | 1.1 to 4 per address found, ~0 per miss |
+| Find email tool (step 6, net-new only) | 1.1 to 4 per address found, little or nothing per miss |
 
 Every node execution also bills 0.01 credits, so a batch over N accounts adds N × 0.01 on top of the per-record price ([`../../cargo-billing/SKILL.md`](../../cargo-billing/SKILL.md), "The execution charge"). Prices: [`../references/credits-cost-table.md`](../references/credits-cost-table.md).
 

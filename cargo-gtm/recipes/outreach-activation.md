@@ -178,7 +178,7 @@ For a 500-contact signal segment (Find email + Haiku personalization):
 
 | Step | Per record | 500 contacts |
 |---|---|---|
-| Find email tool (`email_waterfall`) | 1.1–4 per hit, ~0 per miss | 550–2,000 at most |
+| Find email tool (`email_waterfall`) | 1.1–4 per hit, little or nothing per miss | 550–2,000 at most |
 | `anthropic.instruct` (Haiku, 0.05/1k tokens, ~0.5k tokens per line) | ~0.025 | ~13 |
 | **Total** | | **~563 to 2,013**; the 20-row sample's receipt sets the real figure |
 

@@ -14,7 +14,7 @@ Only swap when:
 
 **Email, phone and LinkedIn-from-email are not swapped for cost or habit.** They default to the native tools in [`../SKILL.md`](../SKILL.md#contact-data-cargos-native-tools-first-mandatory-default); the single-provider rows below apply only when the user names a provider, explicitly asks for the cheapest path, the tool is missing from the workspace, or the row lacks the tool's input. Say which.
 
-Default rule: **don't swap to chase 2× cheaper if hit-rate drops 30%**. The total credit spend across a chain is dominated by misses (re-running across stages), not by the per-call cost.
+Default rule: **don't swap to chase 2× cheaper if hit-rate drops 30%**. Misses mostly bill 0, but every row one rung misses is re-run at the next, pricier rung — so a chain's total spend is set by hit rate as much as by per-hit cost.
 
 ## Sourcing alternatives
 

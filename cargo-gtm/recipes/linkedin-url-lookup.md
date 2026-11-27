@@ -4,7 +4,7 @@
 
 **Trigger phrases**: "Find the LinkedIn for John Smith at Acme.", "Get LinkedIn URLs for all the contacts in this list.", "Find LinkedIn profiles from these personal emails."
 
-**Holding an email instead of a name + company?** The default is Cargo's native **Find LinkedIn URL from email** tool, a maintained waterfall built for exactly this ([`../SKILL.md`](../SKILL.md#contact-data-cargos-native-tools-first-mandatory-default)). It takes a personal email (gmail and the like) and returns `linkedin_url`; first and last name improve the match. 1 to 3 credits per hit, about 0 per miss.
+**Holding an email instead of a name + company?** The default is Cargo's native **Find LinkedIn URL from email** tool, a maintained waterfall built for exactly this ([`../SKILL.md`](../SKILL.md#contact-data-cargos-native-tools-first-mandatory-default)). It takes a personal email (gmail and the like) and returns `linkedin_url`; first and last name improve the match. 1 to 3 credits per hit. A miss can still bill a little: one of its rungs, `enrichCrm`, charges on a miss.
 
 ```bash
 cargo-ai orchestration action execute-batch \

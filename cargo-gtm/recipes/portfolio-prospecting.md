@@ -129,7 +129,7 @@ For 200 portfolio companies × 3 contacts each = 600 prospects:
 | 2. Dedupe against the Companies model | 0 | 200 | 0 |
 | 3. aiArk.enrichCompany | 0.01 | 200 | 2 |
 | 4. searchLeads (3 contacts each) | 0.2 | 600 | 120 |
-| 5. Find email tool (`email_waterfall`) | 1.1–4 per hit, ~0 per miss | 600 | 660–2,400 at most |
+| 5. Find email tool (`email_waterfall`) | 1.1–4 per hit, little or nothing per miss | 600 | 660–2,400 at most |
 | 6. Verify | 0 (already verified) | 600 | 0 |
 | **Total** | | | **~882 to 2,622 credits for 600 verified contacts at 200 portfolio companies**; the sample's receipt sets the real figure |
 

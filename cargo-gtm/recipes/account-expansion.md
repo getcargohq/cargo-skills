@@ -145,7 +145,7 @@ For 50 top-tier customer accounts, expanded monthly:
 | Step | Per record | 50 accounts (3 candidates each = 150) |
 |---|---|---|
 | `salesNavigator.searchLeads` (`limit: 3`) | 0.2 per returned lead | 30 (150 leads) |
-| Find email tool (`email_waterfall`) | 1.1–4 per hit, ~0 per miss | 165–600 at most (per net-new) |
+| Find email tool (`email_waterfall`) | 1.1–4 per hit, little or nothing per miss | 165–600 at most (per net-new) |
 | **Total monthly** | — | **~195 to 630** |
 
 Expansion typically runs on smaller targeted lists, so per-record costs (even the Find phone tool at 3 to 7 credits/record, when phones were asked for) stay affordable. The dedup step is free — it's a workspace storage query.
