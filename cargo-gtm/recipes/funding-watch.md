@@ -102,7 +102,7 @@ To make this recurring, follow [`save-as-play.md`](save-as-play.md) — it walks
 
 | Pattern | Cost per record |
 |---|---|
-| `enrichCrm.getFunding` | 1 |
+| `enrichCrm.getFunding` | 1 (bills on a miss too) |
 
 500 target accounts × 1 = 500 credits per scan. A **daily** cron over 30 days is 15,000 credits, and it is almost always wrong: rounds are announced on a scale of months, so the pull re-bills unchanged data 29 days out of 30.
 

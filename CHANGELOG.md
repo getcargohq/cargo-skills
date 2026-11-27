@@ -10,6 +10,14 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### `cargo-gtm` 2.8.2: five actions do bill on a miss
+
+2.8.1 (#225) said a miss bills 0 on every provider. The backend says otherwise for five actions, which return `unitsCount: 1` when they find nothing: `enrichCrm.enrichPerson`, `enrichCrm.enrichCompany`, `enrichCrm.findEmail`, `enrichCrm.getFunding`, and `companyEnrich.findSimilarCompanies` on an empty result. The blanket rule is replaced with those exceptions in the cost table, `cost-discipline.md` §5, `SKILL.md`, the `enrichCrm` playbook and the funding-watch recipe.
+
+- **Apollo's match is not an email hit.** `apolloio.enrichPerson` bills for a person with a LinkedIn URL and no email, so a user counting email hits sees charged "misses". The playbook now says so.
+- **"Spend is dominated by misses" is gone** from `cost-discipline.md` and `alternatives.md`. It contradicted the miss rule two lines above it. What drives a chain's cost is the rows re-run at the next rung.
+- #225 changed the guidance without bumping `cargo-gtm`, so a 2.8.1 install could have either text. This version separates them.
+
 ### `cargo-ai` 3.0.0, `cargo-project` 5.0.0, `cargo` 1.37.0, `cargo-workspace-management` 1.7.2, plugin 1.37.0: a coding agent clones a project, not a repository (cargo#6677)
 
 Breaking. Agent releases and chats now point at a project (a connected deploy state) instead of naming a repository, and the harness's env vars and run-as user move beside it. Needs CLI 1.0.154 and `@cargo-ai/cdk` 1.0.150; older clients that send `repository` get a 400, and an older CDK cannot deploy any agent.

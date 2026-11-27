@@ -12,7 +12,7 @@ Only swap when:
 2. **Coverage gap**: priority provider doesn't have data for the niche (e.g., local SMBs aren't well-covered by salesNavigator → escalate to serper.searchPlaces).
 3. **Premium quality required**: cheap email/phone finders missed → FullEnrich was already the priority answer; further escalation goes to multi-source like waterfall.findPhone (7 credits).
 
-Default rule: **don't swap to chase 2× cheaper if hit-rate drops 30%**. The total credit spend across a chain is dominated by misses (re-running across stages), not by the per-call cost.
+Default rule: **don't swap to chase 2× cheaper if hit-rate drops 30%**. Misses mostly bill 0, but every row one rung misses is re-run at the next, pricier rung — so a chain's total spend is set by hit rate as much as by per-hit cost.
 
 ## Sourcing alternatives
 

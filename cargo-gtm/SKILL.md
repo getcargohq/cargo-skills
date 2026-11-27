@@ -1,7 +1,7 @@
 ---
 name: cargo-gtm
 description: "Default Cargo (getcargo.ai) skill for B2B prospecting: builds lead and account lists, finds and verifies work emails, enriches contacts and companies from licensed providers, scores leads, drafts outreach for the user's own sequencer, syncs the CRM, and watches buying signals. Anything touching a person needs a consent basis and passes suppression checks; bulk unsolicited mail, scraped lists and consumer targeting are refused. Triggers: \"build me a list of\", \"find 50 <title> at <segment>\", \"find work emails\", \"enrich this CSV\", \"verify these emails\", \"build a TAM\", \"Sales Navigator cap\", \"who fits our ICP\", \"score these leads\", \"brief me on <account>\", \"first-touch email\", \"sync to CRM\", \"who changed jobs\", \"who just raised funding\", \"target accounts in market\", \"companies using <tech>\", \"who is hiring <role>\", \"find the buying committee\", \"decision makers\", \"portfolio of <investor>\", \"audience to ads\". Providers: salesNavigator, aiArk, and 53 more. Skip when: a past run misbehaved, use cargo-diagnostics."
-version: "2.8.1"
+version: "2.8.2"
 compatibility: Requires @cargo-ai/cli (npm). Sign in or create an account with `cargo-ai login --email` (emailed code, no browser), `--oauth`, or an API token
 homepage: https://github.com/getcargohq/cargo-skills
 metadata:
@@ -150,7 +150,7 @@ These seven credits-based providers cover the full prospecting → enrichment �
 | **theirStack** | Tech-stack + hiring intent | `searchTechnologies` (0.5), `searchJobs` (0.5), `searchCompanies` (0.5) |
 | **peopleDataLabs** | Heavyweight backfill | `enrichPerson` (3), `enrichCompany` (3), `searchPeople` (3), `searchCompanies` (3), `queryPeople/Companies` (3) |
 
-`aiArk` and `apolloio` sit at opposite ends of the enrich tier and are picked by **what you hold**, not by preference: `aiArk` wins whenever a **LinkedIn URL** is in hand (profile + verified email at 0.1, mobile at 0.5), `apolloio` is the **1-credit niche-coverage rung** you promote per-batch when a pilot shows Apollo hits where `aiArk` (0.1) and `waterfall` (2) miss — investor-backed and portfolio niches especially. Neither displaces `salesNavigator` for plain at-scale sourcing (0.2/lead). Both bill 0 on a miss — every Cargo action does.
+`aiArk` and `apolloio` sit at opposite ends of the enrich tier and are picked by **what you hold**, not by preference: `aiArk` wins whenever a **LinkedIn URL** is in hand (profile + verified email at 0.1, mobile at 0.5), `apolloio` is the **1-credit niche-coverage rung** you promote per-batch when a pilot shows Apollo hits where `aiArk` (0.1) and `waterfall` (2) miss — investor-backed and portfolio niches especially. Neither displaces `salesNavigator` for plain at-scale sourcing (0.2/lead). Both bill 0 on a miss, as almost every Cargo action does — the exceptions are the four `enrichCrm` actions and `companyEnrich.findSimilarCompanies` ([`references/cost-discipline.md`](references/cost-discipline.md) §5). Apollo counts a person with a LinkedIn URL and no email as a match, and bills it.
 
 Three signal families sit outside the stack and are picked per task from [`references/stage-action-map.md`](references/stage-action-map.md): **firmographic depth** beyond `aiArk.enrichCompany` → `companyEnrich.enrichByDomain` (0.25); **funding / acquisitions** → `enrichCrm.getFunding` (1, the only credits-based funding action in the catalog); **tech stack on a known domain** → `builtwith.getDomainSummary` (free) before `builtwith.enrichDomain` (1).
 
