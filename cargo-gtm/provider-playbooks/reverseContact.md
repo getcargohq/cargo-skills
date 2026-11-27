@@ -8,6 +8,8 @@ last-reviewed: 2026-07-09
 
 LinkedIn-anchored reverse lookups. **None of its four actions runs on Cargo credits**: the integration is not managed-compatible (no `connector.managed.isCompatible`), so every action, including `enrichCompanyFromLinkedin`, needs your own Reverse Contact API key. The catalog lists a 1-credit price on `enrichCompanyFromLinkedin`, but it never bills because a credits connector cannot be created. `enrichCompanyFromLinkedin` is a niche ENRICH rung for when your input is precisely a **LinkedIn company URL**. Don't route generic company enrichment here: the credits-based `waterfall.enrichCompany` (1, priority) covers it, while `linkedin.enrichCompany` (0.25) covers most LinkedIn-anchored needs at a quarter of the price (see [`../references/stage-action-map.md`](../references/stage-action-map.md), Enrich company — "Niche: LinkedIn URL → company").
 
+> **Email, phone and LinkedIn-from-email default to Cargo's native tools, not to this provider.** Find email (`email_waterfall`), Find phone (`phone_waterfall`), Find LinkedIn URL from email (`find_linkedin_url_from_personal_email`) and Verify email (`email_validator`) are Cargo-maintained waterfalls with far higher coverage than any single provider ([`../SKILL.md`](../SKILL.md#contact-data-cargos-native-tools-first-mandatory-default)). The chains and "default" rungs on this page rank the single-provider tier, which runs only when the user names a provider, explicitly asks for the cheapest path, or the tool is missing from the workspace. Say which.
+
 ## Own-API-key actions (no credits: all four require your Reverse Contact account connector)
 
 | Action | What it does |

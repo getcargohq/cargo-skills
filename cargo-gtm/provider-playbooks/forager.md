@@ -8,6 +8,8 @@ last-reviewed: 2026-07-09
 
 Contact-info lookup keyed **exclusively on LinkedIn URL** — three actions, one input field each. Its niche is `findPersonalEmail` (2): personal-mailbox discovery, which the standard FIND-EMAIL chain doesn't offer at all. `findWorkEmail` (2) sits **above** the whole work-email chain (`icypeas` 0.1 → mid-tier 0.5 → `FullEnrich` 1), so it's a last-resort there; `findPhone` (5) is a documented mid-tier phone rung between `prospeo` (3) and `FullEnrich` (6) — see [`../references/alternatives.md`](../references/alternatives.md) (Find phone alternatives).
 
+> **Email, phone and LinkedIn-from-email default to Cargo's native tools, not to this provider.** Find email (`email_waterfall`), Find phone (`phone_waterfall`), Find LinkedIn URL from email (`find_linkedin_url_from_personal_email`) and Verify email (`email_validator`) are Cargo-maintained waterfalls with far higher coverage than any single provider ([`../SKILL.md`](../SKILL.md#contact-data-cargos-native-tools-first-mandatory-default)). The chains and "default" rungs on this page rank the single-provider tier, which runs only when the user names a provider, explicitly asks for the cheapest path, or the tool is missing from the workspace. Say which.
+
 ## Credits-based actions
 
 | Action | Cost | Inputs | Use for |
@@ -20,7 +22,7 @@ Contact-info lookup keyed **exclusively on LinkedIn URL** — three actions, one
 
 - ✅ **Personal email for people who changed jobs** — a work email dies with the job; the personal mailbox survives. Natural follow-up to a job-change signal before re-engaging.
 - ✅ **Phone waterfall, middle rung** — escalate `prospeo.findPhone` (3) misses here (5) before paying `FullEnrich.findPhone` (6) / `waterfall.findPhone` (7).
-- ❌ **First stop for work email** — `FullEnrich.findEmail` (1) is the priority default and half the price; the cheap rungs (`icypeas` 0.1) are 20× cheaper.
+- ❌ **First stop for work email** — `FullEnrich.findEmail` (1) is the single-provider default and half the price; the cheap rungs (`icypeas` 0.1) are 20× cheaper.
 - ❌ **Records without a LinkedIn URL** — there is no name+company input. Resolve the URL first ([`../recipes/linkedin-url-lookup.md`](../recipes/linkedin-url-lookup.md)).
 
 ## Patterns

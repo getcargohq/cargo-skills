@@ -6,7 +6,9 @@ last-reviewed: 2026-07-09
 
 # neverBounce (NeverBounce)
 
-Dedicated email verification. **One credits-based action, 0.2 credits** — double the priority-stack default `waterfall.verifyEmail` (0.1) and 20× the bulk option `icypeas.verifyEmail` (0.01). It earns a call in two cases: the user has an **existing NeverBounce subscription** (own API key connector — the 0.2 price stops mattering), or you want a typo-rescuing second opinion and the equal-cost alternatives (`zeroBounce`, `enrichley`) have already been spent on this list.
+Dedicated email verification. **One credits-based action, 0.2 credits** — double the single-provider default `waterfall.verifyEmail` (0.1) and 20× the bulk option `icypeas.verifyEmail` (0.01). It earns a call in two cases: the user has an **existing NeverBounce subscription** (own API key connector — the 0.2 price stops mattering), or you want a typo-rescuing second opinion and the equal-cost alternatives (`zeroBounce`, `enrichley`) have already been spent on this list.
+
+> **Email, phone and LinkedIn-from-email default to Cargo's native tools, not to this provider.** Find email (`email_waterfall`), Find phone (`phone_waterfall`), Find LinkedIn URL from email (`find_linkedin_url_from_personal_email`) and Verify email (`email_validator`) are Cargo-maintained waterfalls with far higher coverage than any single provider ([`../SKILL.md`](../SKILL.md#contact-data-cargos-native-tools-first-mandatory-default)). The chains and "default" rungs on this page rank the single-provider tier, which runs only when the user names a provider, explicitly asks for the cheapest path, or the tool is missing from the workspace. Say which.
 
 ## Credits-based actions
 

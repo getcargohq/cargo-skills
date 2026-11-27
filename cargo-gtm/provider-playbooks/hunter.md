@@ -8,6 +8,8 @@ last-reviewed: 2026-07-09
 
 Mid-tier email finder. Its `findEmail` (0.5) is **rung 2 of the find-email waterfall** — a different underlying source than `FullEnrich.findEmail` (1), so it often finds what FullEnrich misses. Prefer it as the escalation step on FullEnrich misses, or as the lead finder when budget is critical and a lower hit rate is acceptable ([`../references/alternatives.md`](../references/alternatives.md)). Avoid its `verifyEmail` — at 1 credit it is the most expensive verify tier in the catalog.
 
+> **Email, phone and LinkedIn-from-email default to Cargo's native tools, not to this provider.** Find email (`email_waterfall`), Find phone (`phone_waterfall`), Find LinkedIn URL from email (`find_linkedin_url_from_personal_email`) and Verify email (`email_validator`) are Cargo-maintained waterfalls with far higher coverage than any single provider ([`../SKILL.md`](../SKILL.md#contact-data-cargos-native-tools-first-mandatory-default)). The chains and "default" rungs on this page rank the single-provider tier, which runs only when the user names a provider, explicitly asks for the cheapest path, or the tool is missing from the workspace. Say which.
+
 ## Credits-based actions
 
 | Action | Cost | Inputs | Use for |

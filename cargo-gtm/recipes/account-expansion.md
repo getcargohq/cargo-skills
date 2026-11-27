@@ -97,20 +97,20 @@ curl -fsSL "$URL" \
 
 LinkedIn URL is the most reliable dedup key — emails can vary (work vs. personal), names collide. Normalize both sides (trailing slash, `www.`) before comparing if the stored URLs were typed by hand.
 
-### Step 5 — Enrich the net-new contacts
+### Step 5 — Find the net-new contacts' work emails
 
 ```bash
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"waterfall","actionSlug":"enrichContact"}' \
+  --action '{"kind":"tool","templateSlug":"email_waterfall"}' \
   --records "$(jq -c '[.[] | {
-    first_name, last_name, company_name,
-    domain: .company_domain,
-    linkedin: .linkedin_profile_url
+    firstName: .first_name, lastName: .last_name, companyDomain: .company_domain,
+    linkedinUrl: .linkedin_profile_url,
+    first_name, last_name, company_name
   }]' /tmp/net-new.json)" \
   --wait-until-finished > /tmp/enriched.json
 ```
 
-For mobile direct dials and top-tier accuracy (worth it on a small high-value expansion list), swap in `FullEnrich.findPhoneAndEmail` (7).
+The native Find email tool is the default ([`../SKILL.md`](../SKILL.md#contact-data-cargos-native-tools-first-mandatory-default)); the address lands in `cargo_email`, already verified. Phones only when the user asks: the Find phone tool (`phone_waterfall`, 3 to 7, `linkedinUrl` in), on this small high-value list.
 
 ### Step 6 — Tag with expansion signal, hand off to outreach
 
@@ -133,7 +133,7 @@ For continuous multi-threading:
 
 1. Trigger: monthly cron.
 2. Source: customer-accounts segment.
-3. Nodes: searchLeads → fetch existing Contacts → dedup → enrich → write to "Expansion candidates" segment.
+3. Nodes: searchLeads → fetch existing Contacts → dedup → Find email tool → write to "Expansion candidates" segment.
 4. Downstream: a separate play takes new members of "Expansion candidates" and triggers `outreach-activation`.
 
 For play setup, see [`../../cargo-orchestration/references/examples/plays.md`](../../cargo-orchestration/references/examples/plays.md).
@@ -145,14 +145,14 @@ For 50 top-tier customer accounts, expanded monthly:
 | Step | Per record | 50 accounts (3 candidates each = 150) |
 |---|---|---|
 | `salesNavigator.searchLeads` (`limit: 3`) | 0.2 per returned lead | 30 (150 leads) |
-| `waterfall.enrichContact` | 2 | 300 (per net-new) |
-| **Total monthly** | — | **330** |
+| Find email tool (`email_waterfall`) | 1.1–4 per hit, little or nothing per miss | 165–600 at most (per net-new) |
+| **Total monthly** | — | **~195 to 630** |
 
-Expansion typically runs on smaller targeted lists, so per-record costs (even high-precision providers like `FullEnrich.findPhoneAndEmail` at 7 credits/record) stay affordable. The dedup step is free — it's a workspace storage query.
+Expansion typically runs on smaller targeted lists, so per-record costs (even the Find phone tool at 3 to 7 credits/record, when phones were asked for) stay affordable. The dedup step is free — it's a workspace storage query.
 
 ## Action shape
 
-Every action follows: `{"kind":"connector","integrationSlug":"<slug>","actionSlug":"<slug>"}`. **No `connectorUuid` in `config`** — see [`../../cargo-orchestration/references/examples/actions.md`](../../cargo-orchestration/references/examples/actions.md).
+Every connector action follows: `{"kind":"connector","integrationSlug":"<slug>","actionSlug":"<slug>"}`, and a native Cargo tool `{"kind":"tool","templateSlug":"<slug>"}`. **No `connectorUuid` in `config`** — see [`../../cargo-orchestration/references/examples/actions.md`](../../cargo-orchestration/references/examples/actions.md).
 
 ## Output retrieval
 

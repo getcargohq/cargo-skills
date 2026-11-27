@@ -190,21 +190,18 @@ cargo-ai orchestration action execute-batch \
 
 ### Step 5 — (Optional) Find emails for the contacts
 
+The native Find email tool, Cargo's maintained waterfall, is the default ([`../SKILL.md`](../SKILL.md#contact-data-cargos-native-tools-first-mandatory-default)). Each lead carries a LinkedIn URL, which is all it needs; names and domain ride along.
+
 ```bash
 cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"FullEnrich","actionSlug":"findEmail"}' \
-  --records "$(rows /tmp/contacts.json | jq -c '[.[] | select(.cargo != "") | .domain as $d | (.cargo | fromjson)[] | {firstName: .first_name, lastName: .last_name, domainName: $d}]')" \
+  --action '{"kind":"tool","templateSlug":"email_waterfall"}' \
+  --records "$(rows /tmp/contacts.json | jq -c '[.[] | select(.cargo != "") | .domain as $d | (.cargo | fromjson)[] | {linkedinUrl: .linkedin_profile_url, firstName: .first_name, lastName: .last_name, companyDomain: $d}]')" \
   --wait-until-finished > /tmp/emails.json
 ```
 
-### Step 6 — Verify emails
+### Step 6 — Verify emails: nothing to run
 
-```bash
-cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"waterfall","actionSlug":"verifyEmail"}' \
-  --records "$(rows /tmp/emails.json | jq -c '[.[] | select(.cargo_most_probable_email != "") | {email: .cargo_most_probable_email}]')" \
-  --wait-until-finished > /tmp/verified.json
-```
+Find email returns an address (`cargo_email`) only after zeroBounce graded it valid, so there is no paid verify step. If an exception put a single provider in step 5 (the user named one, or asked for the cheapest path), verify its output with the Verify email tool, `{"kind":"tool","templateSlug":"email_validator"}` (0.2, reads `email`, returns `status` and `is_safe`).
 
 ### Step 7 — Write to model / export / push to CRM
 
@@ -226,10 +223,10 @@ For a 500-company TAM with contacts:
 | 3. enrichCrm.getFunding (optional) | 1 | 500 | 500 |
 | 3. builtwith.getDomainSummary (optional) | 0 | 500 | 0 |
 | 4. searchLeads (3 contacts each) | 0.2 × 3 | 500 | 300 |
-| 5. FullEnrich.findEmail | 1 | 1500 | 1500 |
-| 6. waterfall.verifyEmail | 0.1 | 1500 | 150 |
+| 5. Find email tool (`email_waterfall`) | 1.1–4 per hit, little or nothing per miss | 1500 | 1,650–6,000 at most |
+| 6. Verify | 0 (already verified) | | 0 |
 
-**Total: ~2,555 credits for 500 companies + 1,500 contacts** (~1.7 credits per fully-enriched contact).
+**Total: ~2,555 to 6,905 credits for 500 companies + 1,500 contacts**, most of the range in step 5. The 20-row sample's receipt says where in the range the list lands; quote that.
 
 Cut steps the user doesn't need (skip step 3 funding/tech if not part of ICP, skip steps 4-6 if no contacts needed) to bring the cost down.
 

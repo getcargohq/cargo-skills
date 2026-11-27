@@ -13,6 +13,8 @@ Two filter shapes — pick the right one:
 - **`searchPeople` / `searchCompanies`** use cargo's standard segment-filter shape: `{filter: {conjonction, groups: [{conjonction, conditions: [{propertyName, operator, values | value}, ...]}]}}`. `is`, `isNot`, `contains`, `notContains` take **`values`** (one value or an array); `lowerThan`, `lowerThanOrEquals`, `greaterThan`, `greaterThanOrEquals` take **`value`**. A `value` on a `contains` condition is dropped and the condition matches the literal string `undefined`. Use when criteria are simple key/operator/value AND/OR combinations.
 - **`queryPeople` / `queryCompanies`** take a **SQL string** — PDL's SQL API. Use when you need joins, OR-of-AND combinations beyond what the cargo filter shape supports cleanly, or when you already have a SQL query from PDL's documentation. **NOT Elasticsearch — it's PDL SQL.**
 
+> **Email, phone and LinkedIn-from-email default to Cargo's native tools, not to this provider.** Find email (`email_waterfall`), Find phone (`phone_waterfall`), Find LinkedIn URL from email (`find_linkedin_url_from_personal_email`) and Verify email (`email_validator`) are Cargo-maintained waterfalls with far higher coverage than any single provider ([`../SKILL.md`](../SKILL.md#contact-data-cargos-native-tools-first-mandatory-default)). The chains and "default" rungs on this page rank the single-provider tier, which runs only when the user names a provider, explicitly asks for the cheapest path, or the tool is missing from the workspace. Say which.
+
 ## Credits-based actions
 
 | Action | Cost | Inputs | Use for |

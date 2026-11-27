@@ -8,14 +8,16 @@ last-reviewed: 2026-10-02
 
 Premium contact-detail provider, and now a **free** sourcing source. Four paid actions fill email + phone + LinkedIn gaps — higher cost than cheap email finders, but **better hit rate**, and one of two providers in the priority stack with **reverse-email lookup** (the other is `aiArk.reverseLookup`, 0.05). Four more — `searchPeople`, `searchCompanies`, `lookupPerson`, `lookupCompany` — bill **0 credits**, as do the `fetchPeople` / `fetchCompanies` extractors that pull the same searches into a model. That makes FullEnrich the cheapest search in the catalog: size and pull a list here before paying `aiArk` (0.01–0.05) or `salesNavigator` (0.2) per record.
 
+> **Email, phone and LinkedIn-from-email default to Cargo's native tools, not to this provider.** Find email (`email_waterfall`), Find phone (`phone_waterfall`) and Find LinkedIn URL from email (`find_linkedin_url_from_personal_email`) are Cargo-maintained waterfalls with far higher coverage than any single provider ([`../SKILL.md`](../SKILL.md#contact-data-cargos-native-tools-first-mandatory-default)). Use this provider for those jobs only when the user names it, explicitly asks for the cheapest path, or the tool is missing from the workspace, and say which.
+
 ## Credits-based actions
 
 | Action | Cost | Inputs | Use for |
 |---|---|---|---|
-| `findEmail` | 1 | `firstName, lastName, domainName, companyName, linkedinUrl` | Default email finder in the priority stack. |
+| `findEmail` | 1 | `firstName, lastName, domainName, companyName, linkedinUrl` | Best single-provider email finder; first rung when an exception takes email off the Find email tool. |
 | `findPhone` | 6 | `firstName, lastName, domainName, companyName, linkedinUrl` | Premium phone lookup. Escalate from `prospeo.findPhone` (3). |
 | `findPhoneAndEmail` | 7 | `firstName, lastName, domainName, companyName, linkedinUrl` | Combined call when both are needed and you'd otherwise pay 1+6=7 anyway. **No discount over running both separately.** |
-| `reverseEmailLookup` | 1 | `email` | Email → LinkedIn URL + company info. |
+| `reverseEmailLookup` | 1 | `email` | Email → LinkedIn URL + company info. Exception only: the default is the Find LinkedIn URL from email tool. |
 | `searchPeople` | 0 | person filters (`peopleInfo`, `personLocation`, `jobRole`, `skills`, `education`, `languages`, `tenure`, `pastCompany`) + current-company filters (`companyInfo`, `industry`, `companyType`, `headquarters`, `specialties`, `technologies`, `headcount`, `foundedYear`) + `limit` (default 10, max 2,000) | **Free people search.** Title, seniority, function, location, skills, tenure, past company, and the company they work at. |
 | `searchCompanies` | 0 | company filters (as above) + `keywords` + `limit` (default 10, max 2,000) | **Free company search.** Industry, headcount, HQ, technologies, specialties, founded year, description keywords. |
 | `lookupPerson` | 0 | `linkedinUrl` **or** `linkedinId` **or** `fullName` + (`companyDomain` / `companyLinkedinUrl` / `companyLinkedinId`) | One person you already have an identifier for → profile, title, current employer. No match, no record. |
@@ -29,13 +31,13 @@ Two extractors, `fetchPeople` and `fetchCompanies`, take the same filters as the
 
 - ✅ **Free sourcing** — `searchPeople` / `searchCompanies` (0) as the first rung for people and company lists. Pilot it before `aiArk` and `salesNavigator`; demote only when a pilot shows its coverage or filters miss your segment.
 - ✅ **Recurring list into a model** — `fetchPeople` / `fetchCompanies` (0) as the extractor behind a model that a play then enriches.
-- ✅ **Default email finder** in the prospecting spine — better hit rate than cheap providers (`hunter` at 0.5 cred, `icypeas` at 0.1), worth the 2× cost when conversion matters.
+- ✅ **Best single-provider email finder** — better hit rate than cheap providers (`hunter` at 0.5 cred, `icypeas` at 0.1). The spine's default is the Find email tool, which already includes FullEnrich among its providers; call this directly only under a stated exception.
 - ✅ **Reverse-email lookup** — given an email, retrieve LinkedIn + company. Critical for de-anonymizing email-only data sources.
 - ✅ **Phone lookup with multi-input flexibility** — accepts any combination of name/domain/company/linkedin.
 
 ## Patterns
 
-### Pattern A — Default email finder in the spine
+### Pattern A — Email finder, when an exception applies
 
 ```bash
 # After sourcing + (optional) basic enrichment, find emails for the contacts
@@ -96,7 +98,7 @@ Filter values are plain strings, not codes — the inverse of `salesNavigator`. 
 - **Free search is still not free downstream.** The list costs nothing; `findEmail` (1) and `findPhone` (6) on every row does. Keep the sample-then-approve gate on the enrichment that follows.
 - **`findPhoneAndEmail` is not a discount.** 7 credits = 1 (email) + 6 (phone). Run separately if you want to skip phone lookups for unqualified leads.
 - **Multi-input matters.** Hit rate jumps significantly when you pass `linkedinUrl` AND `domainName` together vs. either alone. If you have both, use both.
-- **Don't use `findEmail` for verification.** It returns a single best-guess email; some are catch-all and will bounce. Always verify with `waterfall.verifyEmail` (0.1 cred) before using in outreach.
+- **Don't use `findEmail` for verification.** It returns a single best-guess email; some are catch-all and will bounce. Always verify with the Verify email tool (`email_validator`, 0.2) before using in outreach.
 
 ## Anti-patterns
 
@@ -118,9 +120,9 @@ Don't run all four blindly — the spine is `FullEnrich` first, escalate only on
 
 The contact finders have no scheduled fit — a found email is stable data; re-running the finder on a timer just re-bills rows that won't change.
 
-- **In-play shape:** `findEmail` as the CONTACT node of a play triggered by rows entering the segment; gate on the email column still being empty so re-evaluation never re-bills enriched rows.
+- **In-play shape:** the Find email tool is the CONTACT node by default; `findEmail` takes that place only under an exception, as the CONTACT node of a play triggered by rows entering the segment; gate on the email column still being empty so re-evaluation never re-bills enriched rows.
 - **Scheduled pull:** `fetchPeople` / `fetchCompanies` (0) behind a model are the natural recurring source — the extractor refreshes the list, and a play on rows entering the model pays for enrichment on net-new rows only.
-- **Recurring niche:** `reverseEmailLookup` (1) on newly captured email-only rows (webforms, `snitcher.searchSessions`) — gate on the LinkedIn-URL column being empty.
+- **Recurring niche:** the Find LinkedIn URL from email tool (or, under an exception, `reverseEmailLookup`, 1) on newly captured email-only rows (webforms, `snitcher.searchSessions`) — gate on the LinkedIn-URL column being empty.
 - **Phone stays out of recurring chains:** `findPhone` (6) is explicit-request + qualified rows only (see Anti-patterns) — never wire it into a play's default path.
 
 ## Action shape

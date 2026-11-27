@@ -93,7 +93,7 @@ A receipt is not optional bookkeeping — it is what makes the next-step suggest
 
 **On a new account, frame the balance against the free tier.** A new workspace starts with **100 free credits, valid for its first 30 days, no card** — so "12.4 spent, 87.6 of your 100 free credits left" is the receipt a first-time user can actually act on, where "87.6 remaining" is a number with no scale. Two consequences for how you spend them:
 
-- **Lead with the cheap rungs harder than usual.** 100 credits is ~500 sourced leads (`salesNavigator.searchLeads`, 0.2) or ~50 fully enriched contacts (`waterfall.enrichContact`, 2) — the same budget, an order of magnitude apart depending on the chain. A first session that burns the tier on `findPhone` (6–7/lookup) leaves the user with nothing to try next.
+- **Lead with the cheap rungs harder than usual.** 100 credits is ~500 sourced leads (`salesNavigator.searchLeads`, 0.2) or ~50 fully enriched contacts (`waterfall.enrichContact`, 2) — the same budget, an order of magnitude apart depending on the chain. A first session that burns the tier on phone lookups (3–7 each) leaves the user with nothing to try next.
 - **Say what's left in the tier when proposing the next step.** "With ~88 free credits left, verifying all 400 of these runs ~40" is a decision the user can make in one word; "that'll cost about 40 credits" is not.
 
 ## 3) Over-provision 1.4×N, then filter — never chase misses
@@ -115,7 +115,7 @@ Size the pool before paying for it:
 ## 5) Provider-billing rules
 
 - **A miss bills 0 credits — with five exceptions.** Cargo bills an action only when it returns a result, so a `fixed` price is per *hit*, not per attempt. The exceptions bill on a miss: `enrichCrm.enrichPerson`, `enrichCrm.enrichCompany`, `enrichCrm.findEmail`, `enrichCrm.getFunding` (1 each), and `companyEnrich.findSimilarCompanies` (1 for an empty result). And a *hit* is the provider's match, not the field you wanted: Apollo's `enrichPerson` bills 1 for a person with a LinkedIn URL and no email, which a user counts as "found nothing". Answer "does a miss cost anything?" per action, never as a blanket rule.
-- **Phone is the guarded lever** — the escalation tier runs 3–7 credits/record, ~10× email. `aiArk.findMobilePhone` (0.5, mobile-only, LinkedIn-URL or domain+name anchored) is the cheap first rung and bills 0 on a miss, but the rule is unchanged: never include phone lookup in a default chain; it enters a plan only on explicit user request, on qualified leads only.
+- **Phone is the guarded lever** — the Find phone tool (`phone_waterfall`, the default when phones are asked for) runs 3–7 credits/record, ~3× an email. `aiArk.findMobilePhone` (0.5, mobile-only) is the cheap rung only when the user named AI Ark or asked for the cheapest path. Either way the rule is unchanged: never include phone lookup in a default chain; it enters a plan only on explicit user request, on qualified leads only.
 - Cheap-but-low-hit-rate providers are not savings: misses mostly cost no credits, but every row a rung misses is paid for again at the next, pricier rung, so a chain's spend is set by hit rate as much as by per-hit price (see [`alternatives.md`](alternatives.md)).
 
 ## 6) Context discipline

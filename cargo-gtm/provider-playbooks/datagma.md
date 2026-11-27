@@ -8,6 +8,8 @@ last-reviewed: 2026-07-09
 
 Contact-info finder: one mid-tier email action, two premium phone actions, and two person-enrich actions. `findEmail` (1) is an **alt mid-tier rung** of the find-email chain ([`../references/stage-action-map.md`](../references/stage-action-map.md)) — same price as the `FullEnrich` default, so it earns a slot only as an escalation with a different underlying source. `findPhone` / `findPhoneAndEmail` (8) are the **second-most-expensive phone tier in the catalog** — last resort before `cleon1` (15), never the first stop.
 
+> **Email, phone and LinkedIn-from-email default to Cargo's native tools, not to this provider.** Find email (`email_waterfall`), Find phone (`phone_waterfall`), Find LinkedIn URL from email (`find_linkedin_url_from_personal_email`) and Verify email (`email_validator`) are Cargo-maintained waterfalls with far higher coverage than any single provider ([`../SKILL.md`](../SKILL.md#contact-data-cargos-native-tools-first-mandatory-default)). The chains and "default" rungs on this page rank the single-provider tier, which runs only when the user names a provider, explicitly asks for the cheapest path, or the tool is missing from the workspace. Say which.
+
 ## Credits-based actions
 
 | Action | Cost | Inputs | Use for |

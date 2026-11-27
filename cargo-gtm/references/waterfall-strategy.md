@@ -16,12 +16,18 @@ This doc defines the canonical waterfall chains by enrichment goal. Every recipe
 
 Cargo doesn't have a built-in "waterfall" primitive — you implement this as N sequential `action execute-batch` calls with the records pruned between calls. Each step's rows come from `cargo-ai orchestration batch download --uuid <batch-uuid>` (a signed CSV URL: the input columns plus each top-level output key as `cargo_<key>`; failed runs keep only the input columns). `--wait-until-finished` prints the batch object, not the rows.
 
+## Native waterfalls come first
+
+For **email, phone and LinkedIn-from-email**, Cargo already ships the waterfall as a tool: Find email (`email_waterfall`), Find phone (`phone_waterfall`), Find LinkedIn URL from email (`find_linkedin_url_from_personal_email`), Find work email from personal email (`work_email_from_personal`) and Verify email (`email_validator`). Run those, addressed as `{"kind":"tool","templateSlug":"<slug>"}`; they are maintained and extended by Cargo and cover far more than a ladder an agent assembles. The hand-built chains below for those goals apply only when the user names a provider, explicitly asks for the cheapest path, the tool is missing, or a row lacks the tool's input. Say which. Rule: [`../SKILL.md`](../SKILL.md#contact-data-cargos-native-tools-first-mandatory-default).
+
 ## Chain — Find email
 
-Goal: get a verifiable email for a person given name + company (or LinkedIn).
+Default: one call to the Find email tool (`email_waterfall`, 1.1–4 per hit), which already walks several providers and verifies each address. Its output needs no step 5.
+
+The hand-built chain, **exception only**, for a verifiable email given name + company (or LinkedIn):
 
 ```
-1. FullEnrich.findEmail (1 cred)              ← default; best hit rate
+1. FullEnrich.findEmail (1 cred)              ← first rung when an exception applies
 2. hunter.findEmail (0.5 cred)                ← different underlying source
 3. peopleDataLabs.enrichPerson (3 cred)       ← heavyweight backfill (also returns email)
 4. icypeas.findEmail (0.1 cred)               ← cheap last resort
@@ -30,17 +36,18 @@ Goal: get a verifiable email for a person given name + company (or LinkedIn).
 Then **always**:
 
 ```
-5. waterfall.verifyEmail (0.1 cred)           ← verify every found email before use
+5. Verify email tool, email_validator (0.2)   ← verify every found email before use
+   (waterfall.verifyEmail, 0.1, when the user asked for the cheapest path)
 ```
 
-Don't skip step 5 — email finders return catch-all addresses that look valid but bounce.
+Don't skip step 5 on a hand-built chain — email finders return catch-all addresses that look valid but bounce.
 
 **Verification hard rules:**
 
-- A provider's own `verified` / `valid` flag is the provider grading its own homework. Always validate with an independent step (`waterfall.verifyEmail`) regardless of what the finder claimed.
+- A provider's own `verified` / `valid` flag is the provider grading its own homework. Always validate with an independent step (the Verify email tool) regardless of what the finder claimed.
 - Ship a **catch-all** email only when a second, independent finder returned the exact same address. One source + catch-all = "unverified", flag it as such.
 
-**Example flow (200 contacts):**
+**Example hand-built flow (200 contacts, user asked to use FullEnrich):**
 
 ```bash
 # Step 1 — try FullEnrich on all 200
@@ -82,7 +89,7 @@ For tech-stack signals, run `builtwith.getDomainSummary` (**free**) across the w
 Goal: get title, location, role, employment for a person given name + company (or email or LinkedIn).
 
 ```
-1. aiArk.enrichPerson (0.1 cred)      ← default when a LinkedIn URL is in hand
+1. aiArk.enrichPerson (0.1 cred)      ← default profile when a LinkedIn URL is in hand (email still comes from Find email)
 2. waterfall.enrichContact (2 cred)   ← no URL, or aiArk came back empty
 3. apolloio.enrichPerson (1 cred)     ← niche coverage on the residue
 4. peopleDataLabs.enrichPerson (3 cred)
@@ -95,17 +102,22 @@ Goal: get the correct LinkedIn URL for a person given name + company.
 ```
 1. linkedin.findProfileUrl (0.25 cred)
 2. linkedin.enrichProfile on candidate (0.25 cred)   ← validation step (mandatory)
-3. FullEnrich.reverseEmailLookup (1 cred)            ← only if email available
 ```
+
+Holding a personal email instead of name + company? Run the Find LinkedIn URL from email tool (`find_linkedin_url_from_personal_email`, 1–3) and validate its answer the same way; `FullEnrich.reverseEmailLookup` (1) is the exception-only fallback.
 
 See [`../recipes/linkedin-url-lookup.md`](../recipes/linkedin-url-lookup.md) for the strict-validation pattern. Don't skip step 2 — false positive rate is high without validation.
 
 ## Chain — Phone number
 
-Goal: get a phone number for a person.
+Goal: get a phone number for a person, on explicit request only.
+
+Default: the Find phone tool (`phone_waterfall`, 3–7, `linkedinUrl` in). Resolve the LinkedIn URL first when a row lacks it.
+
+The hand-built chain, **exception only** (named provider, cheapest path asked for, or no LinkedIn URL obtainable):
 
 ```
-1. prospeo.findPhone (3 cred)               ← cheapest landline/DID (aiArk.findMobilePhone, 0.5, goes first when a LinkedIn URL is in hand)
+1. prospeo.findPhone (3 cred)               ← cheapest landline/DID (aiArk.findMobilePhone, 0.5, goes first on a cheapest-path request with a LinkedIn URL)
 2. FullEnrich.findPhone (6 cred)            ← better hit rate
 3. waterfall.findPhone (7 cred)             ← multi-source last resort
 ```

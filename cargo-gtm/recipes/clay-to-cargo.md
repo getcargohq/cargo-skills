@@ -54,17 +54,17 @@ Costs are credits/record and are the pack's own priority stack. Confirm each aga
 
 | What the Clay column does | Cargo action | Cost |
 |---|---|---|
-| Find work email, **LinkedIn URL in hand** | `aiArk.enrichPerson` | 0.1 |
-| Find work email, name + domain | `FullEnrich.findEmail` | 1 |
-| Find work email, budget rung | `hunter.findEmail` | 0.5 |
-| Find work email, bulk last resort | `icypeas.findEmail` | 0.1 |
-| Validate / verify email | `waterfall.verifyEmail` | 0.1 |
-| Find mobile phone | `aiArk.findMobilePhone` | 0.5 |
+| Find work email (an email waterfall column), name + domain **or** LinkedIn URL | Find email tool, `{"kind":"tool","templateSlug":"email_waterfall"}` | 1.1–4 per hit |
+| Find work email from a personal email | Find work email from personal email tool, `work_email_from_personal` | 1–8.25 |
+| Validate / verify email | Verify email tool, `email_validator` | 0.2 |
+| Find phone (a phone waterfall column) | Find phone tool, `phone_waterfall` (`linkedinUrl` in) | 3–7 |
 | Enrich person from LinkedIn URL | `aiArk.enrichPerson` | 0.1 |
 | Enrich person from name + company | `waterfall.enrichContact` | 2 |
-| Email → LinkedIn (reverse lookup) | `FullEnrich.reverseEmailLookup` | 1 |
+| Personal email → LinkedIn (reverse lookup) | Find LinkedIn URL from email tool, `find_linkedin_url_from_personal_email` | 1–3 |
+| Work email → LinkedIn (reverse lookup) | `aiArk.reverseLookup`, then `FullEnrich.reverseEmailLookup` on misses | 0.05 / 1 |
+| A Clay column pinned to one named provider (Hunter, Findymail, ...) | that provider's action, e.g. `hunter.findEmail` | per provider |
 
-**`aiArk.enrichPerson` is the single highest-leverage substitution in most Clay migrations.** It returns the profile *and* a verified email for 0.1 and bills 0 when it finds none, so a Clay table that runs an email waterfall over rows that already carry LinkedIn URLs is usually paying several times over for what one 0.1 call does. Run it first, then run the finders above only on the residue.
+**A Clay email or phone waterfall maps to Cargo's own tool, not to a provider ladder.** Find email and Find phone are Cargo-maintained waterfalls with verification built in, and they are the default ([`../SKILL.md`](../SKILL.md#contact-data-cargos-native-tools-first-mandatory-default)). Rebuild a Clay waterfall provider by provider only when the user asks to keep its exact order, or explicitly asks for the cheapest path (then `aiArk.enrichPerson`, 0.1 with an email when it finds one, followed by `FullEnrich.findEmail` on the residue, is the cost ladder). Say which applies.
 
 ### Company-data columns
 
@@ -128,7 +128,7 @@ Run the mapped chain on that sample, then report three numbers per column:
 
 Three rules for reading the result honestly:
 
-- **On an email disagreement, the verified value wins, not the source.** Run `waterfall.verifyEmail` (0.1) on both sides before calling either one wrong. Clay being different is not Clay being right.
+- **On an email disagreement, the verified value wins, not the source.** Run the Verify email tool (`email_validator`, 0.2) on both sides before calling either one wrong. Clay being different is not Clay being right.
 - **Never compare a Clay credit to a Cargo credit.** They are different units and the comparison is meaningless. Compare what one sample of rows cost end to end on each side, which is a measurement rather than an argument.
 - **Coverage below the step-1 fill rate is a real miss** and needs a rung added or a provider swapped ([`../references/alternatives.md`](../references/alternatives.md)) before this goes any further. Coverage above it is not a win to celebrate loudly: check the disagreement rate first, because a finder that fills more rows and agrees less is guessing.
 
@@ -157,7 +157,7 @@ Loading is ~free. Spend concentrates in three places, and all of it goes through
 |---|---|
 | The parity pilot | 10–20 rows × the mapped chain cost |
 | Dedupe for rows with no natural key | free — a storage query against the existing Contacts / Companies models on `email` / `domain` / `linkedin_url` |
-| Re-verification of the imported VERIFY bucket | `waterfall.verifyEmail`, 0.1/record |
+| Re-verification of the imported VERIFY bucket | Verify email tool (`email_validator`), 0.2/record |
 
 The full-table run is a separate approval with its own three numbers. Getting the pilot approved is not getting the run approved.
 

@@ -17,21 +17,24 @@ For sourcing-only / TAM list builds, see [`build-tam.md`](build-tam.md). For inv
                free first pass? FullEnrich.searchPeople / searchCompanies (0/record)
 2. DEDUPE    → match against the workspace's own Contacts / Companies models
                on linkedin_url / domain (storage SQL or a segment filter)  (free)
-3. ENRICH    → LinkedIn URL in hand? aiArk.enrichPerson (0.1) FIRST — profile + verified email
+3. ENRICH    → LinkedIn URL in hand? aiArk.enrichPerson (0.1) for the profile, when the goal needs one
                aiArk.enrichCompany (0.01) for firmographics
                + waterfall.enrichContact / enrichCompany              (1–2/record)
                + apolloio.enrichPerson / enrichOrganization on the residue (1/record)
 4. SIGNAL    → enrichCrm.getFunding                                   (1/record)
                + theirStack.searchJobs                                (0.5/job returned)
-5. CONTACT   → FullEnrich.findEmail on rows step 3 left without an email
-               (fallback peopleDataLabs)                              (1–3/record)
-6. VERIFY    → waterfall.verifyEmail                                  (0.1/record)
+5. CONTACT   → Find email tool {"kind":"tool","templateSlug":"email_waterfall"}
+               on every row: linkedinUrl, or firstName + lastName + companyDomain (1.1–4/hit)
+6. VERIFY    → none for Find email's output (verified before it returns);
+               Verify email tool (email_validator) only for emails brought in (0.2/record)
 7. WRITEBACK → segment write / CRM upsert / CSV export                (free)
 ```
 
 Adapt by phase: drop steps that aren't relevant. Pure sourcing → step 1 only. "Enrich list I already have" → steps 2–6.
 
-**QA gates (free, local — [`../references/contact-accuracy.md`](../references/contact-accuracy.md)):** run `scripts/validate-emails.ts` on the step-5 output *before* paying for step 6 (culls invalid/disposable/duplicate emails from the verify batch), and `scripts/contact-accuracy-audit.ts` on the merged output *before* step 7 — only `audit_action: SEND` rows go to write-back; report the audit counts in the receipt.
+**Step 5 is the native Find email tool by default**, not a single provider and not the email a step 3 profile call happens to return. It is Cargo's maintained waterfall with verification built in, and it covers far more than any one provider. Hand-build a provider ladder only when the user names a provider, explicitly asks for the cheapest path, or the tool is missing from the workspace, and say which: [`../SKILL.md`](../SKILL.md#contact-data-cargos-native-tools-first-mandatory-default).
+
+**QA gates (free, local — [`../references/contact-accuracy.md`](../references/contact-accuracy.md)):** run `scripts/validate-emails.ts` on any imported emails *before* paying for step 6 (culls invalid/disposable/duplicate emails from the verify batch), and `scripts/contact-accuracy-audit.ts` on the merged output *before* step 7 — only `audit_action: SEND` rows go to write-back; report the audit counts in the receipt.
 
 ## Discovery sequence (run before any pipeline)
 
@@ -99,16 +102,7 @@ jq -c --slurpfile known /tmp/p1-known.json \
       | ($known[0].rows // [] | map(.linkedin_url)) | index($u) | not)]' \
   /tmp/p1-leads.json > /tmp/p1-new.json
 
-# Step 3a — ENRICH (person): searchLeads returns a LinkedIn URL, so this is the
-# cheapest rung — full profile plus a verified email, billing 0 on no-email.
-# Name columns ride along in each record so they come back in the CSV.
-B=$(cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"aiArk","actionSlug":"enrichPerson"}' \
-  --records "$(jq -c '[.[] | {linkedinUrl: .linkedin_profile_url, first_name, last_name, company_name}]' /tmp/p1-new.json)" \
-  --wait-until-finished | jq -r '.batch.uuid')
-batch_rows "$B" > /tmp/p1-prospect-enriched.json
-
-# Step 3b — ENRICH (firmographics on each contact's company). searchLeads
+# Step 3 — ENRICH (firmographics on each contact's company). searchLeads
 # returns no domain, only the company's LinkedIn id
 B=$(cargo-ai orchestration action execute-batch \
   --action '{"kind":"connector","integrationSlug":"aiArk","actionSlug":"enrichCompany"}' \
@@ -116,35 +110,27 @@ B=$(cargo-ai orchestration action execute-batch \
   --wait-until-finished | jq -r '.batch.uuid')
 batch_rows "$B" > /tmp/p1-firmo.json
 
-# Step 5 — CONTACT: find email ONLY for the rows step 3a left without one
-# (aiArk returns no output on a miss, so every cargo_ column is empty)
+# Step 5 — CONTACT: the native Find email tool on every lead. searchLeads
+# returns a LinkedIn URL, which is all the tool needs. Name columns ride
+# along in each record so they come back in the CSV.
 B=$(cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"FullEnrich","actionSlug":"findEmail"}' \
-  --records "$(jq -c '[.[] | select([to_entries[] | select(.key | startswith("cargo")) | .value] | all(. == ""))
-                       | {firstName: .first_name, lastName: .last_name, companyName: .company_name, linkedinUrl}]' /tmp/p1-prospect-enriched.json)" \
+  --action '{"kind":"tool","templateSlug":"email_waterfall"}' \
+  --records "$(jq -c '[.[] | {linkedinUrl: .linkedin_profile_url, first_name, last_name, company_name}]' /tmp/p1-new.json)" \
   --wait-until-finished | jq -r '.batch.uuid')
 batch_rows "$B" > /tmp/p1-emails.json
 
-# Step 6 — VERIFY each found email (FullEnrich returns it as most_probable_email)
-B=$(cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"waterfall","actionSlug":"verifyEmail"}' \
-  --records "$(jq -c '[.[] | select((.cargo_most_probable_email // "") != "") | {email: .cargo_most_probable_email}]' /tmp/p1-emails.json)" \
-  --wait-until-finished | jq -r '.batch.uuid')
-batch_rows "$B" > /tmp/p1-verified.json
-
+# Step 6 — no paid verify: Find email returns only addresses that passed
+# zeroBounce as valid, so a non-empty cargo_email is already verified.
 # Step 7 — Coalesce + summary: one row per lead, keyed on the LinkedIn URL
-jq -n --slurpfile fe /tmp/p1-emails.json --slurpfile ver /tmp/p1-verified.json \
-      --slurpfile ai /tmp/p1-prospect-enriched.json '
-  ($fe[0] | map({key: .linkedinUrl, value: .cargo_most_probable_email}) | from_entries) as $em
-  | ($ver[0] | map({key: (.email | ascii_downcase), value: .cargo_email_status}) | from_entries) as $st
-  | [$ai[0][] | ($em[.linkedinUrl] // "") as $e
-     | {first_name, last_name, company_name, linkedinUrl,
-        fullenrich_email: $e, email_status: ($st[$e | ascii_downcase] // "")}]'
+jq '[.[] | {first_name, last_name, company_name, linkedinUrl,
+            email: (.cargo_email // ""),
+            email_status: (if (.cargo_email // "") != "" then "valid" else "" end)}]' \
+  /tmp/p1-emails.json
 ```
 
-aiArk's own email sits inside its `email` output object (`email.output[0].address`), so in the CSV it is under the `cargo_email.` columns, not a flat `email`.
+**Credit budget**: ~10 leads × (0.2 + 0 + 0.01 + 1.1 to 4) = ~14 to 43 credits. Find email bills 1.1 when its first provider settles the address and more when it has to walk further; a row nobody covers costs close to nothing. Quote the sample's receipt, not this range.
 
-**Credit budget**: ~10 leads × (0.2 + 0 + 0.1 + 0.01 + 1 + 0.1) = ~14 credits. Step 5 (`FullEnrich.findEmail`, 1/record) only runs on the rows step 3a left without an email — `aiArk.enrichPerson` usually returns one, so the real figure lands under this.
+**Exception, the user asked for the cheapest path:** run `aiArk.enrichPerson` (0.1) on the LinkedIn URLs first, then Find email or `FullEnrich.findEmail` (1) only on the rows it left without an email, then verify the single-provider emails with the Verify email tool. Say that this trades coverage for credits.
 
 ---
 
@@ -204,67 +190,40 @@ batch_rows "$B" \
   > /tmp/p2-leads.json
 ```
 
-### Step 4 — Enrich each lead from its LinkedIn URL
+### Step 4 — Find emails with the native Find email tool
 
 ```bash
+# Every lead carries a LinkedIn URL from searchLeads, so the tool runs on
+# linkedinUrl alone; domain and names ride along for the CSV.
 B=$(cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"aiArk","actionSlug":"enrichPerson"}' \
+  --action '{"kind":"tool","templateSlug":"email_waterfall"}' \
   --records "$(jq -c '[.[] | {linkedinUrl: .linkedin_profile_url, first_name, last_name, domain}]' /tmp/p2-leads.json)" \
-  --wait-until-finished | jq -r '.batch.uuid')
-batch_rows "$B" > /tmp/p2-prospect-enriched.json
-```
-
-`enrichPerson` returns the verified email alongside the profile and bills 0 when
-it finds none, so step 5 below only pays for the residue it left empty.
-
-### Step 5 — Find emails (FullEnrich) on the residue only
-
-```bash
-# ONLY the rows step 4 left without an email (aiArk returns no output on a
-# miss, so every cargo_ column is empty) — this gate is what makes the
-# budget below 60 credits instead of 200.
-B=$(cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"FullEnrich","actionSlug":"findEmail"}' \
-  --records "$(jq -c '[.[] | select([to_entries[] | select(.key | startswith("cargo")) | .value] | all(. == ""))
-                       | {firstName: .first_name, lastName: .last_name, domainName: .domain, linkedinUrl}]' /tmp/p2-prospect-enriched.json)" \
   --wait-until-finished | jq -r '.batch.uuid')
 curl -fsSL "$(cargo-ai orchestration batch download --uuid "$B" | jq -r .url)" > /tmp/p2-emails.csv
 ```
 
-### Step 6 — Verify emails (free cull, then waterfall)
+The tool walks several providers and returns `email` (column `cargo_email`) only when the address passed zeroBounce as valid; a miss is an empty cell and costs close to nothing. Sample 10 to 20 rows first and quote that receipt before running the 200.
+
+### Step 5 — Free cull (no paid verify)
 
 ```bash
-# 6a. FREE pre-cull — stamp every row with email_risk/recommendation
-#     (QA scripts: ../references/contact-accuracy.md; Node >= 22.18;
-#     it reads the batch download CSV directly; FullEnrich's email column
-#     is cargo_most_probable_email)
+# FREE pre-cull — stamps every row with email_risk/recommendation (role,
+# disposable, duplicate). QA scripts: ../references/contact-accuracy.md;
+# Node >= 22.18; reads the batch download CSV directly.
 node <skill-dir>/scripts/validate-emails.ts --input /tmp/p2-emails.csv \
-  --email-column cargo_most_probable_email --json > /tmp/p2-culled.json
-
-# 6b. Paid verification on the SURVIVORS ONLY — the cull is what saves the
-#     credits, so the verify batch must be built from its output, never from
-#     the original list
-B=$(cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"waterfall","actionSlug":"verifyEmail"}' \
-  --records "$(jq -c '[.[] | select(.recommendation != "skip" and (.cargo_most_probable_email // "") != "") | {email: .cargo_most_probable_email}]' /tmp/p2-culled.json)" \
-  --wait-until-finished | jq -r '.batch.uuid')
-batch_rows "$B" > /tmp/p2-verified.json
+  --email-column cargo_email --json > /tmp/p2-culled.json
 ```
 
-### Step 6.5 — Merge, then audit before handoff (free)
+No step 6: the tool already verified every address it returned. A paid verify on top would bill 0.2 a row to learn nothing.
 
-Join the verification statuses back onto the culled rows (the audit must see **every** row with its real status — never pre-filter to `valid` first, or the VERIFY/REMOVE verdicts and their counts are lost), then stamp each row:
+### Step 6.5 — Audit before handoff (free)
+
+Stamp the verification the tool implies onto each row (an address present is `valid`, an empty cell has none), keep every row so the audit counts are honest, then audit:
 
 ```bash
-# Merge: attach each row's verification status by email — join on the
-# LOWERCASED address (verify results may re-case it; a missed join leaves
-# emailStatus empty and the row degrades to VERIFY). Read cargo_email_status
-# (waterfall.verifyEmail's email_status) — not .status.
-jq -c --slurpfile ver /tmp/p2-verified.json '
-  ($ver[0] | map({key: (.email | ascii_downcase), value: .cargo_email_status}) | from_entries) as $st
-  | map(. + {email: .cargo_most_probable_email}
-        | . + {emailStatus: ($st[(.email // "" | ascii_downcase)] // "")})
-' /tmp/p2-culled.json > /tmp/p2-merged.json
+jq -c 'map(. + {email: .cargo_email}
+           | . + {emailStatus: (if (.email // "") != "" then "valid" else "" end)})' \
+  /tmp/p2-culled.json > /tmp/p2-merged.json
 
 # Audit: SEND / VERIFY / REVIEW / REMOVE per row; summary counts go in the receipt
 node <skill-dir>/scripts/contact-accuracy-audit.ts --input /tmp/p2-merged.json --json > /tmp/p2-final.json
@@ -282,10 +241,8 @@ If a Contacts model exists, upsert via `cargo-ai storage` patterns — see [`../
 - dedupe against the Companies model: 0
 - aiArk.enrichCompany × 95: ~1
 - salesNavigator.searchLeads × 95: ~57 (≈ 0.2 × 3 × 95)
-- aiArk.enrichPerson × 200: 20
-- FullEnrich.findEmail × 60 (the rows aiArk left without an email): 60
-- waterfall.verifyEmail × 200: 20
-- **Total: ~208 credits for 200 fully-enriched + verified prospects** (~1 cred/prospect).
+- Find email tool × 200: ~220 to 800 (1.1 per address the first provider settles, up to 4 when it walks further, little or nothing per miss)
+- **Total: ~330 to 910 credits for 200 prospects with verified emails.** The sample's receipt sets the real figure; quote that, not this range.
 
 ---
 
@@ -309,56 +266,25 @@ cargo-ai segmentation segment fetch \
 # 2. Filter to rows MISSING email
 jq -c '[.records[] | select(.email == null or .email == "")]' /tmp/p3-segment.json > /tmp/p3-missing-email.json
 
-# 3. Try aiArk first on the rows that carry a LinkedIn URL (0.1, bills 0 on no-email)
+# 3. The native Find email tool on every row missing an email. It takes a
+#    LinkedIn URL, or first name + last name + company domain; pass whichever
+#    the row has (camelCase keys, or the input is dropped).
 #    batch_rows: the helper defined in P1 (batch download CSV -> JSON)
 B=$(cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"aiArk","actionSlug":"enrichPerson"}' \
-  --records "$(jq -c '[.[] | select(.linkedin) | {linkedinUrl: .linkedin}]' /tmp/p3-missing-email.json)" \
+  --action '{"kind":"tool","templateSlug":"email_waterfall"}' \
+  --records "$(jq -c '[.[] | if (.linkedin // "") != "" then {linkedinUrl: .linkedin, id}
+                         else {firstName, lastName, companyDomain: .domainName, id} end]' /tmp/p3-missing-email.json)" \
   --wait-until-finished | jq -r '.batch.uuid')
-batch_rows "$B" > /tmp/p3-aiark-enriched.json
+batch_rows "$B" > /tmp/p3-found.json   # address in cargo_email, already verified
 
-# 4. For rows still missing email, escalate to FullEnrich. aiArk returns no
-#    output on a miss, so a hit is a row with any non-empty cargo_ column
-jq -s '([.[1][] | select([to_entries[] | select(.key | startswith("cargo")) | .value] | any(. != "")) | .linkedinUrl]) as $hit
-  | [.[0][] | select((.linkedin // "") as $l | $hit | index($l) | not)]' \
-  /tmp/p3-missing-email.json /tmp/p3-aiark-enriched.json > /tmp/p3-still-missing.json
-
-B=$(cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"FullEnrich","actionSlug":"findEmail"}' \
-  --records "$(jq -c '[.[] | {firstName, lastName, domainName, companyName}]' /tmp/p3-still-missing.json)" \
-  --wait-until-finished | jq -r '.batch.uuid')
-batch_rows "$B" > /tmp/p3-fullenrich.json
-
-# 5. For rows still missing after FullEnrich (empty cargo_most_probable_email),
-#    escalate to peopleDataLabs (heavyweight)
-jq -c '[.[] | select((.cargo_most_probable_email // "") == "")]' /tmp/p3-fullenrich.json > /tmp/p3-final-missing.json
-
-B=$(cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"peopleDataLabs","actionSlug":"enrichPerson"}' \
-  --records "$(jq -c '[.[] | {parameters: {first_name: .firstName, last_name: .lastName, company: .companyName}}]' /tmp/p3-final-missing.json)" \
-  --wait-until-finished | jq -r '.batch.uuid')
-batch_rows "$B" > /tmp/p3-pdl.json
-
-# 6. Verify all newly-found emails (FullEnrich: most_probable_email; PDL: work_email)
-jq -s '[(.[0][] | .cargo_most_probable_email), (.[1][] | .cargo_work_email)]
-       | map(select((. // "") != "")) | unique | map({email: .})' \
-  /tmp/p3-fullenrich.json /tmp/p3-pdl.json > /tmp/p3-emails-to-verify.json
-
-B=$(cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"waterfall","actionSlug":"verifyEmail"}' \
-  --records "$(cat /tmp/p3-emails-to-verify.json)" \
-  --wait-until-finished | jq -r '.batch.uuid')
-batch_rows "$B" > /tmp/p3-verified.json   # status in cargo_email_status
+# 4. Rows still empty are rows no provider in the waterfall covers. Leave them
+#    empty: walking single providers behind the tool mostly re-asks the same sources.
+jq '[.[] | select((.cargo_email // "") == "")] | length' /tmp/p3-found.json
 ```
 
-**Credit budget** (200 contacts missing email; assumes 60% hit on aiArk, 25% on FullEnrich, 10% on PDL, 5% unresolvable):
-- aiArk.enrichPerson × 200: 20 (and 0 on the 40% that return no email)
-- FullEnrich.findEmail × 80: 80
-- peopleDataLabs.enrichPerson × 30: 90
-- waterfall.verifyEmail × 190: 19
-- **Total: ~209 credits for 190 verified emails** (~1.1 cred/email).
+**Credit budget** (200 contacts missing email): Find email × 200, 1.1 to 4 per address found and little or nothing per miss, so roughly 200 to 700 credits depending on how far the waterfall walks. Run 20 first and quote that receipt. No verify step: every returned address already passed zeroBounce.
 
-The waterfall pattern saves ~50% vs running peopleDataLabs on everyone (which would be 600 credits just for enrich).
+**Exception, the user asked for the cheapest path or named providers:** run `aiArk.enrichPerson` (0.1) on rows with a LinkedIn URL, `FullEnrich.findEmail` (1) on the residue, `peopleDataLabs.enrichPerson` (3) last, then verify every single-provider address with the Verify email tool (`email_validator`, 0.2; read `cargo_status` and `cargo_is_safe`). Say which exception you are acting on.
 
 ---
 

@@ -9,7 +9,7 @@
     {
       "name": "cargo",
       "displayName": "Cargo",
-      "version": "1.37.2",
+      "version": "1.38.0",
       "source": {
         "type": "local",
         "path": "./"

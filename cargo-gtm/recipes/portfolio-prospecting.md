@@ -103,21 +103,17 @@ batch_rows "$B" \
 
 ```bash
 B=$(cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"FullEnrich","actionSlug":"findEmail"}' \
-  --records "$(jq -c '[.[] | {firstName: .first_name, lastName: .last_name, domainName: .domain, linkedinUrl: .linkedin_profile_url}]' /tmp/contacts.json)" \
+  --action '{"kind":"tool","templateSlug":"email_waterfall"}' \
+  --records "$(jq -c '[.[] | {firstName: .first_name, lastName: .last_name, companyDomain: .domain, linkedinUrl: .linkedin_profile_url}]' /tmp/contacts.json)" \
   --wait-until-finished | jq -r '.batch.uuid')
-batch_rows "$B" > /tmp/emails.json
+batch_rows "$B" > /tmp/emails.json   # address in cargo_email, already verified
 ```
 
-### Step 6 — Verify emails
+The native Find email tool is the default ([`../SKILL.md`](../SKILL.md#contact-data-cargos-native-tools-first-mandatory-default)): Cargo's maintained waterfall, with zeroBounce built in.
 
-```bash
-B=$(cargo-ai orchestration action execute-batch \
-  --action '{"kind":"connector","integrationSlug":"waterfall","actionSlug":"verifyEmail"}' \
-  --records "$(jq -c '[.[] | select((.cargo_most_probable_email // "") != "") | {email: .cargo_most_probable_email}]' /tmp/emails.json)" \
-  --wait-until-finished | jq -r '.batch.uuid')
-batch_rows "$B" > /tmp/verified.json   # status in cargo_email_status
-```
+### Step 6 — Verify emails: nothing to run
+
+Find email's output is verified before it returns. Only when an exception put a single provider in step 5 (a named provider, or the user asked for the cheapest path) do you verify, with the Verify email tool `{"kind":"tool","templateSlug":"email_validator"}` (0.2; `status`, `is_safe`).
 
 ### Step 7 — Personalize outbound (optional)
 
@@ -133,9 +129,9 @@ For 200 portfolio companies × 3 contacts each = 600 prospects:
 | 2. Dedupe against the Companies model | 0 | 200 | 0 |
 | 3. aiArk.enrichCompany | 0.01 | 200 | 2 |
 | 4. searchLeads (3 contacts each) | 0.2 | 600 | 120 |
-| 5. FullEnrich.findEmail | 1 | 600 | 600 |
-| 6. waterfall.verifyEmail | 0.1 | 600 | 60 |
-| **Total** | | | **~882 credits for 600 verified contacts at 200 portfolio companies** |
+| 5. Find email tool (`email_waterfall`) | 1.1–4 per hit, little or nothing per miss | 600 | 660–2,400 at most |
+| 6. Verify | 0 (already verified) | 600 | 0 |
+| **Total** | | | **~882 to 2,622 credits for 600 verified contacts at 200 portfolio companies**; the sample's receipt sets the real figure |
 
 ## Discovery sequence
 

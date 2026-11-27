@@ -143,3 +143,10 @@
 {"prompt": "Which of my target accounts are in market right now?", "expect": "cargo-gtm", "why": "Job that used to live only in a gtm-skills job skill; the recipe is now in cargo-gtm."}
 {"prompt": "Who are the decision makers at Globex for a security purchase?", "expect": "cargo-gtm", "why": "Job that used to live only in a gtm-skills job skill; the recipe is now in cargo-gtm."}
 {"prompt": "Rank this list of 200 companies against our ICP and drop the bad ones", "expect": "cargo-gtm", "why": "Job that used to live only in a gtm-skills job skill; the recipe is now in cargo-gtm."}
+
+{"prompt":"Find emails for this list of 200 contacts","expect":"cargo-gtm","why":"The contact-data rule (native Find email tool first) lives in cargo-gtm; a bare email request must load it."}
+{"prompt":"Find work emails from these LinkedIn URLs","expect":"cargo-gtm","why":"LinkedIn URLs in hand still route email to the Find email tool, which cargo-gtm owns; must not fall to a capability skill."}
+{"prompt":"Get phone numbers for these leads","expect":"cargo-gtm","why":"Phone defaults to the Find phone tool under cargo-gtm's phone gate."}
+{"prompt":"Find LinkedIn profiles from these personal emails","expect":"cargo-gtm","why":"Personal email to LinkedIn defaults to the Find LinkedIn URL from email tool, documented in cargo-gtm."}
+{"prompt":"Use AI Ark to find emails for these contacts","expect":"cargo-gtm","why":"A named provider is the first exception to native-tools-first; it is still cargo-gtm's call to make, not cargo-connection's."}
+{"prompt":"What's the cheapest way possible to get work emails for this list?","expect":"cargo-gtm","why":"The explicit cheapest-path exception lives in cargo-gtm; cost wording must not pull it to cargo-billing."}

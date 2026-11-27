@@ -6,7 +6,9 @@ last-reviewed: 2026-07-09
 
 # bouncer (Bouncer)
 
-Dedicated email verification. **One credits-based action, 0.3 credits** — 3× the priority-stack default `waterfall.verifyEmail` (0.1) and 30× the bulk option `icypeas.verifyEmail` (0.01), making it the second-most-expensive verify tier in the catalog (only `hunter.verifyEmail` at 1 costs more). On credits it almost never earns a call; its real audience is users with an **existing Bouncer subscription** who wire their own API key into a connector and run verification on their plan instead of cargo credits.
+Dedicated email verification. **One credits-based action, 0.3 credits** — 3× the single-provider default `waterfall.verifyEmail` (0.1) and 30× the bulk option `icypeas.verifyEmail` (0.01), making it the second-most-expensive verify tier in the catalog (only `hunter.verifyEmail` at 1 costs more). On credits it almost never earns a call; its real audience is users with an **existing Bouncer subscription** who wire their own API key into a connector and run verification on their plan instead of cargo credits.
+
+> **Email, phone and LinkedIn-from-email default to Cargo's native tools, not to this provider.** Find email (`email_waterfall`), Find phone (`phone_waterfall`), Find LinkedIn URL from email (`find_linkedin_url_from_personal_email`) and Verify email (`email_validator`) are Cargo-maintained waterfalls with far higher coverage than any single provider ([`../SKILL.md`](../SKILL.md#contact-data-cargos-native-tools-first-mandatory-default)). The chains and "default" rungs on this page rank the single-provider tier, which runs only when the user names a provider, explicitly asks for the cheapest path, or the tool is missing from the workspace. Say which.
 
 ## Credits-based actions
 
@@ -20,7 +22,7 @@ The connector also accepts your own Bouncer API key (`apiKey`) — same action, 
 
 - ✅ **Existing Bouncer subscription** — the user already pays Bouncer; create an own-key connector and the 0.3-credit price stops mattering.
 - ✅ **Deliberate extra opinion on high-value contacts** — a different underlying provider when `waterfall.verifyEmail` and `zeroBounce.verifyEmail` disagree and the contact is worth a third check.
-- ❌ **Default verify step** — `waterfall.verifyEmail` (0.1) is the priority default (see [`../references/alternatives.md`](../references/alternatives.md), Verify email alternatives).
+- ❌ **Default verify step** — `waterfall.verifyEmail` (0.1) is the single-provider default (see [`../references/alternatives.md`](../references/alternatives.md), Verify email alternatives).
 - ❌ **Second opinion by default** — `zeroBounce.verifyEmail` (0.1) gives an independent verdict at a third of the price.
 - ❌ **Bulk verification** — `icypeas.verifyEmail` (0.01) is 30× cheaper on large lists.
 
