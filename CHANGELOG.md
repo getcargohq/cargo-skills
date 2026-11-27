@@ -10,6 +10,10 @@ The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/
 
 ## [Unreleased]
 
+### `cargo` 1.37.2, plugin 1.37.2: plugin installs get the credits fixes
+
+`cargo-gtm` 2.8.1 (#225) and 2.8.2 (#231) changed what agents say a miss costs without moving the plugin version, so plugin installs kept the older text. This release moves the plugin so they update. No content change beyond the version.
+
 ### `cargo-gtm` 2.8.2: five actions do bill on a miss
 
 2.8.1 (#225) said a miss bills 0 on every provider. The backend says otherwise for five actions, which return `unitsCount: 1` when they find nothing: `enrichCrm.enrichPerson`, `enrichCrm.enrichCompany`, `enrichCrm.findEmail`, `enrichCrm.getFunding`, and `companyEnrich.findSimilarCompanies` on an empty result. The blanket rule is replaced with those exceptions in the cost table, `cost-discipline.md` §5, `SKILL.md`, the `enrichCrm` playbook and the funding-watch recipe.
